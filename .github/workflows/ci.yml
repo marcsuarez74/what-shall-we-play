@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [main, feat/**]
+  pull_request:
+
+jobs:
+  build:
+    name: Build (Next.js + image Docker)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Build de l'image Docker (valide le Dockerfile + better-sqlite3 natif)
+        run: docker build -t what-shall-we-play:ci .
+
+  test:
+    name: Tests (unitaires + E2E)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Tests unitaires (Vitest)
+        run: npm test
+      - name: Installer Chromium (Playwright)
+        run: npx playwright install --with-deps chromium
+      - name: Tests E2E (Playwright, dev server auto)
+        run: npm run test:e2e
+
+  deploy:
+    name: Déploiement VPS
+    needs: [build, test]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Déployer sur le VPS (pull + rebuild + restart)
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          script: |
+            set -e
+            cd "${{ secrets.VPS_DEPLOY_DIR }}"
+            git pull --ff-only origin main
+            docker compose up -d --build
+            docker image prune -f
