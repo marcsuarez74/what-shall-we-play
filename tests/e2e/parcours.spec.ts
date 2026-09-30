@@ -39,6 +39,9 @@ test('parcours complet : deux joueurs, sélection, tirage, historique', async ({
   // Les deux bibliothèques sont sur l'étagère ; sélection + tirage
   await expect(a.locator('.box')).toHaveCount(2);
   await a.locator('.box').nth(0).click();
+  // Review Focus n°1 : sans pochette (ni BGG ni upload), la fiche affiche le
+  // placeholder ♟ — jamais une image cassée
+  await expect(a.getByRole('dialog', { name: 'Terraforming Mars' }).locator('.cover-placeholder')).toHaveText('♟');
   await a.getByRole('button', { name: /Ajouter à la sélection/ }).click();
   await a.keyboard.press('Escape');
   await a.locator('.box').nth(1).click();
