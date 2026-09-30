@@ -2,7 +2,8 @@
    What Shall We Play? — design system
    Sections : variables, base, boutons, champs, feedback, page,
    auth, formulaire jeu, bibliothèque, étagère, fiche (sheet),
-   sélectionneur de soirée, tabbar, tirage (roue + verdict).
+   sélectionneur de soirée, tabbar, tirage (roue + verdict),
+   soirées (historique).
    ============================================================ */
 
 /* ---------- Variables ---------- */
@@ -943,4 +944,44 @@ input[type='file'] {
   width: 100%;
   max-width: 360px;
   margin-top: 8px;
+}
+
+/* ---------- Soirées (historique) ---------- */
+.nights-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.night-date {
+  color: var(--creme);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.night-picks {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-top: 1px solid rgba(185, 165, 140, 0.25);
+  padding-top: 10px;
+  font-size: 15px;
+  color: var(--doux-clair);
+}
+
+.night-picks strong {
+  color: var(--creme);
+}
+
+.night-picks li::before {
+  content: '🎯 ';
+}
+
+.empty a {
+  color: var(--cuivre);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }

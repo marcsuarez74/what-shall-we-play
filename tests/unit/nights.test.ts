@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { registerUser } from '@/lib/auth';
-import { createNight, getShelfGames, getCurrentNight, userCanAccessNight, setNightPlayers } from '@/lib/nights';
+import { createNight, getShelfGames, getCurrentNight, userCanAccessNight, setNightPlayers, getMyNights } from '@/lib/nights';
 import { createGame } from '@/lib/games';
+import { getDb } from '@/lib/db';
 
 describe('nights', () => {
   it('crée une soirée, inclut le créateur, combine les bibliothèques', () => {
@@ -23,5 +24,18 @@ describe('nights', () => {
     const nightId = createNight(a, [a, b]);
     setNightPlayers(nightId, [a, c]);
     expect(getShelfGames(nightId)).toHaveLength(0); // b parti, c et a n'ont rien
+  });
+  it('liste mes soirées (créateur ou participant), la plus récente d\'abord', () => {
+    const u = (registerUser('n-hist', '1234') as { id: number }).id;
+    const autre = (registerUser('n-hist-b', '1234') as { id: number }).id;
+    const hier = createNight(u, [u]);
+    const invite = createNight(autre, [autre, u]); // je n'y suis qu'invité
+    const etrangere = createNight(autre, [autre]); // sans moi
+    const quittee = createNight(u, [u, autre]);
+    setNightPlayers(quittee, [autre]); // créateur retiré des joueurs : reste visible
+    getDb().prepare(`UPDATE nights SET played_at = date('now', '-1 day') WHERE id = ?`).run(hier);
+    const ids = getMyNights(u).map((n) => n.id);
+    expect(ids).toEqual([quittee, invite, hier]); // played_at DESC, puis id DESC
+    expect(ids).not.toContain(etrangere);
   });
 });

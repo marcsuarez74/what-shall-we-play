@@ -32,6 +32,14 @@ export function userCanAccessNight(userId: number, nightId: number): boolean {
       (n.creator_id = ? OR EXISTS (SELECT 1 FROM night_players np WHERE np.night_id = n.id AND np.user_id = ?))`)
     .get(nightId, userId, userId);
 }
+export function getMyNights(userId: number): Night[] {
+  return getDb().prepare(`
+    SELECT n.* FROM nights n
+    WHERE n.creator_id = ?
+       OR EXISTS (SELECT 1 FROM night_players np WHERE np.night_id = n.id AND np.user_id = ?)
+    ORDER BY n.played_at DESC, n.id DESC`)
+    .all(userId, userId) as Night[];
+}
 export function getShelfGames(nightId: number): Game[] {
   return getDb().prepare(`
     SELECT DISTINCT g.* FROM games g

@@ -52,6 +52,7 @@ export default function ShelfClient({ night, players, games, users }: {
           <div className="user-menu">
             <a href="/games/add">➕ Ajouter un jeu</a>
             <a href="/library">📚 Ma bibliothèque</a>
+            <a href="/nights">🎲 Soirées</a>
             <button type="button" onClick={logout}>Se déconnecter</button>
           </div>
         </details>
