@@ -5,13 +5,14 @@ import type { Game, UserLite } from '@/lib/types';
 
 const fmt = (n: number) => n.toLocaleString('fr-FR', { maximumFractionDigits: 1 });
 
-export default function GameSheet({ game, players, playsCount, inSelection, onToggle, onClose }: {
+export default function GameSheet({ game, players, playsCount, inSelection, onToggle, onClose, mode = 'shelf' }: {
   game: Game;
   players: UserLite[];
   playsCount: number;
   inSelection: boolean;
   onToggle: () => void;
   onClose: () => void;
+  mode?: 'shelf' | 'library';
 }) {
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -60,9 +61,11 @@ export default function GameSheet({ game, players, playsCount, inSelection, onTo
           {game.artist && <li><span>Illustrateur</span><strong>{game.artist}</strong></li>}
           <li><span>Parties jouées</span><strong>{playsCount}</strong></li>
         </ul>
-        <p className="sheet-owner">
-          Apporté par <strong>{owner ?? 'un joueur'}</strong> · {FORMAT_LABEL[game.box_format]}
-        </p>
+        {mode === 'shelf' && (
+          <p className="sheet-owner">
+            Apporté par <strong>{owner ?? 'un joueur'}</strong> · {FORMAT_LABEL[game.box_format]}
+          </p>
+        )}
         {game.bgg_id != null && (
           <a className="bgg-link" href={`https://boardgamegeek.com/boardgame/${game.bgg_id}`}
              target="_blank" rel="noreferrer">
@@ -70,9 +73,11 @@ export default function GameSheet({ game, players, playsCount, inSelection, onTo
             <span>Voir la fiche ↗</span>
           </a>
         )}
-        <button type="button" className={`btn-copper ${inSelection ? 'is-sel' : ''}`} onClick={onToggle}>
-          {inSelection ? '✓ Retirer de la sélection' : '＋ Ajouter à la sélection'}
-        </button>
+        {mode === 'shelf' && (
+          <button type="button" className={`btn-copper ${inSelection ? 'is-sel' : ''}`} onClick={onToggle}>
+            {inSelection ? '✓ Retirer de la sélection' : '＋ Ajouter à la sélection'}
+          </button>
+        )}
       </div>
     </div>
   );

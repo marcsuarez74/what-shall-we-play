@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, Space_Grotesk } from "next/font/google";
 import RegisterSW from "@/components/RegisterSW";
+import TabBar from "@/components/TabBar";
 import "./globals.css";
 
 const bricolage = Bricolage_Grotesque({
@@ -33,6 +34,7 @@ export default function RootLayout({
     <html lang="fr" className={`${bricolage.variable} ${spaceGrotesk.variable}`}>
       <body>
         {children}
+        <TabBar />
         <RegisterSW />
       </body>
     </html>

@@ -29,9 +29,8 @@ test('soirées : historique avec date, joueurs et tirages', async ({ page }) => 
   await page.getByRole('button', { name: 'Lancer le tirage · 1' }).click();
   await expect(page.getByText('LA ROUE A PARLÉ')).toBeVisible({ timeout: 10_000 });
 
-  // Historique : accessible depuis le menu utilisateur de l'étagère
+  // Historique : accessible depuis la barre d'onglets
   await page.goto('/etagere');
-  await page.getByLabel('Menu utilisateur').click();
   await page.getByRole('link', { name: 'Soirées' }).click();
 
   // La soirée du jour : date fr-FR, puce joueur, tirage (titre + qui a lancé)
