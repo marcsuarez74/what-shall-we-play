@@ -4,6 +4,14 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [1.4.0] — 2026-10-01
+
+### Ajouté
+- **Soirées programmées** : programmez une soirée (date + heure + joueurs) depuis le QG. Le jour J, elle devient la soirée en cours automatiquement.
+- **QG Soirées** repensé : « Ce soir » (soirée en cours et son verdict), « Programmées » (cartes avec date longue, heure, joueurs), « Historique ». La nuit active couvre désormais les participants, pas seulement les créateurs.
+- **Annonce WhatsApp au verdict** : « 💬 Annoncer sur WhatsApp » compose le message (jeu tiré, qui ramène, qui est attendu, heure) et l'envoie via le partage natif — sinon lien wa.me. Aucun bot, aucun compte.
+- **Invitation WhatsApp** sur chaque soirée programmée : date, heure et joueurs invités pré-remplis.
+
 ## [1.3.0] — 2026-10-01
 
 ### Ajouté
