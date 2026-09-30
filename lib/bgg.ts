@@ -12,11 +12,14 @@ function headers(): Record<string, string> {
 }
 
 // Garde de débit : max ~1 requête/s vers l'API BGG (ne s'applique pas au téléchargement d'image).
+// Le créneau est réservé AVANT la pause : des appelants concurrents sont sérialisés
+// (sinon tous lisaient le même lastBggCall et repartaient au même instant).
 let lastBggCall = 0;
 async function bggGate(): Promise<void> {
-  const remaining = lastBggCall + 1000 - Date.now();
+  const slot = Math.max(lastBggCall + 1000, Date.now());
+  lastBggCall = slot;
+  const remaining = slot - Date.now();
   if (remaining > 0) await new Promise((r) => setTimeout(r, remaining));
-  lastBggCall = Date.now();
 }
 
 async function bggFetch(url: string, timeoutMs = 8000): Promise<string | null> {

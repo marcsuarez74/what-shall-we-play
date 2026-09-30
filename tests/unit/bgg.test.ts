@@ -44,4 +44,12 @@ describe('bgg', () => {
     expect(await attachCover(cached!)).toBe(cached!);
     expect(global.fetch).not.toHaveBeenCalled();
   });
+  // Épingle R1 : deux appels concurrents partent à ≥ 1000 ms d'écart (pas au même instant).
+  it('sérialise les appels BGG concurrents (~1 req/s)', async () => {
+    const fired: number[] = [];
+    global.fetch = vi.fn(async () => { fired.push(Date.now()); return new Response(THING_XML, { status: 200 }); });
+    await Promise.all([getThing(111), getThing(222)]);
+    expect(fired).toHaveLength(2);
+    expect(fired[1]! - fired[0]!).toBeGreaterThanOrEqual(950);
+  });
 });
