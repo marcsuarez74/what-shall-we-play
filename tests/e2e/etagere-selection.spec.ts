@@ -53,3 +53,43 @@ test('longue pression → mode sélection, taps = toggle, Terminé sort', async 
   await box.click();
   await expect(page.locator('.bottom-sheet')).toBeVisible();
 });
+
+test('tactile : maintien 700 ms → mode sélection ; un glisser annule (garde régression)', async ({ browser }) => {
+  const context = await browser.newContext({ hasTouch: true });
+  const page = await context.newPage();
+  await page.goto('/register');
+  await page.getByLabel('Pseudo').fill(`tapt-${Date.now()}`);
+  await page.getByLabel('Code secret').fill('1234');
+  const reg = page.waitForResponse((r) => r.url().endsWith('/api/auth/register'));
+  await page.getByRole('button', { name: 'Créer mon compte' }).click();
+  await reg;
+  const nightDone = page.waitForResponse((r) => r.url().endsWith('/api/nights') && r.request().method() === 'POST');
+  await page.getByRole('button', { name: 'Créer la soirée' }).click();
+  await nightDone;
+  await page.waitForURL('/etagere');
+  const form = new FormData();
+  form.set('title', 'Tactile'); form.set('box_format', 'moyen');
+  await page.request.post('/api/games', { form });
+  await page.goto('/etagere');
+  const box = page.locator('.box').first();
+  await box.waitFor();
+  const bb = (await box.boundingBox())!;
+  const x = bb.x + bb.width / 2, y = bb.y + bb.height / 2;
+  const cdp = await context.newCDPSession(page);
+
+  // Maintien immobile 700 ms (doigt réel, pas une souris) → sélection
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] });
+  await page.waitForTimeout(700);
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  await expect(page.locator('.pick-banner')).toBeVisible();
+
+  // Glisser franc = swipe de la rangée, jamais une sélection
+  await page.getByRole('button', { name: 'Terminé' }).click();
+  await expect(page.locator('.pick-banner')).toHaveCount(0);
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] });
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: x + 40, y }] });
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  await page.waitForTimeout(600);
+  await expect(page.locator('.pick-banner')).toHaveCount(0);
+  await context.close();
+});

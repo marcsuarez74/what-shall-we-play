@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import pkg from '../package.json';
 import { FORMATS, FORMAT_SCALE, FORMAT_LABEL, coverSrc, avatarSrc } from '@/lib/formats';
+import { LongPress } from '@/lib/press';
 import type { Game, Night, UserLite } from '@/lib/types';
 import GameSheet from './GameSheet';
 import NightPicker from './NightPicker';
@@ -18,9 +19,8 @@ export default function ShelfClient({ night, players, games, users, plays, me }:
   const [editingNight, setEditingNight] = useState(false);
   const [pickMode, setPickMode] = useState(false);
   const menuRef = useRef<HTMLDetailsElement>(null);
-  const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pressRef = useRef<LongPress | null>(null);
   const suppressClick = useRef(false);
-  const pressStart = useRef<{ x: number; y: number } | null>(null);
   const byFormat = useMemo(() => FORMATS.map((f) => ({ f, list: games.filter((g) => g.box_format === f) })), [games]);
 
   useEffect(() => {
@@ -48,24 +48,23 @@ export default function ShelfClient({ night, players, games, users, plays, me }:
     router.refresh();
   }
 
-  // Sélection par longue pression (400 ms) : maintien → mode sélection + jeu marqué.
-  function startPress(g: Game, e: React.PointerEvent) {
-    if (pickMode) return;
-    pressStart.current = { x: e.clientX, y: e.clientY };
-    pressTimer.current = setTimeout(() => {
+  // Sélection par appui maintenu (400 ms) : maintien → mode sélection + jeu marqué.
+  // Robuste tactile : pointer events + fallback touch (vieux WebKit), cancel tardif
+  // du navigateur traité comme un maintien réussi (lib/press.ts).
+  function beginPress(g: Game, x: number, y: number) {
+    if (pickMode || pressRef.current?.active) return; // idempotent (pointer + touch pour un même toucher)
+    pressRef.current = new LongPress(() => {
       suppressClick.current = true; // le click qui suit le relâchement ne doit pas ouvrir la fiche
       setPickMode(true);
       toggle(g.id);
       navigator.vibrate?.(15);
-    }, 400);
+    });
+    pressRef.current.down(x, y);
   }
-  function cancelPress(e?: React.PointerEvent) {
-    // un déplacement du doigt (scroll) annule la pression ; un léger tremblement non
-    if (e && pressStart.current) {
-      const dx = e.clientX - pressStart.current.x, dy = e.clientY - pressStart.current.y;
-      if (Math.hypot(dx, dy) > 10) { pressStart.current = null; if (pressTimer.current) clearTimeout(pressTimer.current); return; }
-    }
-    if (pressTimer.current) clearTimeout(pressTimer.current);
+  function startPress(g: Game, e: React.PointerEvent) { beginPress(g, e.clientX, e.clientY); }
+  function startTouchPress(g: Game, e: React.TouchEvent) {
+    const t = e.touches[0];
+    if (t) beginPress(g, t.clientX, t.clientY);
   }
   function boxClick(g: Game) {
     if (suppressClick.current) { suppressClick.current = false; return; }
@@ -105,10 +104,13 @@ export default function ShelfClient({ night, players, games, users, plays, me }:
               <button key={g.id} role="listitem" className={`box ${selected.has(g.id) ? 'sel' : ''} ${FORMAT_SCALE[f] < 0.7 ? 'sm' : ''}`}
                       style={{ width: 96 * FORMAT_SCALE[f], height: 96 * FORMAT_SCALE[f] }}
                       onPointerDown={(e) => startPress(g, e)}
-                      onPointerUp={() => cancelPress()}
-                      onPointerLeave={() => cancelPress()}
-                      onPointerMove={(e) => cancelPress(e)}
-                      onPointerCancel={() => cancelPress()}
+                      onPointerMove={(e) => pressRef.current?.move(e.clientX, e.clientY)}
+                      onPointerUp={() => pressRef.current?.up()}
+                      onPointerLeave={() => pressRef.current?.up()}
+                      onPointerCancel={() => pressRef.current?.cancelAsPress()}
+                      onTouchStart={(e) => startTouchPress(g, e)}
+                      onTouchEnd={() => pressRef.current?.up()}
+                      onTouchCancel={() => pressRef.current?.cancelAsPress()}
                       onContextMenu={(e) => e.preventDefault()}
                       onClick={() => boxClick(g)}>
                 {selected.has(g.id) && <span className="selbadge">✓</span>}
