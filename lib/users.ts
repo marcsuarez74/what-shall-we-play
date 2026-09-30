@@ -21,7 +21,9 @@ export function getProfileStats(userId: number): { plays: number; nights: number
 export function setSticker(userId: number, sticker: unknown): { ok: true } | { error: string; status: number } {
   if (typeof sticker !== 'string' || !ALLOWED_STICKERS.includes(sticker))
     return { error: 'Sticker inconnu', status: 400 };
+  const prev = (getDb().prepare('SELECT avatar_path FROM users WHERE id = ?').get(userId) as { avatar_path: string | null }).avatar_path;
   getDb().prepare('UPDATE users SET sticker = ?, avatar_path = NULL WHERE id = ?').run(sticker, userId);
+  if (prev) { try { fs.unlinkSync(coverPathOnDisk(prev)); } catch { /* absent */ } }
   return { ok: true };
 }
 

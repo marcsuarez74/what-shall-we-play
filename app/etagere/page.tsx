@@ -18,6 +18,6 @@ export default async function Page() {
   }
   return <main className="page">
     <ShelfClient night={night} players={getNightPlayers(night.id)} games={getShelfGames(night.id)} users={users}
-                 plays={getPickCounts()} me={user} />
+                 plays={getPickCounts()} me={{ id: user.id, pseudo: user.pseudo, sticker: user.sticker, avatar_path: user.avatar_path }} />
   </main>;
 }

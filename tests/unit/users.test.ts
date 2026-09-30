@@ -81,4 +81,14 @@ describe('profil', () => {
     expect(avatarSrc({ avatar_path: null, sticker: '🦊' })).toBeNull();
     expect(setAvatar(u, fake, 'exe')).toEqual({ error: 'Format : jpg, png ou webp', status: 400 });
   });
+
+  it('revenir au sticker efface la photo de disque', () => {
+    const u = uid('p-av2');
+    const r = setAvatar(u, Buffer.from('xx'), 'jpg');
+    if (!('ok' in r)) throw new Error('upload refusé');
+    const p = r.path;
+    expect(setSticker(u, '🦊')).toEqual({ ok: true });
+    expect(fs.existsSync(path.join(process.env.DATA_DIR!, 'covers', p))).toBe(false);
+    expect((getDb().prepare('SELECT avatar_path FROM users WHERE id = ?').get(u) as { avatar_path: string | null }).avatar_path).toBeNull();
+  });
 });

@@ -14,7 +14,7 @@ versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 - **Sélection par longue pression** : maintenir une boîte 400 ms sur l'étagère entre en mode sélection (bandeau cuivre, toucher = ajouter/retirer, « Terminé » pour sortir) ; l'appui simple ouvre toujours la fiche.
 
 ### Modifié
-- **Codes secrets = 4 chiffres** à l'inscription, au changement et à la validation de suppression (saisie type PIN, clavier numérique, 4 cases) ; la connexion accepte les codes existants.
+- **Codes secrets = 4 chiffres** à l'inscription, au changement et à la validation de suppression (saisie type PIN, clavier numérique, 4 cases) ; la vérification à la connexion reste inchangée (bcrypt) et l'audit v1.2.0 confirme que les comptes existants utilisent déjà 4 chiffres.
 - API `GET/PATCH/DELETE /api/me`, `POST /api/me/avatar`, `POST /api/me/code` ; colonnes `users.sticker` / `users.avatar_path` (migrations idempotentes).
 
 ## [1.1.0] — 2026-09-30

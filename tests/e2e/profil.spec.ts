@@ -60,6 +60,36 @@ test('profil : changement de code effectif', async ({ page }) => {
   await page.waitForURL('/etagere');
 });
 
+test('avatar photo : chip ronde, aucun hash bcrypt dans la page, boîtes non sélectionnables', async ({ page }) => {
+  const pseudo = `photo-${Date.now()}`;
+  await registerAndStart(page, pseudo);
+  // PNG 1×1 (base64)
+  const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
+  const up = await page.request.post('/api/me/avatar', {
+    multipart: { avatar: { name: 'photo.png', mimeType: 'image/png', buffer: png } },
+  });
+  if (!up.ok()) throw new Error('upload avatar: ' + up.status() + ' ' + await up.text());
+  // un jeu pour avoir une boîte sur l'étagère
+  const gform = new FormData();
+  gform.set('title', 'Avec pochette'); gform.set('box_format', 'moyen');
+  const gp = await page.request.post('/api/games', { form: gform });
+  if (!gp.ok()) throw new Error('ajout jeu: ' + gp.status());
+  await page.goto('/etagere');
+  // C1 : aucun hash bcrypt ne doit fuiter dans le payload RSC
+  const html = await page.content();
+  expect(html).not.toContain('$2a$');
+  expect(html).not.toContain('$2b$');
+  // C2 : la photo s'affiche en 16px rond dans les chips
+  const chipImg = page.locator('.chip .chip-avatar').first();
+  await expect(chipImg).toBeVisible();
+  expect(await chipImg.evaluate((el) => getComputedStyle(el).width)).toBe('16px');
+  // I2 : la boîte n'ouvre pas la sélection/callout système au maintien
+  const box = page.locator('.box').first();
+  await box.scrollIntoViewIfNeeded();
+  const cs = await box.evaluate((el) => { const s = getComputedStyle(el); return { us: s.userSelect || s.webkitUserSelect, callout: s.webkitTouchCallout }; });
+  expect(cs.us === 'none' || cs.callout === 'none').toBe(true);
+});
+
 test('profil : suppression du compte puis connexion impossible', async ({ page }) => {
   const pseudo = `del-${Date.now()}`;
   await registerAndStart(page, pseudo);

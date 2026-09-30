@@ -305,6 +305,14 @@ input[type='file'] {
 }
 .pin input:focus { outline: none; border-color: var(--cuivre); }
 
+/* Sélection par longue pression — neutraliser la sélection/callout système sur le maintien */
+.box {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.box img { -webkit-touch-callout: none; -webkit-user-drag: none; }
+
 /* Bandeau du mode sélection (longue pression) */
 .pick-banner {
   position: sticky; top: 8px; z-index: 40;
@@ -856,7 +864,7 @@ input[type='file'] {
   position: relative;
 }
 
-.user-chip .chip-avatar {
+.chip-avatar {
   width: 16px; height: 16px; border-radius: 50%; object-fit: cover; display: inline-block;
 }
 
