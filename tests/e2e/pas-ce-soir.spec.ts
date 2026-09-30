@@ -105,9 +105,6 @@ test('étagère : spinner discret pendant le chargement des pochettes', async ({
   const context = await browser.newContext({ serviceWorkers: 'block' });
   const page = await context.newPage();
   await registerAndStart(page, `spin-${Date.now()}`);
-  const form = new FormData();
-  form.set('title', 'Pochette lente'); form.set('box_format', 'moyen');
-  form.set('cover', new File([makePng(8, 8)], 'cover.png', { type: 'image/png' }));
   const res = await page.request.post('/api/games', {
     multipart: {
       title: 'Pochette lente', box_format: 'moyen',
@@ -130,4 +127,43 @@ test('étagère : spinner discret pendant le chargement des pochettes', async ({
   await expect(page.locator('.box img.on')).toHaveCount(1);
   await expect(page.locator('.box-spin')).toHaveCount(0);
   await context.close();
+});
+
+test('étagère : recherche et filtres (joueurs pré-rempli, complexité, durée)', async ({ page }) => {
+  await registerAndStart(page, `flt-${Date.now()}`);
+  const add = async (title: string, fmt: string, meta: Record<string, string>) => {
+    const f = new FormData();
+    f.set('title', title); f.set('box_format', fmt);
+    for (const [k, v] of Object.entries(meta)) f.set(k, v);
+    const r = await page.request.post('/api/games', { form: f });
+    if (!r.ok()) throw new Error(`ajout ${title}: ${r.status()}`);
+  };
+  await add('Azul', 'moyen', { min_players: '2', max_players: '4', playtime_min: '35', weight: '1.7' });
+  await add('Terraforming Mars', 'grand', { min_players: '1', max_players: '5', playtime_min: '120', weight: '3.4' });
+  await add('Jaipur', 'petit', { min_players: '2', max_players: '2', playtime_min: '30', weight: '1.5' });
+  await page.goto('/etagere');
+
+  // Soirée solo → filtre joueurs pré-rempli à 1 : seul Mars (1–5) reste
+  const chip1 = page.locator('.fam[aria-label*="joueurs"] .fchip', { hasText: '1' });
+  await expect(chip1).toHaveClass(/on/);
+  await expect(page.locator('.shelf-block:not(.excluded-block) .box')).toHaveCount(1);
+  await expect(page.locator('.shelf-count')).toContainText('1 jeu sur 3');
+
+  // Désactiver le filtre joueurs → les 3 reviennent
+  await chip1.click();
+  await expect(page.locator('.shelf-block:not(.excluded-block) .box')).toHaveCount(3);
+
+  // Recherche insensible à la casse
+  await page.getByLabel('Rechercher un jeu').fill('azul');
+  await expect(page.locator('.shelf-block:not(.excluded-block) .box')).toHaveCount(1);
+  await page.getByLabel('Rechercher un jeu').fill('');
+
+  // Complexité lourde → Mars
+  await page.getByRole('button', { name: 'Lourde' }).click();
+  await expect(page.locator('.shelf-block:not(.excluded-block) .box')).toHaveCount(1);
+  await page.getByRole('button', { name: 'Lourde' }).click();
+
+  // Durée 60+ → Mars
+  await page.getByRole('button', { name: /60\+ min/ }).click();
+  await expect(page.locator('.shelf-block:not(.excluded-block) .box')).toHaveCount(1);
 });

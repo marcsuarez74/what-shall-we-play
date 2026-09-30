@@ -1548,6 +1548,23 @@ input[type='file'] {
 }
 .box.ex { border-style: dashed; filter: saturate(0.45) brightness(0.82); }
 
+/* Recherche + filtres de l'étagère */
+.shelf-controls { display: grid; gap: 8px; margin: 4px 0 10px; }
+.shelf-search {
+  width: 100%; padding: 11px 14px; border-radius: 12px; font: inherit; font-size: 14.5px;
+  background: var(--surface); border: 1.5px solid var(--doux); color: var(--creme);
+}
+.shelf-search:focus { outline: none; border-color: var(--cuivre); }
+.shelf-search::placeholder { color: var(--doux); }
+.fam { display: flex; gap: 6px; flex-wrap: wrap; }
+.fchip {
+  appearance: none; font: inherit; font-size: 12.5px; font-weight: 600;
+  padding: 6px 12px; border-radius: 999px; cursor: pointer;
+  background: var(--surface); border: 1.5px solid var(--doux); color: var(--doux-clair);
+}
+.fchip.on { background: var(--cuivre); border-color: var(--cuivre); color: #fff; }
+.shelf-count { color: var(--doux-clair); font-size: 12px; }
+
 /* Pilule « Pas ce soir » sur les cartes de bibliothèque */
 .lib-excl {
   appearance: none; border: 1.5px solid color-mix(in srgb, #b5533c 55%, transparent);

@@ -38,3 +38,12 @@ export function makePng(w: number, h: number): Buffer {
     chunk('IHDR', ihdr), chunk('IDAT', zlib.deflateSync(raw)), chunk('IEND', Buffer.alloc(0)),
   ]);
 }
+
+// Même image sous forme de File (upload multipart) — copie dans un ArrayBuffer
+// frais pour satisfaire BlobPart côté TS.
+export function pngFile(w = 8, h = 8): File {
+  const buf = makePng(w, h);
+  const u8 = new Uint8Array(buf.byteLength);
+  u8.set(buf);
+  return new File([u8], 'cover.png', { type: 'image/png' });
+}

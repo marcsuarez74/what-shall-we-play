@@ -4,10 +4,12 @@ import { useRouter } from 'next/navigation';
 import pkg from '../package.json';
 import { FORMATS, FORMAT_SCALE, FORMAT_LABEL, coverSrc, avatarSrc } from '@/lib/formats';
 import type { Game, Night, UserLite } from '@/lib/types';
+import { filterShelf, type ShelfFilters } from '@/lib/filters';
 import GameSheet from './GameSheet';
 import NightPicker from './NightPicker';
 import PlayerChip from './PlayerChip';
 import BoxImage from './BoxImage';
+import ShelfControls from './ShelfControls';
 
 export default function ShelfClient({ night, players, games, excludedGames, users, plays, me }: {
   night: Night; players: UserLite[]; games: Game[]; excludedGames: Game[]; users: UserLite[]; plays: Record<number, number>;
@@ -22,7 +24,11 @@ export default function ShelfClient({ night, players, games, excludedGames, user
   const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const suppressClick = useRef(false);
   const pressStart = useRef<{ x: number; y: number } | null>(null);
-  const byFormat = useMemo(() => FORMATS.map((f) => ({ f, list: games.filter((g) => g.box_format === f) })), [games]);
+  const [filters, setFilters] = useState<ShelfFilters>({
+    q: '', players: players.length ? Math.min(6, players.length) : null, weight: 'all', duration: 'all',
+  });
+  const filtered = useMemo(() => filterShelf(games, filters), [games, filters]);
+  const byFormat = useMemo(() => FORMATS.map((f) => ({ f, list: filtered.filter((g) => g.box_format === f) })), [filtered]);
   const excludedIds = useMemo(() => new Set(excludedGames.map((g) => g.id)), [excludedGames]);
 
   useEffect(() => {
@@ -108,6 +114,7 @@ export default function ShelfClient({ night, players, games, excludedGames, user
         </div>
         <div className="chips">{players.map((p) => <PlayerChip key={p.id} u={p} />)}</div>
       </section>
+      <ShelfControls filters={filters} setFilters={setFilters} visible={filtered.length} total={games.length} />
       {byFormat.map(({ f, list }) => list.length === 0 ? null : (
         <section key={f} className="shelf-block">
           <div className="row" role="list">
