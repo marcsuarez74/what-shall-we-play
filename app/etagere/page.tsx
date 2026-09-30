@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { getSessionUser } from '@/lib/session';
-import { getCurrentNight, getNightPlayers, getShelfGames, getExcludedGames } from '@/lib/nights';
+import { getActiveNight, getNightPlayers, getShelfGames, getExcludedGames } from '@/lib/nights';
 import { getPickCounts } from '@/lib/games';
 import NightPicker from '@/components/NightPicker';
 import ShelfClient from '@/components/ShelfClient';
@@ -11,7 +11,7 @@ export default async function Page() {
   const user = await getSessionUser();
   if (!user) redirect('/login');
   const users = getDb().prepare('SELECT id, pseudo, sticker, avatar_path FROM users ORDER BY pseudo COLLATE NOCASE').all() as UserLite[];
-  const night = getCurrentNight(user.id);
+  const night = getActiveNight(user.id);
   if (!night) {
     // Pas de soirée en cours : on choisit les joueurs présents (créateur pré-coché).
     return <main className="page"><NightPicker users={users} prechecked={[user.id]} /></main>;
