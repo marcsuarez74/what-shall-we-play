@@ -66,7 +66,8 @@ export default function GameSheet({ game, players, playsCount, inSelection, onTo
         {game.bgg_id != null && (
           <a className="bgg-link" href={`https://boardgamegeek.com/boardgame/${game.bgg_id}`}
              target="_blank" rel="noreferrer">
-            Voir sur BoardGameGeek ↗
+            <img className="bgg-logo" src="/logos/powered-by-bgg.svg" alt="Powered by BoardGameGeek" />
+            <span>Voir la fiche ↗</span>
           </a>
         )}
         <button type="button" className={`btn-copper ${inSelection ? 'is-sel' : ''}`} onClick={onToggle}>

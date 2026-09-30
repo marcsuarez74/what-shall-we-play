@@ -716,9 +716,21 @@ input[type='file'] {
 }
 
 .bgg-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
   color: var(--cuivre);
   font-size: 14px;
   font-weight: 600;
+}
+.bgg-logo {
+  height: 17px;
+  width: auto;
+  opacity: 0.85;
+  transition: opacity 0.15s ease;
+}
+.bgg-link:hover .bgg-logo { opacity: 1; }
+.bgg-link span {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
