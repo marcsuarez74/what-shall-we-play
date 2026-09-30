@@ -4,6 +4,14 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [1.2.1] — 2026-10-01
+
+### Corrigé
+- **Recadrage photo** : la photo s'affichait à sa taille naturelle (zoom implicite ×10 sur un téléphone) — l'affichage est désormais piloté par la même math que l'enregistrement (`lib/crop.ts`) : zoom minimum = photo cadrée juste, ce que tu vois = ce qui est enregistré.
+- **Recadrage fiable** : le bouton « Recadrer ✓ » attend que la photo soit décodée (plus d'écran figé si on valide trop vite sur une grosse photo).
+- **Caméra iOS** : les inputs photo ne sont plus en `display:none` (le `.click()` programmatique était aléatoire sur iOS).
+- **Long press tactile** : appui maintenu robuste sur iPhone — fallback `touchstart` (vieux WebKit sans pointer events), `touch-action: pan-x` sur les boîtes (le navigateur ne transforme plus un maintien en scroll/zoom), et un `pointercancel` tardif d'un maintien réel déclenche quand même la sélection (`lib/press.ts`).
+
 ## [1.2.0] — 2026-10-01
 
 ### Ajouté

@@ -381,10 +381,19 @@ input[type='file'] {
   width: min(320px, 100%); aspect-ratio: 1; position: relative; overflow: hidden;
   border: 2.5px solid var(--cuivre); border-radius: 6px; touch-action: none; background: #000;
 }
+/* La taille affichée est pilotée par le JS (naturelle × base × zoom, lib/crop.ts).
+   JAMAIS de min-width/min-height ici : une photo de téléphone s'afficherait à sa
+   taille naturelle → zoom implicite ×10 et cadrage enregistré ≠ cadrage vu. */
 .crop-sq img {
   position: absolute; left: 50%; top: 50%; max-width: none;
-  width: auto; height: auto; min-width: 100%; min-height: 100%;
-  user-select: none; -webkit-user-drag: none;
+  height: auto; user-select: none; -webkit-user-drag: none;
+}
+
+/* Input file rendu mais hors écran : `hidden` (display:none) rend le .click()
+   programmatique aléatoire sur iOS (la caméra ne s'ouvre pas à chaque fois). */
+.sr-input {
+  position: fixed; top: -40px; left: -40px; width: 1px; height: 1px;
+  opacity: 0; pointer-events: none;
 }
 .crop-foot { padding: 12px 20px 26px; text-align: center; color: var(--doux-clair); font-size: 12.5px; }
 .crop-foot label { display: block; margin-bottom: 6px; }
@@ -1011,6 +1020,10 @@ input[type='file'] {
   padding: 0;
   cursor: pointer;
   transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+  /* le navigateur ne revendique le toucher que pour le swipe horizontal de la rangée :
+     un maintien immobile n'est jamais transformé en scroll/zoom (long press fiable),
+     un glisser vertical reste géré par nos seuils JS */
+  touch-action: pan-x;
 }
 
 .box:active {

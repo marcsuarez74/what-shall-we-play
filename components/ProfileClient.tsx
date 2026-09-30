@@ -2,14 +2,12 @@
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { avatarSrc } from '@/lib/formats';
+import { cropDisplaySize, cropSourceRect, clampCropOffset, AVATAR_SIZE, CROP_SQ } from '@/lib/crop';
 import { ALLOWED_STICKERS } from '@/lib/stickers';
 import PinInput from './PinInput';
 
 type Me = { pseudo: string; sticker: string | null; avatar_path: string | null };
 type Stats = { plays: number; nights: number; games: number };
-
-// Recadrage carré : la zone de cadrage fait 320 px, la sortie 256×256.
-const SQ = 320;
 
 export default function ProfileClient({ me, stats }: { me: Me; stats: Stats }) {
   const router = useRouter();
@@ -19,6 +17,7 @@ export default function ProfileClient({ me, stats }: { me: Me; stats: Stats }) {
 
   // Photo → recadrage
   const [cropSrc, setCropSrc] = useState<string | null>(null);
+  const [nat, setNat] = useState<{ w: number; h: number } | null>(null); // dimensions réelles, connues au décodage
   const [zoom, setZoom] = useState(1);
   const [off, setOff] = useState({ x: 0, y: 0 });
   const drag = useRef<{ px: number; py: number; ox: number; oy: number } | null>(null);
@@ -41,17 +40,20 @@ export default function ProfileClient({ me, stats }: { me: Me; stats: Stats }) {
     e.target.value = '';
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = () => { setCropSrc(String(reader.result)); setZoom(1); setOff({ x: 0, y: 0 }); };
+    reader.onload = () => {
+      setCropSrc(String(reader.result));
+      setNat(null); // le recadrage attend le décodage réel (onLoad)
+      setZoom(1);
+      setOff({ x: 0, y: 0 });
+    };
     reader.readAsDataURL(file);
   }
 
-  function clampOffset(x: number, y: number, zoom: number) {
+  function onImgLoad() {
     const img = imgRef.current;
-    if (!img) return { x: 0, y: 0 };
-    const base = Math.max(SQ / img.naturalWidth, SQ / img.naturalHeight);
-    const mx = Math.max(0, (img.naturalWidth * base * zoom - SQ) / 2);
-    const my = Math.max(0, (img.naturalHeight * base * zoom - SQ) / 2);
-    return { x: Math.max(-mx, Math.min(mx, x)), y: Math.max(-my, Math.min(my, y)) };
+    if (!img || !img.naturalWidth) return;
+    setNat({ w: img.naturalWidth, h: img.naturalHeight });
+    setOff({ x: 0, y: 0 }); // cadré juste : centré, l'axe court remplit le carré
   }
 
   function onCropPointerDown(e: React.PointerEvent) {
@@ -59,37 +61,43 @@ export default function ProfileClient({ me, stats }: { me: Me; stats: Stats }) {
     drag.current = { px: e.clientX, py: e.clientY, ox: off.x, oy: off.y };
   }
   function onCropPointerMove(e: React.PointerEvent) {
-    if (!drag.current) return;
-    setOff(clampOffset(drag.current.ox + (e.clientX - drag.current.px), drag.current.oy + (e.clientY - drag.current.py), zoom));
+    if (!drag.current || !nat) return;
+    const c = clampCropOffset(nat.w, nat.h, zoom,
+      drag.current.ox + (e.clientX - drag.current.px),
+      drag.current.oy + (e.clientY - drag.current.py));
+    setOff(c);
   }
   function onCropPointerUp() { drag.current = null; }
   function onZoom(z: number) {
-    const img = imgRef.current;
     const nz = Math.max(1, Math.min(3, z));
     setZoom(nz);
-    if (img) setOff((o) => clampOffset(o.x, o.y, nz));
+    if (nat) setOff((o) => clampCropOffset(nat.w, nat.h, nz, o.x, o.y));
   }
 
   async function useCrop() {
     const img = imgRef.current;
     if (!img || !cropSrc) return;
     setBusy(true); setError(null);
-    const base = Math.max(SQ / img.naturalWidth, SQ / img.naturalHeight);
-    const scale = base * zoom;
-    const left = (SQ - img.naturalWidth * scale) / 2 + off.x;
-    const top = (SQ - img.naturalHeight * scale) / 2 + off.y;
-    const canvas = document.createElement('canvas');
-    canvas.width = 256; canvas.height = 256;
-    canvas.getContext('2d')!.drawImage(img, -left / scale, -top / scale, SQ / scale, SQ / scale, 0, 0, 256, 256);
-    const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, 'image/jpeg', 0.9));
-    if (!blob) { setBusy(false); setError('Recadrage impossible'); return; }
-    const form = new FormData();
-    form.set('avatar', new File([blob], 'avatar.jpg', { type: 'image/jpeg' }));
-    const res = await fetch('/api/me/avatar', { method: 'POST', body: form });
-    setBusy(false);
-    if (!res.ok) { setError((await res.json()).error); return; }
-    setCropSrc(null);
-    router.refresh();
+    try {
+      await img.decode().catch(() => undefined); // jamais de drawImage sur une image vide
+      if (!img.naturalWidth) { setError('Photo pas encore chargée — réessaie'); return; }
+      const r = cropSourceRect(img.naturalWidth, img.naturalHeight, zoom, off.x, off.y);
+      const canvas = document.createElement('canvas');
+      canvas.width = AVATAR_SIZE; canvas.height = AVATAR_SIZE;
+      canvas.getContext('2d')!.drawImage(img, r.sx, r.sy, r.sw, r.sh, 0, 0, AVATAR_SIZE, AVATAR_SIZE);
+      const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, 'image/jpeg', 0.9));
+      if (!blob) { setError('Recadrage impossible'); return; }
+      const form = new FormData();
+      form.set('avatar', new File([blob], 'avatar.jpg', { type: 'image/jpeg' }));
+      const res = await fetch('/api/me/avatar', { method: 'POST', body: form });
+      if (!res.ok) { setError((await res.json()).error); return; }
+      setCropSrc(null);
+      router.refresh();
+    } catch {
+      setError('Recadrage impossible');
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function chooseSticker(s: string) {
@@ -175,8 +183,8 @@ export default function ProfileClient({ me, stats }: { me: Me; stats: Stats }) {
               <button type="button" onClick={() => camRef.current?.click()}>📷 Prendre une photo</button>
               <button type="button" onClick={() => galRef.current?.click()}>🖼 Choisir dans la galerie</button>
             </div>
-            <input ref={camRef} type="file" accept="image/*" capture="environment" hidden onChange={openPhoto} />
-            <input ref={galRef} type="file" accept="image/*" hidden onChange={openPhoto} />
+            <input ref={camRef} type="file" accept="image/*" capture="environment" className="sr-input" onChange={openPhoto} />
+            <input ref={galRef} type="file" accept="image/*" className="sr-input" onChange={openPhoto} />
           </div>
         </div>
       )}
@@ -187,15 +195,16 @@ export default function ProfileClient({ me, stats }: { me: Me; stats: Stats }) {
           <div className="crop-head">
             <button type="button" aria-label="Annuler" onClick={() => setCropSrc(null)}>✕</button>
             <span>Recadre ta photo</span>
-            <button type="button" className="ok" disabled={busy} onClick={useCrop}>Recadrer ✓</button>
+            <button type="button" className="ok" disabled={busy || !nat} onClick={useCrop}>Recadrer ✓</button>
           </div>
           <div className="crop-zone">
             <div className="crop-sq"
                  onPointerDown={onCropPointerDown} onPointerMove={onCropPointerMove}
                  onPointerUp={onCropPointerUp} onPointerCancel={onCropPointerUp}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img ref={imgRef} src={cropSrc} alt="" draggable={false}
-                   style={{ transform: `translate(-50%, -50%) translate(${off.x}px, ${off.y}px) scale(${zoom})` }} />
+              <img ref={imgRef} src={cropSrc} alt="" draggable={false} onLoad={onImgLoad}
+                   style={{ width: nat ? cropDisplaySize(nat.w, nat.h, zoom).w : undefined,
+                            transform: `translate(-50%, -50%) translate(${off.x}px, ${off.y}px)` }} />
             </div>
           </div>
           <div className="crop-foot">
