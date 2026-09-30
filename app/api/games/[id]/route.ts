@@ -8,7 +8,7 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: 'Non connecté' }, { status: 401 });
   const res = deleteGame(user.id, Number((await params).id));
-  if (!res.ok) return NextResponse.json({ error: res.error }, { status: res.status });
+  if ('error' in res) return NextResponse.json({ error: res.error }, { status: res.status });
   return NextResponse.json({ ok: true });
 }
 
