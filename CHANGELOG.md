@@ -4,6 +4,14 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [1.3.0] — 2026-10-01
+
+### Ajouté
+- **« Pas ce soir »** : écarte un jeu du tirage de la soirée depuis la fiche (étagère) ou les cartes de bibliothèque — portée soirée seulement, de retour demain. Section « Écartés ce soir » en bas de l'étagère pour les remettre.
+- **Recherche et filtres sur l'étagère** : recherche (casse et accents ignorés), filtres joueurs (pré-rempli avec la soirée en cours), complexité (légère/moyenne/lourde) et durée (< 30 / 30–60 / 60+). Un jeu sans donnée n'est jamais écarté par un filtre.
+- **Badge « apporté par »** sur chaque boîte : sticker ou photo du propriétaire, en coin de boîte.
+- **Spinner discret** pendant le chargement des pochettes de l'étagère, fondu à l'arrivée.
+
 ## [1.2.1] — 2026-10-01
 
 ### Corrigé
