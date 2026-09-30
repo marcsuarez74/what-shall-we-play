@@ -39,8 +39,12 @@ test('navigation : onglets entre les pages, fiche depuis la bibliothèque, forma
   await expect(page.locator('.bottom-sheet')).not.toContainText('Ajouter à la sélection');
   await page.locator('.sheet-backdrop').click({ position: { x: 10, y: 10 } });
 
-  // Le format se change depuis la carte, l'étagère suit
+  // Le format se change depuis la carte, l'étagère suit (on attend la fin du PATCH :
+  // en CI, naviguer trop tôt rendait l'étagère avec l'ancien format)
+  const formatPatch = page.waitForResponse(
+    (r) => r.url().includes('/api/games/') && r.request().method() === 'PATCH' && r.ok());
   await card.getByLabel(/Format de boîte/).selectOption('petit');
+  await formatPatch;
   await page.getByRole('link', { name: 'Étagère' }).click();
 
   // Aucune pochette ne dépasse de sa boîte (photos portrait comprises)
