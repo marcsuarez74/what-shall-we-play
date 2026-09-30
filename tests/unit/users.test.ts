@@ -3,7 +3,10 @@ import { registerUser } from '@/lib/auth';
 import { createNight } from '@/lib/nights';
 import { createGame } from '@/lib/games';
 import { getDb } from '@/lib/db';
-import { getProfileStats, setSticker, ALLOWED_STICKERS, deleteAccount } from '@/lib/users';
+import fs from 'node:fs';
+import path from 'node:path';
+import { getProfileStats, setSticker, ALLOWED_STICKERS, deleteAccount, setAvatar } from '@/lib/users';
+import { avatarSrc } from '@/lib/formats';
 
 const uid = (p: string) => (registerUser(p, '1234') as { id: number }).id;
 const pick = (nightId: number, gameId: number, spinnerId: number) =>
@@ -61,5 +64,21 @@ describe('profil', () => {
     expect(cnt('SELECT COUNT(*) AS n FROM nights WHERE id = ?', nMarc)).toBe(0); // sa soirée créée part
     expect(cnt('SELECT COUNT(*) AS n FROM nights WHERE id = ?', nLea)).toBe(1); // la soirée de léa reste
     expect(cnt('SELECT COUNT(*) AS n FROM night_players WHERE night_id = ?', nLea)).toBe(1); // sans marc
+  });
+
+  it('setAvatar enregistre le fichier et remplace l ancien', () => {
+    const u = uid('p-av');
+    const fake = Buffer.from('fakejpg1');
+    const r1 = setAvatar(u, fake, 'jpg');
+    if (!('ok' in r1)) throw new Error('upload 1 refusé : ' + (('error' in r1) && r1.error));
+    expect((getDb().prepare('SELECT avatar_path FROM users WHERE id = ?').get(u) as { avatar_path: string }).avatar_path).toBe(r1.path);
+    expect(fs.existsSync(path.join(process.env.DATA_DIR!, 'covers', r1.path))).toBe(true);
+    const r2 = setAvatar(u, fake, 'png');
+    if (!('ok' in r2)) throw new Error('upload 2 refusé');
+    expect(fs.existsSync(path.join(process.env.DATA_DIR!, 'covers', r1.path))).toBe(false); // ancien effacé
+    expect((getDb().prepare('SELECT sticker FROM users WHERE id = ?').get(u) as { sticker: string | null }).sticker).toBeNull();
+    expect(avatarSrc({ avatar_path: r2.path, sticker: '🦊' })).toBe(`/api/cover/${r2.path}`);
+    expect(avatarSrc({ avatar_path: null, sticker: '🦊' })).toBeNull();
+    expect(setAvatar(u, fake, 'exe')).toEqual({ error: 'Format : jpg, png ou webp', status: 400 });
   });
 });

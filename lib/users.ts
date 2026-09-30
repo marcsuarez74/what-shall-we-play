@@ -2,7 +2,7 @@ import { getDb } from './db';
 import bcrypt from 'bcryptjs';
 import fs from 'node:fs';
 import { validateCode } from './auth';
-import { coverPathOnDisk } from './storage';
+import { saveCover, coverPathOnDisk } from './storage';
 import type { UserRow } from './types';
 
 // Stickers d'avatar : grille validée (maquette profil v3) — serveur n'accepte que ceux-ci.
@@ -59,4 +59,14 @@ export function deleteAccount(userId: number): { ok: true; removedGames: number 
   })();
   for (const f of files) { try { fs.unlinkSync(f); } catch { /* fichier déjà absent */ } }
   return { ok: true, removedGames };
+}
+
+const AVATAR_EXT = ['jpg', 'jpeg', 'png', 'webp'];
+export function setAvatar(userId: number, buf: Buffer, ext: string): { ok: true; path: string } | { error: string; status: number } {
+  if (!AVATAR_EXT.includes(ext)) return { error: 'Format : jpg, png ou webp', status: 400 };
+  const prev = (getDb().prepare('SELECT avatar_path FROM users WHERE id = ?').get(userId) as { avatar_path: string | null }).avatar_path;
+  const name = saveCover(buf, ext as 'jpg' | 'jpeg' | 'png' | 'webp');
+  getDb().prepare('UPDATE users SET avatar_path = ?, sticker = NULL WHERE id = ?').run(name, userId);
+  if (prev) { try { fs.unlinkSync(coverPathOnDisk(prev)); } catch { /* absent */ } }
+  return { ok: true, path: name };
 }
