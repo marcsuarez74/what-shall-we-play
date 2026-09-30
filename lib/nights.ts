@@ -40,13 +40,34 @@ export function getMyNights(userId: number): Night[] {
     ORDER BY n.played_at DESC, n.id DESC`)
     .all(userId, userId) as Night[];
 }
-export function getShelfGames(nightId: number): Game[] {
+export type ShelfGame = Game & {
+  owner_pseudo: string; owner_sticker: string | null; owner_avatar_path: string | null;
+};
+export function getShelfGames(nightId: number): ShelfGame[] {
   return getDb().prepare(`
-    SELECT DISTINCT g.* FROM games g
+    SELECT DISTINCT g.*, u.pseudo AS owner_pseudo, u.sticker AS owner_sticker, u.avatar_path AS owner_avatar_path
+    FROM games g
     JOIN night_players np ON np.user_id = g.owner_id
+    JOIN users u ON u.id = g.owner_id
     WHERE np.night_id = ?
+      AND g.id NOT IN (SELECT game_id FROM night_excludes WHERE night_id = ?)
     ORDER BY CASE g.box_format WHEN 'grand' THEN 0 WHEN 'moyen' THEN 1 WHEN 'petit' THEN 2 ELSE 3 END, g.title`)
-    .all(nightId) as Game[];
+    .all(nightId, nightId) as ShelfGame[];
+}
+export function excludeGame(nightId: number, gameId: number): void {
+  getDb().prepare('INSERT OR IGNORE INTO night_excludes (night_id, game_id) VALUES (?, ?)').run(nightId, gameId);
+}
+export function restoreGame(nightId: number, gameId: number): void {
+  getDb().prepare('DELETE FROM night_excludes WHERE night_id = ? AND game_id = ?').run(nightId, gameId);
+}
+export function getExcludedGameIds(nightId: number): number[] {
+  return (getDb().prepare('SELECT game_id FROM night_excludes WHERE night_id = ? ORDER BY game_id')
+    .all(nightId) as { game_id: number }[]).map((r) => r.game_id);
+}
+export function isGameOnShelf(nightId: number, gameId: number): boolean {
+  return !!getDb().prepare(`
+    SELECT 1 FROM games g JOIN night_players np ON np.user_id = g.owner_id
+    WHERE g.id = ? AND np.night_id = ?`).get(gameId, nightId);
 }
 export function getNightPicks(nightId: number): (Pick & { title: string; pseudo: string })[] {
   return getDb().prepare(`
