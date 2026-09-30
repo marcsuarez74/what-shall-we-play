@@ -10,6 +10,7 @@ import NightPicker from './NightPicker';
 import PlayerChip from './PlayerChip';
 import BoxImage from './BoxImage';
 import ShelfControls from './ShelfControls';
+import OwnerBadge from './OwnerBadge';
 
 export default function ShelfClient({ night, players, games, excludedGames, users, plays, me }: {
   night: Night; players: UserLite[]; games: Game[]; excludedGames: Game[]; users: UserLite[]; plays: Record<number, number>;
@@ -130,6 +131,9 @@ export default function ShelfClient({ night, players, games, excludedGames, user
                       onClick={() => boxClick(g)}>
                 {selected.has(g.id) && <span className="selbadge">✓</span>}
                 <BoxImage game={g} />
+                {g.owner_pseudo && (
+                  <OwnerBadge owner={{ pseudo: g.owner_pseudo, sticker: g.owner_sticker ?? null, avatar_path: g.owner_avatar_path ?? null }} />
+                )}
               </button>
             ))}
           </div>
@@ -145,6 +149,9 @@ export default function ShelfClient({ night, players, games, excludedGames, user
               <button key={g.id} role="listitem" className="box ex"
                       onClick={() => setDetail(g)}>
                 <BoxImage game={g} />
+                {g.owner_pseudo && (
+                  <OwnerBadge owner={{ pseudo: g.owner_pseudo, sticker: g.owner_sticker ?? null, avatar_path: g.owner_avatar_path ?? null }} />
+                )}
               </button>
             ))}
           </div>

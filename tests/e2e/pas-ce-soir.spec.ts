@@ -167,3 +167,20 @@ test('étagère : recherche et filtres (joueurs pré-rempli, complexité, durée
   await page.getByRole('button', { name: /60\+ min/ }).click();
   await expect(page.locator('.shelf-block:not(.excluded-block) .box')).toHaveCount(1);
 });
+
+test('étagère : badge « apporté par » sur les boîtes', async ({ page }) => {
+  const pseudo = `bdg-${Date.now()}`;
+  await registerAndStart(page, pseudo);
+  // sticker du propriétaire (pas de photo : c'est lui qui doit apparaître)
+  await page.request.patch('/api/me', { data: { sticker: '🦊' } });
+  const f = new FormData();
+  f.set('title', 'Avec badge'); f.set('box_format', 'moyen');
+  await page.request.post('/api/games', { form: f });
+  await page.goto('/etagere');
+
+  const badge = page.locator('.owner-badge').first();
+  await expect(badge).toBeVisible();
+  await expect(badge).toHaveAttribute('title', `Apporté par ${pseudo}`);
+  await expect(badge).toContainText('🦊');
+  expect(await badge.evaluate((el) => getComputedStyle(el).width)).toBe('16px');
+});
