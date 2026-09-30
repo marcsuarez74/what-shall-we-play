@@ -278,6 +278,33 @@ input[type='file'] {
   text-align: center;
 }
 
+/* Saisie du code secret — 4 chiffres, type PIN */
+.pin-label {
+  display: block;
+  color: var(--doux-clair);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+.pin { display: flex; gap: 9px; }
+.pin input {
+  flex: 1;
+  min-width: 0;
+  height: 60px;
+  text-align: center;
+  font-size: 24px;
+  font-weight: 600;
+  font-family: var(--font-ui);
+  color: var(--creme);
+  background: var(--noyer);
+  border: 1.5px solid var(--doux);
+  border-radius: 10px;
+  padding: 0;
+}
+.pin input:focus { outline: none; border-color: var(--cuivre); }
+
 /* ---------- Ajout de jeu ---------- */
 .add-form {
   display: flex;
