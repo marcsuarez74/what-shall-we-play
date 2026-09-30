@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import pkg from '../package.json';
 import { FORMATS, FORMAT_SCALE, FORMAT_LABEL, coverSrc } from '@/lib/formats';
 import type { Game, Night, UserLite } from '@/lib/types';
 import GameSheet from './GameSheet';
@@ -51,6 +52,7 @@ export default function ShelfClient({ night, players, games, users, plays }: {
           <summary aria-label="Menu utilisateur">{initial} ▾</summary>
           <div className="user-menu">
             <button type="button" onClick={logout}>Se déconnecter</button>
+            <span className="user-version">v{pkg.version}</span>
           </div>
         </details>
       </header>
