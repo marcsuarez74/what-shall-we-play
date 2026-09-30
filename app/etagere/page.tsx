@@ -17,6 +17,7 @@ export default async function Page() {
     return <main className="page"><NightPicker users={users} prechecked={[user.id]} /></main>;
   }
   return <main className="page">
-    <ShelfClient night={night} players={getNightPlayers(night.id)} games={getShelfGames(night.id)} users={users} plays={getPickCounts()} />
+    <ShelfClient night={night} players={getNightPlayers(night.id)} games={getShelfGames(night.id)} users={users}
+                 plays={getPickCounts()} me={user} />
   </main>;
 }

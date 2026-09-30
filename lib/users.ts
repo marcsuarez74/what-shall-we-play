@@ -3,13 +3,10 @@ import bcrypt from 'bcryptjs';
 import fs from 'node:fs';
 import { validateCode } from './auth';
 import { saveCover, coverPathOnDisk } from './storage';
+import { ALLOWED_STICKERS } from './stickers';
 import type { UserRow } from './types';
 
-// Stickers d'avatar : grille validée (maquette profil v3) — serveur n'accepte que ceux-ci.
-export const ALLOWED_STICKERS = [
-  '🎲','🃏','♟️','🧩','🎯','🏆','⚔️','🐉','🚀','🌙','🍀','🦊','🐙','🪐','🎩','👑',
-  '🤖','🦖','🌴','⛺','🔮','🧲','🎪','🦉','🐝','⭐','🎰','🧸','🛸','🐢','⚡','🏰',
-];
+export { ALLOWED_STICKERS };
 
 export function getProfileStats(userId: number): { plays: number; nights: number; games: number } {
   const db = getDb();

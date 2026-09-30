@@ -2,13 +2,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import pkg from '../package.json';
-import { FORMATS, FORMAT_SCALE, FORMAT_LABEL, coverSrc } from '@/lib/formats';
+import { FORMATS, FORMAT_SCALE, FORMAT_LABEL, coverSrc, avatarSrc } from '@/lib/formats';
 import type { Game, Night, UserLite } from '@/lib/types';
 import GameSheet from './GameSheet';
 import NightPicker from './NightPicker';
 
-export default function ShelfClient({ night, players, games, users, plays }: {
+export default function ShelfClient({ night, players, games, users, plays, me }: {
   night: Night; players: UserLite[]; games: Game[]; users: UserLite[]; plays: Record<number, number>;
+  me: UserLite;
 }) {
   const router = useRouter();
   const [selected, setSelected] = useState<Set<number>>(new Set());
@@ -42,15 +43,20 @@ export default function ShelfClient({ night, players, games, users, plays }: {
     router.refresh();
   }
 
-  const initial = (players.find((p) => p.id === night.creator_id)?.pseudo ?? '?')[0].toUpperCase();
+  const initial = (me.pseudo ?? '?')[0].toUpperCase();
+  const myAvatar = avatarSrc(me);
 
   return (
     <div className="shelf-screen">
       <header className="shelf-header">
         <h1>L&apos;étagère</h1>
         <details className="user-chip" ref={menuRef}>
-          <summary aria-label="Menu utilisateur">{initial} ▾</summary>
+          <summary aria-label="Menu utilisateur">
+            {myAvatar ? <img className="chip-avatar" src={myAvatar} alt="" /> : <span aria-hidden="true">{me.sticker ?? '🎲'}</span>}
+            {' '}{initial} ▾
+          </summary>
           <div className="user-menu">
+            <a href="/profil">Mon profil</a>
             <button type="button" onClick={logout}>Se déconnecter</button>
             <span className="user-version">v{pkg.version}</span>
           </div>
