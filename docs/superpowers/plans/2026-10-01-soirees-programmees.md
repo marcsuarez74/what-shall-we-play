@@ -45,7 +45,7 @@
 **Interfaces:**
 - Produces: `excludeGame(nightId: number, gameId: number): void`, `restoreGame(nightId: number, gameId: number): void`, `getExcludedGameIds(nightId: number): number[]` ; `getShelfGames` ne renvoie PLUS les jeux exclus et enrichit chaque jeu avec `owner_pseudo: string`, `owner_sticker: string | null`, `owner_avatar_path: string | null` (type `Game` étendu).
 
-- [ ] **Step 1: Test qui échoue**
+- [x] **Step 1: Test qui échoue**
 
 ```ts
 // tests/unit/excludes.test.ts
@@ -99,8 +99,8 @@ describe('pas ce soir', () => {
 ```
 (Nettoyer le test 3 : supprimer la ligne placeholder avant commit — ne garder que la requête `n`.)
 
-- [ ] **Step 2: Vérifier l'échec** — `npx vitest run tests/unit/excludes.test.ts` → FAIL (exports absents).
-- [ ] **Step 3: Implémenter**
+- [x] **Step 2: Vérifier l'échec** — `npx vitest run tests/unit/excludes.test.ts` → FAIL (exports absents).
+- [x] **Step 3: Implémenter**
 
 ```sql
 -- lib/db.ts : dans SCHEMA, nouvelle table :
@@ -136,8 +136,8 @@ export function getExcludedGameIds(nightId: number): number[] {
 ```
 (`lib/types.ts` : `export interface Game { … owner_pseudo?: string; owner_sticker?: string | null; owner_avatar_path?: string | null; }`)
 
-- [ ] **Step 4: PASS** — suite unitaire complète.
-- [ ] **Step 5: Commit** — `feat: night_excludes — étagère filtrée par nuit + propriétaire exposé`
+- [x] **Step 4: PASS** — suite unitaire complète.
+- [x] **Step 5: Commit** — `feat: night_excludes — étagère filtrée par nuit + propriétaire exposé`
 
 ### Task 2: API /api/nights/[id]/excludes
 
@@ -149,7 +149,7 @@ export function getExcludedGameIds(nightId: number): number[] {
 - POST body `{ gameId: number; excluded: boolean }` ; 401 hors session ; 403 si `!userCanAccessNight(user.id, nightId)` ; 400 si le jeu n'est pas sur l'étagère de la nuit (pas propriétaire d'un participant).
 - Réponse `{ ok: true }`.
 
-- [ ] **Step 1: Test du garde applicatif (lib-level, pattern repo)**
+- [x] **Step 1: Test du garde applicatif (lib-level, pattern repo)**
 
 ```ts
 it('on n exclut pas un jeu hors de l étagère de la nuit', () => {
@@ -167,7 +167,7 @@ it('on n exclut pas un jeu hors de l étagère de la nuit', () => {
 });
 ```
 
-- [ ] **Step 2: Implémenter la route**
+- [x] **Step 2: Implémenter la route**
 
 ```ts
 // app/api/nights/[id]/excludes/route.ts
@@ -195,7 +195,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 }
 ```
 
-- [ ] **Step 3: PASS + commit** — `feat: API exclusion de jeu pour une soirée`
+- [x] **Step 3: PASS + commit** — `feat: API exclusion de jeu pour une soirée`
 
 ### Task 3: « Pas ce soir » dans la fiche + section Écartés (étagère)
 
@@ -208,9 +208,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 - `GameSheet` reçoit `nightId`, `excluded: boolean`, `onToggleExcluded(): void` — bouton ghost rouge « Pas ce soir — écarte du tirage » / « ↩ Remettre ce soir ».
 - `ShelfClient` reçoit `excludedGames: Game[]` (même enrichi propriétaire) — section « Écartés ce soir (N) » sous les blocs, boîtes `.box.ex`, tap → fiche (avec bouton remettre). Le toggle appelle POST `/api/nights/[id]/excludes` puis `router.refresh()`.
 
-- [ ] **Step 1: E2E qui échoue** — créer un jeu, ouvrir sa fiche, cliquer « Pas ce soir » → la boîte quitte les blocs et apparaît dans « Écartés ce soir (1) » ; depuis la fiche écartée, « Remettre ce soir » la restitue ; assertion sur le compteur `Sélection` inchangée et l'absence de la boîte dans les blocs (`locator('.shelf-block .box', { hasTitle })` count 0 puis section `.excluded-row .box` count 1).
-- [ ] **Step 2: Implémenter** (fiche + section + refresh).
-- [ ] **Step 3: PASS + commit** — `feat: « Pas ce soir » depuis la fiche + section écartés`
+- [x] **Step 1: E2E qui échoue** — créer un jeu, ouvrir sa fiche, cliquer « Pas ce soir » → la boîte quitte les blocs et apparaît dans « Écartés ce soir (1) » ; depuis la fiche écartée, « Remettre ce soir » la restitue ; assertion sur le compteur `Sélection` inchangée et l'absence de la boîte dans les blocs (`locator('.shelf-block .box', { hasTitle })` count 0 puis section `.excluded-row .box` count 1).
+- [x] **Step 2: Implémenter** (fiche + section + refresh).
+- [x] **Step 3: PASS + commit** — `feat: « Pas ce soir » depuis la fiche + section écartés`
 
 ### Task 4: « Pas ce soir » dans la bibliothèque
 
@@ -221,8 +221,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 **Interfaces:**
 - La page bibliothèque reçoit `activeNightId: number | null` et `excludedIds: number[]` ; chaque carte affiche la pilule « Pas ce soir » / « ✓ Écarté ce soir » (uniquement si `activeNightId`), même POST + `router.refresh()`.
 
-- [ ] **Step 1: E2E** — bibliothèque : pilule visible, clic → état « ✓ Écarté ce soir », le jeu quitte l'étagère (vérif croisée via `page.goto('/etagere')`).
-- [ ] **Step 2: Implémenter. Step 3: PASS + commit** — `feat: « Pas ce soir » sur les cartes de bibliothèque`
+- [x] **Step 1: E2E** — bibliothèque : pilule visible, clic → état « ✓ Écarté ce soir », le jeu quitte l'étagère (vérif croisée via `page.goto('/etagere')`).
+- [x] **Step 2: Implémenter. Step 3: PASS + commit** — `feat: « Pas ce soir » sur les cartes de bibliothèque`
 
 ### Task 5: Recherche + filtres (client) sur l'étagère
 
@@ -235,7 +235,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 - Produces: `filterShelf(games: Game[], opts: { q: string; players: number | null; weight: 'all' | 'leger' | 'moyen' | 'lourd'; duration: 'all' | 'court' | 'moyen' | 'long' }): Game[]` (weight : légère < 2, moyenne [2,3[, lourde ≥ 3 ; duration : court < 30, moyen [30,60], long > 60 — `null` playtime passe tous les filtres durée).
 - `ShelfControls` : barre recherche + chips (joueurs 1..5, complexité, durée — un choix par famille, toggle pour désactiver). Joueurs pré-rempli avec `players.length`. Compteur « N jeux sur M disponibles ce soir ».
 
-- [ ] **Step 1: Tests purs**
+- [x] **Step 1: Tests purs**
 
 ```ts
 // tests/unit/filters.test.ts
@@ -253,9 +253,9 @@ it('durée courte (<30) : 30 min inclus dans moyen', () => expect(filterShelf(ba
 it('sans playtime, la durée ne filtre pas', () => expect(filterShelf([g({ id: 4, playtime_min: null })], { q: '', players: null, weight: 'all', duration: 'court' }).map((x) => x.id)).toEqual([4]));
 ```
 
-- [ ] **Step 2: Implémenter lib + composant + intégration ShelfClient.** CSS chips `.fchip` (cuivre quand actif).
-- [ ] **Step 3: E2E** — pré-filtre joueurs visible (chips actifs), recherche « azul » → 1 boîte, compteur correct.
-- [ ] **Step 4: PASS + commit** — `feat: recherche et filtres sur l étagère`
+- [x] **Step 2: Implémenter lib + composant + intégration ShelfClient.** CSS chips `.fchip` (cuivre quand actif).
+- [x] **Step 3: E2E** — pré-filtre joueurs visible (chips actifs), recherche « azul » → 1 boîte, compteur correct.
+- [x] **Step 4: PASS + commit** — `feat: recherche et filtres sur l étagère`
 
 ### Task 6: Badge « apporté par » sur les boîtes
 
@@ -266,12 +266,12 @@ it('sans playtime, la durée ne filtre pas', () => expect(filterShelf([g({ id: 4
 **Interfaces:**
 - Boîte : petit rond 16px coin bas-droit — `avatarSrc(owner)` sinon `owner.sticker ?? '♟'` ; `title="Apporté par {pseudo}"`.
 
-- [ ] **Step 1: Implémenter + E2E** (assert `getComputedStyle` 16px + title).
-- [ ] **Step 2: PASS + commit** — `feat: badge « apporté par » sur les boîtes`
+- [x] **Step 1: Implémenter + E2E** (assert `getComputedStyle` 16px + title).
+- [x] **Step 2: PASS + commit** — `feat: badge « apporté par » sur les boîtes`
 
 ### Task 7: Version 1.3.0 + PR
 
-- [ ] Bump `package.json` 1.3.0, CHANGELOG (`### Ajouté` : pas ce soir, recherche/filtres, badge propriétaire ; `### Modifié` : étagère filtrée par exclusions). Full suite verte. Commit + PR + CI.
+- [x] Bump `package.json` 1.3.0, CHANGELOG (`### Ajouté` : pas ce soir, recherche/filtres, badge propriétaire ; `### Modifié` : étagère filtrée par exclusions). Full suite verte. Commit + PR + CI.
 
 ---
 
@@ -287,8 +287,8 @@ it('sans playtime, la durée ne filtre pas', () => expect(filterShelf([g({ id: 4
 - Produces: `getActiveNight(userId)` remplace `getCurrentNight` (nuit datée aujourd'hui où je suis créateur **ou joueur**) ; `getPlannedNights(userId): Night[]` (played_at > aujourd'hui, créateur ou joueur) ; `Night.start_time?: string | null` ; `createNight(creatorId, playerIds, opts?: { playedAt?: string; startTime?: string | null })`.
 - Jour J automatique : une nuit programmée datée aujourd'hui EST la nuit active (aucun état à muter).
 
-- [ ] **Step 1: Tests** — programmée demain → pas dans l'étagère du jour mais dans `getPlannedNights` des deux participants ; reprogrammée aujourd'hui → devient la nuit active ; `getActiveNight` pour un simple joueur (non créateur).
-- [ ] **Step 2: Implémenter** — `getActiveNight` :
+- [x] **Step 1: Tests** — programmée demain → pas dans l'étagère du jour mais dans `getPlannedNights` des deux participants ; reprogrammée aujourd'hui → devient la nuit active ; `getActiveNight` pour un simple joueur (non créateur).
+- [x] **Step 2: Implémenter** — `getActiveNight` :
 
 ```ts
 export function getActiveNight(userId: number): Night | null {
@@ -299,7 +299,7 @@ export function getActiveNight(userId: number): Night | null {
     ORDER BY n.id DESC LIMIT 1`).get(userId, userId) as Night | undefined) ?? null;
 }
 ```
-- [ ] **Step 3: PASS + commit** — `feat: soirées programmées (schéma + nuit active généralisée)`
+- [x] **Step 3: PASS + commit** — `feat: soirées programmées (schéma + nuit active généralisée)`
 
 ### Task 9: API + QG Soirées (3 sections + programmation)
 
@@ -311,8 +311,8 @@ export function getActiveNight(userId: number): Night | null {
 - Page Soirées : « Ce soir » (nuit active), « Programmées » (cartes : date longue fr, heure, chips joueurs, bouton « 💬 Inviter sur WhatsApp » → Task 11), « Historique ». Bouton « ＋ Programmer une soirée » → sheet : date (min = demain), heure, joueurs cochés (NightPicker réutilisé ou liste simple) → POST → refresh.
 - `getMyNights` reste pour l'historique (filtrer played_at ≤ aujourd'hui).
 
-- [ ] **Step 1: E2E** — programmer demain 20h avec 2 joueurs → carte visible dans Programmées ; **elle n'apparaît pas sur l'étagère** ; reprogrammer aujourd'hui → l'étagère l'utilise comme soirée en cours (test du jour J).
-- [ ] **Step 2: Implémenter. Step 3: PASS (toute la suite — garde-fou NightPicker) + commit** — `feat: QG soirées — programmation avec date/heure`
+- [x] **Step 1: E2E** — programmer demain 20h avec 2 joueurs → carte visible dans Programmées ; **elle n'apparaît pas sur l'étagère** ; reprogrammer aujourd'hui → l'étagère l'utilise comme soirée en cours (test du jour J).
+- [x] **Step 2: Implémenter. Step 3: PASS (toute la suite — garde-fou NightPicker) + commit** — `feat: QG soirées — programmation avec date/heure`
 
 ### Task 10: Composition des messages (lib pure)
 
@@ -327,8 +327,8 @@ export function getActiveNight(userId: number): Night | null {
   `🎲 {title} a été tiré au sort !\n👉 {ownerPseudo} ramène son jeu\n🕗 On attend {waiting.join(', ')}{time ? ' — ce soir à ' + time : ''}\n🔗 etagere.marc-suarez.fr`
 - `shareMessage(text: string): Promise<'share' | 'wa.me'>` (client) : `navigator.share({ text })` si dispo, sinon `window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank')`.
 
-- [ ] **Step 1: Tests** (textes exacts, jointure « A, B et C » pour 3+, cas 1 seul, heure absente).
-- [ ] **Step 2: Implémenter. Step 3: PASS + commit** — `feat: composition des messages WhatsApp`
+- [x] **Step 1: Tests** (textes exacts, jointure « A, B et C » pour 3+, cas 1 seul, heure absente).
+- [x] **Step 2: Implémenter. Step 3: PASS + commit** — `feat: composition des messages WhatsApp`
 
 ### Task 11: Bouton annonce au verdict + invitation sur cartes programmées
 
@@ -339,12 +339,12 @@ export function getActiveNight(userId: number): Night | null {
 **Interfaces:**
 - Le verdict reçoit du serveur : `ownerPseudo`, `waitingPseudos`, `startTime` — composition côté client au clic.
 
-- [ ] **Step 1: E2E** — tirage d'un jeu possédé par marc avec léa et thibault présents → clic → `navigator.share` appelé avec message contenant titre + « marc ramène son jeu » + « On attend léa et thibault ».
-- [ ] **Step 2: Implémenter. Step 3: PASS + commit** — `feat: annonce WhatsApp au verdict + invitations`
+- [x] **Step 1: E2E** — tirage d'un jeu possédé par marc avec léa et thibault présents → clic → `navigator.share` appelé avec message contenant titre + « marc ramène son jeu » + « On attend léa et thibault ».
+- [x] **Step 2: Implémenter. Step 3: PASS + commit** — `feat: annonce WhatsApp au verdict + invitations`
 
 ### Task 12: Version 1.4.0 + PR
 
-- [ ] Bump + CHANGELOG (soirées programmées, QG, annonce WhatsApp, nuit active pour les participants). Suites vertes. PR + CI.
+- [x] Bump + CHANGELOG (soirées programmées, QG, annonce WhatsApp, nuit active pour les participants). Suites vertes. PR + CI.
 
 ## Self-Review
 
