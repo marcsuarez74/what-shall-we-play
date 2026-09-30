@@ -1522,3 +1522,14 @@ input[type='file'] {
   text-transform: uppercase; letter-spacing: 0.06em; padding: 0 4px;
 }
 .box.ex { border-style: dashed; filter: saturate(0.45) brightness(0.82); }
+
+/* Pilule « Pas ce soir » sur les cartes de bibliothèque */
+.lib-excl {
+  appearance: none; border: 1.5px solid color-mix(in srgb, #b5533c 55%, transparent);
+  background: transparent; color: #d98a76; font: inherit; font-size: 11.5px; font-weight: 600;
+  border-radius: 999px; padding: 5px 10px; cursor: pointer; white-space: nowrap;
+}
+.lib-excl.on {
+  border-style: dashed;
+  background: color-mix(in srgb, #b5533c 14%, transparent);
+}
