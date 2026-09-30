@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Night, UserLite } from '@/lib/types';
+import PlayerChip from './PlayerChip';
 
 export default function NightPicker({ users, prechecked, night, onClose }: {
   users: UserLite[];
@@ -45,7 +46,7 @@ export default function NightPicker({ users, prechecked, night, onClose }: {
           <li key={u.id}>
             <label>
               <input type="checkbox" checked={checked.has(u.id)} onChange={() => toggle(u.id)} />
-              <span>🎲 {u.pseudo}</span>
+              <span><PlayerChip u={u} /></span>
             </label>
           </li>
         ))}

@@ -23,7 +23,7 @@ export function setNightPlayers(nightId: number, playerIds: number[]): void {
 }
 export function getNightPlayers(nightId: number): UserLite[] {
   return getDb().prepare(`
-    SELECT u.id, u.pseudo FROM night_players np JOIN users u ON u.id = np.user_id
+    SELECT u.id, u.pseudo, u.sticker, u.avatar_path FROM night_players np JOIN users u ON u.id = np.user_id
     WHERE np.night_id = ? ORDER BY u.pseudo`).all(nightId) as UserLite[];
 }
 export function userCanAccessNight(userId: number, nightId: number): boolean {

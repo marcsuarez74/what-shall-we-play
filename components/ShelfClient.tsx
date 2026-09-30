@@ -6,6 +6,7 @@ import { FORMATS, FORMAT_SCALE, FORMAT_LABEL, coverSrc, avatarSrc } from '@/lib/
 import type { Game, Night, UserLite } from '@/lib/types';
 import GameSheet from './GameSheet';
 import NightPicker from './NightPicker';
+import PlayerChip from './PlayerChip';
 
 export default function ShelfClient({ night, players, games, users, plays, me }: {
   night: Night; players: UserLite[]; games: Game[]; users: UserLite[]; plays: Record<number, number>;
@@ -67,7 +68,7 @@ export default function ShelfClient({ night, players, games, users, plays, me }:
           <span className="night-label">SOIRÉE EN COURS</span>
           <button type="button" className="link-btn" onClick={() => setEditingNight(true)}>modifier</button>
         </div>
-        <div className="chips">{players.map((p) => <span key={p.id} className="chip">🎲 {p.pseudo}</span>)}</div>
+        <div className="chips">{players.map((p) => <PlayerChip key={p.id} u={p} />)}</div>
       </section>
       {byFormat.map(({ f, list }) => list.length === 0 ? null : (
         <section key={f} className="shelf-block">

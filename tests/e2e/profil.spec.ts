@@ -23,8 +23,11 @@ test('profil : sticker choisi visible sur l avatar et dans les chips', async ({ 
   await page.getByRole('button', { name: "Changer d'avatar" }).click();
   await page.getByRole('dialog', { name: 'Choisir un sticker' }).getByRole('button', { name: '🦊' }).click();
   await expect(page.locator('.avatar')).toContainText('🦊');
-  // Menu utilisateur : lien Mon profil présent
+
+  // Le sticker remplace le dé dans les chips de l'étagère
   await page.goto('/etagere');
+  await expect(page.locator('.chip', { hasText: pseudo })).toContainText('🦊');
+  // Menu utilisateur : lien Mon profil présent
   await page.getByLabel('Menu utilisateur').click();
   await expect(page.getByRole('link', { name: 'Mon profil' })).toBeVisible();
 });
