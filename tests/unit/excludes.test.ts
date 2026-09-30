@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { registerUser } from '@/lib/auth';
-import { createNight, getShelfGames, excludeGame, restoreGame, getExcludedGameIds } from '@/lib/nights';
+import { createNight, getShelfGames, excludeGame, restoreGame, getExcludedGameIds, isGameOnShelf } from '@/lib/nights';
 import { createGame } from '@/lib/games';
 import { getDb } from '@/lib/db';
 
@@ -42,5 +42,15 @@ describe('pas ce soir', () => {
     expect(row?.owner_pseudo).toBe('x-owner');
     expect(row?.owner_sticker).toBe('🦊');
     expect(row?.owner_avatar_path).toBeNull();
+  });
+
+  it('garde : on n’exclut pas un jeu hors de l’étagère de la nuit', () => {
+    const marc = uid('x-garde');
+    const autre = uid('x-garde-autre');
+    const n = createNight(marc, [marc]);
+    const mien = createGame(marc, { title: 'Sur l’étagère', box_format: 'petit' });
+    const lointain = createGame(autre, { title: 'Loin', box_format: 'petit' });
+    expect(isGameOnShelf(n, mien)).toBe(true);
+    expect(isGameOnShelf(n, lointain)).toBe(false); // le handler refusera (400)
   });
 });
