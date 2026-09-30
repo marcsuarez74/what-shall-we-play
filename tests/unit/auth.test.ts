@@ -1,6 +1,23 @@
 import { describe, it, expect } from 'vitest';
-import { registerUser, verifyLogin, createSession, getUserByToken } from '@/lib/auth';
+import { registerUser, verifyLogin, createSession, getUserByToken, validateCode } from '@/lib/auth';
+import { changeCode } from '@/lib/users';
 import { getDb } from '@/lib/db';
+
+describe('code à 4 chiffres', () => {
+  it('accepte 4 chiffres', () => expect(validateCode('1234')).toBeNull());
+  it('rejette lettres', () => expect(validateCode('abcd')).toMatch('4 chiffres'));
+  it('rejette 3 chiffres', () => expect(validateCode('123')).toMatch('4 chiffres'));
+  it('rejette 5 chiffres', () => expect(validateCode('12345')).toMatch('4 chiffres'));
+  it('changeCode : courant requis, 4 chiffres, effectif', () => {
+    const u = (registerUser('p-code', '1234') as { id: number }).id;
+    expect(changeCode(u, '9999', '5678')).toEqual({ error: 'Code actuel incorrect', status: 401 });
+    expect(changeCode(u, '1234', '567')).toEqual({ error: 'Nouveau code : 4 chiffres', status: 400 });
+    expect(changeCode(u, '1234', 'abcd')).toEqual({ error: 'Nouveau code : 4 chiffres', status: 400 });
+    expect(changeCode(u, '1234', '5678')).toEqual({ ok: true });
+    expect(verifyLogin('p-code', '5678')).toHaveProperty('id');
+    expect((verifyLogin('p-code', '1234') as { status: number }).status).toBe(401);
+  });
+});
 
 describe('auth', () => {
   it('refuse un pseudo trop court / code trop court', () => {
