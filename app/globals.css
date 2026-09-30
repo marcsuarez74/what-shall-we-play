@@ -687,6 +687,25 @@ input[type='file'] {
   gap: 8px;
 }
 
+.sheet-facts {
+  list-style: none;
+  display: grid;
+  gap: 6px;
+  margin: 14px 0 0;
+}
+.sheet-facts li {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 14px;
+  padding: 8px 12px;
+  background: color-mix(in srgb, var(--surface) 55%, transparent);
+  border: 1px solid color-mix(in srgb, var(--doux) 35%, transparent);
+  border-radius: 10px;
+  font-size: 13px;
+}
+.sheet-facts li span { color: var(--doux-clair); flex-shrink: 0; }
+.sheet-facts li strong { text-align: right; font-weight: 600; }
 .sheet-owner {
   color: var(--doux-clair);
   font-size: 14px;

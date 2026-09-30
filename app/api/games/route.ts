@@ -15,10 +15,12 @@ export async function POST(req: Request) {
   if (!user) return NextResponse.json({ error: 'Non connecté' }, { status: 401 });
   const form = await req.formData();
   const raw: Record<string, unknown> = {};
-  for (const k of ['title', 'box_format', 'bgg_id', 'year', 'publisher', 'min_players', 'max_players', 'playtime_min', 'weight', 'bgg_rating']) {
+  for (const k of ['title', 'box_format', 'bgg_id', 'year', 'publisher', 'min_players', 'max_players', 'playtime_min', 'weight', 'bgg_rating', 'designer', 'artist', 'best_players']) {
     const v = form.get(k);
     if (v !== null) raw[k] = Number.isNaN(Number(v)) || v === '' ? v : Number(v);
   }
+  // designer/artist restent des chaînes même si elles sont purement numériques
+  for (const k of ['designer', 'artist']) if (raw[k] != null) raw[k] = String(raw[k]);
   const v = validateGameInput(raw);
   if (!v.ok) return NextResponse.json({ error: v.error }, { status: 400 });
   let coverPath: string | null = null;

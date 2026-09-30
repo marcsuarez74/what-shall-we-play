@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS games (
   bgg_id INTEGER, title TEXT NOT NULL, year INTEGER, publisher TEXT,
   cover_url TEXT, cover_path TEXT,
   min_players INTEGER, max_players INTEGER, playtime_min INTEGER,
-  weight REAL, bgg_rating REAL,
+  weight REAL, bgg_rating REAL, designer TEXT, artist TEXT, best_players INTEGER,
   box_format TEXT NOT NULL CHECK (box_format IN ('mini','petit','moyen','grand')),
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -60,5 +60,13 @@ export function getDb(): Database.Database {
   db.pragma('journal_mode = WAL');
   db.pragma('foreign_keys = ON');
   db.exec(SCHEMA);
+  // Migrations incrémentales v1 : ALTER idempotent (« duplicate column » = déjà en place).
+  for (const stmt of [
+    'ALTER TABLE games ADD COLUMN designer TEXT',
+    'ALTER TABLE games ADD COLUMN artist TEXT',
+    'ALTER TABLE games ADD COLUMN best_players INTEGER',
+  ]) {
+    try { db.exec(stmt); } catch { /* colonne déjà présente */ }
+  }
   return db;
 }

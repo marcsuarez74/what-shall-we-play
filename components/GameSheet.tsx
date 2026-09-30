@@ -5,9 +5,10 @@ import type { Game, UserLite } from '@/lib/types';
 
 const fmt = (n: number) => n.toLocaleString('fr-FR', { maximumFractionDigits: 1 });
 
-export default function GameSheet({ game, players, inSelection, onToggle, onClose }: {
+export default function GameSheet({ game, players, playsCount, inSelection, onToggle, onClose }: {
   game: Game;
   players: UserLite[];
+  playsCount: number;
   inSelection: boolean;
   onToggle: () => void;
   onClose: () => void;
@@ -48,6 +49,17 @@ export default function GameSheet({ game, players, inSelection, onToggle, onClos
           {game.weight != null && <span className="chip">⚖ {fmt(game.weight)} / 5</span>}
           {game.bgg_rating != null && <span className="chip">⭐ {fmt(game.bgg_rating)} / 10</span>}
         </div>
+        <ul className="sheet-facts">
+          {game.weight != null && (
+            <li><span>Complexité (BGG)</span><strong>⚖ {fmt(game.weight)} / 5</strong></li>
+          )}
+          {game.best_players != null && (
+            <li><span>Best joueurs (BGG)</span><strong>{game.best_players}</strong></li>
+          )}
+          {game.designer && <li><span>Créateur</span><strong>{game.designer}</strong></li>}
+          {game.artist && <li><span>Illustrateur</span><strong>{game.artist}</strong></li>}
+          <li><span>Parties jouées</span><strong>{playsCount}</strong></li>
+        </ul>
         <p className="sheet-owner">
           Apporté par <strong>{owner ?? 'un joueur'}</strong> · {FORMAT_LABEL[game.box_format]}
         </p>

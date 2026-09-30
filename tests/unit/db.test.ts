@@ -14,4 +14,8 @@ describe('db', () => {
     expect(db.pragma('foreign_keys', { simple: true })).toBe(1);
     expect(db.pragma('journal_mode', { simple: true })).toBe('wal');
   });
+  it('expose les colonnes enrichies de la fiche (designer, artist, best_players)', () => {
+    const cols = (getDb().prepare('PRAGMA table_info(games)').all() as { name: string }[]).map((c) => c.name);
+    for (const c of ['designer', 'artist', 'best_players']) expect(cols).toContain(c);
+  });
 });
