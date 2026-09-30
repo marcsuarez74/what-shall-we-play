@@ -54,6 +54,9 @@ fichier `.env` à côté du compose (il est transmis au conteneur) :
 echo 'BGG_TOKEN=votre-token' > .env
 ```
 
+Le « jour » d'une soirée suit l'heure locale **Europe/Paris** (`TZ` est fixé dans l'image et le
+compose) : une soirée reste « la soirée du jour » jusqu'au changement de jour parisien, pas UTC.
+
 ### Reverse proxy HTTPS (Caddy, le plus court)
 
 ```caddyfile

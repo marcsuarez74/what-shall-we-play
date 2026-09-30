@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS games (
 CREATE TABLE IF NOT EXISTS nights (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   creator_id INTEGER NOT NULL REFERENCES users(id),
-  played_at TEXT NOT NULL DEFAULT (date('now')),
+  played_at TEXT NOT NULL DEFAULT (date('now','localtime')),
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE TABLE IF NOT EXISTS night_players (

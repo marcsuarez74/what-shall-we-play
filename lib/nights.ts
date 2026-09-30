@@ -3,7 +3,7 @@ import type { Game, Night, Pick, UserLite } from './types';
 
 export function getCurrentNight(userId: number): Night | null {
   return (getDb().prepare(
-    `SELECT * FROM nights WHERE creator_id = ? AND played_at = date('now') ORDER BY id DESC LIMIT 1`)
+    `SELECT * FROM nights WHERE creator_id = ? AND played_at = date('now','localtime') ORDER BY id DESC LIMIT 1`)
     .get(userId) as Night | undefined) ?? null;
 }
 export function getNight(nightId: number): Night | null {
