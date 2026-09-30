@@ -19,6 +19,13 @@ async function registerOther(page: import('@playwright/test').Page, pseudo: stri
   await other.close();
 }
 
+/** YYYY-MM-DD local de demain — arithmétique calendaire (sûr pendant le DST). */
+const demain = () => {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  return d.toLocaleDateString('sv-SE');
+};
+
 test('soirées : programmer pour demain → carte dans Programmées, étagère intacte', async ({ page }) => {
   const s = Date.now().toString(36);
   await register(page, `soir-${s}`);
@@ -26,8 +33,7 @@ test('soirées : programmer pour demain → carte dans Programmées, étagère i
 
   await page.goto('/nights');
   await page.getByRole('button', { name: 'Programmer une soirée' }).click();
-  const demain = new Date(Date.now() + 86_400_000).toLocaleDateString('sv-SE');
-  await page.getByLabel('Date').fill(demain);
+  await page.getByLabel('Date').fill(demain());
   await page.getByLabel('Heure').fill('20:00');
   await page.locator('.player-list label', { hasText: `inv-${s}` }).locator('input').check();
   const post = page.waitForResponse((r) => r.url().endsWith('/api/nights') && r.request().method() === 'POST');
@@ -52,6 +58,19 @@ test('jour J : une soirée datée d aujourd hui devient la nuit active', async (
   await page.goto('/etagere');
   await expect(page.locator('.night-card')).toBeVisible(); // soirée en cours, pas le picker
   await expect(page.getByRole('button', { name: 'Créer la soirée' })).toHaveCount(0);
+});
+
+test('API : date ou heure invalide rejetée, le QG reste sain', async ({ page }) => {
+  await register(page, `val-${Date.now().toString(36)}`);
+  // Date calendairement invalide (le regex seul la laisserait passer)
+  const badDate = await page.request.post('/api/nights', { data: { playerIds: [], playedAt: '2026-10-32' } });
+  expect(badDate.status()).toBe(400);
+  // Heure hors bornes (le regex seul la laisserait passer)
+  const badTime = await page.request.post('/api/nights', { data: { playerIds: [], startTime: '24:99' } });
+  expect(badTime.status()).toBe(400);
+  // Le QG ne casse pas (le jeu invalide n a pas été créé)
+  await page.goto('/nights');
+  await expect(page.getByRole('heading', { name: 'Mes soirées' })).toBeVisible();
 });
 
 // ——— Annonces WhatsApp (Task 11) ———
@@ -127,8 +146,10 @@ test('programmée : « Inviter sur WhatsApp » avec date longue, heure et joueur
 
   await page.goto('/nights');
   await page.getByRole('button', { name: 'Programmer une soirée' }).click();
-  const demain = new Date(Date.now() + 86_400_000);
-  await page.getByLabel('Date').fill(demain.toLocaleDateString('sv-SE'));
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  const dateLong = d.toLocaleDateString('fr-FR', { dateStyle: 'long' });
+  await page.getByLabel('Date').fill(d.toLocaleDateString('sv-SE'));
   await page.getByLabel('Heure').fill('20:00');
   await page.locator('.player-list label', { hasText: `thib-${s}` }).locator('input').check();
   const post = page.waitForResponse((r) => r.url().endsWith('/api/nights') && r.request().method() === 'POST');
@@ -140,7 +161,6 @@ test('programmée : « Inviter sur WhatsApp » avec date longue, heure et joueur
     const calls = (window as unknown as { __share: { text?: string }[] }).__share;
     return calls[0]?.text ?? '';
   });
-  const dateLong = demain.toLocaleDateString('fr-FR', { dateStyle: 'long' });
   expect(text).toContain(`🎲 Soirée jeux le ${dateLong} à 20:00 !`);
   expect(text).toContain(`inv-btn-${s}`); // créateur listé
   expect(text).toContain(`thib-${s}`);    // invité listé

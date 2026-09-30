@@ -19,7 +19,10 @@ export default function NightPicker({ users, prechecked, night, withDate = false
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
   // La programmation se fait au plus tôt demain ; le jour J, la soirée se crée sans date.
-  const demain = new Date(Date.now() + 86_400_000).toLocaleDateString('sv-SE');
+  // Arithmétique calendaire ( setDate) et non +24 h : sûr pendant le passage à l'heure d'été.
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  const demain = d.toLocaleDateString('sv-SE');
 
   function toggle(id: number) {
     setChecked((s) => {

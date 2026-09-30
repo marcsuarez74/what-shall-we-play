@@ -5,8 +5,12 @@ import { createGame } from '@/lib/games';
 import { getDb } from '@/lib/db';
 
 const uid = (p: string) => (registerUser(p, '1234') as { id: number }).id;
-// YYYY-MM-DD local (sv-SE), décalé de 24 h — même convention que date('now','localtime')
-const demain = () => new Date(Date.now() + 86_400_000).toLocaleDateString('sv-SE');
+// YYYY-MM-DD local (sv-SE), demain par arithmétique calendaire (sûr pendant le DST)
+const demain = () => {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  return d.toLocaleDateString('sv-SE');
+};
 
 describe('soirées programmées', () => {
   it('programmée demain : ni active ni visible aujourd hui, mais dans Programmées des deux participants', () => {
