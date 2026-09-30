@@ -14,6 +14,8 @@ test('étagère : sélection via fiche, CTA compteur', async ({ page }) => {
   // Soirée : se cocher soi-même
   await page.getByRole('checkbox').first().check();
   await page.getByRole('button', { name: /Lancer la soirée|Créer la soirée/ }).click();
+  // Sélection vide : CTA désactivé, aucune sélection possible (Review Focus n°6)
+  await expect(page.getByRole('button', { name: 'Touchez une boîte pour l\'ajouter' })).toBeDisabled();
   // Étagère : boîte -> fiche -> ajouter
   await page.locator('.box').first().click();
   await page.getByRole('button', { name: /Ajouter à la sélection/ }).click();
