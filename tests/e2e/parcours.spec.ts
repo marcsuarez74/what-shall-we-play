@@ -14,9 +14,9 @@ test('parcours complet : deux joueurs, sélection, tirage, historique', async ({
 
   // Marc ajoute un jeu SANS pochette (Review Focus n°1 : placeholder ♟)
   await a.goto('/games/add');
-  await a.getByLabel('Titre').fill('Terraforming Mars');
-  await a.getByLabel('Format de boîte').selectOption('grand');
-  await a.getByRole('button', { name: 'Ajouter à ma bibliothèque' }).click();
+  await a.getByLabel('Titre du jeu').fill('Terraforming Mars');
+  await a.getByRole('button', { name: 'Saisir à la main' }).click();
+  await a.getByRole('button', { name: 'Ajouter à la ludothèque' }).click();
 
   // Léa s'inscrit et ajoute son jeu
   const ctxB = await browser.newContext(); const b = await ctxB.newPage();
@@ -27,9 +27,10 @@ test('parcours complet : deux joueurs, sélection, tirage, historique', async ({
   await b.getByRole('button', { name: 'Créer mon compte' }).click();
   await registerLea; // sinon le goto suivant peut interrompre le POST avant le cookie
   await b.goto('/games/add');
-  await b.getByLabel('Titre').fill('Harmonies');
-  await b.getByLabel('Format de boîte').selectOption('petit');
-  await b.getByRole('button', { name: 'Ajouter à ma bibliothèque' }).click();
+  await b.getByLabel('Titre du jeu').fill('Harmonies');
+  await b.getByRole('button', { name: 'Saisir à la main' }).click();
+  await b.getByRole('button', { name: 'Petit', exact: true }).click();
+  await b.getByRole('button', { name: 'Ajouter à la ludothèque' }).click();
 
   // Marc crée la soirée avec Léa
   await a.goto('/etagere');

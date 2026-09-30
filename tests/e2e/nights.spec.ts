@@ -14,8 +14,9 @@ test('soirées : historique avec date, joueurs et tirages', async ({ page }) => 
   // Un seul jeu dans la bibliothèque (formulaire manuel, sans BGG) —
   // l'application ramène sur l'étagère après l'ajout
   await page.goto('/games/add');
-  await page.getByLabel('Titre').fill('Azul');
-  await page.getByRole('button', { name: 'Ajouter à ma bibliothèque' }).click();
+  await page.getByLabel('Titre du jeu').fill('Azul');
+  await page.getByRole('button', { name: 'Saisir à la main' }).click();
+  await page.getByRole('button', { name: 'Ajouter à la ludothèque' }).click();
 
   // Soirée via le sélecteur (affiché sur l'étagère tant qu'il n'y a pas de soirée
   // en cours ; créateur déjà pré-coché, on crée directement)

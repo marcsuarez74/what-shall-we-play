@@ -11,8 +11,9 @@ test('tirage : roue plein écran puis verdict sur le jeu tiré', async ({ page }
 
   // Un seul jeu dans la bibliothèque (formulaire manuel, sans BGG)
   await page.goto('/games/add');
-  await page.getByLabel('Titre').fill('Cascadia');
-  await page.getByRole('button', { name: 'Ajouter à ma bibliothèque' }).click();
+  await page.getByLabel('Titre du jeu').fill('Cascadia');
+  await page.getByRole('button', { name: 'Saisir à la main' }).click();
+  await page.getByRole('button', { name: 'Ajouter à la ludothèque' }).click();
 
   // Soirée via le sélecteur (affiché sur l'étagère tant qu'il n'y a pas de soirée en cours ;
   // créateur déjà pré-coché — on ne coche jamais une autre case : elle appartient à un autre compte)

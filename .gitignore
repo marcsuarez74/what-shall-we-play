@@ -23,3 +23,6 @@ playwright-report/
 
 # Logos sources (pack BGG original, l'asset servi vit dans public/logos)
 assets/
+
+# captures locales playwright-cli
+.playwright-cli/
