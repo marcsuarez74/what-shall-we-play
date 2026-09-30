@@ -7,6 +7,7 @@ import type { Game, Night, UserLite } from '@/lib/types';
 import GameSheet from './GameSheet';
 import NightPicker from './NightPicker';
 import PlayerChip from './PlayerChip';
+import BoxImage from './BoxImage';
 
 export default function ShelfClient({ night, players, games, excludedGames, users, plays, me }: {
   night: Night; players: UserLite[]; games: Game[]; excludedGames: Game[]; users: UserLite[]; plays: Record<number, number>;
@@ -121,7 +122,7 @@ export default function ShelfClient({ night, players, games, excludedGames, user
                       onContextMenu={(e) => e.preventDefault()}
                       onClick={() => boxClick(g)}>
                 {selected.has(g.id) && <span className="selbadge">✓</span>}
-                {coverSrc(g) ? <img src={coverSrc(g) as string} alt={g.title} /> : <span className="cover-placeholder">♟</span>}
+                <BoxImage game={g} />
               </button>
             ))}
           </div>
@@ -136,7 +137,7 @@ export default function ShelfClient({ night, players, games, excludedGames, user
             {excludedGames.map((g) => (
               <button key={g.id} role="listitem" className="box ex"
                       onClick={() => setDetail(g)}>
-                {coverSrc(g) ? <img src={coverSrc(g) as string} alt={g.title} /> : <span className="cover-placeholder">♟</span>}
+                <BoxImage game={g} />
               </button>
             ))}
           </div>

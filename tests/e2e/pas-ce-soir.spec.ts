@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { makePng } from './helpers/png';
 
 async function registerAndStart(page: import('@playwright/test').Page, pseudo: string) {
   await page.goto('/register');
@@ -97,4 +98,36 @@ test('bibliothèque : la pilule « Pas ce soir » écarte le jeu du tirage', asy
   await page.goto('/etagere');
   await expect(page.locator('.shelf-block:not(.excluded-block) .box')).toHaveCount(1);
   await expect(page.locator('.excluded-row .box')).toHaveCount(0);
+});
+
+test('étagère : spinner discret pendant le chargement des pochettes', async ({ browser }) => {
+  // SW bloqué : sans ça, il sert les pochettes et la route de test ne voit rien
+  const context = await browser.newContext({ serviceWorkers: 'block' });
+  const page = await context.newPage();
+  await registerAndStart(page, `spin-${Date.now()}`);
+  const form = new FormData();
+  form.set('title', 'Pochette lente'); form.set('box_format', 'moyen');
+  form.set('cover', new File([makePng(8, 8)], 'cover.png', { type: 'image/png' }));
+  const res = await page.request.post('/api/games', {
+    multipart: {
+      title: 'Pochette lente', box_format: 'moyen',
+      cover: { name: 'cover.png', mimeType: 'image/png', buffer: makePng(8, 8) },
+    },
+  });
+  if (!res.ok()) throw new Error(`ajout jeu: ${res.status()} ${await res.text()}`);
+
+  // La pochette met du temps à arriver (réseau lent simulé par interception)
+  await page.route('**/api/cover/**', async (route) => {
+    await new Promise((r) => setTimeout(r, 900));
+    await route.fulfill({ status: 200, contentType: 'image/png', body: makePng(8, 8) });
+  });
+
+  // DCL avant les images : on observe le spinner PENDANT le chargement de la pochette
+  await page.goto('/etagere', { waitUntil: 'domcontentloaded' });
+  await expect(page.locator('.box-spin').first()).toBeVisible();
+  await expect(page.locator('.box img.on')).toHaveCount(0);
+  // une fois chargée : la pochette apparaît en fondu, le spinner disparaît
+  await expect(page.locator('.box img.on')).toHaveCount(1);
+  await expect(page.locator('.box-spin')).toHaveCount(0);
+  await context.close();
 });

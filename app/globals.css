@@ -1026,6 +1026,31 @@ input[type='file'] {
   height: 100%;
   object-fit: cover;
   border-radius: 8px;
+  opacity: 0;                    /* fondu d'arrivée piloté par BoxImage */
+  transition: opacity 0.25s ease;
+}
+.box img.on { opacity: 1; }
+
+/* Spinner de chargement des pochettes — petit anneau cuivre, discret */
+.box-spin {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+.box-spin::before {
+  content: '';
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid color-mix(in srgb, var(--cuivre) 30%, transparent);
+  border-top-color: var(--cuivre);
+  opacity: 0.85;
+  animation: box-spin 0.8s linear infinite;
+}
+@keyframes box-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .box-spin::before { animation-duration: 2s; }
 }
 
 .box .cover-placeholder {
