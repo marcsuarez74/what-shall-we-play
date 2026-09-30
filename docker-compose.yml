@@ -1,0 +1,10 @@
+services:
+  app:
+    build: .
+    ports: ["3000:3000"]
+    environment:
+      - BGG_TOKEN=${BGG_TOKEN:-}
+      - TZ=Europe/Paris
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped

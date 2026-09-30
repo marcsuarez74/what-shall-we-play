@@ -1,0 +1,23 @@
+// app/api/draw/route.ts
+import { NextResponse } from 'next/server';
+import { getSessionUser } from '@/lib/session';
+import { pickGameId } from '@/lib/draw';
+import { getNight, getShelfGames, userCanAccessNight } from '@/lib/nights';
+import { getDb } from '@/lib/db';
+
+export async function POST(req: Request) {
+  const user = await getSessionUser();
+  if (!user) return NextResponse.json({ error: 'Non connecté' }, { status: 401 });
+  const { nightId, gameIds } = await req.json();
+  const night = getNight(Number(nightId));
+  if (!night || !userCanAccessNight(user.id, night.id))
+    return NextResponse.json({ error: 'Soirée introuvable' }, { status: 404 });
+  const shelf = getShelfGames(night.id);
+  const allowed = new Set(shelf.map((g) => g.id));
+  const ids: number[] = [...new Set((gameIds as number[]).map(Number))].filter((id) => allowed.has(id));
+  if (ids.length === 0) return NextResponse.json({ error: 'Sélection vide' }, { status: 400 });
+  const gameId = pickGameId(ids);
+  const info = getDb().prepare('INSERT INTO picks (night_id, game_id, spinner_id) VALUES (?, ?, ?)')
+    .run(night.id, gameId, user.id);
+  return NextResponse.json({ pickId: Number(info.lastInsertRowid), gameId });
+}

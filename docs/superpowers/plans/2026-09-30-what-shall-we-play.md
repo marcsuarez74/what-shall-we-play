@@ -1453,7 +1453,7 @@ export default async function Page() {
 
 - [ ] **Step 3: `components/NightPicker.tsx`** (client) — coche les joueurs présents, POST `/api/nights`, `router.refresh()`.
 
-- [ ] **Step 4: `components/ShelfClient.tsx`** — l'écran clé : carte soirée (joueurs, « modifier » → NightPicker en sheet), rayons par format (ordre `FORMATS`), scroll horizontal avec snap, badge ✓ (`.sel` + `.selbadge`, `.sm` si scale < 0.6), compteur « Sélection : N jeux », CTA `Lancer le tirage · N` **désactivé si N = 0**, ouverture de `GameSheet` au clic sur une boîte.
+- [ ] **Step 4: `components/ShelfClient.tsx`** — l'écran clé : carte soirée (joueurs, « modifier » → NightPicker en sheet), rayons par format (ordre `FORMATS`), scroll horizontal avec snap, badge ✓ (`.sel` + `.selbadge`, `.sm` si scale < 0.7 — ruling SDD : seuil 0.7 retenu, la spec ne fixe que la pastille 26 px et le raffinement `.sm` vise les petites boîtes), compteur « Sélection : N jeux », CTA `Lancer le tirage · N` **désactivé si N = 0**, ouverture de `GameSheet` au clic sur une boîte.
 
 ```tsx
 'use client';
