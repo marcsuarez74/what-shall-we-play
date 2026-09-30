@@ -19,3 +19,4 @@ data/
 .tmp-vitest/
 test-results/
 playwright-report/
+*.tsbuildinfo
