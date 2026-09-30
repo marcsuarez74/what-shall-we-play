@@ -1,0 +1,16 @@
+# dépendances & build
+node_modules/
+.next/
+out/
+
+# données locales (SQLite + pochettes uploadées)
+data/
+
+# environnement
+.env
+.env.*
+
+# outils
+.superpowers/
+.DS_Store
+*.log
