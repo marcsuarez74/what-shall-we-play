@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#2A1F17"/>
+  <!-- meeple crème -->
+  <g fill="#F3E9DC">
+    <circle cx="244" cy="128" r="54"/>
+    <path d="M244 168c-46 0-70 40-80 92-10 54-18 102-40 148h240c-22-46-30-94-40-148-10-52-34-92-80-92z"/>
+    <circle cx="140" cy="236" r="42"/>
+    <circle cx="348" cy="236" r="42"/>
+    <rect x="96" y="392" width="296" height="30" rx="15"/>
+  </g>
+  <!-- dé cuivre -->
+  <g transform="rotate(12 396 380)">
+    <rect x="348" y="332" width="96" height="96" rx="22" fill="#C96F3B" stroke="#2A1F17" stroke-width="10"/>
+    <circle cx="378" cy="362" r="10" fill="#2A1F17"/>
+    <circle cx="396" cy="380" r="10" fill="#2A1F17"/>
+    <circle cx="414" cy="398" r="10" fill="#2A1F17"/>
+  </g>
+</svg>
