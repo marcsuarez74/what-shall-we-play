@@ -14,8 +14,8 @@ test('tirage : roue plein écran puis verdict sur le jeu tiré', async ({ page }
   await page.getByLabel('Titre').fill('Cascadia');
   await page.getByRole('button', { name: 'Ajouter à ma bibliothèque' }).click();
 
-  // Soirée via le sélecteur (affiché sur l'étagère tant qu'il n'y a pas de soirée en cours)
-  await page.getByRole('checkbox').first().check();
+  // Soirée via le sélecteur (affiché sur l'étagère tant qu'il n'y a pas de soirée en cours ;
+  // créateur déjà pré-coché — on ne coche jamais une autre case : elle appartient à un autre compte)
   await page.getByRole('button', { name: 'Créer la soirée' }).click();
 
   // Étagère : boîte → fiche → « Ajouter à la sélection » → Escape

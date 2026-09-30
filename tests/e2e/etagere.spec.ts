@@ -11,8 +11,8 @@ test('étagère : sélection via fiche, CTA compteur', async ({ page }) => {
   await page.getByLabel('Titre').fill('Terraforming Mars');
   await page.getByLabel('Format de boîte').selectOption('grand');
   await page.getByRole('button', { name: 'Ajouter à ma bibliothèque' }).click();
-  // Soirée : se cocher soi-même
-  await page.getByRole('checkbox').first().check();
+  // Soirée : le créateur est déjà pré-coché — on ne touche à aucune autre case
+  // (les autres utilisateurs listés appartiennent à d'autres comptes)
   await page.getByRole('button', { name: /Lancer la soirée|Créer la soirée/ }).click();
   // Sélection vide : CTA désactivé, aucune sélection possible (Review Focus n°6)
   await expect(page.getByRole('button', { name: 'Touchez une boîte pour l\'ajouter' })).toBeDisabled();
