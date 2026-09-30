@@ -1,11 +1,11 @@
 {
   "name": "what-shall-we-play",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
+    "build": "node scripts/sync-sw-version.mjs && next build --turbopack",
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",

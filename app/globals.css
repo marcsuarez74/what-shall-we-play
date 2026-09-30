@@ -794,6 +794,13 @@ input[type='file'] {
   color: var(--creme);
 }
 
+.user-version {
+  padding: 6px 12px 4px;
+  color: var(--doux);
+  font-size: 12px;
+  text-align: right;
+}
+
 /* carte soirée */
 .night-card {
   background: var(--surface);

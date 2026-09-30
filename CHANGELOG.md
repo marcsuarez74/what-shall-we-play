@@ -4,6 +4,22 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [1.1.0] — 2026-09-30
+
+### Ajouté
+- **Fiche jeu enrichie** (bottom-sheet) : complexité (poids BGG), « best joueurs » (sondage communautaire BGG, parseur prêt — se remplit dès que `BGG_TOKEN` est en place), créateur, illustrateur, **parties jouées** (nombre de tirages locaux) ; colonnes `designer`/`artist`/`best_players` (migration idempotente).
+- **Logo officiel « Powered by BoardGameGeek »** sur le lien BGG de la fiche.
+- **Ajout de jeu repensé** : titre + formats de boîte à l'échelle réelle + bouton « Récupérer les infos » (logo BGG intégré) → la fiche se remplit depuis BGG (année, éditeur, joueurs, durée, complexité, note, créateur, illustrateur, pochette remplaçable par une photo) ; saisie manuelle conservée en secours.
+- **Navigation par onglets** en bas : Étagère · Bibliothèque · Ajouter · Soirées (masquée pendant la roue et hors session) ; menu utilisateur réduit à la déconnexion.
+- **Ma bibliothèque détaillée** : cartes avec pochette, année · éditeur, joueurs, durée ; la fiche complète s'ouvre au toucher ; format et retrait restent en un geste.
+- **Version affichée** dans le menu utilisateur ; nom de cache du service worker versionné automatiquement à chaque build (`wsp-v<version>`).
+- Données des 29 jeux du fondateur complétées (crédits, poids, notes, best, formats de boîte).
+
+### Corrigé
+- Pochettes portrait qui débordaient de leur boîte sur l'étagère (image en flux absolu ; hauteur `100 %` non résolue dans une piste de grille auto).
+- Étagère périmée ~30 s après un changement de format en bibliothèque (`staleTimes.dynamic = 0`).
+- Titre « Ajouter un jeu » perdu dans la refonte du formulaire.
+
 ## [1.0.0] — 2026-09-30
 
 ### Ajouté
