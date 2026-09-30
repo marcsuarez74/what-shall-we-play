@@ -4,6 +4,19 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [1.2.0] — 2026-10-01
+
+### Ajouté
+- **Page profil** (via le menu utilisateur → « Mon profil ») : avatar, pseudo, statistiques (parties jouées · soirées · jeux), changement de code, suppression de compte.
+- **Avatar personnel** : sticker emoji au choix (grille de 32) ou photo (appareil ou galerie) avec **recadrage carré** (glisser + zoom, sortie 256×256) ; il remplace le dé dans les chips de joueurs, le menu et l'historique des soirées.
+- **Changement de code** en 3 étapes (code actuel vérifié, confirmation du nouveau).
+- **Suppression du profil** : avertissement détaillé + code secret exigé ; supprime le compte, la collection et les tirages — les soirées des autres sont conservées (cascade en transaction, fichiers avatar/pochettes nettoyés).
+- **Sélection par longue pression** : maintenir une boîte 400 ms sur l'étagère entre en mode sélection (bandeau cuivre, toucher = ajouter/retirer, « Terminé » pour sortir) ; l'appui simple ouvre toujours la fiche.
+
+### Modifié
+- **Codes secrets = 4 chiffres** à l'inscription, au changement et à la validation de suppression (saisie type PIN, clavier numérique, 4 cases) ; la vérification à la connexion reste inchangée (bcrypt) et l'audit v1.2.0 confirme que les comptes existants utilisent déjà 4 chiffres.
+- API `GET/PATCH/DELETE /api/me`, `POST /api/me/avatar`, `POST /api/me/code` ; colonnes `users.sticker` / `users.avatar_path` (migrations idempotentes).
+
 ## [1.1.0] — 2026-09-30
 
 ### Ajouté

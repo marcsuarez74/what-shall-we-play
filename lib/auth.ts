@@ -10,7 +10,7 @@ export function validatePseudo(p: unknown): string | null {
   return null;
 }
 export function validateCode(c: unknown): string | null {
-  if (typeof c !== 'string' || c.length < 4) return 'Code secret : 4 caractères minimum';
+  if (typeof c !== 'string' || !/^[0-9]{4}$/.test(c)) return 'Code secret : 4 chiffres';
   return null;
 }
 

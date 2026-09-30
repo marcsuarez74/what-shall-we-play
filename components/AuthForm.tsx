@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import PinInput from './PinInput';
 
 export default function AuthForm({ mode }: { mode: 'login' | 'register' }) {
   const router = useRouter();
@@ -26,12 +27,11 @@ export default function AuthForm({ mode }: { mode: 'login' | 'register' }) {
       <label>Pseudo
         <input value={pseudo} onChange={(e) => setPseudo(e.target.value)} autoComplete="username" required />
       </label>
-      <label>Code secret
-        <input type="password" value={code} onChange={(e) => setCode(e.target.value)}
-               autoComplete={mode === 'login' ? 'current-password' : 'new-password'} required />
-      </label>
+      <span className="pin-label">Code secret — 4 chiffres</span>
+      <PinInput label="Code secret" value={code} onChange={setCode}
+                autoComplete={mode === 'login' ? 'current-password' : 'new-password'} />
       {error && <p className="error" role="alert">{error}</p>}
-      <button disabled={busy}>{mode === 'login' ? 'Entrer' : 'Créer mon compte'}</button>
+      <button disabled={busy || code.length !== 4}>{mode === 'login' ? 'Entrer' : 'Créer mon compte'}</button>
       <a href={mode === 'login' ? '/register' : '/login'}>
         {mode === 'login' ? 'Pas de compte ? Le créer' : 'Déjà un compte ? Entrer'}
       </a>

@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { getSessionUser } from '@/lib/session';
 import { getMyNights, getNightPlayers, getNightPicks } from '@/lib/nights';
+import PlayerChip from '@/components/PlayerChip';
 
 const dateFormat = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' });
 
@@ -29,7 +30,7 @@ export default async function Page() {
                   <span className="night-date">{dateFormat.format(new Date(`${n.played_at}T12:00:00`))}</span>
                 </div>
                 <div className="chips">
-                  {players.map((p) => <span key={p.id} className="chip">🎲 {p.pseudo}</span>)}
+                  {players.map((p) => <PlayerChip key={p.id} u={p} />)}
                 </div>
                 {picks.length > 0 && (
                   <ul className="night-picks">

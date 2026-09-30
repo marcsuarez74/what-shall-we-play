@@ -278,6 +278,132 @@ input[type='file'] {
   text-align: center;
 }
 
+/* Saisie du code secret — 4 chiffres, type PIN */
+.pin-label {
+  display: block;
+  color: var(--doux-clair);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+.pin { display: flex; gap: 9px; }
+.pin input {
+  flex: 1;
+  min-width: 0;
+  height: 60px;
+  text-align: center;
+  font-size: 24px;
+  font-weight: 600;
+  font-family: var(--font-ui);
+  color: var(--creme);
+  background: var(--noyer);
+  border: 1.5px solid var(--doux);
+  border-radius: 10px;
+  padding: 0;
+}
+.pin input:focus { outline: none; border-color: var(--cuivre); }
+
+/* Sélection par longue pression — neutraliser la sélection/callout système sur le maintien */
+.box {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.box img { -webkit-touch-callout: none; -webkit-user-drag: none; }
+
+/* Bandeau du mode sélection (longue pression) */
+.pick-banner {
+  position: sticky; top: 8px; z-index: 40;
+  display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  background: var(--cuivre); color: #fff; border-radius: 12px;
+  padding: 10px 14px; font-size: 13.5px; font-weight: 600;
+}
+.pick-banner button {
+  background: #fff; color: var(--cuivre); border: none; border-radius: 999px;
+  padding: 5px 13px; font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer;
+}
+
+/* ---------- Profil ---------- */
+.profile { max-width: 430px; }
+.avatar-zone { display: grid; justify-items: center; gap: 10px; margin: 8px 0 18px; }
+.avatar {
+  width: 88px; height: 88px; border-radius: 50%;
+  background: var(--surface); border: 2px solid var(--doux);
+  display: grid; place-items: center; font-size: 44px; cursor: pointer;
+  position: relative; overflow: visible; padding: 0;
+}
+.avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.avatar::after {
+  content: 'changer';
+  position: absolute; bottom: -7px; left: 50%; transform: translateX(-50%);
+  background: var(--cuivre); color: #fff; font-size: 10px; font-weight: 600;
+  border-radius: 999px; padding: 2px 9px; font-family: var(--font-ui);
+}
+.pseudo { font-family: var(--font-display); font-size: 23px; font-weight: 700; color: var(--creme); }
+.stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+.stat { background: var(--surface); border-radius: 14px; padding: 13px 10px; text-align: center; }
+.stat b { display: block; font-family: var(--font-display); font-size: 24px; color: var(--cuivre); }
+.stat span { font-size: 11.5px; color: var(--doux-clair); }
+.actions { display: grid; gap: 8px; }
+.action {
+  appearance: none; width: 100%; display: flex; justify-content: space-between; align-items: center;
+  background: var(--surface); border: 1px solid color-mix(in srgb, var(--doux) 40%, transparent);
+  border-radius: 13px; color: var(--creme); font: inherit; font-size: 14.5px;
+  padding: 14px 15px; cursor: pointer; text-align: left;
+}
+.action .n { color: var(--doux-clair); font-size: 12px; }
+.action.danger { color: #E07A6C; border-color: color-mix(in srgb, #C74B3C 45%, transparent); }
+
+/* Picker de sticker (bottom-sheet) */
+.picker h2 { font-family: var(--font-display); font-size: 17px; margin-bottom: 3px; color: var(--creme); }
+.sticker-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 8px; margin-top: 12px; }
+.sticker-grid button {
+  aspect-ratio: 1; font-size: 22px; background: var(--noyer);
+  border: 1.5px solid transparent; border-radius: 10px; cursor: pointer;
+}
+.sticker-grid button.on { border-color: var(--cuivre); background: color-mix(in srgb, var(--cuivre) 16%, var(--noyer)); }
+.photo-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 14px; }
+.photo-opts button {
+  display: flex; gap: 8px; align-items: center; justify-content: center;
+  background: var(--noyer); border: 1.5px solid var(--doux); border-radius: 11px;
+  color: var(--creme); font: inherit; font-size: 13.5px; padding: 12px; cursor: pointer;
+}
+
+/* Recadrage carré */
+.crop { position: fixed; inset: 0; z-index: 80; background: #14100b; display: flex; flex-direction: column; }
+.crop-head { display: flex; justify-content: space-between; align-items: center; padding: 16px 16px 10px; color: var(--creme); }
+.crop-head button { background: none; border: none; color: var(--creme); font: inherit; font-size: 15px; cursor: pointer; padding: 6px; }
+.crop-head .ok { color: var(--cuivre); font-weight: 600; }
+.crop-zone { flex: 1; display: grid; place-items: center; padding: 0 20px; }
+.crop-sq {
+  width: min(320px, 100%); aspect-ratio: 1; position: relative; overflow: hidden;
+  border: 2.5px solid var(--cuivre); border-radius: 6px; touch-action: none; background: #000;
+}
+.crop-sq img {
+  position: absolute; left: 50%; top: 50%; max-width: none;
+  width: auto; height: auto; min-width: 100%; min-height: 100%;
+  user-select: none; -webkit-user-drag: none;
+}
+.crop-foot { padding: 12px 20px 26px; text-align: center; color: var(--doux-clair); font-size: 12.5px; }
+.crop-foot label { display: block; margin-bottom: 6px; }
+.crop-foot input[type='range'] { width: 100%; accent-color: var(--cuivre); }
+.crop-foot b { color: var(--creme); }
+.crop-foot p { margin-top: 8px; }
+
+/* Changer le code / suppression */
+.steps { display: flex; gap: 6px; margin: 10px 0 12px; }
+.steps i { height: 4px; flex: 1; border-radius: 99px; background: var(--noyer); }
+.steps i.on { background: var(--cuivre); }
+.btn-go { width: 100%; border: none; border-radius: 12px; padding: 13px; font: inherit; font-weight: 600; font-size: 15px; cursor: pointer; background: var(--vert); color: #fff; margin-top: 14px; }
+.btn-go:disabled { opacity: 0.5; cursor: default; }
+.btn-danger { width: 100%; border: none; border-radius: 12px; padding: 13px; font: inherit; font-weight: 600; font-size: 15px; cursor: pointer; background: #C74B3C; color: #fff; margin-top: 14px; }
+.btn-danger:disabled { opacity: 0.5; cursor: default; }
+.warn { color: var(--doux-clair); font-size: 13px; line-height: 1.55; margin: 8px 0 12px; }
+.warn b { color: #E07A6C; }
+.ok-msg { color: var(--vert); font-size: 13.5px; margin-top: 10px; }
+
 /* ---------- Ajout de jeu ---------- */
 .add-form {
   display: flex;
@@ -736,6 +862,10 @@ input[type='file'] {
 /* menu utilisateur (initial ▾) */
 .user-chip {
   position: relative;
+}
+
+.chip-avatar {
+  width: 16px; height: 16px; border-radius: 50%; object-fit: cover; display: inline-block;
 }
 
 .user-chip summary {

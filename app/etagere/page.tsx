@@ -10,13 +10,14 @@ import type { UserLite } from '@/lib/types';
 export default async function Page() {
   const user = await getSessionUser();
   if (!user) redirect('/login');
-  const users = getDb().prepare('SELECT id, pseudo FROM users ORDER BY pseudo COLLATE NOCASE').all() as UserLite[];
+  const users = getDb().prepare('SELECT id, pseudo, sticker, avatar_path FROM users ORDER BY pseudo COLLATE NOCASE').all() as UserLite[];
   const night = getCurrentNight(user.id);
   if (!night) {
     // Pas de soirée en cours : on choisit les joueurs présents (créateur pré-coché).
     return <main className="page"><NightPicker users={users} prechecked={[user.id]} /></main>;
   }
   return <main className="page">
-    <ShelfClient night={night} players={getNightPlayers(night.id)} games={getShelfGames(night.id)} users={users} plays={getPickCounts()} />
+    <ShelfClient night={night} players={getNightPlayers(night.id)} games={getShelfGames(night.id)} users={users}
+                 plays={getPickCounts()} me={{ id: user.id, pseudo: user.pseudo, sticker: user.sticker, avatar_path: user.avatar_path }} />
   </main>;
 }
