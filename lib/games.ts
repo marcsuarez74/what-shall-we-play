@@ -6,6 +6,7 @@ export interface NewGame {
   title: string; box_format: BoxFormat; bgg_id?: number | null; year?: number | null;
   publisher?: string | null; min_players?: number | null; max_players?: number | null;
   playtime_min?: number | null; weight?: number | null; bgg_rating?: number | null;
+  designer?: string | null; artist?: string | null; best_players?: number | null;
 }
 export function validateGameInput(body: unknown): { ok: true; value: NewGame } | { ok: false; error: string } {
   const b = (body ?? {}) as Record<string, unknown>;
@@ -21,18 +22,28 @@ export function validateGameInput(body: unknown): { ok: true; value: NewGame } |
       bgg_id: num(b.bgg_id), year: num(b.year), publisher: typeof b.publisher === 'string' ? b.publisher.slice(0, 120) : null,
       min_players: num(b.min_players), max_players: num(b.max_players),
       playtime_min: num(b.playtime_min), weight: num(b.weight), bgg_rating: num(b.bgg_rating),
+      designer: typeof b.designer === 'string' && b.designer.trim() ? b.designer.slice(0, 120) : null,
+      artist: typeof b.artist === 'string' && b.artist.trim() ? b.artist.slice(0, 120) : null,
+      best_players: num(b.best_players),
     },
   };
 }
 
 export function createGame(ownerId: number, g: NewGame, coverPath: string | null = null): number {
   const info = getDb().prepare(`
-    INSERT INTO games (owner_id, title, box_format, bgg_id, year, publisher, min_players, max_players, playtime_min, weight, bgg_rating, cover_path)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(
+    INSERT INTO games (owner_id, title, box_format, bgg_id, year, publisher, min_players, max_players, playtime_min, weight, bgg_rating, designer, artist, best_players, cover_path)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(
     ownerId, g.title, g.box_format, g.bgg_id ?? null, g.year ?? null, g.publisher ?? null,
     g.min_players ?? null, g.max_players ?? null, g.playtime_min ?? null,
-    g.weight ?? null, g.bgg_rating ?? null, coverPath);
+    g.weight ?? null, g.bgg_rating ?? null, g.designer ?? null, g.artist ?? null, g.best_players ?? null, coverPath);
   return Number(info.lastInsertRowid);
+}
+
+// Nombre de fois que chaque jeu a été tiré (toutes soirées confondues) — fiche « Parties jouées ».
+export function getPickCounts(): Record<number, number> {
+  const rows = getDb().prepare('SELECT game_id, COUNT(*) AS c FROM picks GROUP BY game_id').all() as
+    { game_id: number; c: number }[];
+  return Object.fromEntries(rows.map((r) => [r.game_id, r.c]));
 }
 
 export function listMyGames(ownerId: number): Game[] {

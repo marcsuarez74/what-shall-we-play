@@ -6,8 +6,8 @@ import type { Game, Night, UserLite } from '@/lib/types';
 import GameSheet from './GameSheet';
 import NightPicker from './NightPicker';
 
-export default function ShelfClient({ night, players, games, users }: {
-  night: Night; players: UserLite[]; games: Game[]; users: UserLite[];
+export default function ShelfClient({ night, players, games, users, plays }: {
+  night: Night; players: UserLite[]; games: Game[]; users: UserLite[]; plays: Record<number, number>;
 }) {
   const router = useRouter();
   const [selected, setSelected] = useState<Set<number>>(new Set());
@@ -86,7 +86,8 @@ export default function ShelfClient({ night, players, games, users }: {
           {selected.size === 0 ? 'Touchez une boîte pour l\'ajouter' : `Lancer le tirage · ${selected.size}`}
         </button>
       </div>
-      {detail && <GameSheet game={detail} players={players} inSelection={selected.has(detail.id)}
+      {detail && <GameSheet game={detail} players={players} playsCount={plays[detail.id] ?? 0}
+                            inSelection={selected.has(detail.id)}
                             onToggle={() => toggle(detail.id)} onClose={() => setDetail(null)} />}
       {editingNight && (
         <div className="sheet-backdrop" onClick={() => setEditingNight(false)}>

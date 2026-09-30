@@ -35,6 +35,7 @@ export interface ThingParsed {
   bggId: number; title: string; year: number | null; publisher: string | null;
   minPlayers: number | null; maxPlayers: number | null; playtimeMin: number | null;
   weight: number | null; rating: number | null; imageUrl: string | null;
+  designer: string | null; artist: string | null; bestPlayers: number | null;
 }
 export interface ThingResult extends ThingParsed { coverName: string | null; }
 
@@ -51,6 +52,27 @@ export function parseThingXml(xml: string): ThingParsed | null {
       Record<string, unknown> | undefined)?.['@_value'] as string | undefined;
   const name = item.name?.['@_value'] ?? (Array.isArray(item.name) ? item.name.find((x: Record<string, unknown>) => x['@_type'] === 'primary')?.['@_value'] : undefined);
   if (!name) return null;
+  // Crédits : tous les noms du type de lien, joints par « , » (BGG liste le(s) auteur(s)/illustrateur(s)).
+  const linkNames = (type: string): string | null => {
+    const links = Array.isArray(item.link) ? item.link : item.link ? [item.link] : [];
+    const names = links.filter((l: Record<string, unknown>) => l['@_type'] === type).map((l: Record<string, unknown>) => l['@_value'] as string).filter(Boolean);
+    return names.length ? names.join(', ') : null;
+  };
+  // Sondage « userplayers » : le nombre de joueurs avec le plus de votes « Best ».
+  const polls = Array.isArray(item.poll) ? item.poll : item.poll ? [item.poll] : [];
+  const userplayers = polls.find((p: Record<string, unknown>) => p['@_name'] === 'userplayers');
+  let bestPlayers: number | null = null;
+  if (userplayers) {
+    const groups = Array.isArray(userplayers.results) ? userplayers.results : userplayers.results ? [userplayers.results] : [];
+    let bestVotes = 0;
+    for (const g of groups) {
+      const opts = Array.isArray(g.result) ? g.result : g.result ? [g.result] : [];
+      const best = opts.find((o: Record<string, unknown>) => o['@_value'] === 'Best');
+      const votes = Number(best?.['@_votes'] ?? 0);
+      const n = Number(g['@_numplayers']);
+      if (best && Number.isFinite(n) && votes > bestVotes) { bestVotes = votes; bestPlayers = n; }
+    }
+  }
   return {
     bggId: Number(item['@_id']), title: String(name), year: n(val('yearpublished')),
     publisher: (Array.isArray(item.link) ? item.link : item.link ? [item.link] : [])
@@ -58,6 +80,7 @@ export function parseThingXml(xml: string): ThingParsed | null {
     minPlayers: n(val('minplayers')), maxPlayers: n(val('maxplayers')), playtimeMin: n(val('playingtime')),
     weight: n(val('statistics.ratings.averageweight')), rating: n(val('statistics.ratings.average')),
     imageUrl: item.image?.['@_src'] ?? null,
+    designer: linkNames('boardgamedesigner'), artist: linkNames('boardgameartist'), bestPlayers,
   };
 }
 

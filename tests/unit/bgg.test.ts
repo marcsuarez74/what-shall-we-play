@@ -10,6 +10,8 @@ describe('bgg', () => {
       bggId: 167791, title: 'Terraforming Mars', year: 2016, publisher: 'FryxGames',
       minPlayers: 1, maxPlayers: 5, playtimeMin: 120, weight: 3.32, rating: 8.36,
       imageUrl: 'https://cf.geekdo-images.com/f.jpg',
+      designer: 'Jacob Fryxelius', artist: 'Isaac Fryxelius, Daniel Fryxelius',
+      bestPlayers: 3, // le plus de votes « Best » (61), pas le groupe au plus grand nombre de joueurs
     });
   });
   it('renvoie null sur un XML vide', () => {

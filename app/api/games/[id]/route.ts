@@ -20,9 +20,10 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   const body = await req.json();
   const v = validateGameInput({ ...g, ...body });
   if (!v.ok) return NextResponse.json({ error: v.error }, { status: 400 });
-  getDb().prepare(`UPDATE games SET title=?, box_format=?, year=?, publisher=?, min_players=?, max_players=?, playtime_min=?, weight=?, bgg_rating=? WHERE id=?`)
+  getDb().prepare(`UPDATE games SET title=?, box_format=?, year=?, publisher=?, min_players=?, max_players=?, playtime_min=?, weight=?, bgg_rating=?, designer=?, artist=?, best_players=? WHERE id=?`)
     .run(v.value.title, v.value.box_format, v.value.year ?? null, v.value.publisher ?? null,
          v.value.min_players ?? null, v.value.max_players ?? null, v.value.playtime_min ?? null,
-         v.value.weight ?? null, v.value.bgg_rating ?? null, g.id);
+         v.value.weight ?? null, v.value.bgg_rating ?? null,
+         v.value.designer ?? null, v.value.artist ?? null, v.value.best_players ?? null, g.id);
   return NextResponse.json({ ok: true });
 }

@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { getSessionUser } from '@/lib/session';
 import { getCurrentNight, getNightPlayers, getShelfGames } from '@/lib/nights';
+import { getPickCounts } from '@/lib/games';
 import NightPicker from '@/components/NightPicker';
 import ShelfClient from '@/components/ShelfClient';
 import { getDb } from '@/lib/db';
@@ -16,6 +17,6 @@ export default async function Page() {
     return <main className="page"><NightPicker users={users} prechecked={[user.id]} /></main>;
   }
   return <main className="page">
-    <ShelfClient night={night} players={getNightPlayers(night.id)} games={getShelfGames(night.id)} users={users} />
+    <ShelfClient night={night} players={getNightPlayers(night.id)} games={getShelfGames(night.id)} users={users} plays={getPickCounts()} />
   </main>;
 }

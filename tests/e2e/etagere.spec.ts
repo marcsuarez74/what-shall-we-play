@@ -16,8 +16,9 @@ test('étagère : sélection via fiche, CTA compteur', async ({ page }) => {
   await page.getByRole('button', { name: /Lancer la soirée|Créer la soirée/ }).click();
   // Sélection vide : CTA désactivé, aucune sélection possible (Review Focus n°6)
   await expect(page.getByRole('button', { name: 'Touchez une boîte pour l\'ajouter' })).toBeDisabled();
-  // Étagère : boîte -> fiche -> ajouter
+  // Étagère : boîte -> fiche (la fiche enrichie affiche les facts) -> ajouter
   await page.locator('.box').first().click();
+  await expect(page.locator('.sheet-facts')).toContainText('Parties jouées');
   await page.getByRole('button', { name: /Ajouter à la sélection/ }).click();
   await page.keyboard.press('Escape');
   await expect(page.locator('.selcount')).toContainText('Sélection : 1');
