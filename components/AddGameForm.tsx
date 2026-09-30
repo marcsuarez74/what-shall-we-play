@@ -27,7 +27,7 @@ export default function AddGameForm() {
   async function pick(s: Suggestion) {
     setValues((v) => ({ ...v, title: s.name, bgg_id: String(s.bggId) }));
     const res = await fetch(`/api/bgg/thing?id=${s.bggId}`).catch(() => null);
-    if (!res || !res.ok) return; // BGG indisponible : les champs restent à remplir à la main
+    if (!res || !res.ok) { setCoverName(null); return; } // BGG indisponible : les champs restent à remplir à la main
     const t = (await res.json()) as Record<string, unknown>;
     setCoverName(typeof t.coverName === 'string' ? t.coverName : null);
     const str = (x: unknown) => (x == null ? undefined : String(x));
@@ -70,7 +70,7 @@ export default function AddGameForm() {
       )}
       <label>Titre
         <input required value={values.title}
-               onChange={(e) => setValues((v) => ({ ...v, title: e.target.value }))} />
+               onChange={(e) => { setValues((v) => ({ ...v, title: e.target.value, bgg_id: '' })); setCoverName(null); }} />
       </label>
       <label>Format de boîte
         <select value={values.box_format}
