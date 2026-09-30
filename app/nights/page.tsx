@@ -5,6 +5,7 @@ import { getDb } from '@/lib/db';
 import type { UserLite } from '@/lib/types';
 import PlayerChip from '@/components/PlayerChip';
 import NightPlanner from '@/components/NightPlanner';
+import InviteButton from '@/components/InviteButton';
 
 const dateFormat = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' });
 const timeFormat = new Intl.DateTimeFormat('fr-FR', { timeStyle: 'short' });
@@ -32,6 +33,11 @@ export default async function Page() {
         <div className="chips">
           {players.map((p) => <PlayerChip key={p.id} u={p} />)}
         </div>
+        <InviteButton
+          dateLong={dateFormat.format(new Date(`${n.played_at}T12:00:00`))}
+          time={n.start_time ? timeFormat.format(new Date(`${n.played_at}T${n.start_time}`)) : null}
+          pseudos={players.map((p) => p.pseudo)}
+        />
       </li>
     );
   };
