@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { registerUser } from '@/lib/auth';
-import { createNight, getShelfGames, excludeGame, restoreGame, getExcludedGameIds, getExcludedGames, isGameOnShelf } from '@/lib/nights';
+import { createNight, getShelfGames, excludeGame, restoreGame, getExcludedGameIds, getExcludedGames, isGameOnShelf, setNightPlayers } from '@/lib/nights';
 import { createGame } from '@/lib/games';
 import { getDb } from '@/lib/db';
 
@@ -67,5 +67,18 @@ describe('pas ce soir', () => {
     expect(list[0]?.owner_sticker).toBe('🦊');
     restoreGame(n, g);
     expect(getExcludedGames(n)).toEqual([]);
+  });
+
+  it('les exclusions d’un joueur parti ne hantent pas la section écartés', () => {
+    const lea = uid('x-parti-lea');
+    const marc = uid('x-parti');
+    const n = createNight(lea, [lea, marc]);
+    const g = createGame(marc, { title: 'Fantôme', box_format: 'petit' });
+    excludeGame(n, g);
+    expect(getExcludedGames(n).map((x) => x.id)).toEqual([g]);
+    setNightPlayers(n, [lea]); // marc quitte la soirée
+    expect(getExcludedGames(n)).toEqual([]); // ROUGE avant fix : le fantôme reste
+    setNightPlayers(n, [lea, marc]); // il revient → son exclusion redevient visible
+    expect(getExcludedGames(n).map((x) => x.id)).toEqual([g]);
   });
 });

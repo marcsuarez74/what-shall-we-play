@@ -1031,8 +1031,9 @@ input[type='file'] {
 }
 
 /* l'image est absolute : height:100% ne se résout pas dans une piste de grille auto
-   (les photos portrait débordaient sinon). Le badge de sélection reste hors cadre. */
-.box img {
+   (les photos portrait débordaient sinon). Le badge de sélection reste hors cadre.
+   Sélecteur enfant direct : l'img du badge propriétaire ne doit pas hériter du fondu. */
+.box > img {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -1042,7 +1043,7 @@ input[type='file'] {
   opacity: 0;                    /* fondu d'arrivée piloté par BoxImage */
   transition: opacity 0.25s ease;
 }
-.box img.on { opacity: 1; }
+.box > img.on { opacity: 1; }
 
 /* Spinner de chargement des pochettes — petit anneau cuivre, discret */
 .box-spin {

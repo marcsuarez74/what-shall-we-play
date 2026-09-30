@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { coverSrc } from '@/lib/formats';
 import type { Game } from '@/lib/types';
 
@@ -7,11 +7,17 @@ import type { Game } from '@/lib/types';
 // Sans pochette : le placeholder ♟ d'origine.
 export default function BoxImage({ game }: { game: Game }) {
   const [loaded, setLoaded] = useState(false);
+  const ref = useRef<HTMLImageElement>(null);
   const src = coverSrc(game);
+  // Si le cache du service worker sert l'image AVANT l'hydratation, l'événement load
+  // a déjà eu lieu : onLoad ne tirera jamais — on rattrape avec img.complete.
+  useEffect(() => {
+    if (ref.current?.complete && ref.current.naturalWidth > 0) setLoaded(true);
+  }, []);
   if (!src) return <span className="cover-placeholder">♟</span>;
   return (
     <>
-      <img src={src} alt={game.title} draggable={false}
+      <img ref={ref} src={src} alt={game.title} draggable={false}
            className={loaded ? 'on' : ''} onLoad={() => setLoaded(true)} />
       {!loaded && <span className="box-spin" aria-hidden="true" />}
     </>

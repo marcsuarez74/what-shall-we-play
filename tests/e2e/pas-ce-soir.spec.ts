@@ -129,6 +129,21 @@ test('étagère : spinner discret pendant le chargement des pochettes', async ({
   await context.close();
 });
 
+test('étagère : pochette visible dès le montage quand le cache SW sert l’image (revisite)', async ({ page }) => {
+  await registerAndStart(page, `swimg-${Date.now()}`);
+  const res = await page.request.post('/api/games', {
+    multipart: { title: 'Cache chaud', box_format: 'moyen', cover: { name: 'c.png', mimeType: 'image/png', buffer: makePng(8, 8) } },
+  });
+  if (!res.ok()) throw new Error(`ajout: ${res.status()}`);
+
+  await page.goto('/etagere'); // 1re visite : remplit le cache du service worker
+  await expect(page.locator('.box img.on')).toHaveCount(1);
+  await page.goto('/etagere'); // 2e visite : le SW sert la pochette AVANT l'hydratation
+  await page.waitForTimeout(800);
+  await expect(page.locator('.box img.on')).toHaveCount(1);  // ROUGE : opacity 0 à vie
+  await expect(page.locator('.box-spin')).toHaveCount(0);    // ROUGE : spinner infini
+});
+
 test('étagère : recherche et filtres (joueurs pré-rempli, complexité, durée)', async ({ page }) => {
   await registerAndStart(page, `flt-${Date.now()}`);
   const add = async (title: string, fmt: string, meta: Record<string, string>) => {
@@ -183,4 +198,23 @@ test('étagère : badge « apporté par » sur les boîtes', async ({ page }) =>
   await expect(badge).toHaveAttribute('title', `Apporté par ${pseudo}`);
   await expect(badge).toContainText('🦊');
   expect(await badge.evaluate((el) => getComputedStyle(el).width)).toBe('16px');
+});
+
+test('badge : la photo du propriétaire est visible (pas avalée par l’opacité de la pochette)', async ({ page }) => {
+  const pseudo = `bdgph-${Date.now()}`;
+  await registerAndStart(page, pseudo);
+  const png = makePng(4, 4);
+  const up = await page.request.post('/api/me/avatar', {
+    multipart: { avatar: { name: 'p.png', mimeType: 'image/png', buffer: png } },
+  });
+  if (!up.ok()) throw new Error(`avatar: ${up.status()}`);
+  const f = new FormData();
+  f.set('title', 'Avec photo'); f.set('box_format', 'moyen');
+  await page.request.post('/api/games', { form: f });
+  await page.goto('/etagere');
+
+  const img = page.locator('.owner-badge img').first();
+  await expect(img).toBeVisible();
+  // L'opacité de la pochette (.box img) ne doit pas s'appliquer à l'img du badge
+  expect(await img.evaluate((el) => getComputedStyle(el).opacity)).toBe('1'); // ROUGE avant fix
 });

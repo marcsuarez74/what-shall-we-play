@@ -70,6 +70,7 @@ export function getExcludedGames(nightId: number): ShelfGame[] {
     FROM night_excludes ne
     JOIN games g ON g.id = ne.game_id
     JOIN users u ON u.id = g.owner_id
+    JOIN night_players np ON np.night_id = ne.night_id AND np.user_id = g.owner_id
     WHERE ne.night_id = ?
     ORDER BY g.title`).all(nightId) as ShelfGame[];
 }
