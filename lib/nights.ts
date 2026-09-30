@@ -64,6 +64,15 @@ export function getExcludedGameIds(nightId: number): number[] {
   return (getDb().prepare('SELECT game_id FROM night_excludes WHERE night_id = ? ORDER BY game_id')
     .all(nightId) as { game_id: number }[]).map((r) => r.game_id);
 }
+export function getExcludedGames(nightId: number): ShelfGame[] {
+  return getDb().prepare(`
+    SELECT g.*, u.pseudo AS owner_pseudo, u.sticker AS owner_sticker, u.avatar_path AS owner_avatar_path
+    FROM night_excludes ne
+    JOIN games g ON g.id = ne.game_id
+    JOIN users u ON u.id = g.owner_id
+    WHERE ne.night_id = ?
+    ORDER BY g.title`).all(nightId) as ShelfGame[];
+}
 export function isGameOnShelf(nightId: number, gameId: number): boolean {
   return !!getDb().prepare(`
     SELECT 1 FROM games g JOIN night_players np ON np.user_id = g.owner_id

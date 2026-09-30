@@ -1507,3 +1507,18 @@ input[type='file'] {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+
+/* « Pas ce soir » — jeu écarté du tirage de la soirée (portée nuit) */
+.btn-exclude {
+  appearance: none; width: 100%; padding: 12px; border-radius: 12px;
+  background: transparent; border: 1.5px solid color-mix(in srgb, #b5533c 55%, transparent);
+  color: #d98a76; font: inherit; font-size: 14.5px; font-weight: 600; cursor: pointer;
+}
+.btn-exclude:active { background: color-mix(in srgb, #b5533c 18%, transparent); }
+
+.excluded-block { opacity: 0.8; }
+.excluded-title {
+  font-size: 12.5px; font-weight: 600; color: var(--doux-clair);
+  text-transform: uppercase; letter-spacing: 0.06em; padding: 0 4px;
+}
+.box.ex { border-style: dashed; filter: saturate(0.45) brightness(0.82); }

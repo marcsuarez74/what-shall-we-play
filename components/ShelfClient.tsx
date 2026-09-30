@@ -8,8 +8,8 @@ import GameSheet from './GameSheet';
 import NightPicker from './NightPicker';
 import PlayerChip from './PlayerChip';
 
-export default function ShelfClient({ night, players, games, users, plays, me }: {
-  night: Night; players: UserLite[]; games: Game[]; users: UserLite[]; plays: Record<number, number>;
+export default function ShelfClient({ night, players, games, excludedGames, users, plays, me }: {
+  night: Night; players: UserLite[]; games: Game[]; excludedGames: Game[]; users: UserLite[]; plays: Record<number, number>;
   me: UserLite;
 }) {
   const router = useRouter();
@@ -22,6 +22,7 @@ export default function ShelfClient({ night, players, games, users, plays, me }:
   const suppressClick = useRef(false);
   const pressStart = useRef<{ x: number; y: number } | null>(null);
   const byFormat = useMemo(() => FORMATS.map((f) => ({ f, list: games.filter((g) => g.box_format === f) })), [games]);
+  const excludedIds = useMemo(() => new Set(excludedGames.map((g) => g.id)), [excludedGames]);
 
   useEffect(() => {
     function closeMenu(e: MouseEvent) {
@@ -45,6 +46,14 @@ export default function ShelfClient({ night, players, games, users, plays, me }:
   async function logout() {
     await fetch('/api/auth/logout', { method: 'POST' });
     router.push('/login');
+    router.refresh();
+  }
+
+  async function toggleExclude(g: Game) {
+    await fetch(`/api/nights/${night.id}/excludes`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ gameId: g.id, excluded: !excludedIds.has(g.id) }),
+    });
     router.refresh();
   }
 
@@ -120,6 +129,21 @@ export default function ShelfClient({ night, players, games, users, plays, me }:
           <p className="row-label">{FORMAT_LABEL[f]} — on swipe ›</p>
         </section>
       ))}
+      {excludedGames.length > 0 && (
+        <section className="shelf-block excluded-block">
+          <h2 className="excluded-title">Écartés ce soir ({excludedGames.length})</h2>
+          <div className="row excluded-row" role="list">
+            {excludedGames.map((g) => (
+              <button key={g.id} role="listitem" className="box ex"
+                      onClick={() => setDetail(g)}>
+                {coverSrc(g) ? <img src={coverSrc(g) as string} alt={g.title} /> : <span className="cover-placeholder">♟</span>}
+              </button>
+            ))}
+          </div>
+          <div className="rail" />
+          <p className="row-label">De retour demain — tap pour remettre ›</p>
+        </section>
+      )}
       {pickMode && (
         <div className="pick-banner" role="status">
           <span>Sélection — touche les boîtes</span>
@@ -134,7 +158,9 @@ export default function ShelfClient({ night, players, games, users, plays, me }:
       </div>
       {detail && <GameSheet game={detail} players={players} playsCount={plays[detail.id] ?? 0}
                             inSelection={selected.has(detail.id)}
-                            onToggle={() => toggle(detail.id)} onClose={() => setDetail(null)} />}
+                            onToggle={() => toggle(detail.id)} onClose={() => setDetail(null)}
+                            excluded={excludedIds.has(detail.id)}
+                            onToggleExcluded={() => toggleExclude(detail)} />}
       {editingNight && (
         <div className="sheet-backdrop" onClick={() => setEditingNight(false)}>
           <div className="bottom-sheet" role="dialog" aria-modal="true" aria-label="Modifier la soirée"

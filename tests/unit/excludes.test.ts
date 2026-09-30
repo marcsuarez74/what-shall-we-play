@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { registerUser } from '@/lib/auth';
-import { createNight, getShelfGames, excludeGame, restoreGame, getExcludedGameIds, isGameOnShelf } from '@/lib/nights';
+import { createNight, getShelfGames, excludeGame, restoreGame, getExcludedGameIds, getExcludedGames, isGameOnShelf } from '@/lib/nights';
 import { createGame } from '@/lib/games';
 import { getDb } from '@/lib/db';
 
@@ -52,5 +52,20 @@ describe('pas ce soir', () => {
     const lointain = createGame(autre, { title: 'Loin', box_format: 'petit' });
     expect(isGameOnShelf(n, mien)).toBe(true);
     expect(isGameOnShelf(n, lointain)).toBe(false); // le handler refusera (400)
+  });
+
+  it('getExcludedGames renvoie les jeux écartés avec le propriétaire', () => {
+    const marc = uid('x-excl-list');
+    const lea = uid('x-excl-list-lea');
+    getDb().prepare("UPDATE users SET sticker = '🦊' WHERE id = ?").run(marc);
+    const n = createNight(marc, [marc, lea]);
+    const g = createGame(marc, { title: 'Écarté', box_format: 'petit' });
+    excludeGame(n, g);
+    const list = getExcludedGames(n);
+    expect(list.map((x) => x.id)).toEqual([g]);
+    expect(list[0]?.owner_pseudo).toBe('x-excl-list');
+    expect(list[0]?.owner_sticker).toBe('🦊');
+    restoreGame(n, g);
+    expect(getExcludedGames(n)).toEqual([]);
   });
 });
