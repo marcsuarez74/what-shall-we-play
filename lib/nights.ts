@@ -1,19 +1,33 @@
 import { getDb } from './db';
 import type { Game, Night, Pick, UserLite } from './types';
 
-export function getCurrentNight(userId: number): Night | null {
-  return (getDb().prepare(
-    `SELECT * FROM nights WHERE creator_id = ? AND played_at = date('now','localtime') ORDER BY id DESC LIMIT 1`)
-    .get(userId) as Night | undefined) ?? null;
+export function getActiveNight(userId: number): Night | null {
+  return (getDb().prepare(`
+    SELECT n.* FROM nights n
+    WHERE n.played_at = date('now','localtime')
+      AND (n.creator_id = ? OR EXISTS (SELECT 1 FROM night_players np WHERE np.night_id = n.id AND np.user_id = ?))
+    ORDER BY n.id DESC LIMIT 1`).get(userId, userId) as Night | undefined) ?? null;
 }
-export function getNight(nightId: number): Night | null {
-  return (getDb().prepare('SELECT * FROM nights WHERE id = ?').get(nightId) as Night | undefined) ?? null;
+
+// Soirées à venir (créateur OU participant), la plus proche d'abord.
+export function getPlannedNights(userId: number): Night[] {
+  return getDb().prepare(`
+    SELECT n.* FROM nights n
+    WHERE n.played_at > date('now','localtime')
+      AND (n.creator_id = ? OR EXISTS (SELECT 1 FROM night_players np WHERE np.night_id = n.id AND np.user_id = ?))
+    ORDER BY n.played_at ASC, n.id ASC`).all(userId, userId) as Night[];
 }
-export function createNight(creatorId: number, playerIds: number[]): number {
-  const info = getDb().prepare('INSERT INTO nights (creator_id) VALUES (?)').run(creatorId);
+
+export function createNight(creatorId: number, playerIds: number[], opts?: { playedAt?: string; startTime?: string | null }): number {
+  const info = getDb()
+    .prepare(`INSERT INTO nights (creator_id, played_at, start_time) VALUES (?, COALESCE(?, date('now','localtime')), ?)`)
+    .run(creatorId, opts?.playedAt ?? null, opts?.startTime ?? null);
   const nightId = Number(info.lastInsertRowid);
   setNightPlayers(nightId, playerIds.includes(creatorId) ? playerIds : [...playerIds, creatorId]);
   return nightId;
+}
+export function getNight(nightId: number): Night | null {
+  return (getDb().prepare('SELECT * FROM nights WHERE id = ?').get(nightId) as Night | undefined) ?? null;
 }
 export function setNightPlayers(nightId: number, playerIds: number[]): void {
   const db = getDb();

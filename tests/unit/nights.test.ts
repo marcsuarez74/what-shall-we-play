@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { registerUser } from '@/lib/auth';
-import { createNight, getShelfGames, getCurrentNight, userCanAccessNight, setNightPlayers, getMyNights } from '@/lib/nights';
+import { createNight, getShelfGames, getActiveNight, userCanAccessNight, setNightPlayers, getMyNights } from '@/lib/nights';
 import { createGame } from '@/lib/games';
 import { getDb } from '@/lib/db';
 
@@ -13,7 +13,7 @@ describe('nights', () => {
     const nightId = createNight(marc, [marc, lea]);
     const games = getShelfGames(nightId);
     expect(games.map((g) => g.title).sort()).toEqual(['Harmonies', 'Terraforming Mars']);
-    expect(getCurrentNight(marc)?.id).toBe(nightId);
+    expect(getActiveNight(marc)?.id).toBe(nightId);
     expect(userCanAccessNight(lea, nightId)).toBe(true);
     expect(userCanAccessNight((registerUser('n-autre', '1234') as { id: number }).id, nightId)).toBe(false);
   });
@@ -38,15 +38,15 @@ describe('nights', () => {
     expect(ids).toEqual([quittee, invite, hier]); // played_at DESC, puis id DESC
     expect(ids).not.toContain(etrangere);
   });
-  it('getCurrentNight suit le jour local (Europe/Paris) et bascule au lendemain', () => {
+  it('getActiveNight suit le jour local (Europe/Paris) et bascule au lendemain', () => {
     const u = (registerUser('n-tz', '1234') as { id: number }).id;
     const nightId = createNight(u, [u]);
     const db = getDb();
     const today = (db.prepare(`SELECT date('now','localtime') AS d`).get() as { d: string }).d;
-    const night = getCurrentNight(u);
+    const night = getActiveNight(u);
     expect(night?.id).toBe(nightId);
     expect(night?.played_at).toBe(today); // app et base s'accordent sur « aujourd'hui »
     db.prepare(`UPDATE nights SET played_at = date('now','localtime','-1 day') WHERE id = ?`).run(nightId);
-    expect(getCurrentNight(u)).toBeNull(); // passé au jour suivant : plus de soirée courante
+    expect(getActiveNight(u)).toBeNull(); // passé au jour suivant : plus de soirée courante
   });
 });

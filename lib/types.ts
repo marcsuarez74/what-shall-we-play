@@ -11,5 +11,5 @@ export interface Game {
   designer: string | null; artist: string | null; best_players: number | null;
   owner_pseudo?: string; owner_sticker?: string | null; owner_avatar_path?: string | null;
 }
-export interface Night { id: number; creator_id: number; played_at: string; created_at: string; }
+export interface Night { id: number; creator_id: number; played_at: string; start_time?: string | null; created_at: string; }
 export interface Pick { id: number; night_id: number; game_id: number; spinner_id: number; created_at: string; }

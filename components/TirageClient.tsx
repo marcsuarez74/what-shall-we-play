@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { coverSrc } from '@/lib/formats';
 import type { Game } from '@/lib/types';
 import { finalRotation, jitterFor } from '@/lib/wheel';
+import { buildResultMessage, shareMessage } from '@/lib/announce';
 import Wheel from './Wheel';
 
 const fmt = (n: number) => n.toLocaleString('fr-FR', { maximumFractionDigits: 1 });
@@ -11,7 +12,12 @@ const REDUCED_MS = 500;    // prefers-reduced-motion : transition 0,4 s
 
 type Phase = 'spin' | 'verdict' | 'error';
 
-export default function TirageClient({ nightId, games }: { nightId: number; games: Game[] }) {
+export default function TirageClient({ nightId, games, waitingPseudos, startTime }: {
+  nightId: number;
+  games: Game[];
+  waitingPseudos: string[];
+  startTime: string | null;
+}) {
   const [phase, setPhase] = useState<Phase>('spin');
   const [picked, setPicked] = useState<Game | null>(null);
   const [rotation, setRotation] = useState(0);
@@ -90,6 +96,15 @@ export default function TirageClient({ nightId, games }: { nightId: number; game
             <button type="button" className={`btn-copper ${boxOut ? 'is-sel' : ''}`}
                     onClick={() => setBoxOut(true)}>
               {boxOut ? 'Boîte sortie ✓' : 'Sortir la boîte 📦'}
+            </button>
+            <button type="button" className="btn-ghost"
+                    onClick={() => picked && shareMessage(buildResultMessage({
+                      title: picked.title,
+                      ownerPseudo: picked.owner_pseudo ?? '',
+                      waiting: waitingPseudos.filter((p) => p !== picked.owner_pseudo),
+                      time: startTime,
+                    }))}>
+              💬 Annoncer sur WhatsApp
             </button>
             <button type="button" className="btn-ghost" onClick={draw}>Relancer le tirage</button>
           </div>
