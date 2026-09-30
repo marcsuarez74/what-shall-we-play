@@ -124,6 +124,7 @@ export default function AddGameForm() {
       if (stage === 'etiquette') fetchInfos();
       else if (stage === 'fiche') submit();
     }}>
+      <h1>Ajouter un jeu</h1>
       {stage === 'etiquette' && (
         <>
           <label htmlFor="add-titre">Titre du jeu</label>

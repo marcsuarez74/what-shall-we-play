@@ -188,7 +188,49 @@ input[type='file'] {
   max-width: 560px;
   margin: 0 auto;
   min-height: 100dvh;
-  padding: 18px 16px 40px;
+  padding: 18px 16px 96px; /* dégagement pour la barre d'onglets */
+}
+
+/* ---------- Barre d'onglets ---------- */
+.tabbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  display: flex;
+  height: 66px;
+  padding-bottom: env(safe-area-inset-bottom);
+  background: color-mix(in srgb, var(--surface) 94%, black);
+  border-top: 1px solid color-mix(in srgb, var(--doux) 45%, transparent);
+}
+
+.tabbar a {
+  flex: 1;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 3px;
+  color: var(--doux-clair);
+  font-size: 11px;
+}
+
+.tabbar a .ico { font-size: 19px; opacity: 0.85; }
+
+.tabbar a.on {
+  color: var(--cuivre);
+  font-weight: 600;
+}
+
+.tabbar a.on .ico { opacity: 1; }
+
+.page h1 small,
+.lib-info small {
+  font-family: var(--font-ui), system-ui, sans-serif;
+  font-size: 14px;
+  color: var(--doux-clair);
+  font-weight: 400;
+  margin-left: 8px;
 }
 
 .page > h1 {
@@ -559,55 +601,100 @@ input[type='file'] {
 }
 
 /* ---------- Bibliothèque ---------- */
-.library {
+.lib {
   list-style: none;
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.library li {
+/* cartes de la bibliothèque */
+.lib {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.lib-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface);
+  border-radius: 14px;
+  padding: 10px;
+}
+
+.lib-main {
+  appearance: none;
+  border: none;
+  background: none;
+  color: var(--creme);
+  font: inherit;
+  flex: 1;
   display: flex;
   align-items: center;
   gap: 12px;
-  background: var(--surface);
-  border-radius: 14px;
-  padding: 10px 12px;
+  min-width: 0;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
 }
 
-.library li > div:nth-child(2) {
-  flex: 1;
+.lib-info {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 3px;
   min-width: 0;
 }
 
-.library strong {
+.lib-info strong {
   font-size: 15px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.library select {
-  width: auto;
-  padding: 6px 10px;
-  font-size: 14px;
-}
+.lib-meta { color: var(--doux-clair); font-size: 12px; }
 
-.library li > button {
-  appearance: none;
-  border: 1px solid var(--doux);
-  border-radius: 10px;
-  background: transparent;
+.lib-k { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.lib-k span {
+  font-size: 11px;
   color: var(--doux-clair);
-  font: inherit;
-  font-size: 14px;
-  padding: 8px 12px;
-  cursor: pointer;
+  background: var(--noyer);
+  border-radius: 999px;
+  padding: 2px 8px;
 }
 
-.library li > button:hover {
-  border-color: var(--cuivre);
-  color: var(--creme);
+.lib-fmt {
+  width: auto;
+  padding: 6px 8px;
+  font-size: 12.5px;
+  background: var(--noyer);
+  border-color: var(--doux);
+  color: var(--cuivre);
+}
+
+.lib-rm {
+  appearance: none;
+  border: none;
+  background: none;
+  color: var(--doux);
+  font-size: 15px;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.lib-rm:hover { color: var(--creme); }
+
+.lib-card img,
+.lib-card .cover-placeholder {
+  width: 52px;
+  height: 52px;
+  border-radius: 9px;
+  object-fit: cover;
+  flex: 0 0 auto;
 }
 
 .library img,
@@ -793,7 +880,11 @@ input[type='file'] {
   transform: scale(0.97);
 }
 
+/* l'image est absolute : height:100% ne se résout pas dans une piste de grille auto
+   (les photos portrait débordaient sinon). Le badge de sélection reste hors cadre. */
 .box img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;

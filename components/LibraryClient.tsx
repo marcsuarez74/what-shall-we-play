@@ -1,46 +1,78 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { coverSrc } from '@/lib/formats';
+import { FORMATS, FORMAT_LABEL, coverSrc } from '@/lib/formats';
 import type { Game } from '@/lib/types';
+import GameSheet from './GameSheet';
 
-export default function LibraryClient({ games: initial }: { games: Game[] }) {
+export default function LibraryClient({ games: initial, plays }: {
+  games: Game[];
+  plays: Record<number, number>;
+}) {
   const router = useRouter();
   const [games, setGames] = useState(initial);
   const [notice, setNotice] = useState<string | null>(null);
+  const [detail, setDetail] = useState<Game | null>(null);
 
   async function remove(id: number) {
     const res = await fetch(`/api/games/${id}`, { method: 'DELETE' });
     if (res.status === 409) { setNotice((await res.json()).error); return; }
-    if (res.ok) { setGames((g) => g.filter((x) => x.id !== id)); setNotice(null); }
+    if (res.ok) {
+      setGames((g) => g.filter((x) => x.id !== id));
+      setNotice(null);
+      setDetail((d) => (d?.id === id ? null : d));
+      router.refresh();
+    }
   }
+
   async function setFormat(id: number, box_format: string) {
     const res = await fetch(`/api/games/${id}`, { method: 'PATCH',
       headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ box_format }) });
     if (res.ok) setGames((g) => g.map((x) => x.id === id ? { ...x, box_format: box_format as Game['box_format'] } : x));
     router.refresh();
   }
+
   return (
     <div>
-      <h1>Ma bibliothèque</h1>
+      <h1>Ma bibliothèque <small>{games.length} jeu{games.length > 1 ? 'x' : ''}</small></h1>
       {notice && <p className="hint" role="alert">{notice}</p>}
-      {games.length === 0 && <p className="empty">Aucun jeu pour l&apos;instant. Touchez « Ajouter » pour commencer votre étagère.</p>}
-      <ul className="library">
+      {games.length === 0 && (
+        <p className="empty">Aucun jeu pour l&apos;instant. Onglet « Ajouter » pour commencer votre étagère.</p>
+      )}
+      <ul className="lib">
         {games.map((g) => (
-          <li key={g.id}>
-            {coverSrc(g)
-              ? <img src={coverSrc(g) as string} alt="" />
-              : <div className="cover-placeholder">♟</div>}
-            <div>
-              <strong>{g.title}</strong>
-              <select value={g.box_format} onChange={(e) => setFormat(g.id, e.target.value)}>
-                {(['grand','moyen','petit','mini'] as const).map((f) => <option key={f} value={f}>{f}</option>)}
-              </select>
-            </div>
-            <button onClick={() => remove(g.id)}>Retirer</button>
+          <li key={g.id} className="lib-card">
+            <button type="button" className="lib-main" onClick={() => setDetail(g)}
+                    aria-label={`Voir la fiche de ${g.title}`}>
+              {coverSrc(g)
+                ? <img src={coverSrc(g) as string} alt="" />
+                : <span className="cover-placeholder" aria-hidden>♟</span>}
+              <span className="lib-info">
+                <strong>{g.title}</strong>
+                {(g.year || g.publisher) && (
+                  <span className="lib-meta">{g.year ?? '—'} · {g.publisher ?? '—'}</span>
+                )}
+                <span className="lib-k">
+                  {g.min_players != null && g.max_players != null && (
+                    <span>👥 {g.min_players === g.max_players ? g.min_players : `${g.min_players}–${g.max_players}`}</span>
+                  )}
+                  {g.playtime_min != null && <span>⏱ {g.playtime_min} min</span>}
+                </span>
+              </span>
+            </button>
+            <select className="lib-fmt" value={g.box_format} aria-label={`Format de boîte de ${g.title}`}
+                    onChange={(e) => setFormat(g.id, e.target.value)}>
+              {FORMATS.map((f) => <option key={f} value={f}>{FORMAT_LABEL[f]}</option>)}
+            </select>
+            <button type="button" className="lib-rm" aria-label={`Retirer ${g.title}`} onClick={() => remove(g.id)}>✕</button>
           </li>
         ))}
       </ul>
+      {detail && (
+        <GameSheet game={detail} players={[]} playsCount={plays[detail.id] ?? 0}
+                   inSelection={false} onToggle={() => {}} onClose={() => setDetail(null)}
+                   mode="library" />
+      )}
     </div>
   );
 }
