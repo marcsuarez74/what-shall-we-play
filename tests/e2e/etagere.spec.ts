@@ -8,9 +8,9 @@ test('étagère : sélection via fiche, CTA compteur', async ({ page }) => {
   await page.getByRole('button', { name: 'Créer mon compte' }).click();
   await registerDone; // sinon le goto suivant peut interrompre le POST avant le cookie
   await page.goto('/games/add');
-  await page.getByLabel('Titre').fill('Terraforming Mars');
-  await page.getByLabel('Format de boîte').selectOption('grand');
-  await page.getByRole('button', { name: 'Ajouter à ma bibliothèque' }).click();
+  await page.getByLabel('Titre du jeu').fill('Terraforming Mars');
+  await page.getByRole('button', { name: 'Saisir à la main' }).click();
+  await page.getByRole('button', { name: 'Ajouter à la ludothèque' }).click();
   // Soirée : le créateur est déjà pré-coché — on ne touche à aucune autre case
   // (les autres utilisateurs listés appartiennent à d'autres comptes)
   await page.getByRole('button', { name: /Lancer la soirée|Créer la soirée/ }).click();
