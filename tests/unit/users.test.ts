@@ -3,7 +3,7 @@ import { registerUser } from '@/lib/auth';
 import { createNight } from '@/lib/nights';
 import { createGame } from '@/lib/games';
 import { getDb } from '@/lib/db';
-import { getProfileStats, setSticker, ALLOWED_STICKERS } from '@/lib/users';
+import { getProfileStats, setSticker, ALLOWED_STICKERS, deleteAccount } from '@/lib/users';
 
 const uid = (p: string) => (registerUser(p, '1234') as { id: number }).id;
 const pick = (nightId: number, gameId: number, spinnerId: number) =>
@@ -40,5 +40,26 @@ describe('profil', () => {
     const cols = (getDb().pragma('table_info(users)') as { name: string }[]).map((c) => c.name);
     expect(cols).toContain('sticker');
     expect(cols).toContain('avatar_path');
+  });
+
+  it('deleteAccount : tout part, les soirées des autres restent', () => {
+    const marc = uid('p-del-marc');
+    const lea = uid('p-del-lea');
+    const g = createGame(marc, { title: 'À supprimer', box_format: 'grand' });
+    const nMarc = createNight(marc, [marc, lea]);
+    const nLea = createNight(lea, [lea, marc]);
+    pick(nMarc, g, marc);   // tirage de marc sur SA soirée
+    pick(nLea, g, lea);     // tirage de léa sur le jeu de marc (RESTRICT game_id)
+    const res = deleteAccount(marc);
+    expect(res).toEqual({ ok: true, removedGames: 1 });
+    const cnt = (sql: string, ...args: (string | number)[]) =>
+      Number((getDb().prepare(sql).get(...args) as { n: number }).n);
+    expect(cnt('SELECT COUNT(*) AS n FROM users WHERE id = ?', marc)).toBe(0);
+    expect(cnt('SELECT COUNT(*) AS n FROM games WHERE owner_id = ?', marc)).toBe(0);
+    expect(cnt('SELECT COUNT(*) AS n FROM picks WHERE game_id = ?', g)).toBe(0); // les 2 tirages visaient son jeu
+    expect(cnt('SELECT COUNT(*) AS n FROM picks WHERE spinner_id = ?', marc)).toBe(0);
+    expect(cnt('SELECT COUNT(*) AS n FROM nights WHERE id = ?', nMarc)).toBe(0); // sa soirée créée part
+    expect(cnt('SELECT COUNT(*) AS n FROM nights WHERE id = ?', nLea)).toBe(1); // la soirée de léa reste
+    expect(cnt('SELECT COUNT(*) AS n FROM night_players WHERE night_id = ?', nLea)).toBe(1); // sans marc
   });
 });
