@@ -19,6 +19,8 @@ RUN npm run build
 # ---- run : image finale minimaliste ----
 FROM node:22-alpine AS run
 WORKDIR /app
+# tzdata : sans elle /usr/share/zoneinfo est absent et TZ=Europe/Paris retombe sur UTC
+RUN apk add --no-cache tzdata
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
     PORT=3000 \
