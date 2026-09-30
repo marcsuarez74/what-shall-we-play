@@ -65,6 +65,8 @@ export function getDb(): Database.Database {
     'ALTER TABLE games ADD COLUMN designer TEXT',
     'ALTER TABLE games ADD COLUMN artist TEXT',
     'ALTER TABLE games ADD COLUMN best_players INTEGER',
+    'ALTER TABLE users ADD COLUMN sticker TEXT',
+    'ALTER TABLE users ADD COLUMN avatar_path TEXT',
   ]) {
     try { db.exec(stmt); } catch { /* colonne déjà présente */ }
   }
