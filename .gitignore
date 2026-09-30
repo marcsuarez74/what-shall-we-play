@@ -14,3 +14,8 @@ data/
 .superpowers/
 .DS_Store
 *.log
+
+# outillage tests (task 1)
+.tmp-vitest/
+test-results/
+playwright-report/
