@@ -35,9 +35,9 @@ test('étagère vide à la création, le sélecteur ajoute depuis ma ludothèque
   const sheet = page.locator('.picker-sheet');
   await expect(sheet).toBeVisible();
   await expect(sheet.locator('.pick-row')).toHaveCount(2);
-  await sheet.getByLabel('Rechercher dans ma ludothèque').fill('azul'); // insensible à la casse
+  await sheet.getByLabel('Rechercher un jeu').fill('azul'); // insensible à la casse
   await expect(sheet.locator('.pick-row')).toHaveCount(1);
-  await sheet.getByLabel('Rechercher dans ma ludothèque').fill('');
+  await sheet.getByLabel('Rechercher un jeu').fill('');
 
   // Un tap = un ajout (✓ vert), le compteur suit ; « Terminé » referme
   await sheet.getByRole('button', { name: /Ajouter Azul/ }).click();
@@ -397,4 +397,55 @@ test('picker : ajouter un jeu ne fait pas sauter le défilement de la feuille', 
     return s.scrollTop + l.scrollTop;
   });
   expect(Math.abs(apres - avant)).toBeLessThan(10); // le défilement n'a pas bougé
+});
+
+// v3.2 — deux signaux joueurs : un scroll horizontal parasite sur la feuille
+// (zoom iOS sur les champs < 16px + contenu plus large que la liste), et les
+// filtres de l'étagère absents de la liste du sélecteur.
+test('picker : aucun défilement horizontal, même avec un titre interminable', async ({ page }) => {
+  await registerAndStart(page, `hscrol-${Date.now()}`);
+  await newGame(page, 'SuperLongTitreDeJeuSansAucunEspaceInterneVraimentTresLargePourDeborderLaFeuille', 'moyen');
+  for (let i = 1; i <= 3; i++) await newGame(page, `Rangement ${i}`, 'petit');
+  await page.goto('/etagere');
+  await page.getByRole('button', { name: 'Ajouter des jeux depuis ma ludothèque' }).click();
+  const sheet = page.locator('.picker-sheet');
+  await sheet.locator('.pick-row').first().waitFor();
+
+  const debordements = await page.evaluate(() => {
+    const liste = document.querySelector('.pick-list') as HTMLElement;
+    const feuille = document.querySelector('.picker-sheet') as HTMLElement;
+    const doc = document.documentElement;
+    return {
+      liste: liste.scrollWidth - liste.clientWidth,
+      feuille: feuille.scrollWidth - feuille.clientWidth,
+      page: doc.scrollWidth - doc.clientWidth,
+    };
+  });
+  expect(debordements.liste).toBeLessThanOrEqual(0);
+  expect(debordements.feuille).toBeLessThanOrEqual(0);
+  expect(debordements.page).toBeLessThanOrEqual(0);
+  // les champs font au moins 16px : iOS ne zoome pas au focus (pas de faux scroll horizontal)
+  const fontSize = await sheet.locator('.shelf-search').evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
+  expect(fontSize).toBeGreaterThanOrEqual(16);
+});
+
+test('picker : les filtres de l\'étagère s\'appliquent à la liste', async ({ page }) => {
+  await registerAndStart(page, `filtre-${Date.now()}`);
+  await newGame(page, 'Grand Jeu Lourd', 'grand', { playtime_min: '120', weight: '3.4', min_players: '3', max_players: '5' });
+  await newGame(page, 'Petit Jeu Rapide', 'petit', { playtime_min: '20', weight: '1.3', min_players: '2', max_players: '4' });
+  await page.goto('/etagere');
+  await page.getByRole('button', { name: 'Ajouter des jeux depuis ma ludothèque' }).click();
+  const sheet = page.locator('.picker-sheet');
+  await sheet.locator('.pick-row').first().waitFor();
+
+  // Filtre par format : « Boîte : Petit » → une seule rangée
+  await sheet.getByRole('button', { name: 'Filtres' }).click();
+  await sheet.getByRole('group', { name: 'Filtrer par format de boîte' }).getByRole('button', { name: 'Petit' }).click();
+  await expect(sheet.locator('.pick-row')).toHaveCount(1);
+  await expect(sheet.locator('.pick-row').first()).toContainText('Petit Jeu Rapide');
+
+  // Compteur cohérent + « Tout afficher » ramène les deux
+  await expect(sheet.locator('.shelf-count')).toContainText('1 jeu sur 2');
+  await sheet.getByRole('button', { name: 'Tout afficher' }).click();
+  await expect(sheet.locator('.pick-row')).toHaveCount(2);
 });
