@@ -4,6 +4,15 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [3.2.1] — 2026-10-01
+
+### Corrigé
+- **Le scroll vertical de la page passe au-dessus des rangées de boîtes**
+  (signalement joueur) : un `touch-action: pan-x` hérité de l'ancien appui
+  maintenu faisait que le navigateur n'acceptait que l'horizontal au-dessus
+  des boîtes — tout geste vertical y était avalé. La rangée n'est plus un
+  conteneur vertical (`overflow-y: clip`).
+
 ## [3.2.0] — 2026-10-01
 
 ### Ajouté
