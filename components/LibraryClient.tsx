@@ -1,7 +1,7 @@
 'use client';
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { FORMATS, FORMAT_LABEL, coverSrc } from '@/lib/formats';
+import { FORMATS, FORMAT_LABEL, FORMAT_SHORT, coverSrc } from '@/lib/formats';
 import { filterShelf, type ShelfFilters } from '@/lib/filters';
 import type { Game } from '@/lib/types';
 import GameSheet from './GameSheet';
@@ -55,7 +55,7 @@ export default function LibraryClient({ games: initial, plays, activeNightId = n
 
   return (
     <div>
-      <h1>Ma bibliothèque <small>{games.length} jeu{games.length > 1 ? 'x' : ''}</small></h1>
+      <h1>Ma ludothèque <small>{games.length} jeu{games.length > 1 ? 'x' : ''}</small></h1>
       {notice && <p className="hint" role="alert">{notice}</p>}
       {games.length === 0 && (
         <p className="empty">Aucun jeu pour l&apos;instant. Onglet « Ajouter » pour commencer votre étagère.</p>
@@ -67,36 +67,44 @@ export default function LibraryClient({ games: initial, plays, activeNightId = n
       <ul className="lib">
         {filtered.map((g) => (
           <li key={g.id} className="lib-card">
-            <button type="button" className="lib-main" onClick={() => setDetail(g)}
-                    aria-label={`Voir la fiche de ${g.title}`}>
-              {coverSrc(g)
-                ? <img src={coverSrc(g) as string} alt="" />
-                : <span className="cover-placeholder" aria-hidden>♟</span>}
-              <span className="lib-info">
-                <strong>{g.title}</strong>
-                {(g.year || g.publisher) && (
-                  <span className="lib-meta">{g.year ?? '—'} · {g.publisher ?? '—'}</span>
-                )}
-                <span className="lib-k">
-                  {g.min_players != null && g.max_players != null && (
-                    <span>👥 {g.min_players === g.max_players ? g.min_players : `${g.min_players}–${g.max_players}`}</span>
-                  )}
-                  {g.playtime_min != null && <span>⏱ {g.playtime_min} min</span>}
+            <div className="lib-top">
+              <button type="button" className="lib-main" onClick={() => setDetail(g)}
+                      aria-label={`Voir la fiche de ${g.title}`}>
+                <span className="lib-cover">
+                  {coverSrc(g)
+                    ? <img src={coverSrc(g) as string} alt="" />
+                    : <span className="cover-placeholder" aria-hidden>♟</span>}
                 </span>
-              </span>
-            </button>
-            <select className="lib-fmt" value={g.box_format} aria-label={`Format de boîte de ${g.title}`}
-                    onChange={(e) => setFormat(g.id, e.target.value)}>
-              {FORMATS.map((f) => <option key={f} value={f}>{FORMAT_LABEL[f]}</option>)}
-            </select>
-            {activeNightId != null && (
-              <button type="button" className={`lib-excl ${excluded.has(g.id) ? 'on' : ''}`}
-                      aria-label={excluded.has(g.id) ? `Remettre ${g.title} au tirage ce soir` : `Écarter ${g.title} du tirage ce soir`}
-                      onClick={() => toggleExclude(g)}>
-                {excluded.has(g.id) ? '✓ Écarté ce soir' : 'Pas ce soir'}
+                <span className="lib-info">
+                  <strong>{g.title}</strong>
+                  {(g.year || g.publisher) && (
+                    <span className="lib-meta">{g.year ?? '—'} · {g.publisher ?? '—'}</span>
+                  )}
+                  <span className="traits">
+                    <span className="fmt">{FORMAT_SHORT[g.box_format]}</span>
+                    {g.min_players != null && g.max_players != null && (
+                      <span>👥 {g.min_players === g.max_players ? g.min_players : `${g.min_players}–${g.max_players}`}</span>
+                    )}
+                    {g.playtime_min != null && <span>⏱ {g.playtime_min} min</span>}
+                    {g.weight != null && <span>⚖ {g.weight.toLocaleString('fr-FR', { maximumFractionDigits: 1 })}</span>}
+                  </span>
+                </span>
               </button>
-            )}
-            <button type="button" className="lib-rm" aria-label={`Retirer ${g.title}`} onClick={() => remove(g.id)}>✕</button>
+              <button type="button" className="lib-rm" aria-label={`Retirer ${g.title}`} onClick={() => remove(g.id)}>✕</button>
+            </div>
+            <div className="lib-act">
+              <select className="lib-fmt" value={g.box_format} aria-label={`Format de boîte de ${g.title}`}
+                      onChange={(e) => setFormat(g.id, e.target.value)}>
+                {FORMATS.map((f) => <option key={f} value={f}>{FORMAT_LABEL[f]}</option>)}
+              </select>
+              {activeNightId != null && (
+                <button type="button" className={`lib-excl ${excluded.has(g.id) ? 'on' : ''}`}
+                        aria-label={excluded.has(g.id) ? `Remettre ${g.title} au tirage ce soir` : `Écarter ${g.title} du tirage ce soir`}
+                        onClick={() => toggleExclude(g)}>
+                  {excluded.has(g.id) ? '✓ Écarté ce soir' : 'Pas ce soir'}
+                </button>
+              )}
+            </div>
           </li>
         ))}
       </ul>

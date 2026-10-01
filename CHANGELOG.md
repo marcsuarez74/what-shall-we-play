@@ -8,9 +8,12 @@ versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
 ### Ajouté
 - **Recherche et filtres sur la bibliothèque** : barre de contrôles partagée avec l'étagère, plus une famille propre à la ludothèque — format de **boîte** (Grand/Moyen/Petit/Mini). Compteur « N jeux sur M » et lien « Tout afficher » quand des filtres mordent.
+- **Terminer la soirée** : depuis le QG, le créateur clôture la soirée en cours (double-tap de confirmation) — l'étagère redevient vierge, la soirée rejoint l'historique, rien n'est supprimé.
 
 ### Modifié
+- **Filtres repliés par défaut** : sur l'étagère comme sur la ludothèque, une seule rangée (recherche + bouton « Filtres » badgeant les familles actives) ; le détail se déplie au tap. La liste est le héros.
 - **Filtres de l'étagère repensés** : contrôles segmentés étiquetés (Joueurs, Complexité, Durée) — plus lisibles, deux fois moins hauts, un tap pour changer de valeur.
+- **« Ma bibliothèque » devient « Ma ludothèque »** (onglet + titre), et les cartes passent en trois zones : identité (pochette, titre, année · éditeur), traits (format encadré cuivre, joueurs, durée, poids), filet d'actions (sélecteur de format à gauche, « Pas ce soir » à droite).
 - **QG Soirées repensé** : « Ce soir » devient la carte vivante à liseré cuivre ; les programmées affichent la date en héros (numéro du jour, mois, heure en badge) ; l'historique passe en rangées compactes scannables.
 
 ## [1.4.0] — 2026-10-01

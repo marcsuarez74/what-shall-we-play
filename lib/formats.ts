@@ -4,6 +4,11 @@ export const FORMAT_SCALE: Record<BoxFormat, number> = { grand: 1, moyen: 0.78, 
 export const FORMAT_LABEL: Record<BoxFormat, string> = {
   grand: 'Grand · 30×30', moyen: 'Moyen', petit: 'Petit', mini: 'Mini-boîte',
 };
+
+// Étiquettes courtes (puces de traits, familles de filtres).
+export const FORMAT_SHORT: Record<BoxFormat, string> = {
+  grand: 'Grand', moyen: 'Moyen', petit: 'Petit', mini: 'Mini',
+};
 export function coverSrc(g: Pick<Game, 'cover_path' | 'cover_url'>): string | null {
   if (g.cover_path) return `/api/cover/${g.cover_path}`;
   return g.cover_url;

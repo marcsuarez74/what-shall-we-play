@@ -86,7 +86,7 @@ test('avatar photo : chip ronde, aucun hash bcrypt dans la page, boîtes non sé
   // I2 : la boîte n'ouvre pas la sélection/callout système au maintien
   const box = page.locator('.box').first();
   await box.scrollIntoViewIfNeeded();
-  const cs = await box.evaluate((el) => { const s = getComputedStyle(el); return { us: s.userSelect || s.webkitUserSelect, callout: s.webkitTouchCallout }; });
+  const cs = await box.evaluate((el) => { const s = getComputedStyle(el); return { us: s.userSelect || (s as CSSStyleDeclaration & { webkitUserSelect?: string }).webkitUserSelect, callout: (s as CSSStyleDeclaration & { webkitTouchCallout?: string }).webkitTouchCallout }; });
   expect(cs.us === 'none' || cs.callout === 'none').toBe(true);
 });
 

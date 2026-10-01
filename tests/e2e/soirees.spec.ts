@@ -165,3 +165,25 @@ test('programmée : « Inviter sur WhatsApp » avec date longue, heure et joueur
   expect(text).toContain(`inv-btn-${s}`); // créateur listé
   expect(text).toContain(`thib-${s}`);    // invité listé
 });
+
+test('terminer la soirée : étagère vidée, nuit conservée en historique', async ({ page }) => {
+  await register(page, `fin-${Date.now().toString(36)}`);
+  await page.request.post('http://localhost:3000/api/nights', { data: { playerIds: [] } });
+  await page.goto('/etagere');
+  await expect(page.locator('.night-card')).toBeVisible();
+
+  // Double-tap de confirmation dans le QG
+  await page.goto('/nights');
+  await page.getByRole('button', { name: 'Terminer la soirée' }).click();
+  const endPost = page.waitForResponse((r) => r.url().includes('/end') && r.request().method() === 'POST');
+  await page.getByRole('button', { name: 'Sûr ? Terminer' }).click();
+  await endPost;
+
+  // « Ce soir » est vide, la nuit est dans l'historique
+  await expect(page.locator('[aria-label="Ce soir"] .empty')).toBeVisible();
+  await expect(page.locator('[aria-label="Historique"] .hist-row')).toHaveCount(1);
+
+  // L'étagère revient à l'état vierge
+  await page.goto('/etagere');
+  await expect(page.getByRole('button', { name: 'Créer la soirée' })).toBeVisible();
+});
