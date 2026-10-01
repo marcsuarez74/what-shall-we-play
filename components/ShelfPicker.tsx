@@ -1,5 +1,5 @@
 'use client';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FORMATS, FORMAT_LABEL } from '@/lib/formats';
 import { normalizeText } from '@/lib/filters';
@@ -14,6 +14,7 @@ export default function ShelfPicker({ nightId, myLibrary, shelfIds, onClose }: {
   const router = useRouter();
   const [q, setQ] = useState('');
   const [busy, setBusy] = useState<number | null>(null);
+  const listRef = useRef<HTMLDivElement | null>(null);
   const added = useMemo(() => new Set(shelfIds), [shelfIds]);
 
   const byFormat = useMemo(() => {
@@ -27,6 +28,8 @@ export default function ShelfPicker({ nightId, myLibrary, shelfIds, onClose }: {
   async function toggle(g: Game) {
     // Une rangée se désactive elle-même pendant son POST ; les autres restent
     // cliquables (deux taps rapides ne doivent jamais perdre un ajout).
+    const liste = listRef.current;
+    const scrollAvant = liste?.scrollTop ?? 0;
     setBusy(g.id);
     await fetch(`/api/nights/${nightId}/games`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -34,6 +37,12 @@ export default function ShelfPicker({ nightId, myLibrary, shelfIds, onClose }: {
     });
     setBusy((b) => (b === g.id ? null : b));
     router.refresh();
+    // v3.1 : certains navigateurs tactiles font sauter le défilement de la
+    // feuille quand la page se rafraîchit — on remet la liste exactement où
+    // le joueur l'avait laissée.
+    requestAnimationFrame(() => {
+      if (listRef.current) listRef.current.scrollTop = scrollAvant;
+    });
   }
 
   return (
@@ -50,7 +59,7 @@ export default function ShelfPicker({ nightId, myLibrary, shelfIds, onClose }: {
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Rechercher dans ma ludothèque…"
                  aria-label="Rechercher dans ma ludothèque" autoComplete="off" />
         </div>
-        <div className="pick-list">
+        <div className="pick-list" ref={listRef}>
           {byFormat.map(({ f, list }) => (
             <div key={f} className="fmt-group">
               <div className="fmt-k">{FORMAT_LABEL[f]}</div>

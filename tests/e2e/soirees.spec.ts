@@ -93,7 +93,7 @@ async function setupTirage(page: import('@playwright/test').Page, s: string) {
   await page.goto('/etagere');
   // v3.0.0 : marc valide puis lance — léa n'a pas validé : double-appui « Sûr ? »
   await page.getByRole('button', { name: 'Valider ma sélection' }).click();
-  const lancer = page.getByRole('button', { name: /Lancer le tirage · 1|Sûr \? Lancer/ });
+  const lancer = page.getByRole('button', { name: /Lancer · 1|Sûr \? Lancer/ });
   await lancer.click(); // 1/2 prêts → demande de confirmation
   await lancer.click(); // « Sûr ? Lancer » → on lance quand même
   await expect(page.getByText('LA ROUE A PARLÉ')).toBeVisible({ timeout: 10_000 });

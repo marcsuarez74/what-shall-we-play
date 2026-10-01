@@ -33,7 +33,7 @@ test('barre de lancement + validation visibles sans scroller (4 rangées)', asyn
 
   // Le créateur valide sa sélection (solo → tout le monde est prêt), puis lance
   await page.getByRole('button', { name: 'Valider ma sélection' }).click();
-  await expect(page.locator('.pret-line')).toContainText('Ta sélection est validée');
+  await expect(page.locator('.pill-ok')).toContainText('✓ Validée');
 
   // Sans aucun scroll : la zone d'action est entièrement dans le viewport
   const inView = await page.evaluate(() => {
@@ -42,8 +42,8 @@ test('barre de lancement + validation visibles sans scroller (4 rangées)', asyn
   });
   expect(inView).toBe(true);
 
-  // Lancer le tirage · 4 = TOUTES les boîtes de l'étagère
-  await page.getByRole('button', { name: 'Lancer le tirage · 4' }).click();
+  // Lancer · 4 = TOUTES les boîtes de l'étagère
+  await page.getByRole('button', { name: 'Lancer · 4' }).click();
   await page.waitForURL(/\/tirage\//);
 });
 
@@ -57,5 +57,5 @@ test('les filtres réduisent la vue, jamais le pool du tirage', async ({ page })
   await expect(page.locator('.shelf-block .box')).toHaveCount(1);
 
   // Le lanceur compte quand même TOUTES les boîtes de l'étagère
-  await expect(page.getByRole('button', { name: 'Lancer le tirage · 4' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Lancer · 4' })).toBeVisible();
 });

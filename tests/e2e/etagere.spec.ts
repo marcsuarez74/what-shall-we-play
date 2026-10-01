@@ -27,8 +27,8 @@ test('étagère : boîte → fiche, valider sa sélection, lancer', async ({ pag
   await page.keyboard.press('Escape');
   // Valider sa sélection : état partagé ✓ puis le lanceur apparaît (créateur, solo = tout le monde est prêt)
   await page.getByRole('button', { name: 'Valider ma sélection' }).click();
-  await expect(page.locator('.pret-line')).toContainText('Ta sélection est validée');
-  await expect(page.locator('.etat-line.pret')).toContainText('Tout le monde est prêt !');
-  await page.getByRole('button', { name: 'Lancer le tirage · 1' }).click();
+  await expect(page.locator('.pill-ok')).toContainText('✓ Validée');
+  await expect(page.locator('.cta-row .btn-copper.pret')).toBeVisible(); // tout le monde est prêt : le lanceur passe au vert
+  await page.getByRole('button', { name: 'Lancer · 1' }).click();
   await expect(page).toHaveURL(new RegExp(`/tirage/\\d+`));
 });

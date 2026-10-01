@@ -4,6 +4,21 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [3.1.0] — 2026-10-01
+
+### Changé
+- **Barre d'action compacte de l'étagère** (maquette v310 validée) : une rangée
+  d'action + au plus une ligne d'état (~150 px → 50–70 px). Quand tout le monde
+  a validé, le lanceur passe au vert — le signal, sans texte. Le rappel « à
+  re-valider » vit désormais sur le lien « + Ajouter d'autres jeux » ; l'invité
+  validé voit « Lancement par Marc ».
+
+### Corrigé
+- **Picker : plus de saut de défilement** en ajoutant un jeu depuis la feuille
+  (signalement joueur) : un seul conteneur de défilement, `overscroll-behavior:
+  contain`, et la liste est remise exactement où le joueur l'avait laissée après
+  l'ajout.
+
 ## [3.0.0] — 2026-10-01
 
 ### Changé (majeur — le flow du tirage change)

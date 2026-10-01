@@ -29,8 +29,8 @@ test('soirées : historique avec date, joueurs et tirages', async ({ page }) => 
 
   // v3.0.0 : le créateur valide sa sélection puis lance (solo = tout le monde est prêt)
   await page.getByRole('button', { name: 'Valider ma sélection' }).click();
-  await expect(page.locator('.pret-line')).toContainText('Ta sélection est validée'); // la validation est enregistrée avant de cliquer
-  await page.getByRole('button', { name: 'Lancer le tirage · 1' }).click();
+  await expect(page.locator('.pill-ok')).toContainText('✓ Validée'); // la validation est enregistrée avant de cliquer
+  await page.getByRole('button', { name: 'Lancer · 1' }).click();
   await expect(page.getByText('LA ROUE A PARLÉ')).toBeVisible({ timeout: 10_000 });
 
   // Historique : accessible depuis la barre d'onglets
