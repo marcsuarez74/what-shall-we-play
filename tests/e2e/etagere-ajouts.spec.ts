@@ -78,6 +78,8 @@ test('sync live : le jeu ajouté par un joueur apparaît chez les autres sans re
   const { nightId } = await (await nightDone).json() as { nightId: number };
   await a.waitForURL('/etagere');
   await expect(a.locator('.empty-shelf')).toBeVisible(); // étagère vide, ShelfClient monté
+  // Le flux SSE de Marc est connecté (sinon l'événement de Léa serait perdu)
+  await expect(a.locator('body')).toHaveAttribute('data-sync', 'on', { timeout: 15_000 });
 
   // Léa, de son téléphone (API seule), pose un jeu…
   const form = new FormData();
@@ -108,6 +110,8 @@ test('ajouter un joueur : sa page ouverte bascule sur la partie en cours (sync)'
   await regB;
   await b.waitForURL('/etagere');
   await expect(b.locator('.player-list')).toBeVisible(); // elle n'a pas de partie
+  // Son flux SSE est connecté avant que Marc ne crée la partie
+  await expect(b.locator('body')).toHaveAttribute('data-sync', 'on', { timeout: 15_000 });
 
   // Marc s'inscrit et crée la partie AVEC Léa (cochée à la création)
   const ctxA = await browser.newContext();
