@@ -103,7 +103,7 @@ export default function LibraryClient({ games: initial, plays, me, foyer = null 
       )}
       {detail && (
         <GameSheet game={detail} players={[]} playsCount={plays[detail.id] ?? 0}
-                   inSelection={false} onToggle={() => {}} onClose={() => setDetail(null)}
+                   onClose={() => setDetail(null)}
                    mode="library" />
       )}
     </div>

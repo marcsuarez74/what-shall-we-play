@@ -51,8 +51,18 @@ export function setNightPlayers(nightId: number, playerIds: number[]): void {
 }
 export function getNightPlayers(nightId: number): UserLite[] {
   return getDb().prepare(`
-    SELECT u.id, u.pseudo, u.sticker, u.avatar_path FROM night_players np JOIN users u ON u.id = np.user_id
+    SELECT u.id, u.pseudo, u.sticker, u.avatar_path, np.validated_at FROM night_players np JOIN users u ON u.id = np.user_id
     WHERE np.night_id = ? ORDER BY u.pseudo`).all(nightId) as UserLite[];
+}
+
+// v3.0.0 — « chacun dit quand il est prêt » : valider sa sélection n'est pas un
+// verrou, c'est un signal. L'ajout ou le retrait d'une boîte par le joueur
+// l'annule (la sélection a changé) ; il re-valide quand il veut.
+export function validateSelection(nightId: number, userId: number): void {
+  if (!isNightParticipant(nightId, userId)) throw new Error('Vous n\'êtes pas dans cette partie');
+  getDb().prepare(`UPDATE night_players SET validated_at = datetime('now','localtime') WHERE night_id = ? AND user_id = ?`)
+    .run(nightId, userId);
+  notifyNight(nightId); // « Léa a validé sa sélection » apparaît chez tous, en direct
 }
 export function userCanAccessNight(userId: number, nightId: number): boolean {
   return !!getDb().prepare(`
@@ -101,6 +111,8 @@ export function addNightGame(nightId: number, gameId: number, userId: number): N
   const inMyLibrary = g.foyer_id != null ? g.foyer_id === myFoyerId : g.owner_id === userId;
   if (!inMyLibrary) return { error: "Ce jeu n'est pas dans votre ludothèque", status: 403 };
   db.prepare('INSERT OR IGNORE INTO night_games (night_id, game_id, added_by) VALUES (?, ?, ?)').run(nightId, gameId, userId);
+  // la sélection de l'ajouteur a changé : sa validation saute, il re-confirmera
+  db.prepare('UPDATE night_players SET validated_at = NULL WHERE night_id = ? AND user_id = ?').run(nightId, userId);
   notifyNight(nightId); // sync live : la boîte apparaît chez les autres joueurs
   return { ok: true };
 }
@@ -109,6 +121,8 @@ export function addNightGame(nightId: number, gameId: number, userId: number): N
 export function removeNightGame(nightId: number, gameId: number, userId: number): NightGameResult {
   if (!isNightParticipant(nightId, userId)) return { error: 'Seuls les joueurs de la partie peuvent retirer des jeux', status: 403 };
   getDb().prepare('DELETE FROM night_games WHERE night_id = ? AND game_id = ?').run(nightId, gameId);
+  // sa sélection a changé : sa validation saute (idiome v3.0.0, cf. addNightGame)
+  getDb().prepare('UPDATE night_players SET validated_at = NULL WHERE night_id = ? AND user_id = ?').run(nightId, userId);
   notifyNight(nightId); // sync live : la boîte disparaît chez les autres joueurs
   return { ok: true };
 }

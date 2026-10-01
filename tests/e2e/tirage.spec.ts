@@ -24,11 +24,8 @@ test('tirage : roue plein écran puis verdict sur le jeu tiré', async ({ page }
   await putOnShelf(page, await gameIdByTitle(page, 'Cascadia'));
   await page.goto('/etagere');
 
-  // Étagère : boîte → fiche → « Ajouter à la sélection » → Escape
-  await page.locator('.box').first().click();
-  await page.getByRole('button', { name: /Ajouter à la sélection/ }).click();
-  await page.keyboard.press('Escape');
-  await expect(page.locator('.selcount')).toContainText('Sélection : 1');
+  // v3.0.0 : valider sa sélection puis lancer
+  await page.getByRole('button', { name: 'Valider ma sélection' }).click();
   await page.getByRole('button', { name: 'Lancer le tirage · 1' }).click();
 
   // La roue tourne (~3,5 s) puis le verdict tombe

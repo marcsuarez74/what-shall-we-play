@@ -164,7 +164,8 @@ test('retirer de la partie : depuis la fiche, l\'étagère redevient vide', asyn
   await page.locator('.shelf-block .box').first().click();
   await page.getByRole('button', { name: 'Retirer de la partie' }).click();
   await expect(page.locator('.empty-shelf')).toBeVisible();
-  await expect(page.locator('.chip.selcount')).toContainText('0');
+  // v3.0.0 : sans boîte, plus de lanceur — mais la validation reste possible
+  await expect(page.getByRole('button', { name: 'Valider ma sélection' })).toBeVisible();
 });
 
 test('étagère : spinner pendant le chargement des pochettes', async ({ browser }) => {

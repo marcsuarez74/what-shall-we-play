@@ -27,10 +27,8 @@ test('soirées : historique avec date, joueurs et tirages', async ({ page }) => 
   await putOnShelf(page, await gameIdByTitle(page, 'Azul'));
   await page.goto('/etagere');
 
-  // Étagère : boîte → fiche → « Ajouter à la sélection » → Escape → tirage
-  await page.locator('.box').first().click();
-  await page.getByRole('button', { name: /Ajouter à la sélection/ }).click();
-  await page.keyboard.press('Escape');
+  // v3.0.0 : le créateur valide sa sélection puis lance (solo = tout le monde est prêt)
+  await page.getByRole('button', { name: 'Valider ma sélection' }).click();
   await page.getByRole('button', { name: 'Lancer le tirage · 1' }).click();
   await expect(page.getByText('LA ROUE A PARLÉ')).toBeVisible({ timeout: 10_000 });
 

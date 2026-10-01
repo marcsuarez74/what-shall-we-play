@@ -48,12 +48,11 @@ test('parcours complet : deux joueurs, sélection, tirage, historique', async ({
   // Review Focus n°1 : sans pochette (ni BGG ni upload), la fiche affiche le
   // placeholder ♟ — jamais une image cassée
   await expect(a.getByRole('dialog', { name: 'Terraforming Mars' }).locator('.cover-placeholder')).toHaveText('♟');
-  await a.getByRole('button', { name: /Ajouter à la sélection/ }).click();
-  await a.keyboard.press('Escape');
-  await a.locator('.box').nth(1).click();
-  await a.getByRole('button', { name: /Ajouter à la sélection/ }).click();
-  await a.keyboard.press('Escape');
-  await a.getByRole('button', { name: /Lancer le tirage · 2/ }).click();
+  // v3.0.0 : Marc valide puis lance — Léa n'a pas validé : double-appui « Sûr ? »
+  await a.getByRole('button', { name: 'Valider ma sélection' }).click();
+  const lancer = a.getByRole('button', { name: /Lancer le tirage · 2|Sûr \? Lancer/ });
+  await lancer.click(); // 1/2 prêts → demande de confirmation
+  await lancer.click(); // « Sûr ? Lancer » → on lance quand même
   await expect(a.getByText('LA ROUE A PARLÉ')).toBeVisible({ timeout: 10_000 });
 
   // Historique

@@ -4,6 +4,26 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [3.0.0] — 2026-10-01
+
+### Changé (majeur — le flow du tirage change)
+- **La sélection disparaît** : plus d'appui maintenu ni de compteur « Sélection : n ».
+  L'étagère EST la sélection — le tirage se fait parmi **toutes les boîtes** qu'elle
+  porte (les filtres restent une vue de navigation, jamais un filtre du tirage).
+- **Un seul bouton, réservé au créateur** : « Lancer le tirage · n » — les autres
+  joueurs voient une ligne d'attente : « Le tirage sera lancé par Marc ».
+- La fiche d'un jeu perd « Ajouter à la sélection » ; elle garde « Retirer de la partie ».
+
+### Ajouté
+- **Valider sa sélection** (« chacun dit quand il est prêt ») : chaque joueur appuie
+  sur « Valider ma sélection » — même sans boîte apportée. L'état est partagé en
+  direct : chips ✓/⏳ et phrase « Léa a validé sa sélection » chez tout le monde.
+- **Ajouter après avoir validé remet sa validation à zéro** : la sélection a changé,
+  on re-confirme. Les autres ne bougent pas.
+- **Le créateur voit l'état sous le lanceur** : « 2/3 prêts — Thib n'a pas validé » ;
+  quand tout le monde a validé, « Tout le monde est prêt ! » et un appui lance.
+  Il peut lancer sans l'accord de tous : double-appui « Sûr ? Lancer » (idiome maison).
+
 ## [2.1.0] — 2026-10-01
 
 ### Ajouté

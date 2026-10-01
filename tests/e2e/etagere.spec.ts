@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { gameIdByTitle, putOnShelf } from './helpers/shelf';
 
-test('étagère : sélection via fiche, CTA compteur', async ({ page }) => {
+test('étagère : boîte → fiche, valider sa sélection, lancer', async ({ page }) => {
   await page.goto('/register');
   await page.getByLabel('Pseudo').fill(`shelf-${Date.now()}`);
   await page.getByLabel('Code secret').fill('1234');
@@ -18,13 +18,17 @@ test('étagère : sélection via fiche, CTA compteur', async ({ page }) => {
   // Étagère vide à la création (v3) : le joueur pose sa boîte
   await putOnShelf(page, await gameIdByTitle(page, 'Terraforming Mars'));
   await page.goto('/etagere');
-  // Sélection vide : CTA désactivé, aucune sélection possible (Review Focus n°6)
-  await expect(page.getByRole('button', { name: 'Touchez une boîte pour l\'ajouter' })).toBeDisabled();
-  // Étagère : boîte -> fiche (la fiche enrichie affiche les facts) -> ajouter
+  // v3.0.0 : tant que sa sélection n'est pas validée, c'est l'action principale
+  await expect(page.getByRole('button', { name: 'Valider ma sélection' })).toBeVisible();
+  // Boîte -> fiche (la fiche enrichie affiche les facts) — plus aucun bloc sélection
   await page.locator('.box').first().click();
   await expect(page.locator('.sheet-facts')).toContainText('Parties jouées');
-  await page.getByRole('button', { name: /Ajouter à la sélection/ }).click();
+  await expect(page.locator('.bottom-sheet')).not.toContainText('Ajouter à la sélection');
   await page.keyboard.press('Escape');
-  await expect(page.locator('.selcount')).toContainText('Sélection : 1');
-  await expect(page.getByRole('button', { name: /Lancer le tirage · 1/ })).toBeEnabled();
+  // Valider sa sélection : état partagé ✓ puis le lanceur apparaît (créateur, solo = tout le monde est prêt)
+  await page.getByRole('button', { name: 'Valider ma sélection' }).click();
+  await expect(page.locator('.pret-line')).toContainText('Ta sélection est validée');
+  await expect(page.locator('.etat-line.pret')).toContainText('Tout le monde est prêt !');
+  await page.getByRole('button', { name: 'Lancer le tirage · 1' }).click();
+  await expect(page).toHaveURL(new RegExp(`/tirage/\\d+`));
 });

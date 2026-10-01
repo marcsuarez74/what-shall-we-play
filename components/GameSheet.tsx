@@ -5,12 +5,10 @@ import type { Game, UserLite } from '@/lib/types';
 
 const fmt = (n: number) => n.toLocaleString('fr-FR', { maximumFractionDigits: 1 });
 
-export default function GameSheet({ game, players, playsCount, inSelection, onToggle, onClose, mode = 'shelf', onRemoveShelf }: {
+export default function GameSheet({ game, players, playsCount, onClose, mode = 'shelf', onRemoveShelf }: {
   game: Game;
   players: UserLite[];
   playsCount: number;
-  inSelection: boolean;
-  onToggle: () => void;
   onClose: () => void;
   mode?: 'shelf' | 'library';
   onRemoveShelf?: () => void;
@@ -73,11 +71,6 @@ export default function GameSheet({ game, players, playsCount, inSelection, onTo
             <img className="bgg-logo" src="/logos/powered-by-bgg.svg" alt="Powered by BoardGameGeek" />
             <span>Voir la fiche ↗</span>
           </a>
-        )}
-        {mode === 'shelf' && (
-          <button type="button" className={`btn-copper ${inSelection ? 'is-sel' : ''}`} onClick={onToggle}>
-            {inSelection ? '✓ Retirer de la sélection' : '＋ Ajouter à la sélection'}
-          </button>
         )}
         {mode === 'shelf' && onRemoveShelf && (
           <button type="button" className="btn-exclude" onClick={onRemoveShelf}>

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { registerUser } from '@/lib/auth';
-import { createNight, getShelfGames, getActiveNight, userCanAccessNight, setNightPlayers, getMyNights, addNightGame } from '@/lib/nights';
+import { createNight, getShelfGames, getActiveNight, userCanAccessNight, setNightPlayers, getMyNights, addNightGame, removeNightGame, validateSelection, getNightPlayers } from '@/lib/nights';
 import { createGame } from '@/lib/games';
 import { getDb } from '@/lib/db';
 
@@ -51,5 +51,35 @@ describe('nights', () => {
     expect(night?.played_at).toBe(today); // app et base s'accordent sur « aujourd'hui »
     db.prepare(`UPDATE nights SET played_at = date('now','localtime','-1 day') WHERE id = ?`).run(nightId);
     expect(getActiveNight(u)).toBeNull(); // passé au jour suivant : plus de soirée courante
+  });
+});
+
+describe('validation de sélection', () => {
+  it('valide, saute à l\'ajout d\'un jeu, puis re-valide', () => {
+    const marc = (registerUser('v-marc', '1234') as { id: number }).id;
+    const lea = (registerUser('v-lea', '1234') as { id: number }).id;
+    const nightId = createNight(marc, [marc, lea]);
+    const valDe = (id: number) => getNightPlayers(nightId).find((p) => p.id === id)?.validated_at ?? null;
+    expect(valDe(lea)).toBeNull(); // personne n'a validé à la création
+
+    validateSelection(nightId, lea);
+    expect(valDe(lea)).not.toBeNull(); // « Léa a validé sa sélection »
+    expect(valDe(marc)).toBeNull(); // marc, lui, n'a pas bougé
+
+    const gl = createGame(lea, { title: 'Harmonies', box_format: 'petit' });
+    addNightGame(nightId, gl, lea);
+    expect(valDe(lea)).toBeNull(); // sa sélection a changé : re-validation exigée
+    validateSelection(nightId, lea);
+    expect(valDe(lea)).not.toBeNull();
+
+    // retirer une boîte saute aussi la validation de celui qui la retire
+    removeNightGame(nightId, gl, lea);
+    expect(valDe(lea)).toBeNull();
+  });
+  it('refuse un joueur hors de la partie', () => {
+    const marc = (registerUser('v-marc2', '1234') as { id: number }).id;
+    const zzz = (registerUser('v-hors', '1234') as { id: number }).id;
+    const nightId = createNight(marc, [marc]);
+    expect(() => validateSelection(nightId, zzz)).toThrow(/pas dans/);
   });
 });
