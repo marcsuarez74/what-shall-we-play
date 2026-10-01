@@ -408,6 +408,14 @@ input[type='file'] {
 .member .st, .member img.st { width: 32px; height: 32px; border-radius: 50%; background: var(--surface); display: grid; place-items: center; font-size: 16px; object-fit: cover; }
 .member b { font-size: 13.5px; font-weight: 600; }
 .member .role { margin-left: auto; font-size: 11px; color: var(--doux-clair); }
+.member .kick {
+  appearance: none; background: none; border: 1.5px solid transparent; color: var(--doux);
+  border-radius: 9px; font: inherit; font-size: 13px; padding: 4px 8px; cursor: pointer; margin-left: 8px;
+}
+.member .kick.armed {
+  border-color: color-mix(in srgb, #b5533c 70%, transparent); color: #E08A76;
+  font-size: 11.5px; font-weight: 600; white-space: nowrap;
+}
 
 .code-zone {
   display: flex; align-items: center; gap: 10px; background: var(--noyer);
@@ -1005,6 +1013,16 @@ input[type='file'] {
 }
 
 /* menu utilisateur (initial ▾) */
+/* ---------- En-tête de page partagé (titre + menu utilisateur) ---------- */
+.page-head {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 10px; margin-bottom: 14px;
+}
+.page-head h1 { margin-bottom: 0; }
+/* Profil : la pastille vient se poser en haut à droite de la carte */
+.profile { position: relative; }
+.profile > .user-chip { position: absolute; top: 0; right: 0; }
+
 .user-chip {
   position: relative;
 }

@@ -3,7 +3,7 @@ import { makePng } from './helpers/png';
 import { newGame, putOnShelf } from './helpers/shelf';
 
 // v2.0.0 — Étagère vide à la création : chacun ajoute depuis SA ludothèque
-// (sélecteur), et « Pas ce soir » a laissé place au « Retirer de la soirée ».
+// (sélecteur), et « Pas ce soir » a laissé place au « Retirer de la partie ».
 // Les filtres de l'étagère et de la bibliothèque sont couverts plus bas.
 
 async function registerAndStart(page: import('@playwright/test').Page, pseudo: string) {
@@ -14,7 +14,7 @@ async function registerAndStart(page: import('@playwright/test').Page, pseudo: s
   await page.getByRole('button', { name: 'Créer mon compte' }).click();
   await reg;
   const nightDone = page.waitForResponse((r) => r.url().endsWith('/api/nights') && r.request().method() === 'POST');
-  await page.getByRole('button', { name: 'Créer la soirée' }).click();
+  await page.getByRole('button', { name: 'Créer la partie' }).click();
   const { nightId } = await (await nightDone).json() as { nightId: number };
   await page.waitForURL('/etagere');
   return nightId;
@@ -57,24 +57,112 @@ test('étagère vide à la création, le sélecteur ajoute depuis ma ludothèque
   await expect(page.locator('.shelf-block .box')).toHaveCount(1);
 });
 
-test('retirer de la soirée : depuis la fiche, l\'étagère redevient vide', async ({ page }) => {
+test('sync live : le jeu ajouté par un joueur apparaît chez les autres sans recharger', async ({ browser }) => {
+  const s = Date.now().toString(36);
+  // Léa existe AVANT que la page de Marc liste les joueurs
+  const other = await browser.newContext();
+  await other.request.post('/api/auth/register', { data: { pseudo: `sync-l-${s}`, code: '1234', sticker: '🌙' } });
+
+  // Marc s'inscrit (UI) et crée la partie avec Léa
+  const ctxA = await browser.newContext();
+  const a = await ctxA.newPage();
+  await a.goto('/register');
+  await a.getByLabel('Pseudo').fill(`sync-m-${s}`);
+  await a.getByLabel('Code secret').fill('1234');
+  const reg = a.waitForResponse((r) => r.url().endsWith('/api/auth/register'));
+  await a.getByRole('button', { name: 'Créer mon compte' }).click();
+  await reg;
+  await a.getByLabel(new RegExp(`sync-l-${s}`)).check();
+  const nightDone = a.waitForResponse((r) => r.url().endsWith('/api/nights') && r.request().method() === 'POST');
+  await a.getByRole('button', { name: 'Créer la partie' }).click();
+  const { nightId } = await (await nightDone).json() as { nightId: number };
+  await a.waitForURL('/etagere');
+  await expect(a.locator('.empty-shelf')).toBeVisible(); // étagère vide, ShelfClient monté
+  // Le flux SSE de Marc est connecté (sinon l'événement de Léa serait perdu)
+  await expect(a.locator('body')).toHaveAttribute('data-sync', 'on', { timeout: 15_000 });
+
+  // Léa, de son téléphone (API seule), pose un jeu…
+  const form = new FormData();
+  form.set('title', 'Sync live'); form.set('box_format', 'moyen');
+  const g = await other.request.post('/api/games', { form });
+  if (!g.ok()) throw new Error(`jeu léa: ${g.status()}`);
+  const gid = ((await g.json()) as { id: number }).id;
+  const put = await other.request.post(`/api/nights/${nightId}/games`, { data: { gameId: gid, added: true } });
+  if (!put.ok()) throw new Error(`pose étagère: ${put.status()}`);
+
+  // …et la boîte apparaît chez Marc SANS aucun rechargement (SSE)
+  await expect(a.locator('.shelf-block .box')).toHaveCount(1, { timeout: 5000 });
+  await other.close();
+  await ctxA.close();
+});
+
+test('ajouter un joueur : sa page ouverte bascule sur la partie en cours (sync)', async ({ browser }) => {
+  const s = Date.now().toString(36);
+
+  // Léa s'inscrit (UI) : sa page reste ouverte sur l'écran « nouvelle partie »
+  const ctxB = await browser.newContext();
+  const b = await ctxB.newPage();
+  await b.goto('/register');
+  await b.getByLabel('Pseudo').fill(`add-l-${s}`);
+  await b.getByLabel('Code secret').fill('1234');
+  const regB = b.waitForResponse((r) => r.url().endsWith('/api/auth/register'));
+  await b.getByRole('button', { name: 'Créer mon compte' }).click();
+  await regB;
+  await b.waitForURL('/etagere');
+  await expect(b.locator('.player-list')).toBeVisible(); // elle n'a pas de partie
+  // Son flux SSE est connecté avant que Marc ne crée la partie
+  await expect(b.locator('body')).toHaveAttribute('data-sync', 'on', { timeout: 15_000 });
+
+  // Marc s'inscrit et crée la partie AVEC Léa (cochée à la création)
+  const ctxA = await browser.newContext();
+  const a = await ctxA.newPage();
+  await a.goto('/register');
+  await a.getByLabel('Pseudo').fill(`add-m-${s}`);
+  await a.getByLabel('Code secret').fill('1234');
+  const regA = a.waitForResponse((r) => r.url().endsWith('/api/auth/register'));
+  await a.getByRole('button', { name: 'Créer mon compte' }).click();
+  await regA;
+  await a.getByLabel(new RegExp(`add-l-${s}`)).check();
+  const nightDone = a.waitForResponse((r) => r.url().endsWith('/api/nights') && r.request().method() === 'POST');
+  await a.getByRole('button', { name: 'Créer la partie' }).click();
+  const { nightId } = await (await nightDone).json() as { nightId: number };
+
+  // La page de Léa, restée sur « nouvelle partie », bascule TOUTE SEULE
+  await expect(b.locator('.night-card')).toBeVisible({ timeout: 5000 });
+  await expect(b.locator('.night-card')).toContainText('PARTIE EN COURS');
+  await expect(b.locator('.night-card')).toContainText(`add-l-${s}`);
+
+  // Marc pose un jeu : Léa le voit apparaître aussi, sans recharger
+  const form = new FormData();
+  form.set('title', 'Ajoutée à chaud'); form.set('box_format', 'moyen');
+  const g = await a.request.post('/api/games', { form });
+  if (!g.ok()) throw new Error(`jeu marc: ${g.status()}`);
+  const gid = ((await g.json()) as { id: number }).id;
+  const put = await a.request.post(`/api/nights/${nightId}/games`, { data: { gameId: gid, added: true } });
+  if (!put.ok()) throw new Error(`pose étagère: ${put.status()}`);
+  await expect(b.locator('.shelf-block .box')).toHaveCount(1, { timeout: 5000 });
+  await ctxA.close();
+  await ctxB.close();
+});
+
+test('retirer de la partie : depuis la fiche, l\'étagère redevient vide', async ({ page }) => {
   const nightId = await registerAndStart(page, `retv3-${Date.now()}`);
   await putOnShelf(page, await newGame(page, 'Alpha', 'grand'), nightId);
   await putOnShelf(page, await newGame(page, 'Bravo', 'petit'), nightId);
   await page.goto('/etagere');
   await expect(page.locator('.shelf-block .box')).toHaveCount(2);
 
-  // Fiche d'Alpha → « Retirer de la soirée » (remplace « Pas ce soir »)
+  // Fiche d'Alpha → « Retirer de la partie » (remplace « Pas ce soir »)
   await page.locator('.shelf-block .box').first().click();
   await expect(page.locator('.bottom-sheet')).toBeVisible();
   const post = page.waitForResponse((r) => r.url().includes('/games') && r.request().method() === 'POST');
-  await page.getByRole('button', { name: 'Retirer de la soirée' }).click();
+  await page.getByRole('button', { name: 'Retirer de la partie' }).click();
   await post;
   await expect(page.locator('.shelf-block .box')).toHaveCount(1);
 
   // Un seul jeu restant, retiré à son tour → état vide
   await page.locator('.shelf-block .box').first().click();
-  await page.getByRole('button', { name: 'Retirer de la soirée' }).click();
+  await page.getByRole('button', { name: 'Retirer de la partie' }).click();
   await expect(page.locator('.empty-shelf')).toBeVisible();
   await expect(page.locator('.chip.selcount')).toContainText('0');
 });

@@ -36,7 +36,7 @@ test('parcours complet : deux joueurs, sélection, tirage, historique', async ({
   // Marc crée la soirée avec Léa
   await a.goto('/etagere');
   await a.getByLabel(new RegExp(`parc-lea-${stamp}`)).check();
-  await a.getByRole('button', { name: /Créer la soirée/ }).click();
+  await a.getByRole('button', { name: /Créer la partie/ }).click();
 
   // Étagère vide à la création (v3) : chacun pose son jeu depuis SA session —
   // le cœur du flux (Léa ne peut pas poser le jeu de Marc, ni l'inverse)

@@ -2,6 +2,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FORMATS, FORMAT_SCALE } from '@/lib/formats';
+import type { UserLite } from '@/lib/types';
+import UserMenu from './UserMenu';
 
 interface Suggestion { bggId: number; name: string; }
 interface Thing {
@@ -16,7 +18,7 @@ type Mode = 'bgg' | 'manuel';
 // Taille du plus grand carré (grand = 30×30) ; les autres suivent FORMAT_SCALE.
 const BOX_PX = 76;
 
-export default function AddGameForm() {
+export default function AddGameForm({ me }: { me: UserLite }) {
   const router = useRouter();
   const [title, setTitle] = useState('');
   const [format, setFormat] = useState('grand');
@@ -124,7 +126,10 @@ export default function AddGameForm() {
       if (stage === 'etiquette') fetchInfos();
       else if (stage === 'fiche') submit();
     }}>
-      <h1>Ajouter un jeu</h1>
+      <div className="page-head">
+        <h1>Ajouter un jeu</h1>
+        <UserMenu me={me} />
+      </div>
       {stage === 'etiquette' && (
         <>
           <label htmlFor="add-titre">Titre du jeu</label>

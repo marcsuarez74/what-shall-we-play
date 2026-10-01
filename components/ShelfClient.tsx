@@ -1,8 +1,7 @@
 'use client';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import pkg from '../package.json';
-import { FORMATS, FORMAT_SCALE, FORMAT_LABEL, coverSrc, avatarSrc } from '@/lib/formats';
+import { FORMATS, FORMAT_SCALE, FORMAT_LABEL } from '@/lib/formats';
 import { LongPress } from '@/lib/press';
 import type { Game, Night, UserLite } from '@/lib/types';
 import { filterShelf, type ShelfFilters } from '@/lib/filters';
@@ -13,6 +12,7 @@ import BoxImage from './BoxImage';
 import ShelfControls from './ShelfControls';
 import OwnerBadge from './OwnerBadge';
 import ShelfPicker from './ShelfPicker';
+import UserMenu from './UserMenu';
 
 export default function ShelfClient({ night, players, games, myLibrary, users, plays, me }: {
   night: Night; players: UserLite[]; games: Game[]; myLibrary: Game[]; users: UserLite[]; plays: Record<number, number>;
@@ -24,7 +24,6 @@ export default function ShelfClient({ night, players, games, myLibrary, users, p
   const [editingNight, setEditingNight] = useState(false);
   const [addingGames, setAddingGames] = useState(false);
   const [pickMode, setPickMode] = useState(false);
-  const menuRef = useRef<HTMLDetailsElement>(null);
   const pressRef = useRef<LongPress | null>(null);
   const suppressClick = useRef(false);
   // Aucun filtre appliqué par défaut : l'étagère montre toute la collection.
@@ -33,14 +32,6 @@ export default function ShelfClient({ night, players, games, myLibrary, users, p
   });
   const filtered = useMemo(() => filterShelf(games, filters), [games, filters]);
   const byFormat = useMemo(() => FORMATS.map((f) => ({ f, list: filtered.filter((g) => g.box_format === f) })), [filtered]);
-
-  useEffect(() => {
-    function closeMenu(e: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) menuRef.current.open = false;
-    }
-    document.addEventListener('click', closeMenu);
-    return () => document.removeEventListener('click', closeMenu);
-  }, []);
 
   function toggle(id: number) {
     setSelected((s) => {
@@ -52,11 +43,6 @@ export default function ShelfClient({ night, players, games, myLibrary, users, p
   async function launch() {
     if (selected.size === 0) return;
     router.push(`/tirage/${night.id}?games=${[...selected].join(',')}`);
-  }
-  async function logout() {
-    await fetch('/api/auth/logout', { method: 'POST' });
-    router.push('/login');
-    router.refresh();
   }
 
   async function removeFromNight(g: Game) {
@@ -91,28 +77,15 @@ export default function ShelfClient({ night, players, games, myLibrary, users, p
     if (pickMode) toggle(g.id); else setDetail(g);
   }
 
-  const initial = (me.pseudo ?? '?')[0].toUpperCase();
-  const myAvatar = avatarSrc(me);
-
   return (
     <div className="shelf-screen">
       <header className="shelf-header">
         <h1>L&apos;étagère</h1>
-        <details className="user-chip" ref={menuRef}>
-          <summary aria-label="Menu utilisateur">
-            {myAvatar ? <img className="chip-avatar" src={myAvatar} alt="" /> : <span aria-hidden="true">{me.sticker ?? '🎲'}</span>}
-            {' '}{initial} ▾
-          </summary>
-          <div className="user-menu">
-            <a href="/profil">Mon profil</a>
-            <button type="button" onClick={logout}>Se déconnecter</button>
-            <span className="user-version">v{pkg.version}</span>
-          </div>
-        </details>
+        <UserMenu me={me} />
       </header>
       <section className="night-card">
         <div className="night-card-head">
-          <span className="night-label">SOIRÉE EN COURS</span>
+          <span className="night-label">PARTIE EN COURS</span>
           <button type="button" className="link-btn" onClick={() => setEditingNight(true)}>modifier</button>
         </div>
         <div className="chips">{players.map((p) => <PlayerChip key={p.id} u={p} />)}</div>
@@ -185,7 +158,7 @@ export default function ShelfClient({ night, players, games, myLibrary, users, p
       )}
       {editingNight && (
         <div className="sheet-backdrop" onClick={() => setEditingNight(false)}>
-          <div className="bottom-sheet" role="dialog" aria-modal="true" aria-label="Modifier la soirée"
+          <div className="bottom-sheet" role="dialog" aria-modal="true" aria-label="Modifier la partie"
                onClick={(e) => e.stopPropagation()}>
             <button type="button" className="sheet-close" aria-label="Fermer" onClick={() => setEditingNight(false)}>✕</button>
             <NightPicker users={users} prechecked={players.map((p) => p.id)} night={night}

@@ -6,7 +6,7 @@ import { normalizeText } from '@/lib/filters';
 import type { Game } from '@/lib/types';
 import BoxImage from './BoxImage';
 
-// Sélecteur « Ajouter à la soirée » : MA ludothèque (jeux perso + ceux de mon foyer),
+// Sélecteur « Ajouter à la partie » : MA ludothèque (jeux perso + ceux de mon foyer),
 // groupée par format, recherche insensible aux accents. Un tap = un ajout/retrait.
 export default function ShelfPicker({ nightId, myLibrary, shelfIds, onClose }: {
   nightId: number; myLibrary: Game[]; shelfIds: number[]; onClose: () => void;
@@ -38,10 +38,10 @@ export default function ShelfPicker({ nightId, myLibrary, shelfIds, onClose }: {
 
   return (
     <div className="sheet-backdrop" onClick={onClose}>
-      <div className="bottom-sheet picker-sheet" role="dialog" aria-modal="true" aria-label="Ajouter à la soirée"
+      <div className="bottom-sheet picker-sheet" role="dialog" aria-modal="true" aria-label="Ajouter à la partie"
            onClick={(e) => e.stopPropagation()}>
         <div className="sheet-head">
-          <h3>Ajouter à la soirée</h3>
+          <h3>Ajouter à la partie</h3>
           <button type="button" className="sheet-close" aria-label="Fermer" onClick={onClose}>✕</button>
         </div>
         <p className="sheet-sub">Depuis votre ludothèque — vos jeux et ceux de votre foyer.</p>
@@ -63,7 +63,7 @@ export default function ShelfPicker({ nightId, myLibrary, shelfIds, onClose }: {
                   </span>
                   <button type="button" className={`add ${added.has(g.id) ? 'on' : ''}`}
                           disabled={busy === g.id}
-                          aria-label={added.has(g.id) ? `Retirer ${g.title} de la soirée` : `Ajouter ${g.title} à la soirée`}
+                          aria-label={added.has(g.id) ? `Retirer ${g.title} de la partie` : `Ajouter ${g.title} à la partie`}
                           onClick={() => toggle(g)}>
                     {added.has(g.id) ? '✓' : '+'}
                   </button>

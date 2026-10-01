@@ -49,7 +49,7 @@ async function registerAndStart(page: import('@playwright/test').Page, pseudo: s
   await page.getByRole('button', { name: 'Créer mon compte' }).click();
   await reg;
   const nightDone = page.waitForResponse((r) => r.url().endsWith('/api/nights') && r.request().method() === 'POST');
-  await page.getByRole('button', { name: 'Créer la soirée' }).click();
+  await page.getByRole('button', { name: 'Créer la partie' }).click();
   await nightDone;
   await page.waitForURL('/etagere');
 }

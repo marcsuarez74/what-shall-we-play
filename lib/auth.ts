@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import crypto from 'node:crypto';
 import { getDb } from './db';
+import { ALLOWED_STICKERS } from './stickers';
 import type { UserRow } from './types';
 
 export type AuthResult = { id: number } | { error: string; status: number };
@@ -14,12 +15,18 @@ export function validateCode(c: unknown): string | null {
   return null;
 }
 
-export function registerUser(pseudo: unknown, code: unknown): AuthResult {
+export function registerUser(pseudo: unknown, code: unknown, sticker?: unknown): AuthResult {
   const pe = validatePseudo(pseudo); if (pe) return { error: pe, status: 400 };
   const ce = validateCode(code); if (ce) return { error: ce, status: 400 };
+  // Avatar d'onboarding : un emoji de la grille validée, sinon le dé par défaut.
+  const st = sticker == null || sticker === '' ? null : sticker;
+  if (st != null && !(ALLOWED_STICKERS as readonly string[]).includes(st as string))
+    return { error: 'Emoji invalide', status: 400 };
   const hash = bcrypt.hashSync(code as string, 10);
   try {
-    const info = getDb().prepare('INSERT INTO users (pseudo, code_hash) VALUES (?, ?)').run(pseudo, hash);
+    const info = st != null
+      ? getDb().prepare('INSERT INTO users (pseudo, code_hash, sticker) VALUES (?, ?, ?)').run(pseudo, hash, st)
+      : getDb().prepare('INSERT INTO users (pseudo, code_hash) VALUES (?, ?)').run(pseudo, hash);
     return { id: Number(info.lastInsertRowid) };
   } catch (e: unknown) {
     if (String(e).includes('UNIQUE')) return { error: 'Pseudo déjà pris', status: 409 };

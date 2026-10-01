@@ -20,6 +20,48 @@ async function addGame(page: import('@playwright/test').Page, title: string, for
   if (!res.ok()) throw new Error(`ajout ${title}: ${res.status()} ${await res.text()}`);
 }
 
+test('retirer un membre : ses ajouts le suivent, le foyer reste au créateur', async ({ browser }) => {
+  const ctxA = await browser.newContext();
+  const a = await ctxA.newPage();
+  await register(a, `kikA-${stamp}`);
+  await a.goto('/profil');
+  await a.getByRole('button', { name: 'Créer un foyer' }).click();
+  await expect(a.locator('.code-zone')).toBeVisible();
+  const code = (await a.locator('.code-zone .code').innerText()).trim();
+  await addGame(a, 'De Marc', 'moyen'); // dans le foyer
+
+  // Léa rejoint et ajoute son jeu à la collection commune
+  const ctxB = await browser.newContext();
+  const b = await ctxB.newPage();
+  await register(b, `kikB-${stamp}`);
+  await addGame(b, 'De Léa', 'petit');
+  await b.goto('/profil');
+  await b.getByRole('button', { name: 'Rejoindre avec un code' }).click();
+  await b.getByLabel('Code du foyer').fill(code.toLowerCase());
+  await b.getByRole('button', { name: 'Rejoindre' }).click();
+  await expect(b.locator('.member')).toHaveCount(2); // dans le foyer, sans doublon à trier
+
+  // Le créateur voit les ✕ (pas sur lui-même) ; double-tap pour retirer
+  await a.goto('/profil');
+  await expect(a.locator('.member')).toHaveCount(2);
+  await a.getByRole('button', { name: 'Retirer kikB-' + stamp + ' du foyer', exact: false }).click();
+  await a.getByRole('button', { name: /Sûr \? Retirer/ }).click();
+  await expect(a.locator('.member')).toHaveCount(1);
+
+  // Léa : dehors, elle retrouve SES jeux ; le foyer garde ceux de Marc
+  // (le profil n'est pas en sync live : elle recharge et voit son état)
+  await b.reload();
+  await expect(b.locator('.foyer-card.solo')).toBeVisible();
+  await b.goto('/library');
+  await expect(b.locator('.lib-card')).toHaveCount(1);
+  await expect(b.locator('.lib-card').first()).toContainText('De Léa');
+  await a.goto('/library');
+  await expect(a.locator('.lib-card')).toHaveCount(1);
+  await expect(a.locator('.lib-card').first()).toContainText('De Marc');
+  await ctxA.close();
+  await ctxB.close();
+});
+
 test('foyer : créer, rejoindre par code, fusion guidée, collection commune, sortie', async ({ browser }) => {
   // — Marc crée son foyer (ses jeux passent dans la collection commune)
   const ctxA = await browser.newContext();
@@ -60,12 +102,12 @@ test('foyer : créer, rejoindre par code, fusion guidée, collection commune, so
   // …et les mêmes chez Marc, avec le badge de l'ajouteuse (initiale : pas de sticker sur ce compte)
   await a.goto('/library');
   await expect(a.locator('.lib-card')).toHaveCount(2);
-  await expect(a.locator('.lib-cover .who').first()).toHaveText('F');
+  await expect(a.locator('.lib-cover .who').first()).toHaveText('🎲'); // l'onboarding pose un sticker à tous
 
   // — Étagère v3 : vide à la création ; Marc ajoute depuis SA ludothèque — la
   //   collection du foyer entière (fiches posées par Léa comprises)
   await a.goto('/etagere');
-  await a.getByRole('button', { name: 'Créer la soirée' }).click();
+  await a.getByRole('button', { name: 'Créer la partie' }).click();
   await a.waitForURL('/etagere');
   await expect(a.locator('.empty-shelf')).toBeVisible();
   await a.getByRole('button', { name: 'Ajouter des jeux depuis ma ludothèque' }).click();

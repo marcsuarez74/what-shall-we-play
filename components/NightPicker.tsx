@@ -8,7 +8,7 @@ export default function NightPicker({ users, prechecked, night, withDate = false
   users: UserLite[];
   prechecked: number[];
   night?: Night | null;
-  /** QG Soirées : ajoute les champs date + heure (programmation). */
+  /** QG Parties : ajoute les champs date + heure (programmation). */
   withDate?: boolean;
   onClose?: () => void;
 }) {
@@ -18,7 +18,7 @@ export default function NightPicker({ users, prechecked, night, withDate = false
   const [error, setError] = useState<string | null>(null);
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
-  // La programmation se fait au plus tôt demain ; le jour J, la soirée se crée sans date.
+  // La programmation se fait au plus tôt demain ; le jour J, la partie se crée sans date.
   // Arithmétique calendaire ( setDate) et non +24 h : sûr pendant le passage à l'heure d'été.
   const d = new Date();
   d.setDate(d.getDate() + 1);
@@ -52,7 +52,7 @@ export default function NightPicker({ users, prechecked, night, withDate = false
 
   return (
     <form className="night-picker" onSubmit={submit}>
-      <h2>{night ? 'Modifier la soirée' : withDate ? 'Programmer une soirée' : 'Nouvelle soirée'}</h2>
+      <h2>{night ? 'Modifier la partie' : withDate ? 'Programmer une partie' : 'Nouvelle partie'}</h2>
       {withDate && (
         <div className="plan-fields">
           <label>
@@ -80,7 +80,7 @@ export default function NightPicker({ users, prechecked, night, withDate = false
       <div className="night-actions">
         {onClose && <button type="button" className="btn-ghost" onClick={onClose}>Annuler</button>}
         <button className="btn-copper" disabled={busy}>
-          {busy ? 'Enregistrement…' : night ? 'Enregistrer' : withDate ? 'Programmer' : 'Créer la soirée'}
+          {busy ? 'Enregistrement…' : night ? 'Enregistrer' : withDate ? 'Programmer' : 'Créer la partie'}
         </button>
       </div>
     </form>

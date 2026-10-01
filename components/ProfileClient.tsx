@@ -6,6 +6,7 @@ import { cropDisplaySize, cropSourceRect, clampCropOffset, AVATAR_SIZE, CROP_SQ 
 import { ALLOWED_STICKERS } from '@/lib/stickers';
 import PinInput from './PinInput';
 import FoyerCard, { type FoyerData } from './FoyerCard';
+import UserMenu from './UserMenu';
 
 type Me = { id: number; pseudo: string; sticker: string | null; avatar_path: string | null };
 type Stats = { plays: number; nights: number; games: number };
@@ -142,6 +143,7 @@ export default function ProfileClient({ me, stats, foyer }: { me: Me; stats: Sta
 
   return (
     <div className="profile">
+      <UserMenu me={me} />
       <div className="avatar-zone">
         <button type="button" className="avatar" aria-label="Changer d'avatar" onClick={() => setPickerOpen(true)}>
           {src ? <img src={src} alt="" /> : sticker}
@@ -151,7 +153,7 @@ export default function ProfileClient({ me, stats, foyer }: { me: Me; stats: Sta
 
       <div className="stats">
         <div className="stat"><b>{stats.plays}</b><span>parties jouées</span></div>
-        <div className="stat"><b>{stats.nights}</b><span>soirées</span></div>
+        <div className="stat"><b>{stats.nights}</b><span>parties</span></div>
         <div className="stat"><b>{stats.games}</b><span>jeux</span></div>
       </div>
 
@@ -265,7 +267,7 @@ export default function ProfileClient({ me, stats, foyer }: { me: Me; stats: Sta
             <h2>Supprimer mon profil ?</h2>
             <p className="warn">
               Ton profil, tes <b>{stats.games} jeux</b> et tes tirages quittent l&apos;app.
-              Les soirées des autres restent, sans toi. <b>Irréversible.</b>
+              Les parties des autres restent, sans toi. <b>Irréversible.</b>
             </p>
             <p className="pin-label">Confirme avec ton code secret</p>
             <PinInput label="Code secret" value={delCode} onChange={setDelCode} />

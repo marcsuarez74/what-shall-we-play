@@ -1,4 +1,4 @@
-// Composition pure des messages de soirée — pas de bot WhatsApp : l'app compose,
+// Composition pure des messages de partie — pas de bot WhatsApp : l'app compose,
 // l'utilisateur envoie via le partage natif (navigator.share) sinon lien wa.me.
 
 // Énumération française : « A », « A et B », « A, B et C ».
@@ -14,7 +14,7 @@ export function buildInviteMessage({ dateLong, time, pseudos }: {
 }): string {
   const heure = time ? ` à ${time}` : '';
   const qui = `${frJoin(pseudos)} ${pseudos.length > 1 ? 'sont' : 'est'} de la partie.`;
-  return `🎲 Soirée jeux le ${dateLong}${heure} !\n👥 ${qui}\nMarquez vos jeux dispo 🔗 etagere.marc-suarez.fr`;
+  return `🎲 Partie de jeux le ${dateLong}${heure} !\n👥 ${qui}\nMarquez vos jeux dispo 🔗 etagere.marc-suarez.fr`;
 }
 
 export function buildResultMessage({ title, ownerPseudo, waiting, time }: {

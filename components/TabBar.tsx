@@ -6,7 +6,7 @@ const TABS = [
   { href: '/etagere', icon: '♟', label: 'Étagère' },
   { href: '/library', icon: '📚', label: 'Ludothèque' },
   { href: '/games/add', icon: '➕', label: 'Ajouter' },
-  { href: '/nights', icon: '🎲', label: 'Soirées' },
+  { href: '/nights', icon: '🎲', label: 'Parties' },
 ];
 
 // La roue et les écrans de connexion restent hors navigation (moment plein écran / pas de session).
