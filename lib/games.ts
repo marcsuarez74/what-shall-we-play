@@ -63,16 +63,19 @@ export function getGame(id: number): Game | null {
   return (getDb().prepare('SELECT * FROM games WHERE id = ?').get(id) as Game | undefined) ?? null;
 }
 
-// Collection commune : un jeu du foyer peut être retiré par n'importe quel membre du foyer.
-export function deleteGame(userId: number, id: number): { ok: true } | { error: string; status: number } {
-  const g = getGame(id);
-  if (!g) return { error: 'Jeu introuvable', status: 404 };
+// Collection commune : un jeu du foyer est gérable par chaque membre du foyer,
+// un jeu perso par son propriétaire seul.
+export function canManageGame(userId: number, g: Game): boolean {
   if (g.foyer_id != null) {
     const me = getDb().prepare('SELECT foyer_id FROM users WHERE id = ?').get(userId) as { foyer_id: number | null } | undefined;
-    if (!me || me.foyer_id !== g.foyer_id) return { error: 'Jeu introuvable', status: 404 };
-  } else if (g.owner_id !== userId) {
-    return { error: 'Jeu introuvable', status: 404 };
+    return !!me && me.foyer_id === g.foyer_id;
   }
+  return g.owner_id === userId;
+}
+
+export function deleteGame(userId: number, id: number): { ok: true } | { error: string; status: number } {
+  const g = getGame(id);
+  if (!g || !canManageGame(userId, g)) return { error: 'Jeu introuvable', status: 404 };
   const picked = getDb().prepare('SELECT 1 FROM picks WHERE game_id = ? LIMIT 1').get(id);
   if (picked) return { error: 'Ce jeu a déjà été tiré lors d\'une soirée', status: 409 };
   getDb().prepare('DELETE FROM games WHERE id = ?').run(id);

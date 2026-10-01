@@ -131,7 +131,8 @@ describe('foyer — bibliothèque partagée', () => {
     const foyer = createFoyer(marc);
     joinFoyerByCode(lea, foyer.code);
     expect(deleteGame(lea, g1)).toEqual({ ok: true }); // collection commune
-    expect(deleteGame(zarb, g2).status).toBe(404);
+    const res = deleteGame(zarb, g2);
+    expect('error' in res && res.status).toBe(404);
   });
 
   it('les stats profil comptent la bibliothèque du foyer', () => {

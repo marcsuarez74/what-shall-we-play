@@ -1,7 +1,7 @@
 // app/api/games/[id]/route.ts — DELETE ; PATCH édite title/box_format/numériques (même validateGameInput, UPDATE)
 import { NextResponse } from 'next/server';
 import { getSessionUser } from '@/lib/session';
-import { deleteGame, getGame, validateGameInput } from '@/lib/games';
+import { deleteGame, getGame, validateGameInput, canManageGame } from '@/lib/games';
 import { getDb } from '@/lib/db';
 
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -16,7 +16,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: 'Non connecté' }, { status: 401 });
   const g = getGame(Number((await params).id));
-  if (!g || g.owner_id !== user.id) return NextResponse.json({ error: 'Jeu introuvable' }, { status: 404 });
+  // collection commune : un membre du foyer peut éditer les jeux du foyer
+  if (!g || !canManageGame(user.id, g)) return NextResponse.json({ error: 'Jeu introuvable' }, { status: 404 });
   const body = await req.json();
   const v = validateGameInput({ ...g, ...body });
   if (!v.ok) return NextResponse.json({ error: v.error }, { status: 400 });
