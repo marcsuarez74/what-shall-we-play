@@ -158,14 +158,17 @@ test('étagère : recherche et filtres (joueurs pré-rempli, complexité, durée
   await add('Jaipur', 'petit', { min_players: '2', max_players: '2', playtime_min: '30', weight: '1.5' });
   await page.goto('/etagere');
 
-  // Soirée solo → filtre joueurs pré-rempli à 1 : seul Mars (1–5) reste
+  // Aucun filtre par défaut : les 3 boîtes sont là
   await page.getByRole('button', { name: /Filtres/ }).click(); // panneau replié par défaut
   const chip1 = page.locator('.fam[aria-label*="joueurs"] .fchip', { hasText: '1' });
-  await expect(chip1).toHaveClass(/on/);
-  await expect(page.locator('.shelf-block:not(.excluded-block) .box')).toHaveCount(1);
-  await expect(page.locator('.shelf-count')).toContainText('1 jeu sur 3');
+  await expect(page.locator('.shelf-block:not(.excluded-block) .box')).toHaveCount(3);
+  await expect(page.locator('.shelf-count')).toContainText('3 jeux sur 3');
 
-  // Désactiver le filtre joueurs → les 3 reviennent
+  // Le filtre joueurs reste disponible : en solo, seul Mars (1–5) reste
+  await chip1.click();
+  await expect(page.locator('.shelf-block:not(.excluded-block) .box')).toHaveCount(1);
+
+  // Le retirer → les 3 reviennent
   await chip1.click();
   await expect(page.locator('.shelf-block:not(.excluded-block) .box')).toHaveCount(3);
 

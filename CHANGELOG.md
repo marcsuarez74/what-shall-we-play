@@ -16,6 +16,11 @@ versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 - **« Ma bibliothèque » devient « Ma ludothèque »** (onglet + titre), et les cartes passent en trois zones : identité (pochette, titre, année · éditeur), traits (format encadré cuivre, joueurs, durée, poids), filet d'actions (sélecteur de format à gauche, « Pas ce soir » à droite).
 - **QG Soirées repensé** : « Ce soir » devient la carte vivante à liseré cuivre ; les programmées affichent la date en héros (numéro du jour, mois, heure en badge) ; l'historique passe en rangées compactes scannables.
 
+### Corrigé
+- **Étagère : la barre « Sélection + Lancer le tirage » reste visible** pendant qu'on fait défiler les boîtes — elle était collée en bas du flux, hors écran. La bannière du mode sélection aussi (fixée en haut).
+- **Aucun filtre appliqué par défaut** sur l'étagère : toute la collection s'affiche à l'ouverture ; le filtre joueurs de la soirée reste disponible au tap.
+- **Plus de rebond de page** (PWA iOS) : le rebond élastique est désactivé — fini le scroll parasite sur les pages courtes comme le profil.
+
 ## [1.4.0] — 2026-10-01
 
 ### Ajouté

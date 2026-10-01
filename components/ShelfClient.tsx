@@ -25,8 +25,9 @@ export default function ShelfClient({ night, players, games, excludedGames, user
   const menuRef = useRef<HTMLDetailsElement>(null);
   const pressRef = useRef<LongPress | null>(null);
   const suppressClick = useRef(false);
+  // Aucun filtre appliqué par défaut : l'étagère montre toute la collection.
   const [filters, setFilters] = useState<ShelfFilters>({
-    q: '', players: players.length ? Math.min(6, players.length) : null, weight: 'all', duration: 'all', format: 'all',
+    q: '', players: null, weight: 'all', duration: 'all', format: 'all',
   });
   const filtered = useMemo(() => filterShelf(games, filters), [games, filters]);
   const byFormat = useMemo(() => FORMATS.map((f) => ({ f, list: filtered.filter((g) => g.box_format === f) })), [filtered]);

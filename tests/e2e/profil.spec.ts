@@ -112,3 +112,9 @@ test('profil : suppression du compte puis connexion impossible', async ({ page }
   expect(res.status()).toBe(401);
   await expect(page.locator('.auth-form .error')).toContainText('Identifiants incorrects');
 });
+
+test('pas de rebond de page : overscroll désactivé (PWA iOS)', async ({ page }) => {
+  await page.goto('/login');
+  const beh = await page.evaluate(() => getComputedStyle(document.documentElement).overscrollBehaviorY);
+  expect(beh).toBe('none');
+});
