@@ -11,10 +11,10 @@ const g = (o: Partial<Game>): Game => ({
 const base = [
   g({ id: 1, title: 'Azul', min_players: 2, max_players: 4, weight: 1.7, playtime_min: 35 }),
   g({ id: 2, title: 'Terraforming Mars', min_players: 1, max_players: 5, weight: 3.2, playtime_min: 120 }),
-  g({ id: 3, title: 'Jaipur', min_players: 2, max_players: 2, weight: 1.6, playtime_min: 30 }),
+  g({ id: 3, title: 'Jaipur', min_players: 2, max_players: 2, weight: 1.6, playtime_min: 30, box_format: 'petit' }),
   g({ id: 4, title: 'Mystérum', min_players: null, max_players: null, weight: null, playtime_min: null }),
 ];
-const all = { q: '', players: null, weight: 'all', duration: 'all' } as const;
+const all = { q: '', players: null, weight: 'all', duration: 'all', format: 'all' } as const;
 
 describe('filtres de l étagère', () => {
   it('sans filtre : tout passe', () => {
@@ -46,7 +46,13 @@ describe('filtres de l étagère', () => {
   });
 
   it('filtres combinés', () => {
-    expect(filterShelf(base, { q: '', players: 2, weight: 'leger', duration: 'moyen' }).map((x) => x.id)).toEqual([1, 3, 4]);
-    expect(filterShelf(base, { q: 'mars', players: 2, weight: 'lourd', duration: 'long' }).map((x) => x.id)).toEqual([2]);
+    expect(filterShelf(base, { q: '', players: 2, weight: 'leger', duration: 'moyen', format: 'all' }).map((x) => x.id)).toEqual([1, 3, 4]);
+    expect(filterShelf(base, { q: 'mars', players: 2, weight: 'lourd', duration: 'long', format: 'all' }).map((x) => x.id)).toEqual([2]);
+  });
+
+  it('format de boîte (ludothèque) : filtre exact, all = tout', () => {
+    expect(filterShelf(base, { ...all, format: 'petit' }).map((x) => x.id)).toEqual([3]);
+    expect(filterShelf(base, { ...all, format: 'mini' }).map((x) => x.id)).toEqual([]);
+    expect(filterShelf(base, { ...all, format: 'all' }).map((x) => x.id)).toEqual([1, 2, 3, 4]);
   });
 });

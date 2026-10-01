@@ -218,3 +218,30 @@ test('badge : la photo du propriétaire est visible (pas avalée par l’opacit�
   // L'opacité de la pochette (.box img) ne doit pas s'appliquer à l'img du badge
   expect(await img.evaluate((el) => getComputedStyle(el).opacity)).toBe('1'); // ROUGE avant fix
 });
+
+test('bibliothèque : recherche, filtres (dont Boîte) et compteur', async ({ page }) => {
+  await registerAndStart(page, `libf-${Date.now()}`);
+  const add = async (title: string, meta: Record<string, string>) => {
+    const r = await page.request.post('/api/games', { multipart: { title, box_format: 'moyen', ...meta } });
+    if (!r.ok()) throw new Error(`ajout ${title}: ${r.status()}`);
+  };
+  await add('Azul', { min_players: '2', max_players: '4', playtime_min: '35', weight: '1.7' });
+  await add('Terraforming Mars', { min_players: '1', max_players: '5', playtime_min: '120', weight: '3.4', box_format: 'grand' });
+  await add('Jaipur', { min_players: '2', max_players: '2', playtime_min: '30', weight: '1.5', box_format: 'petit' });
+  await page.goto('/library');
+
+  // Recherche insensible à la casse
+  await page.getByLabel('Rechercher un jeu').fill('azul');
+  await expect(page.locator('.lib-card')).toHaveCount(1);
+  await page.getByLabel('Rechercher un jeu').fill('');
+
+  // Filtre Boîte (dimension propre à la ludothèque)
+  await page.locator('.fam[aria-label*="boîte"] .fchip', { hasText: 'Petit' }).click();
+  await expect(page.locator('.lib-card')).toHaveCount(1);
+  await page.locator('.fam[aria-label*="boîte"] .fchip', { hasText: 'Mini' }).click();
+  await expect(page.locator('.lib-card')).toHaveCount(0);
+  await expect(page.locator('.lib-empty')).toBeVisible();
+  // Reset : « Tout afficher »
+  await page.getByRole('button', { name: 'Tout afficher' }).click();
+  await expect(page.locator('.lib-card')).toHaveCount(3);
+});

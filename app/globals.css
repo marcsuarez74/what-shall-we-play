@@ -1562,22 +1562,35 @@ input[type='file'] {
 }
 .box.ex { border-style: dashed; filter: saturate(0.45) brightness(0.82); }
 
-/* Recherche + filtres de l'étagère */
-.shelf-controls { display: grid; gap: 8px; margin: 4px 0 10px; }
+/* Barre de recherche + filtres — contrôles segmentés étiquetés */
+.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin: 4px 0 12px; }
 .shelf-search {
-  width: 100%; padding: 11px 14px; border-radius: 12px; font: inherit; font-size: 14.5px;
+  flex: 1 1 220px; padding: 10px 14px; border-radius: 12px; font: inherit; font-size: 14.5px;
   background: var(--surface); border: 1.5px solid var(--doux); color: var(--creme);
 }
 .shelf-search:focus { outline: none; border-color: var(--cuivre); }
 .shelf-search::placeholder { color: var(--doux); }
-.fam { display: flex; gap: 6px; flex-wrap: wrap; }
+.fam { display: inline-flex; align-items: stretch; }
+.fam-k {
+  align-self: center; padding-right: 8px; font-size: 11.5px; font-weight: 600; color: var(--doux);
+  white-space: nowrap;
+}
 .fchip {
   appearance: none; font: inherit; font-size: 12.5px; font-weight: 600;
-  padding: 6px 12px; border-radius: 999px; cursor: pointer;
+  padding: 6px 11px; cursor: pointer; white-space: nowrap;
   background: var(--surface); border: 1.5px solid var(--doux); color: var(--doux-clair);
+  border-right-width: 0;
 }
-.fchip.on { background: var(--cuivre); border-color: var(--cuivre); color: #fff; }
-.shelf-count { color: var(--doux-clair); font-size: 12px; }
+.fchip:first-of-type { border-radius: 999px 0 0 999px; }
+.fchip:last-of-type { border-right-width: 1.5px; border-radius: 0 999px 999px 0; }
+.fchip.on {
+  position: relative; z-index: 1;
+  background: var(--cuivre); border-color: var(--cuivre); color: #fff;
+}
+.fchip:not(.on):hover { color: var(--creme); }
+.shelf-count { color: var(--doux-clair); font-size: 12px; display: flex; align-items: center; gap: 10px; }
+.shelf-count .link-btn { font-size: 12px; }
+.lib-empty { color: var(--doux-clair); padding: 18px 0; }
 
 /* Badge « apporté par » — petit rond en coin de boîte */
 .owner-badge {
@@ -1598,6 +1611,59 @@ input[type='file'] {
   color-scheme: dark; /* calendrier/horloge natives lisibles */
 }
 .night-time { color: var(--cuivre); font-weight: 600; font-size: 13px; }
+
+/* QG Soirées — trois moments, trois traitements */
+.qg-section { margin-top: 22px; }
+.qg-section > h2, .qg-head h2 {
+  margin: 0 0 10px; font-family: var(--font-display, 'Bricolage Grotesque'), sans-serif;
+  font-size: 15px; font-weight: 700; color: var(--doux-clair);
+}
+.qg-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.qg-head .btn-copper { font-size: 13px; padding: 8px 14px; }
+
+/* La seule carte vivante : liseré cuivre */
+.night-card.live {
+  border: 1.5px solid color-mix(in srgb, var(--cuivre) 55%, transparent);
+  background: color-mix(in srgb, var(--cuivre) 7%, var(--surface));
+}
+.night-card.live .night-label { color: var(--cuivre); }
+
+/* Programmée : la date est le héros */
+.planned-card {
+  flex-direction: row; align-items: center; gap: 16px; padding: 14px 16px;
+}
+.plan-date {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-width: 52px; padding: 8px 6px; border-radius: 12px;
+  background: color-mix(in srgb, var(--cuivre) 12%, transparent);
+  align-self: stretch;
+}
+.plan-day {
+  font-family: var(--font-display, 'Bricolage Grotesque'), sans-serif;
+  font-size: 26px; font-weight: 800; line-height: 1; color: var(--creme);
+}
+.plan-month { font-size: 11px; font-weight: 600; color: var(--cuivre); margin-top: 2px; }
+.plan-body { display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 0; }
+.plan-when { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.plan-long { font-weight: 600; color: var(--creme); font-size: 14px; }
+.plan-time {
+  font-size: 12.5px; font-weight: 700; color: var(--cuivre);
+  padding: 2px 9px; border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--cuivre) 45%, transparent);
+}
+.invite-btn { align-self: flex-start; font-size: 12.5px; padding: 7px 12px; }
+
+/* Historique : rangées scannables, pas des cartes */
+.hist-list { list-style: none; display: flex; flex-direction: column; }
+.hist-row {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  padding: 11px 2px; border-bottom: 1px solid rgba(185, 165, 140, 0.18);
+}
+.hist-row:last-child { border-bottom: none; }
+.hist-date { min-width: 128px; color: var(--doux-clair); font-size: 12.5px; }
+.hist-players { display: flex; flex-wrap: wrap; gap: 6px; }
+.hist-picks { color: var(--creme); font-size: 13px; }
+.hist-picks::before { content: '🎯 '; }
 
 /* Pilule « Pas ce soir » sur les cartes de bibliothèque */
 .lib-excl {

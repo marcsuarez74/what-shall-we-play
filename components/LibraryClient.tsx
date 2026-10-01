@@ -1,9 +1,11 @@
 'use client';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FORMATS, FORMAT_LABEL, coverSrc } from '@/lib/formats';
+import { filterShelf, type ShelfFilters } from '@/lib/filters';
 import type { Game } from '@/lib/types';
 import GameSheet from './GameSheet';
+import ShelfControls from './ShelfControls';
 
 export default function LibraryClient({ games: initial, plays, activeNightId = null, excludedIds: initialExcluded = [] }: {
   games: Game[];
@@ -16,6 +18,8 @@ export default function LibraryClient({ games: initial, plays, activeNightId = n
   const [notice, setNotice] = useState<string | null>(null);
   const [detail, setDetail] = useState<Game | null>(null);
   const [excluded, setExcluded] = useState<Set<number>>(new Set(initialExcluded));
+  const [filters, setFilters] = useState<ShelfFilters>({ q: '', players: null, weight: 'all', duration: 'all', format: 'all' });
+  const filtered = useMemo(() => filterShelf(games, filters), [games, filters]);
 
   async function toggleExclude(g: Game) {
     const nowExcluded = !excluded.has(g.id);
@@ -56,8 +60,12 @@ export default function LibraryClient({ games: initial, plays, activeNightId = n
       {games.length === 0 && (
         <p className="empty">Aucun jeu pour l&apos;instant. Onglet « Ajouter » pour commencer votre étagère.</p>
       )}
+      {games.length > 0 && (
+        <ShelfControls filters={filters} setFilters={setFilters}
+                       visible={filtered.length} total={games.length} withFormat countHint="" />
+      )}
       <ul className="lib">
-        {games.map((g) => (
+        {filtered.map((g) => (
           <li key={g.id} className="lib-card">
             <button type="button" className="lib-main" onClick={() => setDetail(g)}
                     aria-label={`Voir la fiche de ${g.title}`}>
@@ -92,6 +100,9 @@ export default function LibraryClient({ games: initial, plays, activeNightId = n
           </li>
         ))}
       </ul>
+      {games.length > 0 && filtered.length === 0 && (
+        <p className="lib-empty">Aucun jeu ne correspond aux filtres.</p>
+      )}
       {detail && (
         <GameSheet game={detail} players={[]} playsCount={plays[detail.id] ?? 0}
                    inSelection={false} onToggle={() => {}} onClose={() => setDetail(null)}

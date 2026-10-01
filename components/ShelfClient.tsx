@@ -26,7 +26,7 @@ export default function ShelfClient({ night, players, games, excludedGames, user
   const pressRef = useRef<LongPress | null>(null);
   const suppressClick = useRef(false);
   const [filters, setFilters] = useState<ShelfFilters>({
-    q: '', players: players.length ? Math.min(6, players.length) : null, weight: 'all', duration: 'all',
+    q: '', players: players.length ? Math.min(6, players.length) : null, weight: 'all', duration: 'all', format: 'all',
   });
   const filtered = useMemo(() => filterShelf(games, filters), [games, filters]);
   const byFormat = useMemo(() => FORMATS.map((f) => ({ f, list: filtered.filter((g) => g.box_format === f) })), [filtered]);

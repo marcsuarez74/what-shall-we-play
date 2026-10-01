@@ -4,6 +4,15 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [1.5.0] — 2026-10-01
+
+### Ajouté
+- **Recherche et filtres sur la bibliothèque** : barre de contrôles partagée avec l'étagère, plus une famille propre à la ludothèque — format de **boîte** (Grand/Moyen/Petit/Mini). Compteur « N jeux sur M » et lien « Tout afficher » quand des filtres mordent.
+
+### Modifié
+- **Filtres de l'étagère repensés** : contrôles segmentés étiquetés (Joueurs, Complexité, Durée) — plus lisibles, deux fois moins hauts, un tap pour changer de valeur.
+- **QG Soirées repensé** : « Ce soir » devient la carte vivante à liseré cuivre ; les programmées affichent la date en héros (numéro du jour, mois, heure en badge) ; l'historique passe en rangées compactes scannables.
+
 ## [1.4.0] — 2026-10-01
 
 ### Ajouté

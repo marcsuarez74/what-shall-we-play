@@ -1,10 +1,14 @@
 import type { Game } from './types';
 
+
+
 export interface ShelfFilters {
   q: string;
   players: number | null;
   weight: 'all' | 'leger' | 'moyen' | 'lourd';
   duration: 'all' | 'court' | 'moyen' | 'long';
+  /** Boîte : dimension propre à la ludothèque (l'étagère groupe déjà par format). */
+  format: 'all' | Game['box_format'];
 }
 
 // Insensible à la casse ET aux accents (les titres français gardent leurs accents,
@@ -29,6 +33,7 @@ export function filterShelf(games: Game[], f: ShelfFilters): Game[] {
       if (f.duration === 'moyen' && (g.playtime_min < 30 || g.playtime_min > 60)) return false;
       if (f.duration === 'long' && g.playtime_min <= 60) return false;
     }
+    if (f.format !== 'all' && g.box_format !== f.format) return false;
     return true;
   });
 }
