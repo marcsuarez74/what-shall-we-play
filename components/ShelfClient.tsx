@@ -107,7 +107,9 @@ export default function ShelfClient({ night, players, games, myLibrary, users, p
         </section>
       ) : (
         <div className="add-more">
-          <button type="button" className="link-btn" onClick={() => setAddingGames(true)}>+ Ajouter d&apos;autres jeux</button>
+          <button type="button" className="link-btn" onClick={() => setAddingGames(true)}>
+            + Ajouter d&apos;autres jeux{jAiValide ? <span className="revalide"> · à re-valider ensuite</span> : null}
+          </button>
         </div>
       )}
       {byFormat.map(({ f, list }) => list.length === 0 ? null : (
@@ -129,33 +131,37 @@ export default function ShelfClient({ night, players, games, myLibrary, users, p
         </section>
       ))}
       <div className="cta-zone">
-        {!jAiValide ? (
-          <button type="button" className="btn-copper" disabled={busy} onClick={valider}>
-            {busy ? 'Enregistrement…' : 'Valider ma sélection'}
-          </button>
-        ) : (
-          <p className="pret-line">✓ Ta sélection est validée</p>
-        )}
-        {jAiValide && (
-          <p className="etat-line">Tu peux encore ajouter des boîtes — il faudra re-valider</p>
-        )}
-        {estCreateur ? (
+        {jAiValide ? (
           <>
-            {games.length > 0 && (
-              <button type="button" className="btn-copper" onClick={clicLancer}>
-                {surAffiche ? 'Sûr ? Lancer' : `Lancer le tirage · ${games.length}`}
-              </button>
-            )}
-            {games.length > 0 && (
-              <p className={`etat-line ${tousPrets ? 'pret' : ''}`}>
-                {tousPrets
-                  ? 'Tout le monde est prêt !'
-                  : `${players.length - enAttente.length}/${players.length} prêts — ${enAttente.map((p) => prenom(p)).join(', ')} n'a${enAttente.length > 1 ? 'ont' : ''} pas validé`}
+            <div className="cta-row">
+              <span className="pill-ok" aria-label="sélection validée">✓ Validée</span>
+              {estCreateur && games.length > 0 ? (
+                <button type="button" className={`btn-copper ${tousPrets ? 'pret' : ''}`} onClick={clicLancer}>
+                  {surAffiche ? 'Sûr ? Lancer' : `Lancer · ${games.length}`}
+                </button>
+              ) : (
+                !estCreateur && (
+                  <span className="lance-par">Lancement par <b>{prenom(players.find((p) => p.id === night.creator_id) ?? me)}</b></span>
+                )
+              )}
+            </div>
+            {estCreateur && games.length > 0 && !tousPrets && (
+              <p className="cta-statut">
+                {players.length - enAttente.length}/{players.length} prêts — <b>{enAttente.map((p) => prenom(p)).join(', ')}</b> n&apos;a{enAttente.length > 1 ? 'ont' : ''} pas encore validé
               </p>
             )}
           </>
         ) : (
-          <p className="etat-line">Le tirage sera lancé par <b>{prenom(players.find((p) => p.id === night.creator_id) ?? me)}</b></p>
+          <div className="cta-row">
+            <button type="button" className="btn-copper" disabled={busy} onClick={valider}>
+              {busy ? 'Enregistrement…' : 'Valider ma sélection'}
+            </button>
+            {estCreateur && games.length > 0 && (
+              <button type="button" className="btn-ghost lancer-sec" onClick={clicLancer}>
+                {surAffiche ? 'Sûr ? Lancer' : `Lancer · ${games.length}`}
+              </button>
+            )}
+          </div>
         )}
       </div>
       {detail && <GameSheet game={detail} players={players} playsCount={plays[detail.id] ?? 0}

@@ -317,10 +317,21 @@ input[type='file'] {
 .night-card .etats { display: grid; gap: 3px; margin-top: 9px; }
 .night-card .etats p { font-size: 12.5px; color: var(--doux-clair); }
 .night-card .etats p.ok { color: var(--vert); font-weight: 600; }
-.cta-zone .pret-line { text-align: center; color: var(--vert); font-size: 13px; font-weight: 600; padding: 3px 0; }
-.cta-zone .etat-line { text-align: center; font-size: 12.5px; color: var(--doux-clair); padding: 0 0 2px; }
-.cta-zone .etat-line b { color: var(--creme); }
-.cta-zone .etat-line.pret { color: var(--vert); font-weight: 600; }
+.cta-zone { gap: 7px; }
+.cta-row { display: flex; gap: 10px; align-items: center; }
+.cta-row .btn-copper { flex: 1 1 auto; min-width: 0; white-space: nowrap; }
+.cta-row .btn-ghost { min-height: 50px; padding: 10px 16px; font-weight: 700;
+  border-color: color-mix(in srgb, var(--cuivre) 75%, transparent); color: var(--creme); white-space: nowrap; }
+.pill-ok { display: inline-flex; align-items: center; gap: 7px; border-radius: 999px; padding: 8px 13px;
+  font-size: 13px; font-weight: 700; flex: none; white-space: nowrap;
+  background: color-mix(in srgb, var(--vert) 20%, transparent); color: var(--vert);
+  border: 1px solid color-mix(in srgb, var(--vert) 55%, transparent); }
+.btn-copper.pret { background: var(--vert); } /* tout le monde est prêt : le vert est le signal */
+.cta-statut { font-size: 12.5px; color: var(--doux-clair); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cta-statut b { color: var(--creme); font-weight: 600; }
+.lance-par { margin-left: auto; font-size: 12.5px; color: var(--doux-clair); white-space: nowrap; }
+.lance-par b { color: var(--creme); font-weight: 600; }
+.add-more .revalide { color: var(--doux-clair); font-weight: 400; }
 
 /* ---------- Profil ---------- */
 .profile { max-width: 430px; }
@@ -1246,7 +1257,7 @@ input[type='file'] {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 10px;
+  gap: 7px;
   max-width: 560px;
   margin: 0 auto;
   padding: 18px 16px 14px;
@@ -1255,10 +1266,6 @@ input[type='file'] {
 }
 
 .cta-zone > * { pointer-events: auto; }
-
-.cta-zone .btn-copper {
-  width: 100%;
-}
 
 /* ---------- Fiche jeu (bottom-sheet) ---------- */
 .sheet-backdrop {
@@ -1699,7 +1706,8 @@ input[type='file'] {
 .add-more .link-btn { font-size: 13px; }
 
 /* Sélecteur « Ajouter à la soirée » (bottom-sheet) */
-.picker-sheet { max-height: 88%; }
+.picker-sheet { max-height: 88%; display: flex; flex-direction: column; overflow: hidden; }
+.picker-sheet .sheet-head, .picker-sheet .sheet-sub, .picker-sheet .search, .picker-sheet .sheet-foot { flex: none; }
 .picker-sheet .sheet-sub { color: var(--doux-clair); font-size: 12.5px; margin-bottom: 12px; }
 .picker-sheet .search {
   display: flex; align-items: center; gap: 8px; background: var(--noyer);
@@ -1710,7 +1718,11 @@ input[type='file'] {
   color: var(--creme); font: inherit; font-size: 14.5px;
 }
 .picker-sheet .search input::placeholder { color: var(--doux); }
-.pick-list { overflow-y: auto; display: grid; gap: 12px; padding-right: 2px; }
+.pick-list {
+  flex: 1 1 auto; min-height: 0; /* seul conteneur qui défile dans la feuille */
+  overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
+  display: grid; gap: 12px; padding-right: 2px;
+}
 .fmt-group .fmt-k {
   font-size: 11px; font-weight: 700; color: var(--doux);
   letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 6px;

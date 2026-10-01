@@ -56,20 +56,17 @@ test('valider : la phrase « xxx a validé sa sélection » apparaît chez les a
   // Les deux pages sont sur l'étagère, flux SSE connectés
   await expect(a.locator('body')).toHaveAttribute('data-sync', 'on', { timeout: 15_000 });
   await expect(b.locator('body')).toHaveAttribute('data-sync', 'on', { timeout: 15_000 });
-  await expect(a.locator('.cta-zone .etat-line')).toContainText('0/2 prêts');
 
   // Léa valide DEPUIS SON TÉLÉPHONE (page b) : la phrase apparaît chez Marc sans recharger
   await b.getByRole('button', { name: 'Valider ma sélection' }).click();
   await expect(a.locator('.etats')).toContainText('a validé sa sélection', { timeout: 5_000 });
   await expect(a.locator('.etats')).toContainText(`val-l-${s}`);
-  await expect(a.locator('.cta-zone .etat-line')).toContainText('1/2 prêts');
   // Chez Léa aussi, l'état a basculé
-  await expect(b.locator('.pret-line')).toContainText('Ta sélection est validée');
+  await expect(b.locator('.pill-ok')).toContainText('✓ Validée');
 
   // Léa ajoute une boîte via l'API : sa validation saute, Marc le voit en direct
   await poserBoite(b, nightId, 'Tardivement ajouté');
   await expect(a.locator('.etats')).toContainText("n'a pas encore validé", { timeout: 5_000 });
-  await expect(a.locator('.cta-zone .etat-line')).toContainText('0/2 prêts');
   // Chez Léa : re-validation exigée
   await expect(b.getByRole('button', { name: 'Valider ma sélection' })).toBeVisible();
   await ctxA.close();
@@ -88,19 +85,20 @@ test('lancer : un appui quand tout le monde a validé, double-appui sinon', asyn
   const nightId = await creerPartie(a, `lan-l-${s}`);
   await poserBoite(a, nightId, 'Le jeu du soir');
 
-  // Marc valide : 1/2 prêts — le bouton demande confirmation au premier appui
+  // Marc valide : 1/2 prêts — la ligne d'état apparaît, le bouton demande confirmation au premier appui
   await a.getByRole('button', { name: 'Valider ma sélection' }).click();
-  await expect(a.locator('.pret-line')).toContainText('Ta sélection est validée');
-  const lancer = a.getByRole('button', { name: /Lancer le tirage · 1|Sûr \? Lancer/ });
+  await expect(a.locator('.pill-ok')).toContainText('✓ Validée');
+  await expect(a.locator('.cta-statut')).toContainText('1/2 prêts');
+  const lancer = a.getByRole('button', { name: /Lancer · 1|Sûr \? Lancer/ });
   await lancer.click();
   await expect(a.getByRole('button', { name: 'Sûr ? Lancer' })).toBeVisible();
 
-  // Léa valide : la ligne passe à « Tout le monde est prêt ! » en direct…
+  // Léa valide : le lanceur passe au vert (« tout le monde est prêt ») en direct…
   await b.getByRole('button', { name: 'Valider ma sélection' }).click();
-  await expect(a.locator('.cta-zone .etat-line.pret')).toContainText('Tout le monde est prêt !', { timeout: 5_000 });
+  await expect(a.locator('.cta-row .btn-copper.pret')).toBeVisible({ timeout: 5_000 });
   // …et le « Sûr ? » s'efface : un SEUL appui lance
-  await expect(a.getByRole('button', { name: 'Lancer le tirage · 1' })).toBeVisible();
-  await a.getByRole('button', { name: 'Lancer le tirage · 1' }).click();
+  await expect(a.getByRole('button', { name: 'Lancer · 1' })).toBeVisible();
+  await a.getByRole('button', { name: 'Lancer · 1' }).click();
   await expect(a).toHaveURL(/\/tirage\//);
   await ctxA.close();
   await ctxB.close();

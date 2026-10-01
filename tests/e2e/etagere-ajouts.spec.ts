@@ -366,3 +366,35 @@ test('joueur ajouté ensuite via modifier : elle voit la partie et les jeux déj
   await ctxA.close();
   await ctxB.close();
 });
+
+// v3.1 — repro du signal du 2026-10-01 : « quand on ajoute des jeux à l'étagère
+// depuis le bottomsheet il y a un scroll sur la ligne du jeu ». Ajouter ne doit
+// JAMAIS faire sauter le défilement de la feuille.
+test('picker : ajouter un jeu ne fait pas sauter le défilement de la feuille', async ({ page }) => {
+  await registerAndStart(page, `scroll-${Date.now()}`);
+  for (let i = 1; i <= 8; i++) await newGame(page, `Rangement ${i}`, i % 2 ? 'moyen' : 'petit');
+  await page.goto('/etagere');
+  await page.getByRole('button', { name: 'Ajouter des jeux depuis ma ludothèque' }).click();
+  const sheet = page.locator('.picker-sheet');
+  await sheet.locator('.pick-row').first().waitFor();
+
+  const descend = () => page.evaluate(() => {
+    const s = document.querySelector('.picker-sheet') as HTMLElement;
+    const l = document.querySelector('.pick-list') as HTMLElement;
+    s.scrollTop = s.scrollHeight; l.scrollTop = l.scrollHeight;
+    return s.scrollTop + l.scrollTop;
+  });
+  const avant = await descend();
+  expect(avant).toBeGreaterThan(40); // la feuille défile vraiment
+
+  const post = page.waitForResponse((r) => r.url().includes('/nights/') && r.request().method() === 'POST');
+  await sheet.locator('.pick-row').last().getByRole('button', { name: /Ajouter/ }).click();
+  await post;
+  await page.waitForResponse((r) => r.url().includes('/etagere') && r.request().method() === 'GET'); // le refresh RSC
+  const apres = await page.evaluate(() => {
+    const s = document.querySelector('.picker-sheet') as HTMLElement;
+    const l = document.querySelector('.pick-list') as HTMLElement;
+    return s.scrollTop + l.scrollTop;
+  });
+  expect(Math.abs(apres - avant)).toBeLessThan(10); // le défilement n'a pas bougé
+});
