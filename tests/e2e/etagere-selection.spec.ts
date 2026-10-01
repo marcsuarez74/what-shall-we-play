@@ -93,3 +93,43 @@ test('tactile : maintien 700 ms → mode sélection ; un glisser annule (garde r
   await expect(page.locator('.pick-banner')).toHaveCount(0);
   await context.close();
 });
+
+test('sélection + lancer le tirage visibles sans scroller (barre fixe)', async ({ page }) => {
+  const pseudo = `fix-${Date.now()}`;
+  await registerAndStart(page, pseudo);
+  // 4 formats = 4 rangées : la page dépasse l'écran
+  for (const [t, f] of [['Alpha', 'grand'], ['Bravo', 'moyen'], ['Charlie', 'petit'], ['Delta', 'mini']] as const) {
+    const form = new FormData();
+    form.set('title', t); form.set('box_format', f);
+    const res = await page.request.post('/api/games', { form });
+    if (!res.ok()) throw new Error(`ajout jeu ${t}: ${res.status()} ${await res.text()}`);
+  }
+  await page.goto('/etagere');
+  await page.locator('.box').first().waitFor();
+
+  // Sans aucun scroll : la barre de sélection est entièrement dans le viewport
+  const inView = await page.evaluate(() => {
+    const r = document.querySelector('.cta-zone')!.getBoundingClientRect();
+    return r.top >= 0 && r.bottom <= window.innerHeight && r.height > 0;
+  });
+  expect(inView).toBe(true);
+
+  // En mode sélection : la bannière aussi, sans scroll
+  const box = page.locator('.box').first();
+  await box.scrollIntoViewIfNeeded();
+  const bb = (await box.boundingBox())!;
+  await page.mouse.move(bb.x + bb.width / 2, bb.y + bb.height / 2);
+  await page.mouse.down();
+  await page.waitForTimeout(500);
+  await page.mouse.up();
+  await expect(page.locator('.pick-banner')).toBeVisible();
+  const bannerIn = await page.evaluate(() => {
+    const r = document.querySelector('.pick-banner')!.getBoundingClientRect();
+    return r.top >= 0 && r.bottom <= window.innerHeight;
+  });
+  expect(bannerIn).toBe(true);
+
+  // Le tirage se lance depuis la barre fixe
+  await page.getByRole('button', { name: /Lancer le tirage · 1/ }).click();
+  await page.waitForURL(/\/tirage\//);
+});
