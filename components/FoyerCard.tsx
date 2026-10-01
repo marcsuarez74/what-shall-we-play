@@ -25,6 +25,7 @@ export default function FoyerCard({ foyer, meId }: { foyer: FoyerData | null; me
   const [renaming, setRenaming] = useState(false);
   const [name, setName] = useState('');
   const [armed, setArmed] = useState<'leave' | 'dissolve' | null>(null);
+  const [armedKick, setArmedKick] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
 
   async function create() {
@@ -67,6 +68,22 @@ export default function FoyerCard({ foyer, meId }: { foyer: FoyerData | null; me
     setArmed(null); setBusy(true);
     await fetch(kind === 'leave' ? '/api/foyers/leave' : '/api/foyers', { method: kind === 'leave' ? 'POST' : 'DELETE' });
     setBusy(false);
+    router.refresh();
+  }
+
+  // Retirer un membre (créateur) : même idiome double-tap ; ses ajouts le suivent.
+  async function kick(userId: number) {
+    if (armedKick !== userId) {
+      setArmedKick(userId);
+      setTimeout(() => setArmedKick((a) => (a === userId ? null : a)), 4000);
+      return;
+    }
+    setArmedKick(null); setBusy(true); setError(null);
+    const res = await fetch('/api/foyers/members', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId }),
+    });
+    setBusy(false);
+    if (!res.ok) { setError((await res.json()).error); return; }
     router.refresh();
   }
 
@@ -130,6 +147,13 @@ export default function FoyerCard({ foyer, meId }: { foyer: FoyerData | null; me
               : <span className="st" aria-hidden>{m.sticker ?? '🎲'}</span>}
             <b>{m.pseudo}</b>
             <span className="role">{m.role}</span>
+            {isCreator && m.id !== meId && (
+              <button type="button" className={`kick ${armedKick === m.id ? 'armed' : ''}`}
+                      aria-label={armedKick === m.id ? `Sûr ? Retirer ${m.pseudo} du foyer` : `Retirer ${m.pseudo} du foyer`}
+                      disabled={busy} onClick={() => kick(m.id)}>
+                {armedKick === m.id ? 'Sûr ? Retirer' : '✕'}
+              </button>
+            )}
           </div>
         ))}
       </div>

@@ -4,6 +4,29 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [2.1.0] — 2026-10-01
+
+### Ajouté
+- **Menu utilisateur sur toutes les pages** : la pastille (sticker + initiale) est en haut
+  à droite de l'étagère, de la ludothèque, des parties, de l'ajout et du profil —
+  Mon profil · Se déconnecter · version, partout. Un seul composant partagé (`UserMenu`).
+- **Onboarding : l'emoji au compte créé** — la page « Créer un compte » propose la grille
+  des 32 avatars (🎲 présélectionné), validée côté API ; modifiable au profil.
+- **Foyer : le créateur retire un membre** — ✕ sur chaque autre membre, double-tap de
+  confirmation ; la règle de sortie s'applique (ses ajouts le suivent, la collection
+  commune reste). API `POST /api/foyers/members` + garde créateur.
+- **Sync live de l'étagère (SSE)** — quand un joueur est ajouté à une partie ou qu'un
+  jeu est posé/retiré, l'écran de chaque participant se met à jour toute seule (< 1 s),
+  sans recharger — y compris la page « nouvelle partie » ouverte du joueur qu'on vient
+  d'ajouter, qui bascule sur la partie en cours. Flux `GET /api/me/events` (SSE par
+  utilisateur), bus événementiel partagé (`globalThis`), battement de cœur 30 s,
+  reconnexion automatique ; marche à travers nginx (`X-Accel-Buffering: no`).
+
+### Modifié
+- **« Soirées » devient « Parties »** — l'onglet et tout le vocabulaire de l'app
+  (Mes parties, Partie en cours, Créer la partie, Terminer la partie, annonce WhatsApp
+  « Partie de jeux le… »). Rien ne change en base.
+
 ## [2.0.0] — 2026-10-01
 
 ### Changement de flux (maquette validée)

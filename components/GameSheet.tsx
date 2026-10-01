@@ -81,7 +81,7 @@ export default function GameSheet({ game, players, playsCount, inSelection, onTo
         )}
         {mode === 'shelf' && onRemoveShelf && (
           <button type="button" className="btn-exclude" onClick={onRemoveShelf}>
-            Retirer de la soirée
+            Retirer de la partie
           </button>
         )}
       </div>

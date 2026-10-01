@@ -10,7 +10,7 @@ async function registerAndStart(page: import('@playwright/test').Page, pseudo: s
   await reg;
   // Première connexion : on crée la soirée (pré-cochée) — on attend la fin du POST
   const nightDone = page.waitForResponse((r) => r.url().endsWith('/api/nights') && r.request().method() === 'POST');
-  await page.getByRole('button', { name: 'Créer la soirée' }).click();
+  await page.getByRole('button', { name: 'Créer la partie' }).click();
   await nightDone;
   await page.waitForURL('/etagere');
 }
@@ -90,6 +90,22 @@ test('avatar photo : chip ronde, aucun hash bcrypt dans la page, boîtes non sé
   await box.scrollIntoViewIfNeeded();
   const cs = await box.evaluate((el) => { const s = getComputedStyle(el); return { us: s.userSelect || (s as CSSStyleDeclaration & { webkitUserSelect?: string }).webkitUserSelect, callout: (s as CSSStyleDeclaration & { webkitTouchCallout?: string }).webkitTouchCallout }; });
   expect(cs.us === 'none' || cs.callout === 'none').toBe(true);
+});
+
+test('onboarding : l\'emoji choisi à l\'inscription est porté partout', async ({ page }) => {
+  await page.goto('/register');
+  await page.getByLabel('Pseudo').fill(`emo-${Date.now().toString(36)}`);
+  await page.getByLabel('Code secret').fill('1234');
+  await page.getByRole('button', { name: 'Avatar 🦊' }).click();
+  const reg = page.waitForResponse((r) => r.url().endsWith('/api/auth/register'));
+  await page.getByRole('button', { name: 'Créer mon compte' }).click();
+  await reg;
+  await page.waitForURL('/etagere');
+  // La pastille utilisateur (présente sur toutes les pages) porte l'emoji choisi
+  await expect(page.locator('.user-chip summary').first()).toContainText('🦊');
+  // Et l'avatar du profil porte le même emoji choisi à l'inscription
+  await page.goto('/profil');
+  await expect(page.getByRole('button', { name: "Changer d'avatar" })).toContainText('🦊');
 });
 
 test('profil : suppression du compte puis connexion impossible', async ({ page }) => {

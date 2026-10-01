@@ -10,7 +10,7 @@ describe('messages de soirée', () => {
 
   it('invitation : date + heure + joueurs', () => {
     expect(buildInviteMessage({ dateLong: 'vendredi 2 octobre', time: '20:00', pseudos: ['marc', 'léa'] })).toBe(
-      '🎲 Soirée jeux le vendredi 2 octobre à 20:00 !\n'
+      '🎲 Partie de jeux le vendredi 2 octobre à 20:00 !\n'
       + '👥 marc et léa sont de la partie.\n'
       + 'Marquez vos jeux dispo 🔗 etagere.marc-suarez.fr');
   });
@@ -22,7 +22,7 @@ describe('messages de soirée', () => {
 
   it('invitation : sans heure, pas de « à »', () => {
     expect(buildInviteMessage({ dateLong: 'samedi 3 octobre', time: null, pseudos: ['marc'] })).toBe(
-      '🎲 Soirée jeux le samedi 3 octobre !\n'
+      '🎲 Partie de jeux le samedi 3 octobre !\n'
       + '👥 marc est de la partie.\n'
       + 'Marquez vos jeux dispo 🔗 etagere.marc-suarez.fr');
   });

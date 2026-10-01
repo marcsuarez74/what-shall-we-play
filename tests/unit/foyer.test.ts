@@ -3,7 +3,7 @@ import { registerUser } from '@/lib/auth';
 import { createGame, listUserLibrary, deleteGame, getGame, getPickCounts } from '@/lib/games';
 import {
   createFoyer, joinFoyerByCode, resolveDupe, leaveFoyer, dissolveFoyer,
-  renameFoyer, getFoyerForUser, getUserFoyerId,
+  renameFoyer, getFoyerForUser, getUserFoyerId, removeMember,
 } from '@/lib/foyers';
 import { createNight, getShelfGames, addNightGame, removeNightGame } from '@/lib/nights';
 import { getProfileStats, deleteAccount } from '@/lib/users';
@@ -155,5 +155,28 @@ describe('foyer — bibliothèque partagée', () => {
     const gt = createGame(thib, { title: 'Perso', box_format: 'petit' });
     deleteAccount(thib);
     expect(getGame(gt)).toBeNull();
+  });
+
+  it('retirer un membre : geste du créateur ; ses ajouts le suivent, le foyer reste', () => {
+    const marc = uid('f-km'); const lea = uid('f-kl'); const zoe = uid('f-kz');
+    const gm = createGame(marc, { title: 'Du foyer (Marc)', box_format: 'moyen' });
+    const foyer = createFoyer(marc);
+    joinFoyerByCode(lea, foyer.code);
+    const gl = createGame(lea, { title: 'Du foyer (Léa)', box_format: 'petit' });
+    // gardes : pas le créateur, pas soi-même, pas un membre
+    const rZoe = removeMember(foyer.id, lea, zoe);
+    const rSelf = removeMember(foyer.id, marc, marc);
+    const rGhost = removeMember(999, lea, marc);
+    expect('error' in rZoe && rZoe.status).toBe(403);
+    expect('error' in rSelf && rSelf.status).toBe(400);
+    expect('error' in rGhost && rGhost.status).toBe(404);
+    // le créateur retire Léa : ses ajouts la suivent, le foyer garde ceux de Marc
+    expect(removeMember(foyer.id, lea, marc)).toEqual({ ok: true });
+    expect(getUserFoyerId(lea)).toBeNull();                 // Léa est dehors
+    expect(listUserLibrary(lea).map((g) => g.id)).toEqual([gl]); // ses ajouts la suivent
+    expect(listUserLibrary(marc).map((g) => g.id)).toEqual([gm]); // la commune reste
+    const foyerApres = getFoyerForUser(marc);
+    expect(foyerApres?.members.length).toBe(1);             // le foyer survit
+    expect(foyerApres?.members[0].pseudo).toBe('f-km');
   });
 });

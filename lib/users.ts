@@ -72,7 +72,7 @@ export function deleteAccount(userId: number): { ok: true; removedGames: number 
     db.prepare('DELETE FROM picks WHERE game_id IN (SELECT id FROM games WHERE owner_id = ?)').run(userId);
     // 2) mes tirages sur les jeux des autres
     db.prepare('DELETE FROM picks WHERE spinner_id = ?').run(userId);
-    // 3) mes soirées créées (cascades picks + night_players de ces soirées)
+    // 3) mes parties créées (cascades picks + night_players de ces parties)
     db.prepare('DELETE FROM nights WHERE creator_id = ?').run(userId);
     // 4) moi (cascades sessions, night_players, games)
     db.prepare('DELETE FROM users WHERE id = ?').run(userId);

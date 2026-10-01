@@ -33,7 +33,7 @@ test('soirées : programmer pour demain → carte dans Programmées, étagère i
   await registerOther(page, `inv-${s}`);
 
   await page.goto('/nights');
-  await page.getByRole('button', { name: 'Programmer une soirée' }).click();
+  await page.getByRole('button', { name: 'Programmer une partie' }).click();
   await page.getByLabel('Date').fill(demain());
   await page.getByLabel('Heure').fill('20:00');
   await page.locator('.player-list label', { hasText: `inv-${s}` }).locator('input').check();
@@ -48,7 +48,7 @@ test('soirées : programmer pour demain → carte dans Programmées, étagère i
 
   // La programmée n'est PAS la nuit active : l'étagère reste à l'état vide
   await page.goto('/etagere');
-  await expect(page.getByRole('button', { name: 'Créer la soirée' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Créer la partie' })).toBeVisible();
 });
 
 test('jour J : une soirée datée d aujourd hui devient la nuit active', async ({ page }) => {
@@ -58,7 +58,7 @@ test('jour J : une soirée datée d aujourd hui devient la nuit active', async (
   await page.request.post('/api/nights', { data: { playerIds: [] } });
   await page.goto('/etagere');
   await expect(page.locator('.night-card')).toBeVisible(); // soirée en cours, pas le picker
-  await expect(page.getByRole('button', { name: 'Créer la soirée' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Créer la partie' })).toHaveCount(0);
 });
 
 test('API : date ou heure invalide rejetée, le QG reste sain', async ({ page }) => {
@@ -71,7 +71,7 @@ test('API : date ou heure invalide rejetée, le QG reste sain', async ({ page })
   expect(badTime.status()).toBe(400);
   // Le QG ne casse pas (le jeu invalide n a pas été créé)
   await page.goto('/nights');
-  await expect(page.getByRole('heading', { name: 'Mes soirées' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Mes parties' })).toBeVisible();
 });
 
 // ——— Annonces WhatsApp (Task 11) ———
@@ -86,7 +86,7 @@ async function setupTirage(page: import('@playwright/test').Page, s: string) {
   await page.getByRole('button', { name: 'Ajouter à la ludothèque' }).click();
   await page.locator('.player-list label', { hasText: `lea-${s}` }).locator('input').check();
   const post = page.waitForResponse((r) => r.url().endsWith('/api/nights') && r.request().method() === 'POST');
-  await page.getByRole('button', { name: 'Créer la soirée' }).click();
+  await page.getByRole('button', { name: 'Créer la partie' }).click();
   await post;
   // Étagère vide à la création (v3) : marc pose Cascadia depuis sa ludothèque
   await putOnShelf(page, await gameIdByTitle(page, 'Cascadia'));
@@ -149,7 +149,7 @@ test('programmée : « Inviter sur WhatsApp » avec date longue, heure et joueur
   await registerOther(page, `thib-${s}`);
 
   await page.goto('/nights');
-  await page.getByRole('button', { name: 'Programmer une soirée' }).click();
+  await page.getByRole('button', { name: 'Programmer une partie' }).click();
   const d = new Date();
   d.setDate(d.getDate() + 1);
   const dateLong = d.toLocaleDateString('fr-FR', { dateStyle: 'long' });
@@ -165,7 +165,7 @@ test('programmée : « Inviter sur WhatsApp » avec date longue, heure et joueur
     const calls = (window as unknown as { __share: { text?: string }[] }).__share;
     return calls[0]?.text ?? '';
   });
-  expect(text).toContain(`🎲 Soirée jeux le ${dateLong} à 20:00 !`);
+  expect(text).toContain(`🎲 Partie de jeux le ${dateLong} à 20:00 !`);
   expect(text).toContain(`inv-btn-${s}`); // créateur listé
   expect(text).toContain(`thib-${s}`);    // invité listé
 });
@@ -178,7 +178,7 @@ test('terminer la soirée : étagère vidée, nuit conservée en historique', as
 
   // Double-tap de confirmation dans le QG
   await page.goto('/nights');
-  await page.getByRole('button', { name: 'Terminer la soirée' }).click();
+  await page.getByRole('button', { name: 'Terminer la partie' }).click();
   const endPost = page.waitForResponse((r) => r.url().includes('/end') && r.request().method() === 'POST');
   await page.getByRole('button', { name: 'Sûr ? Terminer' }).click();
   await endPost;
@@ -189,5 +189,5 @@ test('terminer la soirée : étagère vidée, nuit conservée en historique', as
 
   // L'étagère revient à l'état vierge
   await page.goto('/etagere');
-  await expect(page.getByRole('button', { name: 'Créer la soirée' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Créer la partie' })).toBeVisible();
 });

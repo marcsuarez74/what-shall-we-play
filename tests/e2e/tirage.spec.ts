@@ -18,7 +18,7 @@ test('tirage : roue plein écran puis verdict sur le jeu tiré', async ({ page }
 
   // Soirée via le sélecteur (affiché sur l'étagère tant qu'il n'y a pas de soirée en cours ;
   // créateur déjà pré-coché — on ne coche jamais une autre case : elle appartient à un autre compte)
-  await page.getByRole('button', { name: 'Créer la soirée' }).click();
+  await page.getByRole('button', { name: 'Créer la partie' }).click();
 
   // Étagère vide à la création (v3) : le joueur pose Cascadia depuis sa ludothèque
   await putOnShelf(page, await gameIdByTitle(page, 'Cascadia'));

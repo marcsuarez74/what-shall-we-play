@@ -49,7 +49,7 @@ test('navigation : onglets entre les pages, fiche depuis la bibliothèque, forma
   await page.getByRole('link', { name: 'Étagère' }).click();
 
   // Aucune pochette ne dépasse de sa boîte (photos portrait comprises)
-  await page.getByRole('button', { name: /Lancer la soirée|Créer la soirée/ }).click();
+  await page.getByRole('button', { name: /Lancer la soirée|Créer la partie/ }).click();
   // Étagère vide à la création (v3) : le joueur pose Azul depuis sa ludothèque
   await putOnShelf(page, await gameIdByTitle(page, 'Azul'));
   await page.goto('/etagere');

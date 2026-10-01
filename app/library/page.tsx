@@ -9,6 +9,7 @@ export default async function Page() {
   const foyer = getFoyerForUser(user.id);
   return <main className="page">
     <LibraryClient games={listUserLibrary(user.id)} plays={getPickCounts()}
+                   me={user}
                    foyer={foyer ? { name: foyer.name, members: foyer.members.length } : null} />
   </main>;
 }

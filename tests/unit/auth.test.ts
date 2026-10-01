@@ -19,6 +19,20 @@ describe('code à 4 chiffres', () => {
   });
 });
 
+describe('onboarding emoji', () => {
+  it('registerUser : sticker de la grille validée posé à la création', () => {
+    const u = (registerUser('p-emo', '1234', '🦊') as { id: number }).id;
+    const row = getDb().prepare('SELECT sticker FROM users WHERE id = ?').get(u) as { sticker: string | null };
+    expect(row.sticker).toBe('🦊');
+  });
+  it('registerUser : emoji hors grille rejeté ; défaut = dé', () => {
+    expect((registerUser('p-emo-x', '1234', '🚽') as { status: number }).status).toBe(400);
+    const u = (registerUser('p-emo-d', '1234') as { id: number }).id;
+    const row = getDb().prepare('SELECT sticker FROM users WHERE id = ?').get(u) as { sticker: string | null };
+    expect(row.sticker).toBeNull();
+  });
+});
+
 describe('auth', () => {
   it('refuse un pseudo trop court / code trop court', () => {
     expect((registerUser('ab', '1234') as { status: number }).status).toBe(400);

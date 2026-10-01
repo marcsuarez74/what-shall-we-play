@@ -38,7 +38,7 @@ test('ajout : un seul résultat BGG -> fiche remplie -> ludothèque', async ({ p
 
   await expect(page).toHaveURL(/\/etagere$/);
   // Soirée (créateur pré-coché), puis étagère vide (v3) : ajout via le sélecteur
-  await page.getByRole('button', { name: /Lancer la soirée|Créer la soirée/ }).click();
+  await page.getByRole('button', { name: /Lancer la soirée|Créer la partie/ }).click();
   await page.getByRole('button', { name: 'Ajouter des jeux depuis ma ludothèque' }).click();
   const sheet = page.locator('.picker-sheet');
   await expect(sheet).toBeVisible();
@@ -97,7 +97,7 @@ test('ajout : BGG indisponible (token absent) -> saisie à la main', async ({ pa
   await page.getByRole('button', { name: 'Ajouter à la ludothèque' }).click();
   await expect(page).toHaveURL(/\/etagere$/);
   // Soirée, puis étagère vide (v3) : ajout via le sélecteur
-  await page.getByRole('button', { name: /Lancer la soirée|Créer la soirée/ }).click();
+  await page.getByRole('button', { name: /Lancer la soirée|Créer la partie/ }).click();
   await page.getByRole('button', { name: 'Ajouter des jeux depuis ma ludothèque' }).click();
   const sheet2 = page.locator('.picker-sheet');
   await expect(sheet2).toBeVisible();

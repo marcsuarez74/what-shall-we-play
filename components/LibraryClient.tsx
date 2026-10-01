@@ -3,13 +3,15 @@ import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FORMATS, FORMAT_LABEL, FORMAT_SHORT, coverSrc } from '@/lib/formats';
 import { filterShelf, type ShelfFilters } from '@/lib/filters';
-import type { Game } from '@/lib/types';
+import type { Game, UserLite } from '@/lib/types';
 import GameSheet from './GameSheet';
 import ShelfControls from './ShelfControls';
+import UserMenu from './UserMenu';
 
-export default function LibraryClient({ games: initial, plays, foyer = null }: {
+export default function LibraryClient({ games: initial, plays, me, foyer = null }: {
   games: Game[];
   plays: Record<number, number>;
+  me: UserLite;
   foyer?: { name: string; members: number } | null;
 }) {
   const router = useRouter();
@@ -39,7 +41,10 @@ export default function LibraryClient({ games: initial, plays, foyer = null }: {
 
   return (
     <div>
-      <h1>Ma ludothèque <small>{games.length} jeu{games.length > 1 ? 'x' : ''}</small></h1>
+      <div className="page-head">
+        <h1>Ma ludothèque <small>{games.length} jeu{games.length > 1 ? 'x' : ''}</small></h1>
+        <UserMenu me={me} />
+      </div>
       {foyer && (
         <div className="foyer-line">🏠 Foyer <b>{foyer.name}</b> · {foyer.members} membre{foyer.members > 1 ? 's' : ''}</div>
       )}

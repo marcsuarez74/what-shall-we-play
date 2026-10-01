@@ -14,7 +14,7 @@ test('étagère : sélection via fiche, CTA compteur', async ({ page }) => {
   await page.getByRole('button', { name: 'Ajouter à la ludothèque' }).click();
   // Soirée : le créateur est déjà pré-coché — on ne touche à aucune autre case
   // (les autres utilisateurs listés appartiennent à d'autres comptes)
-  await page.getByRole('button', { name: /Lancer la soirée|Créer la soirée/ }).click();
+  await page.getByRole('button', { name: /Lancer la soirée|Créer la partie/ }).click();
   // Étagère vide à la création (v3) : le joueur pose sa boîte
   await putOnShelf(page, await gameIdByTitle(page, 'Terraforming Mars'));
   await page.goto('/etagere');

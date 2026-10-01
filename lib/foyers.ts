@@ -65,7 +65,7 @@ export function joinFoyerByCode(userId: number, rawCode: string): { id: number; 
   return { id: foyer.id, name: foyer.name, dupes: findDupes(foyer.id) };
 }
 
-// Richesse d'une fiche : tirages d'abord (mémoire des soirées), puis métadonnées remplies.
+// Richesse d'une fiche : tirages d'abord (mémoire des parties), puis métadonnées remplies.
 function completeness(g: Game, picks: Record<number, number>): number {
   const filled = [g.year, g.publisher, g.min_players, g.max_players, g.playtime_min,
     g.weight, g.bgg_rating, g.designer, g.artist, g.cover_path].filter((v) => v != null).length;
@@ -119,6 +119,18 @@ export function leaveFoyer(userId: number): void {
     const left = db.prepare('SELECT COUNT(*) AS n FROM users WHERE foyer_id = ?').get(foyerId) as { n: number };
     if (left.n === 0) db.prepare('DELETE FROM foyers WHERE id = ?').run(foyerId);
   })();
+}
+
+// Retirer un membre : geste réservé au créateur. La règle de sortie s'applique —
+// ses ajouts le suivent, la collection commune reste au foyer.
+export function removeMember(foyerId: number, targetId: number, byId: number): { ok: true } | { error: string; status: number } {
+  const foyer = getDb().prepare('SELECT * FROM foyers WHERE id = ?').get(foyerId) as Foyer | undefined;
+  if (!foyer) return { error: 'Foyer introuvable', status: 404 };
+  if (foyer.created_by !== byId) return { error: 'Seul le créateur peut retirer un membre', status: 403 };
+  if (targetId === byId) return { error: 'Utilisez « Quitter le foyer » pour partir', status: 400 };
+  if (getUserFoyerId(targetId) !== foyerId) return { error: "Ce membre n'est pas dans ce foyer", status: 404 };
+  leaveFoyer(targetId);
+  return { ok: true };
 }
 
 export function dissolveFoyer(userId: number): void {

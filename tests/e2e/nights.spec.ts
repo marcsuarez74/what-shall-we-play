@@ -21,7 +21,7 @@ test('soirées : historique avec date, joueurs et tirages', async ({ page }) => 
 
   // Soirée via le sélecteur (affiché sur l'étagère tant qu'il n'y a pas de soirée
   // en cours ; créateur déjà pré-coché, on crée directement)
-  await page.getByRole('button', { name: 'Créer la soirée' }).click();
+  await page.getByRole('button', { name: 'Créer la partie' }).click();
 
   // Étagère vide à la création (v3) : Marc pose Azul, sa ludothèque est la sienne
   await putOnShelf(page, await gameIdByTitle(page, 'Azul'));
@@ -36,16 +36,16 @@ test('soirées : historique avec date, joueurs et tirages', async ({ page }) => 
 
   // Historique : accessible depuis la barre d'onglets
   await page.goto('/etagere');
-  await page.getByRole('link', { name: 'Soirées' }).click();
+  await page.getByRole('link', { name: 'Parties' }).click();
 
-  // La soirée du jour : section « Ce soir » (SOIRÉE EN COURS) ; l'historique reste vide
-  await expect(page.getByRole('heading', { name: 'Mes soirées' })).toBeVisible();
+  // La soirée du jour : section « Ce soir » (PARTIE EN COURS) ; l'historique reste vide
+  await expect(page.getByRole('heading', { name: 'Mes parties' })).toBeVisible();
   await expect(page.locator('.night-card')).toHaveCount(1); // Ce soir seulement
-  await expect(page.locator('[aria-label="Ce soir"] .night-card')).toContainText('SOIRÉE EN COURS');
+  await expect(page.locator('[aria-label="Ce soir"] .night-card')).toContainText('PARTIE EN COURS');
   await expect(page.locator('[aria-label="Ce soir"] .chips')).toContainText(pseudo);
   await expect(page.locator('[aria-label="Ce soir"] .night-picks')).toContainText('Azul');
   await expect(page.locator('[aria-label="Ce soir"] .night-picks')).toContainText(`tiré par ${pseudo}`);
-  await expect(page.locator('[aria-label="Historique"] .empty')).toContainText('Aucune soirée passée');
+  await expect(page.locator('[aria-label="Historique"] .empty')).toContainText('Aucune partie passée');
 });
 
 test('soirées : écran vide pour un nouveau compte', async ({ page }) => {
@@ -59,9 +59,9 @@ test('soirées : écran vide pour un nouveau compte', async ({ page }) => {
 
   // QG à trois sections, chacune avec son état vide ; lien vers l'étagère
   await page.goto('/nights');
-  await expect(page.getByRole('heading', { name: 'Mes soirées' })).toBeVisible();
-  await expect(page.locator('[aria-label="Ce soir"] .empty')).toContainText('Pas de soirée aujourd');
-  await expect(page.locator('[aria-label="Programmées"] .empty')).toContainText('Aucune soirée programmée');
-  await expect(page.locator('[aria-label="Historique"] .empty')).toContainText('Aucune soirée passée');
+  await expect(page.getByRole('heading', { name: 'Mes parties' })).toBeVisible();
+  await expect(page.locator('[aria-label="Ce soir"] .empty')).toContainText('Pas de partie aujourd');
+  await expect(page.locator('[aria-label="Programmées"] .empty')).toContainText('Aucune partie programmée');
+  await expect(page.locator('[aria-label="Historique"] .empty')).toContainText('Aucune partie passée');
   await expect(page.locator('[aria-label="Ce soir"] .empty a')).toHaveAttribute('href', '/etagere');
 });

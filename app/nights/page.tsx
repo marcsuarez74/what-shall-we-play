@@ -7,6 +7,7 @@ import PlayerChip from '@/components/PlayerChip';
 import NightPlanner from '@/components/NightPlanner';
 import InviteButton from '@/components/InviteButton';
 import TerminerNight from '@/components/TerminerNight';
+import UserMenu from '@/components/UserMenu';
 
 const dateFormat = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' });
 const timeFormat = new Intl.DateTimeFormat('fr-FR', { timeStyle: 'short' });
@@ -25,7 +26,7 @@ export default async function Page() {
   if (!user) redirect('/login');
   const active = getActiveNight(user.id);
   const planned = getPlannedNights(user.id);
-  // Historique : soirées passées uniquement (la nuit du jour vit dans « Ce soir »)
+  // Historique : parties passées uniquement (la nuit du jour vit dans « Ce soir »)
   const today = new Date().toLocaleDateString('sv-SE');
   const history = getMyNights(user.id).filter((n) => n.played_at <= today && (!active || n.id !== active.id));
   const users = getDb().prepare('SELECT id, pseudo, sticker, avatar_path FROM users ORDER BY pseudo COLLATE NOCASE').all() as UserLite[];
@@ -44,7 +45,10 @@ export default async function Page() {
 
   return (
     <main className="page">
-      <h1>Mes soirées</h1>
+      <div className="page-head">
+        <h1>Mes parties</h1>
+        <UserMenu me={user} />
+      </div>
 
       <section className="qg-section" aria-label="Ce soir">
         <h2>Ce soir</h2>
@@ -52,7 +56,7 @@ export default async function Page() {
           <ul className="nights-list">
             <li className="night-card live">
               <div className="night-card-head">
-                <span className="night-label">SOIRÉE EN COURS</span>
+                <span className="night-label">PARTIE EN COURS</span>
                 {active.creator_id === user.id && <TerminerNight nightId={active.id} />}
               </div>
               <div className="chips">
@@ -62,7 +66,7 @@ export default async function Page() {
             </li>
           </ul>
         ) : (
-          <p className="empty">Pas de soirée aujourd&apos;hui — programmez-la ou lancez-la <a href="/etagere">depuis l&apos;étagère</a>.</p>
+          <p className="empty">Pas de partie aujourd&apos;hui — programmez-la ou lancez-la <a href="/etagere">depuis l&apos;étagère</a>.</p>
         )}
       </section>
 
@@ -72,7 +76,7 @@ export default async function Page() {
           <NightPlanner users={users} meId={user.id} />
         </div>
         {planned.length === 0 ? (
-          <p className="empty">Aucune soirée programmée — la prochaine commence ici.</p>
+          <p className="empty">Aucune partie programmée — la prochaine commence ici.</p>
         ) : (
           <ul className="nights-list">
             {planned.map((n) => {
@@ -110,7 +114,7 @@ export default async function Page() {
       <section className="qg-section" aria-label="Historique">
         <h2>Historique</h2>
         {history.length === 0 ? (
-          <p className="empty">Aucune soirée passée — les tirages terminés atterriront ici.</p>
+          <p className="empty">Aucune partie passée — les tirages terminés atterriront ici.</p>
         ) : (
           <ul className="hist-list">
             {history.map((n) => {

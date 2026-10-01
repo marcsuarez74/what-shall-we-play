@@ -9,7 +9,7 @@ async function registerAndStart(page: import('@playwright/test').Page, pseudo: s
   await page.getByRole('button', { name: 'Créer mon compte' }).click();
   await reg;
   const nightDone = page.waitForResponse((r) => r.url().endsWith('/api/nights') && r.request().method() === 'POST');
-  await page.getByRole('button', { name: 'Créer la soirée' }).click();
+  await page.getByRole('button', { name: 'Créer la partie' }).click();
   const { nightId } = await (await nightDone).json() as { nightId: number }; // v3 : étagère vide à la création
   await page.waitForURL('/etagere');
   return nightId;
@@ -65,7 +65,7 @@ test('tactile : maintien 700 ms → mode sélection ; un glisser annule (garde r
   await page.getByRole('button', { name: 'Créer mon compte' }).click();
   await reg;
   const nightDone = page.waitForResponse((r) => r.url().endsWith('/api/nights') && r.request().method() === 'POST');
-  await page.getByRole('button', { name: 'Créer la soirée' }).click();
+  await page.getByRole('button', { name: 'Créer la partie' }).click();
   const { nightId } = await (await nightDone).json() as { nightId: number };
   await page.waitForURL('/etagere');
   await putOnShelf(page, await newGame(page, 'Tactile', 'moyen'), nightId);

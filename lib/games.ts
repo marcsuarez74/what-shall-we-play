@@ -39,7 +39,7 @@ export function createGame(ownerId: number, g: NewGame, coverPath: string | null
   return Number(info.lastInsertRowid);
 }
 
-// Nombre de fois que chaque jeu a été tiré (toutes soirées confondues) — fiche « Parties jouées ».
+// Nombre de fois que chaque jeu a été tiré (toutes parties confondues) — fiche « Parties jouées ».
 export function getPickCounts(): Record<number, number> {
   const rows = getDb().prepare('SELECT game_id, COUNT(*) AS c FROM picks GROUP BY game_id').all() as
     { game_id: number; c: number }[];
@@ -77,7 +77,7 @@ export function deleteGame(userId: number, id: number): { ok: true } | { error: 
   const g = getGame(id);
   if (!g || !canManageGame(userId, g)) return { error: 'Jeu introuvable', status: 404 };
   const picked = getDb().prepare('SELECT 1 FROM picks WHERE game_id = ? LIMIT 1').get(id);
-  if (picked) return { error: 'Ce jeu a déjà été tiré lors d\'une soirée', status: 409 };
+  if (picked) return { error: 'Ce jeu a déjà été tiré lors d\'une partie', status: 409 };
   getDb().prepare('DELETE FROM games WHERE id = ?').run(id);
   return { ok: true };
 }
