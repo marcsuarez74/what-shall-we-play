@@ -1153,6 +1153,7 @@ input[type='file'] {
   display: flex;
   gap: 14px;
   overflow-x: auto;
+  overflow-y: clip; /* la rangée n'est pas un conteneur vertical : le geste vertical passe à la page */
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
@@ -1191,10 +1192,6 @@ input[type='file'] {
   padding: 0;
   cursor: pointer;
   transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
-  /* le navigateur ne revendique le toucher que pour le swipe horizontal de la rangée :
-     un maintien immobile n'est jamais transformé en scroll/zoom (long press fiable),
-     un glisser vertical reste géré par nos seuils JS */
-  touch-action: pan-x;
 }
 
 .box:active {
