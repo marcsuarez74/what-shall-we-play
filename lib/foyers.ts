@@ -75,7 +75,10 @@ function completeness(g: Game, picks: Record<number, number>): number {
 // Doublons du foyer, au titre normalisé (casse/accents/espaces ignorés — comme la recherche).
 // a = fiche suggérée (la plus complète), b = celle proposée à l'absorption.
 export function findDupes(foyerId: number): { a: Game; b: Game }[] {
-  const games = getDb().prepare('SELECT * FROM games WHERE foyer_id = ?').all(foyerId) as Game[];
+  const games = getDb().prepare(`
+    SELECT g.*, u.pseudo AS owner_pseudo, u.sticker AS owner_sticker
+    FROM games g LEFT JOIN users u ON u.id = g.owner_id
+    WHERE g.foyer_id = ?`).all(foyerId) as Game[];
   const picks = getPickCounts();
   const groups = new Map<string, Game[]>();
   for (const g of games) {

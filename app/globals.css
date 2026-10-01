@@ -359,6 +359,120 @@ input[type='file'] {
 .action .n { color: var(--doux-clair); font-size: 12px; }
 .action.danger { color: #E07A6C; border-color: color-mix(in srgb, #C74B3C 45%, transparent); }
 
+/* ---------- Foyer (bibliothèque partagée) ---------- */
+.foyer-card {
+  background: var(--surface);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 18px;
+  position: relative;
+}
+
+.foyer-card.solo {
+  border: 1.5px dashed color-mix(in srgb, var(--doux) 60%, transparent);
+  background: color-mix(in srgb, var(--surface) 45%, transparent);
+}
+
+.foyer-head { display: flex; align-items: center; gap: 9px; margin-bottom: 4px; }
+.foyer-ico { font-size: 17px; }
+.foyer-name { font-family: var(--font-display); font-size: 17px; font-weight: 700; }
+.foyer-name.small { font-size: 15px; }
+.foyer-name .pen {
+  appearance: none; background: none; border: none; font-size: 12px;
+  color: var(--doux); margin-left: 6px; cursor: pointer; padding: 2px;
+}
+.rename-row { display: flex; align-items: center; gap: 6px; flex: 1; }
+.rename-input {
+  flex: 1; min-width: 0; font: inherit; font-size: 14.5px; color: var(--creme);
+  background: var(--noyer); border: 1.5px solid var(--cuivre); border-radius: 9px; padding: 6px 9px;
+}
+.foyer-sub { color: var(--doux-clair); font-size: 12.5px; margin-bottom: 12px; }
+.foyer-empty p { color: var(--doux-clair); font-size: 13.5px; line-height: 1.55; margin-bottom: 12px; }
+.foyer-empty b, .foyer-hint b { color: var(--creme); }
+.foyer-btn { margin-top: 0; width: 100%; }
+.join-form { display: grid; gap: 8px; margin-top: 8px; }
+.code-input {
+  font-family: var(--font-display); font-size: 20px; font-weight: 700; letter-spacing: 0.18em;
+  text-transform: uppercase; text-align: center; color: var(--creme);
+  background: var(--noyer); border: 1.5px solid var(--doux); border-radius: 11px; padding: 10px;
+}
+.code-input:focus { outline: none; border-color: var(--cuivre); }
+.btn-ghost.armed { color: #E08A76; border-color: color-mix(in srgb, #b5533c 70%, transparent); }
+
+.members { display: grid; gap: 7px; margin-bottom: 14px; }
+.member { display: flex; align-items: center; gap: 10px; background: var(--noyer); border-radius: 11px; padding: 8px 11px; }
+.member .st, .member img.st { width: 30px; height: 30px; border-radius: 50%; background: var(--surface); display: grid; place-items: center; font-size: 16px; object-fit: cover; }
+.member b { font-size: 13.5px; font-weight: 600; }
+.member .role { margin-left: auto; font-size: 11px; color: var(--doux-clair); }
+
+.code-zone {
+  display: flex; align-items: center; gap: 10px; background: var(--noyer);
+  border: 1.5px solid var(--cuivre); border-radius: 12px; padding: 10px 14px; margin: 4px 0 10px;
+}
+.code-zone .code { font-family: var(--font-display); font-size: 22px; font-weight: 700; letter-spacing: 0.14em; color: var(--cuivre); flex: 1; }
+.code-zone button {
+  appearance: none; font: inherit; font-size: 12px; font-weight: 600; color: var(--creme);
+  background: var(--surface); border: 1px solid var(--doux); border-radius: 9px; padding: 6px 10px; cursor: pointer;
+}
+.foyer-hint { color: var(--doux-clair); font-size: 12px; line-height: 1.5; margin-bottom: 12px; }
+
+/* Ligne foyer dans Ma ludothèque */
+.foyer-line {
+  display: inline-flex; align-items: center; gap: 7px; font-size: 12px; color: var(--doux-clair);
+  background: color-mix(in srgb, var(--surface) 60%, transparent);
+  border: 1px solid color-mix(in srgb, var(--doux) 35%, transparent);
+  border-radius: 999px; padding: 4px 11px; margin: 2px 0 12px;
+}
+.foyer-line b { color: var(--cuivre); }
+
+/* Sticker « ajouté par » en coin de pochette (ludothèque) */
+.lib-cover { position: relative; }
+.lib-cover .who {
+  position: absolute; right: -6px; bottom: -6px; width: 22px; height: 22px; border-radius: 50%;
+  background: var(--noyer); border: 2px solid var(--surface);
+  display: grid; place-items: center; font-size: 11px;
+}
+
+/* ---------- Fusion guidée (dédoublement) ---------- */
+.dedup {
+  position: fixed; inset: 0; z-index: 50;
+  background: var(--noyer);
+  padding: 26px 20px;
+  overflow-y: auto;
+}
+
+.dedup-head { text-align: center; margin: 6px 0 14px; }
+.dedup-head h2 { font-family: var(--font-display); font-size: 21px; }
+.dedup-head p { color: var(--doux-clair); font-size: 13px; margin-top: 5px; line-height: 1.5; }
+
+.duel { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+.duel-card { background: var(--surface); border-radius: 16px; padding: 12px; text-align: center; transition: opacity 0.2s; }
+.duel-card.busy { opacity: 0.55; }
+.duel-card .cover {
+  width: 100%; aspect-ratio: 1; border-radius: 11px; overflow: hidden;
+  background: color-mix(in srgb, var(--noyer) 70%, black);
+  display: grid; place-items: center; margin-bottom: 10px; position: relative;
+}
+.duel-card .cover img, .duel-card .cover .cover-placeholder { width: 100%; height: 100%; object-fit: cover; }
+.duel-card .tag {
+  position: absolute; top: 8px; left: 8px; font-size: 10.5px; font-weight: 700; color: #fff;
+  background: color-mix(in srgb, var(--noyer) 78%, transparent); border-radius: 999px; padding: 3px 9px;
+}
+.duel-card b { font-size: 14px; display: block; margin-bottom: 3px; }
+.duel-card .meta { color: var(--doux-clair); font-size: 11.5px; line-height: 1.5; }
+
+.duel-choices { display: grid; gap: 8px; }
+.duel-choices button {
+  appearance: none; font: inherit; font-size: 13.5px; font-weight: 600; border-radius: 12px; padding: 11px; cursor: pointer;
+}
+.duel-choices .choice-a, .duel-choices .choice-b { background: var(--cuivre); border: none; color: #fff; }
+.duel-choices .choice-both { background: none; border: 1.5px solid var(--doux); color: var(--creme); }
+
+.done-card { text-align: center; padding: 60px 10px; }
+.done-card .big { font-size: 44px; margin-bottom: 10px; }
+.done-card h2 { font-family: var(--font-display); font-size: 20px; margin-bottom: 8px; }
+.done-card p { color: var(--doux-clair); font-size: 13.5px; line-height: 1.6; margin-bottom: 18px; }
+
 /* Picker de sticker (bottom-sheet) */
 .picker h2 { font-family: var(--font-display); font-size: 17px; margin-bottom: 3px; color: var(--creme); }
 .sticker-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 8px; margin-top: 12px; }
