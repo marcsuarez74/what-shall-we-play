@@ -1707,34 +1707,26 @@ input[type='file'] {
 
 /* Sélecteur « Ajouter à la soirée » (bottom-sheet) */
 .picker-sheet { max-height: 88%; display: flex; flex-direction: column; overflow: hidden; }
-.picker-sheet .sheet-head, .picker-sheet .sheet-sub, .picker-sheet .search, .picker-sheet .sheet-foot { flex: none; }
+.picker-sheet .sheet-head, .picker-sheet .sheet-sub, .picker-sheet .collection-controls, .picker-sheet .sheet-foot { flex: none; }
+.picker-sheet .collection-controls { margin-bottom: 12px; }
 .picker-sheet .sheet-sub { color: var(--doux-clair); font-size: 12.5px; margin-bottom: 12px; }
-.picker-sheet .search {
-  display: flex; align-items: center; gap: 8px; background: var(--noyer);
-  border: 1.5px solid var(--doux); border-radius: 12px; padding: 9px 12px; margin-bottom: 12px;
-}
-.picker-sheet .search input {
-  flex: 1; min-width: 0; background: none; border: none; outline: none;
-  color: var(--creme); font: inherit; font-size: 14.5px;
-}
-.picker-sheet .search input::placeholder { color: var(--doux); }
 .pick-list {
   flex: 1 1 auto; min-height: 0; /* seul conteneur qui défile dans la feuille */
-  overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
+  overflow-y: auto; overflow-x: hidden; /* jamais de défilement horizontal (signalement v3.2) */
+  overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
   display: grid; gap: 12px; padding-right: 2px;
 }
 .fmt-group .fmt-k {
   font-size: 11px; font-weight: 700; color: var(--doux);
   letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 6px;
 }
-.pick-row {
-  display: flex; align-items: center; gap: 11px; background: var(--noyer);
-  border-radius: 12px; padding: 8px 10px; margin-bottom: 6px;
-}
+.pick-row { display: flex; align-items: center; gap: 11px; background: var(--noyer); min-width: 0;
+  border-radius: 12px; padding: 8px 10px; margin-bottom: 6px; }
+.fmt-group { min-width: 0; }
 .pick-row .cov { width: 44px; height: 44px; border-radius: 8px; overflow: hidden; flex: 0 0 auto; background: var(--surface); }
 .pick-row .cov img { width: 100%; height: 100%; object-fit: cover; }
 .pick-row .pick-meta { min-width: 0; }
-.pick-row .pick-meta b { font-size: 13.5px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pick-row .pick-meta b { font-size: 13.5px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; overflow-wrap: anywhere; }
 .pick-row .who { font-size: 11px; color: var(--doux-clair); }
 .pick-row .add {
   margin-left: auto; width: 34px; height: 34px; border-radius: 50%; appearance: none; cursor: pointer;
@@ -1755,7 +1747,8 @@ input[type='file'] {
 .collection-controls { margin: 4px 0 12px; }
 .controls-row { display: flex; gap: 8px; align-items: center; }
 .shelf-search {
-  flex: 1; min-width: 0; padding: 10px 14px; border-radius: 12px; font: inherit; font-size: 14.5px;
+  flex: 1; min-width: 0; padding: 10px 14px; border-radius: 12px; font: inherit;
+  font-size: 16px; /* seuil iOS : un champ plus petit zoome la page au focus (faux scroll horizontal) */
   background: var(--surface); border: 1.5px solid var(--doux); color: var(--creme);
 }
 .shelf-search:focus { outline: none; border-color: var(--cuivre); }

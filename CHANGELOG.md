@@ -4,6 +4,20 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [3.2.0] — 2026-10-01
+
+### Ajouté
+- **Les filtres de l'étagère dans le sélecteur** « Ajouter à la partie » : la
+  même barre recherche + Filtres (joueurs, complexité, durée, boîte), avec le
+  compteur « N jeux sur M dans ma ludothèque ». Un jeu sans donnée n'est jamais
+  écarté par un filtre.
+
+### Corrigé
+- **Fini le scroll horizontal dans la feuille d'ajout** (signalement joueur) :
+  la liste ne défile plus sur l'axe horizontal, les titres interminables sont
+  ellipsés, et les champs de recherche passent à 16 px — iOS ne zoome plus la
+  page au focus (le vrai coupable du « scroll horizontal »).
+
 ## [3.1.0] — 2026-10-01
 
 ### Changé
