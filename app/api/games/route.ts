@@ -1,13 +1,14 @@
 // app/api/games/route.ts
 import { NextResponse } from 'next/server';
 import { getSessionUser } from '@/lib/session';
-import { validateGameInput, createGame, listMyGames } from '@/lib/games';
+import { validateGameInput, createGame, listUserLibrary } from '@/lib/games';
+import { getUserFoyerId } from '@/lib/foyers';
 import { saveCover, isSafeCoverName, COVER_EXT } from '@/lib/storage';
 
 export async function GET() {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: 'Non connecté' }, { status: 401 });
-  return NextResponse.json({ games: listMyGames(user.id) });
+  return NextResponse.json({ games: listUserLibrary(user.id) });
 }
 
 export async function POST(req: Request) {
@@ -33,6 +34,6 @@ export async function POST(req: Request) {
     if (!ext || !COVER_EXT.includes(ext)) return NextResponse.json({ error: 'Pochette : jpg, png ou webp' }, { status: 400 });
     coverPath = saveCover(Buffer.from(await file.arrayBuffer()), ext);
   }
-  const id = createGame(user.id, v.value, coverPath);
+  const id = createGame(user.id, v.value, coverPath, getUserFoyerId(user.id));
   return NextResponse.json({ id });
 }

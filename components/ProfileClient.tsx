@@ -5,11 +5,12 @@ import { avatarSrc } from '@/lib/formats';
 import { cropDisplaySize, cropSourceRect, clampCropOffset, AVATAR_SIZE, CROP_SQ } from '@/lib/crop';
 import { ALLOWED_STICKERS } from '@/lib/stickers';
 import PinInput from './PinInput';
+import FoyerCard, { type FoyerData } from './FoyerCard';
 
-type Me = { pseudo: string; sticker: string | null; avatar_path: string | null };
+type Me = { id: number; pseudo: string; sticker: string | null; avatar_path: string | null };
 type Stats = { plays: number; nights: number; games: number };
 
-export default function ProfileClient({ me, stats }: { me: Me; stats: Stats }) {
+export default function ProfileClient({ me, stats, foyer }: { me: Me; stats: Stats; foyer: FoyerData | null }) {
   const router = useRouter();
   const [pickerOpen, setPickerOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -153,6 +154,8 @@ export default function ProfileClient({ me, stats }: { me: Me; stats: Stats }) {
         <div className="stat"><b>{stats.nights}</b><span>soirées</span></div>
         <div className="stat"><b>{stats.games}</b><span>jeux</span></div>
       </div>
+
+      <FoyerCard foyer={foyer} meId={me.id} />
 
       <div className="actions">
         <button type="button" className="action" onClick={() => { setCodeOpen(true); setCodeStep(1); }}>

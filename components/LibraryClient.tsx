@@ -7,11 +7,12 @@ import type { Game } from '@/lib/types';
 import GameSheet from './GameSheet';
 import ShelfControls from './ShelfControls';
 
-export default function LibraryClient({ games: initial, plays, activeNightId = null, excludedIds: initialExcluded = [] }: {
+export default function LibraryClient({ games: initial, plays, activeNightId = null, excludedIds: initialExcluded = [], foyer = null }: {
   games: Game[];
   plays: Record<number, number>;
   activeNightId?: number | null;
   excludedIds?: number[];
+  foyer?: { name: string; members: number } | null;
 }) {
   const router = useRouter();
   const [games, setGames] = useState(initial);
@@ -56,6 +57,9 @@ export default function LibraryClient({ games: initial, plays, activeNightId = n
   return (
     <div>
       <h1>Ma ludothèque <small>{games.length} jeu{games.length > 1 ? 'x' : ''}</small></h1>
+      {foyer && (
+        <div className="foyer-line">🏠 Foyer <b>{foyer.name}</b> · {foyer.members} membre{foyer.members > 1 ? 's' : ''}</div>
+      )}
       {notice && <p className="hint" role="alert">{notice}</p>}
       {games.length === 0 && (
         <p className="empty">Aucun jeu pour l&apos;instant. Onglet « Ajouter » pour commencer votre étagère.</p>
@@ -74,6 +78,11 @@ export default function LibraryClient({ games: initial, plays, activeNightId = n
                   {coverSrc(g)
                     ? <img src={coverSrc(g) as string} alt="" />
                     : <span className="cover-placeholder" aria-hidden>♟</span>}
+                  {g.owner_pseudo && (
+                    <span className="who" title={`Ajouté par ${g.owner_pseudo}`}>
+                      {g.owner_sticker ?? g.owner_pseudo[0]?.toUpperCase()}
+                    </span>
+                  )}
                 </span>
                 <span className="lib-info">
                   <strong>{g.title}</strong>

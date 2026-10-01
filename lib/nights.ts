@@ -63,16 +63,23 @@ export function getMyNights(userId: number): Night[] {
 export type ShelfGame = Game & {
   owner_pseudo: string; owner_sticker: string | null; owner_avatar_path: string | null;
 };
+// L'étagère d'une soirée : les jeux possédés par les joueurs + les collections de leurs foyers
+// (un foyer porte sa collection même si l'autre membre est absent).
+const SHELF_WHERE = `
+  (g.owner_id IN (SELECT user_id FROM night_players WHERE night_id = ?)
+    OR g.foyer_id IN (SELECT u2.foyer_id FROM users u2
+                      JOIN night_players np2 ON np2.user_id = u2.id
+                      WHERE np2.night_id = ? AND u2.foyer_id IS NOT NULL))`;
+
 export function getShelfGames(nightId: number): ShelfGame[] {
   return getDb().prepare(`
     SELECT DISTINCT g.*, u.pseudo AS owner_pseudo, u.sticker AS owner_sticker, u.avatar_path AS owner_avatar_path
     FROM games g
-    JOIN night_players np ON np.user_id = g.owner_id
     JOIN users u ON u.id = g.owner_id
-    WHERE np.night_id = ?
+    WHERE ${SHELF_WHERE}
       AND g.id NOT IN (SELECT game_id FROM night_excludes WHERE night_id = ?)
     ORDER BY CASE g.box_format WHEN 'grand' THEN 0 WHEN 'moyen' THEN 1 WHEN 'petit' THEN 2 ELSE 3 END, g.title`)
-    .all(nightId, nightId) as ShelfGame[];
+    .all(nightId, nightId, nightId) as ShelfGame[];
 }
 export function excludeGame(nightId: number, gameId: number): void {
   getDb().prepare('INSERT OR IGNORE INTO night_excludes (night_id, game_id) VALUES (?, ?)').run(nightId, gameId);
@@ -90,14 +97,13 @@ export function getExcludedGames(nightId: number): ShelfGame[] {
     FROM night_excludes ne
     JOIN games g ON g.id = ne.game_id
     JOIN users u ON u.id = g.owner_id
-    JOIN night_players np ON np.night_id = ne.night_id AND np.user_id = g.owner_id
-    WHERE ne.night_id = ?
-    ORDER BY g.title`).all(nightId) as ShelfGame[];
+    WHERE ne.night_id = ? AND ${SHELF_WHERE}
+    ORDER BY g.title`).all(nightId, nightId, nightId) as ShelfGame[];
 }
 export function isGameOnShelf(nightId: number, gameId: number): boolean {
   return !!getDb().prepare(`
-    SELECT 1 FROM games g JOIN night_players np ON np.user_id = g.owner_id
-    WHERE g.id = ? AND np.night_id = ?`).get(gameId, nightId);
+    SELECT 1 FROM games g
+    WHERE g.id = ? AND ${SHELF_WHERE}`).get(gameId, nightId, nightId);
 }
 export function getNightPicks(nightId: number): (Pick & { title: string; pseudo: string })[] {
   return getDb().prepare(`
