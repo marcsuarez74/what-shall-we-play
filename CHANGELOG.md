@@ -4,6 +4,14 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [1.6.1] — 2026-10-01
+
+### Modifié
+- **Panneau de création de foyer plus lisible** : plus d'espace, icône en pastille, boutons aérés, code d'invitation plus grand, liste des membres plus respirente.
+
+### Ajouté
+- **`AGENTS.md`** : principes de travail du dépôt — KISS fondamental, politique de release (major/minor/patch selon la demande), documentation systématique.
+
 ## [1.6.0] — 2026-10-01
 
 ### Ajouté
