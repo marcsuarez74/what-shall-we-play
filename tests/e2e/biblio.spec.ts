@@ -21,12 +21,12 @@ test('navigation : onglets entre les pages, fiche depuis la bibliothèque, forma
   await page.getByRole('button', { name: 'Ajouter à la ludothèque' }).click();
   await expect(page).toHaveURL(/\/etagere$/);
 
-  // Barre d'onglets : Étagère -> Bibliothèque -> Ajouter -> Étagère
-  await page.getByRole('link', { name: 'Bibliothèque' }).click();
-  await expect(page.getByRole('heading', { name: /Ma bibliothèque/ })).toBeVisible();
+  // Barre d'onglets : Étagère -> Ludothèque -> Ajouter -> Étagère
+  await page.getByRole('link', { name: 'Ludothèque' }).click();
+  await expect(page.getByRole('heading', { name: /Ma ludothèque/ })).toBeVisible();
   await page.getByRole('link', { name: 'Ajouter' }).click();
   await expect(page.getByRole('heading', { name: 'Ajouter un jeu' })).toBeVisible();
-  await page.getByRole('link', { name: 'Bibliothèque' }).click();
+  await page.getByRole('link', { name: 'Ludothèque' }).click();
 
   // Carte détaillée : année · éditeur, chips joueurs/durée (absents ici : seuls l'année·éditeur s'affichent)
   const card = page.locator('.lib-card').first();

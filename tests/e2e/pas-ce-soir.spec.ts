@@ -159,6 +159,7 @@ test('étagère : recherche et filtres (joueurs pré-rempli, complexité, durée
   await page.goto('/etagere');
 
   // Soirée solo → filtre joueurs pré-rempli à 1 : seul Mars (1–5) reste
+  await page.getByRole('button', { name: /Filtres/ }).click(); // panneau replié par défaut
   const chip1 = page.locator('.fam[aria-label*="joueurs"] .fchip', { hasText: '1' });
   await expect(chip1).toHaveClass(/on/);
   await expect(page.locator('.shelf-block:not(.excluded-block) .box')).toHaveCount(1);
@@ -229,6 +230,9 @@ test('bibliothèque : recherche, filtres (dont Boîte) et compteur', async ({ pa
   await add('Terraforming Mars', { min_players: '1', max_players: '5', playtime_min: '120', weight: '3.4', box_format: 'grand' });
   await add('Jaipur', { min_players: '2', max_players: '2', playtime_min: '30', weight: '1.5', box_format: 'petit' });
   await page.goto('/library');
+
+  // Panneau de filtres replié par défaut : on le déplie pour la famille Boîte
+  await page.getByRole('button', { name: /Filtres/ }).click();
 
   // Recherche insensible à la casse
   await page.getByLabel('Rechercher un jeu').fill('azul');

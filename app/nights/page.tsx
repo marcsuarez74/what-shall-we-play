@@ -6,6 +6,7 @@ import type { UserLite } from '@/lib/types';
 import PlayerChip from '@/components/PlayerChip';
 import NightPlanner from '@/components/NightPlanner';
 import InviteButton from '@/components/InviteButton';
+import TerminerNight from '@/components/TerminerNight';
 
 const dateFormat = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' });
 const timeFormat = new Intl.DateTimeFormat('fr-FR', { timeStyle: 'short' });
@@ -52,6 +53,7 @@ export default async function Page() {
             <li className="night-card live">
               <div className="night-card-head">
                 <span className="night-label">SOIRÉE EN COURS</span>
+                {active.creator_id === user.id && <TerminerNight nightId={active.id} />}
               </div>
               <div className="chips">
                 {getNightPlayers(active.id).map((p) => <PlayerChip key={p.id} u={p} />)}

@@ -40,6 +40,7 @@ test('ajout : un seul résultat BGG -> fiche remplie -> ludothèque', async ({ p
   // pochette simulée absente : la boîte apparaît avec son placeholder ♟
   await page.getByRole('button', { name: /Lancer la soirée|Créer la soirée/ }).click();
   // Le filtre joueurs est pré-rempli (soirée solo = 1) : un jeu 2–5 joueurs est écarté
+  await page.getByRole('button', { name: /Filtres/ }).click(); // panneau replié par défaut
   await expect(page.locator('.shelf-count')).toContainText('0 jeu sur 1');
   // On le désactive : la boîte apparaît
   await page.locator('.fam[aria-label*="joueurs"] .fchip', { hasText: '1' }).click();

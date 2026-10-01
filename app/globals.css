@@ -743,22 +743,15 @@ input[type='file'] {
   gap: 10px;
 }
 
-/* cartes de la bibliothèque */
-.lib {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+/* carte ludothèque v2 — identité / traits / filet + actions */
+.lib-card {
+  background: var(--surface);
+  border: 1px solid rgba(185, 165, 140, 0.3);
+  border-radius: 14px;
+  padding: 10px 12px;
 }
 
-.lib-card {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: var(--surface);
-  border-radius: 14px;
-  padding: 10px;
-}
+.lib-top { display: flex; gap: 12px; min-width: 0; }
 
 .lib-main {
   appearance: none;
@@ -776,15 +769,35 @@ input[type='file'] {
   text-align: left;
 }
 
+.lib-cover {
+  width: 64px;
+  height: 64px;
+  border-radius: 10px;
+  overflow: hidden;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--noyer) 70%, black);
+}
+
+.lib-cover img,
+.lib-cover .cover-placeholder {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .lib-info {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
   min-width: 0;
+  align-content: start;
 }
 
 .lib-info strong {
   font-size: 15px;
+  line-height: 1.2;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -792,23 +805,21 @@ input[type='file'] {
 
 .lib-meta { color: var(--doux-clair); font-size: 12px; }
 
-.lib-k { display: flex; gap: 6px; flex-wrap: wrap; }
+.traits { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 2px; }
 
-.lib-k span {
+.traits span {
   font-size: 11px;
+  font-weight: 500;
   color: var(--doux-clair);
-  background: var(--noyer);
+  background: color-mix(in srgb, var(--noyer) 55%, transparent);
+  border: 1px solid color-mix(in srgb, var(--doux) 25%, transparent);
   border-radius: 999px;
   padding: 2px 8px;
 }
 
-.lib-fmt {
-  width: auto;
-  padding: 6px 8px;
-  font-size: 12.5px;
-  background: var(--noyer);
-  border-color: var(--doux);
+.traits span.fmt {
   color: var(--cuivre);
+  border-color: color-mix(in srgb, var(--cuivre) 40%, transparent);
 }
 
 .lib-rm {
@@ -816,29 +827,31 @@ input[type='file'] {
   border: none;
   background: none;
   color: var(--doux);
-  font-size: 15px;
+  font-size: 14px;
   cursor: pointer;
-  padding: 4px;
+  padding: 2px 4px;
+  align-self: start;
 }
 
 .lib-rm:hover { color: var(--creme); }
 
-.lib-card img,
-.lib-card .cover-placeholder {
-  width: 52px;
-  height: 52px;
-  border-radius: 9px;
-  object-fit: cover;
-  flex: 0 0 auto;
+.lib-act {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(185, 165, 140, 0.22);
 }
 
-.library img,
-.library .cover-placeholder {
-  width: 56px;
-  height: 56px;
-  border-radius: 8px;
-  object-fit: cover;
-  flex: 0 0 auto;
+.lib-fmt {
+  width: auto;
+  padding: 6px 8px;
+  font-size: 12px;
+  background: var(--noyer);
+  border-color: var(--doux);
+  color: var(--doux-clair);
 }
 
 /* ---------- Placeholders de pochette ---------- */
@@ -963,6 +976,18 @@ input[type='file'] {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.14em;
+}
+
+/* « Terminer la soirée » — discret, devient alarmant une fois armé */
+.end-btn {
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  padding: 4px 10px;
+}
+
+.end-btn.armed {
+  color: #e08a76;
+  border-color: color-mix(in srgb, #b5533c 60%, transparent);
 }
 
 .night-card .chips {
@@ -1562,18 +1587,34 @@ input[type='file'] {
 }
 .box.ex { border-style: dashed; filter: saturate(0.45) brightness(0.82); }
 
-/* Barre de recherche + filtres — contrôles segmentés étiquetés */
-.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin: 4px 0 12px; }
+/* Barre de recherche + filtres — repliée par défaut : une rangée, la liste est le héros */
+.collection-controls { margin: 4px 0 12px; }
+.controls-row { display: flex; gap: 8px; align-items: center; }
 .shelf-search {
-  flex: 1 1 220px; padding: 10px 14px; border-radius: 12px; font: inherit; font-size: 14.5px;
+  flex: 1; min-width: 0; padding: 10px 14px; border-radius: 12px; font: inherit; font-size: 14.5px;
   background: var(--surface); border: 1.5px solid var(--doux); color: var(--creme);
 }
 .shelf-search:focus { outline: none; border-color: var(--cuivre); }
 .shelf-search::placeholder { color: var(--doux); }
+.fbtn {
+  display: inline-flex; align-items: center; gap: 7px; appearance: none; font: inherit;
+  font-size: 13px; font-weight: 600; color: var(--creme); background: var(--surface);
+  border: 1.5px solid var(--doux); border-radius: 12px; padding: 9px 13px; cursor: pointer; white-space: nowrap;
+}
+.fbtn .badge {
+  min-width: 18px; height: 18px; border-radius: 999px; background: var(--cuivre); color: #fff;
+  font-size: 11px; font-weight: 700; display: grid; place-items: center; padding: 0 5px;
+}
+.fbtn[aria-expanded="true"] { border-color: var(--cuivre); color: var(--cuivre); }
+.fam-row {
+  display: flex; flex-direction: column; gap: 9px; padding: 12px; margin-top: 8px;
+  background: color-mix(in srgb, var(--surface) 55%, transparent);
+  border: 1px solid color-mix(in srgb, var(--doux) 30%, transparent); border-radius: 14px;
+}
 .fam { display: inline-flex; align-items: stretch; }
 .fam-k {
   align-self: center; padding-right: 8px; font-size: 11.5px; font-weight: 600; color: var(--doux);
-  white-space: nowrap;
+  white-space: nowrap; min-width: 74px;
 }
 .fchip {
   appearance: none; font: inherit; font-size: 12.5px; font-weight: 600;

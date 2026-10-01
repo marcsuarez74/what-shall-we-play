@@ -5,8 +5,14 @@ export function getActiveNight(userId: number): Night | null {
   return (getDb().prepare(`
     SELECT n.* FROM nights n
     WHERE n.played_at = date('now','localtime')
+      AND n.ended_at IS NULL
       AND (n.creator_id = ? OR EXISTS (SELECT 1 FROM night_players np WHERE np.night_id = n.id AND np.user_id = ?))
     ORDER BY n.id DESC LIMIT 1`).get(userId, userId) as Night | undefined) ?? null;
+}
+
+// Terminer la soirée : elle quitte l'état actif, l'historique la conserve.
+export function endNight(nightId: number): void {
+  getDb().prepare("UPDATE nights SET ended_at = datetime('now','localtime') WHERE id = ?").run(nightId);
 }
 
 // Soirées à venir (créateur OU participant), la plus proche d'abord.

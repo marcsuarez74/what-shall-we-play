@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { registerUser } from '@/lib/auth';
-import { createNight, getActiveNight, getPlannedNights, getShelfGames, getNight } from '@/lib/nights';
+import { createNight, getActiveNight, getPlannedNights, getShelfGames, getNight, endNight, getMyNights } from '@/lib/nights';
 import { createGame } from '@/lib/games';
 import { getDb } from '@/lib/db';
 
@@ -44,5 +44,15 @@ describe('soirées programmées', () => {
     const marc = uid('p-heure');
     const n = createNight(marc, [marc], { startTime: '20:30' });
     expect(getNight(n)?.start_time).toBe('20:30');
+  });
+
+  it('terminer la nuit la sort de l état actif et la garde en historique', () => {
+    const marc = uid('p-fin');
+    const n = createNight(marc, [marc]);
+    expect(getActiveNight(marc)?.id).toBe(n);
+    endNight(n);
+    expect(getActiveNight(marc)).toBeNull(); // plus de soirée en cours
+    expect(getMyNights(marc).map((x) => x.id)).toContain(n); // l historique conserve la nuit
+    expect(getNight(n)?.ended_at).not.toBeNull();
   });
 });
