@@ -4,6 +4,15 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [1.6.0] — 2026-10-01
+
+### Ajouté
+- **Foyer : une bibliothèque partagée** — en couple ou en colocation, créez un foyer depuis « Mon profil » et partagez une seule collection : chacun ajoute, modifie, écarte. L'étagère d'une soirée réunit les collections des joueurs et de leurs foyers, même si un membre est absent.
+- **Adhésion par code d'invitation** : « Créer un foyer » génère un code à 6 caractères (sans O/0, I/1) à dicter de vive voix ; l'autre membre le saisit dans son profil. Le code reste visible dans le foyer pour inviter plus tard.
+- **Fusion guidée des bibliothèques** : à l'adhésion, les doublons de titre (casse et accents ignorés) se trient un à un — garder la fiche de l'un, de l'autre, ou les deux. La fiche conservée absorbe l'historique de tirages de l'autre.
+- **Quitter / dissoudre** : quitter emporte les jeux que j'ai ajoutés ; dissoudre (créateur) rend chaque jeu à son ajouteur. Supprimer son compte laisse la collection du foyer aux autres membres.
+- **Ma ludothèque affiche le foyer** : ligne « Foyer · nom · N membres » sous le titre, et badge de l'ajouteur en coin de pochette.
+
 ## [1.5.0] — 2026-10-01
 
 ### Ajouté
