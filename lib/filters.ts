@@ -14,6 +14,8 @@ export interface ShelfFilters {
 // Insensible à la casse ET aux accents (les titres français gardent leurs accents,
 // les utilisateurs tapent souvent sans).
 const norm = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+// Recherche insensible aux accents, partagée (sélecteur de l'étagère…).
+export const normalizeText = norm;
 
 // Filtrage 100 % client de l'étagère. Un jeu SANS donnée (poids/durée/joueurs null)
 // n'est jamais écarté par le filtre correspondant — on ne cache pas ce qu'on ne sait pas classer.

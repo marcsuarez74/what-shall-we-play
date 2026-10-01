@@ -63,47 +63,47 @@ export function getMyNights(userId: number): Night[] {
 export type ShelfGame = Game & {
   owner_pseudo: string; owner_sticker: string | null; owner_avatar_path: string | null;
 };
-// L'étagère d'une soirée : les jeux possédés par les joueurs + les collections de leurs foyers
-// (un foyer porte sa collection même si l'autre membre est absent).
-const SHELF_WHERE = `
-  (g.owner_id IN (SELECT user_id FROM night_players WHERE night_id = ?)
-    OR g.foyer_id IN (SELECT u2.foyer_id FROM users u2
-                      JOIN night_players np2 ON np2.user_id = u2.id
-                      WHERE np2.night_id = ? AND u2.foyer_id IS NOT NULL))`;
-
+// Étagère v3 : une soirée commence avec une étagère VIDE. Chaque joueur y ajoute,
+// depuis SA ludothèque (jeux perso + ceux de son foyer), ce dont il a envie ce soir.
+// « owner_* » porte le pseudo de celui qui a posé la boîte sur l'étagère.
 export function getShelfGames(nightId: number): ShelfGame[] {
   return getDb().prepare(`
-    SELECT DISTINCT g.*, u.pseudo AS owner_pseudo, u.sticker AS owner_sticker, u.avatar_path AS owner_avatar_path
-    FROM games g
-    JOIN users u ON u.id = g.owner_id
-    WHERE ${SHELF_WHERE}
-      AND g.id NOT IN (SELECT game_id FROM night_excludes WHERE night_id = ?)
-    ORDER BY CASE g.box_format WHEN 'grand' THEN 0 WHEN 'moyen' THEN 1 WHEN 'petit' THEN 2 ELSE 3 END, g.title`)
-    .all(nightId, nightId, nightId) as ShelfGame[];
-}
-export function excludeGame(nightId: number, gameId: number): void {
-  getDb().prepare('INSERT OR IGNORE INTO night_excludes (night_id, game_id) VALUES (?, ?)').run(nightId, gameId);
-}
-export function restoreGame(nightId: number, gameId: number): void {
-  getDb().prepare('DELETE FROM night_excludes WHERE night_id = ? AND game_id = ?').run(nightId, gameId);
-}
-export function getExcludedGameIds(nightId: number): number[] {
-  return (getDb().prepare('SELECT game_id FROM night_excludes WHERE night_id = ? ORDER BY game_id')
-    .all(nightId) as { game_id: number }[]).map((r) => r.game_id);
-}
-export function getExcludedGames(nightId: number): ShelfGame[] {
-  return getDb().prepare(`
     SELECT g.*, u.pseudo AS owner_pseudo, u.sticker AS owner_sticker, u.avatar_path AS owner_avatar_path
-    FROM night_excludes ne
-    JOIN games g ON g.id = ne.game_id
-    JOIN users u ON u.id = g.owner_id
-    WHERE ne.night_id = ? AND ${SHELF_WHERE}
-    ORDER BY g.title`).all(nightId, nightId, nightId) as ShelfGame[];
+    FROM night_games ng
+    JOIN games g ON g.id = ng.game_id
+    JOIN users u ON u.id = ng.added_by
+    WHERE ng.night_id = ?
+    ORDER BY CASE g.box_format WHEN 'grand' THEN 0 WHEN 'moyen' THEN 1 WHEN 'petit' THEN 2 ELSE 3 END, g.title`)
+    .all(nightId) as ShelfGame[];
 }
 export function isGameOnShelf(nightId: number, gameId: number): boolean {
-  return !!getDb().prepare(`
-    SELECT 1 FROM games g
-    WHERE g.id = ? AND ${SHELF_WHERE}`).get(gameId, nightId, nightId);
+  return !!getDb().prepare('SELECT 1 FROM night_games WHERE night_id = ? AND game_id = ?').get(nightId, gameId);
+}
+export type NightGameResult = { ok: true } | { error: string; status: number };
+
+// Ajouter un jeu à la soirée : réservé aux joueurs présents, et seulement
+// un jeu de SA ludothèque. Un doublon d'ajout est ignoré (premier ajouteur = badge).
+export function addNightGame(nightId: number, gameId: number, userId: number): NightGameResult {
+  const db = getDb();
+  if (!getNight(nightId)) return { error: 'Soirée introuvable', status: 404 };
+  if (!isNightParticipant(nightId, userId)) return { error: 'Seuls les joueurs de la soirée peuvent ajouter des jeux', status: 403 };
+  const g = db.prepare('SELECT owner_id, foyer_id FROM games WHERE id = ?').get(gameId) as { owner_id: number; foyer_id: number | null } | undefined;
+  if (!g) return { error: 'Jeu introuvable', status: 404 };
+  const myFoyerId = (db.prepare('SELECT foyer_id FROM users WHERE id = ?').get(userId) as { foyer_id: number | null }).foyer_id;
+  const inMyLibrary = g.foyer_id != null ? g.foyer_id === myFoyerId : g.owner_id === userId;
+  if (!inMyLibrary) return { error: "Ce jeu n'est pas dans votre ludothèque", status: 403 };
+  db.prepare('INSERT OR IGNORE INTO night_games (night_id, game_id, added_by) VALUES (?, ?, ?)').run(nightId, gameId, userId);
+  return { ok: true };
+}
+
+// Retirer un jeu de la soirée : n'importe quel joueur présent peut le faire.
+export function removeNightGame(nightId: number, gameId: number, userId: number): NightGameResult {
+  if (!isNightParticipant(nightId, userId)) return { error: 'Seuls les joueurs de la soirée peuvent retirer des jeux', status: 403 };
+  getDb().prepare('DELETE FROM night_games WHERE night_id = ? AND game_id = ?').run(nightId, gameId);
+  return { ok: true };
+}
+export function isNightParticipant(nightId: number, userId: number): boolean {
+  return !!getDb().prepare('SELECT 1 FROM night_players WHERE night_id = ? AND user_id = ?').get(nightId, userId);
 }
 export function getNightPicks(nightId: number): (Pick & { title: string; pseudo: string })[] {
   return getDb().prepare(`

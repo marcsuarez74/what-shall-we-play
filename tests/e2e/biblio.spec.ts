@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { gameIdByTitle, putOnShelf } from './helpers/shelf';
 
 // Barre d'onglets + bibliothèque détaillée : cartes riches, fiche au toucher, format modifiable.
 const stamp = Date.now().toString(36);
@@ -49,6 +50,9 @@ test('navigation : onglets entre les pages, fiche depuis la bibliothèque, forma
 
   // Aucune pochette ne dépasse de sa boîte (photos portrait comprises)
   await page.getByRole('button', { name: /Lancer la soirée|Créer la soirée/ }).click();
+  // Étagère vide à la création (v3) : le joueur pose Azul depuis sa ludothèque
+  await putOnShelf(page, await gameIdByTitle(page, 'Azul'));
+  await page.goto('/etagere');
   const debords = await page.evaluate(() =>
     [...document.querySelectorAll('.box img')].filter((img) => {
       const b = img.closest('.box')!.getBoundingClientRect();

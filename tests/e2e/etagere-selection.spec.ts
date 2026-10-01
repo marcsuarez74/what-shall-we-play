@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { newGame, putOnShelf } from './helpers/shelf';
 
 async function registerAndStart(page: import('@playwright/test').Page, pseudo: string) {
   await page.goto('/register');
@@ -9,21 +10,21 @@ async function registerAndStart(page: import('@playwright/test').Page, pseudo: s
   await reg;
   const nightDone = page.waitForResponse((r) => r.url().endsWith('/api/nights') && r.request().method() === 'POST');
   await page.getByRole('button', { name: 'Créer la soirée' }).click();
-  await nightDone;
+  const { nightId } = await (await nightDone).json() as { nightId: number }; // v3 : étagère vide à la création
   await page.waitForURL('/etagere');
+  return nightId;
+}
+
+/** Jeux posés sur l'étagère de la soirée (le geste des joueurs, via l'API). */
+async function peuplerEtagere(page: import('@playwright/test').Page, nightId: number, jeux: [string, string][]) {
+  for (const [t, f] of jeux) await putOnShelf(page, await newGame(page, t, f), nightId);
+  await page.goto('/etagere');
 }
 
 test('longue pression → mode sélection, taps = toggle, Terminé sort', async ({ page }) => {
   const pseudo = `lp-${Date.now()}`;
-  await registerAndStart(page, pseudo);
-  // 3 jeux via l'API (la session navigateur partage les cookies)
-  for (const [t, f] of [['Alpha', 'grand'], ['Bravo', 'moyen'], ['Charlie', 'petit']] as const) {
-    const form = new FormData();
-    form.set('title', t); form.set('box_format', f);
-    const res = await page.request.post('/api/games', { form });
-    if (!res.ok()) throw new Error(`ajout jeu ${t}: ${res.status()} ${await res.text()}`);
-  }
-  await page.goto('/etagere');
+  const nightId = await registerAndStart(page, pseudo);
+  await peuplerEtagere(page, nightId, [['Alpha', 'grand'], ['Bravo', 'moyen'], ['Charlie', 'petit']]);
   const box = page.locator('.box').first();
   await box.scrollIntoViewIfNeeded();
 
@@ -65,11 +66,9 @@ test('tactile : maintien 700 ms → mode sélection ; un glisser annule (garde r
   await reg;
   const nightDone = page.waitForResponse((r) => r.url().endsWith('/api/nights') && r.request().method() === 'POST');
   await page.getByRole('button', { name: 'Créer la soirée' }).click();
-  await nightDone;
+  const { nightId } = await (await nightDone).json() as { nightId: number };
   await page.waitForURL('/etagere');
-  const form = new FormData();
-  form.set('title', 'Tactile'); form.set('box_format', 'moyen');
-  await page.request.post('/api/games', { form });
+  await putOnShelf(page, await newGame(page, 'Tactile', 'moyen'), nightId);
   await page.goto('/etagere');
   const box = page.locator('.box').first();
   await box.waitFor();
@@ -96,15 +95,9 @@ test('tactile : maintien 700 ms → mode sélection ; un glisser annule (garde r
 
 test('sélection + lancer le tirage visibles sans scroller (barre fixe)', async ({ page }) => {
   const pseudo = `fix-${Date.now()}`;
-  await registerAndStart(page, pseudo);
+  const nightId = await registerAndStart(page, pseudo);
   // 4 formats = 4 rangées : la page dépasse l'écran
-  for (const [t, f] of [['Alpha', 'grand'], ['Bravo', 'moyen'], ['Charlie', 'petit'], ['Delta', 'mini']] as const) {
-    const form = new FormData();
-    form.set('title', t); form.set('box_format', f);
-    const res = await page.request.post('/api/games', { form });
-    if (!res.ok()) throw new Error(`ajout jeu ${t}: ${res.status()} ${await res.text()}`);
-  }
-  await page.goto('/etagere');
+  await peuplerEtagere(page, nightId, [['Alpha', 'grand'], ['Bravo', 'moyen'], ['Charlie', 'petit'], ['Delta', 'mini']]);
   await page.locator('.box').first().waitFor();
 
   // Sans aucun scroll : la barre de sélection est entièrement dans le viewport

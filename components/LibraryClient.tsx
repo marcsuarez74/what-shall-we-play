@@ -7,34 +7,17 @@ import type { Game } from '@/lib/types';
 import GameSheet from './GameSheet';
 import ShelfControls from './ShelfControls';
 
-export default function LibraryClient({ games: initial, plays, activeNightId = null, excludedIds: initialExcluded = [], foyer = null }: {
+export default function LibraryClient({ games: initial, plays, foyer = null }: {
   games: Game[];
   plays: Record<number, number>;
-  activeNightId?: number | null;
-  excludedIds?: number[];
   foyer?: { name: string; members: number } | null;
 }) {
   const router = useRouter();
   const [games, setGames] = useState(initial);
   const [notice, setNotice] = useState<string | null>(null);
   const [detail, setDetail] = useState<Game | null>(null);
-  const [excluded, setExcluded] = useState<Set<number>>(new Set(initialExcluded));
   const [filters, setFilters] = useState<ShelfFilters>({ q: '', players: null, weight: 'all', duration: 'all', format: 'all' });
   const filtered = useMemo(() => filterShelf(games, filters), [games, filters]);
-
-  async function toggleExclude(g: Game) {
-    const nowExcluded = !excluded.has(g.id);
-    setExcluded((s) => {
-      const n = new Set(s);
-      if (nowExcluded) n.add(g.id); else n.delete(g.id);
-      return n;
-    });
-    await fetch(`/api/nights/${activeNightId}/excludes`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ gameId: g.id, excluded: nowExcluded }),
-    });
-    router.refresh();
-  }
 
   async function remove(id: number) {
     const res = await fetch(`/api/games/${id}`, { method: 'DELETE' });
@@ -106,13 +89,6 @@ export default function LibraryClient({ games: initial, plays, activeNightId = n
                       onChange={(e) => setFormat(g.id, e.target.value)}>
                 {FORMATS.map((f) => <option key={f} value={f}>{FORMAT_LABEL[f]}</option>)}
               </select>
-              {activeNightId != null && (
-                <button type="button" className={`lib-excl ${excluded.has(g.id) ? 'on' : ''}`}
-                        aria-label={excluded.has(g.id) ? `Remettre ${g.title} au tirage ce soir` : `Écarter ${g.title} du tirage ce soir`}
-                        onClick={() => toggleExclude(g)}>
-                  {excluded.has(g.id) ? '✓ Écarté ce soir' : 'Pas ce soir'}
-                </button>
-              )}
             </div>
           </li>
         ))}

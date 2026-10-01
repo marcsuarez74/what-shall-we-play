@@ -1,16 +1,19 @@
 import { describe, it, expect } from 'vitest';
 import { registerUser } from '@/lib/auth';
-import { createNight, getShelfGames, getActiveNight, userCanAccessNight, setNightPlayers, getMyNights } from '@/lib/nights';
+import { createNight, getShelfGames, getActiveNight, userCanAccessNight, setNightPlayers, getMyNights, addNightGame } from '@/lib/nights';
 import { createGame } from '@/lib/games';
 import { getDb } from '@/lib/db';
 
 describe('nights', () => {
-  it('crée une soirée, inclut le créateur, combine les bibliothèques', () => {
+  it('crée une soirée vide, puis chacun ajoute depuis sa ludothèque', () => {
     const marc = (registerUser('n-marc', '1234') as { id: number }).id;
     const lea = (registerUser('n-lea', '1234') as { id: number }).id;
-    createGame(marc, { title: 'Terraforming Mars', box_format: 'grand' });
-    createGame(lea, { title: 'Harmonies', box_format: 'petit' });
+    const gm = createGame(marc, { title: 'Terraforming Mars', box_format: 'grand' });
+    const gl = createGame(lea, { title: 'Harmonies', box_format: 'petit' });
     const nightId = createNight(marc, [marc, lea]);
+    expect(getShelfGames(nightId)).toEqual([]); // vide à la création
+    addNightGame(nightId, gm, marc);
+    addNightGame(nightId, gl, lea);
     const games = getShelfGames(nightId);
     expect(games.map((g) => g.title).sort()).toEqual(['Harmonies', 'Terraforming Mars']);
     expect(getActiveNight(marc)?.id).toBe(nightId);

@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { gameIdByTitle, putOnShelf } from './helpers/shelf';
 
 // QG Soirées : programmation (date + heure + joueurs), sections Ce soir / Programmées / Historique.
 // Le jour J, la programmée devient la soirée en cours automatiquement (aucun état à muter).
@@ -87,6 +88,9 @@ async function setupTirage(page: import('@playwright/test').Page, s: string) {
   const post = page.waitForResponse((r) => r.url().endsWith('/api/nights') && r.request().method() === 'POST');
   await page.getByRole('button', { name: 'Créer la soirée' }).click();
   await post;
+  // Étagère vide à la création (v3) : marc pose Cascadia depuis sa ludothèque
+  await putOnShelf(page, await gameIdByTitle(page, 'Cascadia'));
+  await page.goto('/etagere');
   await page.locator('.box').first().click();
   await page.getByRole('button', { name: /Ajouter à la sélection/ }).click();
   await page.keyboard.press('Escape');

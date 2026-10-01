@@ -62,11 +62,19 @@ test('foyer : créer, rejoindre par code, fusion guidée, collection commune, so
   await expect(a.locator('.lib-card')).toHaveCount(2);
   await expect(a.locator('.lib-cover .who').first()).toHaveText('F');
 
-  // — Étagère : une soirée où Léa est absente porte quand même la collection du foyer
+  // — Étagère v3 : vide à la création ; Marc ajoute depuis SA ludothèque — la
+  //   collection du foyer entière (fiches posées par Léa comprises)
   await a.goto('/etagere');
   await a.getByRole('button', { name: 'Créer la soirée' }).click();
   await a.waitForURL('/etagere');
-  await expect(a.locator('.shelf-block:not(.excluded-block) .box')).toHaveCount(2);
+  await expect(a.locator('.empty-shelf')).toBeVisible();
+  await a.getByRole('button', { name: 'Ajouter des jeux depuis ma ludothèque' }).click();
+  const rows = a.locator('.pick-row .add');
+  await expect(rows).toHaveCount(2);
+  await rows.nth(0).click();
+  await rows.nth(1).click();
+  await a.getByRole('button', { name: 'Terminé' }).click();
+  await expect(a.locator('.shelf-block .box')).toHaveCount(2);
 
   // — Léa quitte : ses ajouts la suivent, y compris l'Azul gardée à la fusion
   //   (la fiche conservée appartient à celui dont elle est) ; Marc garde le

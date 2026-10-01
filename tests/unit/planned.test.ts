@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { registerUser } from '@/lib/auth';
-import { createNight, getActiveNight, getPlannedNights, getShelfGames, getNight, endNight, getMyNights } from '@/lib/nights';
+import { createNight, getActiveNight, getPlannedNights, getShelfGames, getNight, endNight, getMyNights, addNightGame } from '@/lib/nights';
 import { createGame } from '@/lib/games';
 import { getDb } from '@/lib/db';
 
@@ -20,7 +20,9 @@ describe('soirées programmées', () => {
     const n = createNight(marc, [marc, lea], { playedAt: demain(), startTime: '20:00' });
     expect(getActiveNight(marc)).toBeNull(); // pas de soirée aujourd hui
     expect(getActiveNight(lea)).toBeNull();
-    expect(getShelfGames(n).map((x) => x.id)).toEqual([g]); // l étagère de CETTE nuit est prête pour le jour J
+    expect(getShelfGames(n)).toEqual([]); // l étagère de la soirée est vide à la création
+    addNightGame(n, g, marc);             // chacun ajoute depuis sa ludothèque
+    expect(getShelfGames(n).map((x) => x.id)).toEqual([g]); // prête pour le jour J
     expect(getPlannedNights(marc).map((x) => x.id)).toContain(n);
     expect(getPlannedNights(lea).map((x) => x.id)).toContain(n); // simple joueur la voit aussi
   });

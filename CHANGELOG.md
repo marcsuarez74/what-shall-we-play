@@ -4,6 +4,27 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [2.0.0] — 2026-10-01
+
+### Changement de flux (maquette validée)
+- **L'étagère d'une soirée est vide à la création.** Chaque joueur y ajoute, depuis
+  SA ludothèque (jeux perso + ceux de son foyer) et sur son téléphone, ce dont il a
+  envie de jouer ce soir — l'étagère se remplit au fil des arrivées.
+- **Nouveau sélecteur « Ajouter à la soirée »** (bottom-sheet) : ma ludothèque groupée
+  par format, recherche insensible aux accents, tap = ajout (✓ vert), compteur en direct.
+- **« Pas ce soir » disparaît** : un jeu n'est sur l'étagère que si quelqu'un l'a voulu ;
+  écarter un jeu ce soir = « Retirer de la soirée » (fiche du jeu, n'importe quel joueur).
+- **Badge « Apporté par » = qui a posé la boîte** (l'ajouteur à la soirée, pas le
+  propriétaire de la fiche) ; un doublon d'ajout est ignoré, le premier ajouteur garde le badge.
+- La sélection (appui maintenu), le tirage et WhatsApp restent inchangés ; un lien
+  « + Ajouter d'autres jeux » reste disponible en cours de soirée.
+
+### Technique
+- Table `night_games` (night, jeu, ajouteur) ; API `POST /api/nights/[id]/games`
+  (`{ gameId, added }`) avec gardes : joueur de la soirée + jeu de SA ludothèque ;
+  route « excludes » supprimée (table `night_excludes` conservée pour l'historique).
+- Suites : 88 unitaires (+3 gardes étagère) / 37 E2E (sélecteur, retrait, étagère vide) ; tsc propre.
+
 ## [1.6.1] — 2026-10-01
 
 ### Modifié
