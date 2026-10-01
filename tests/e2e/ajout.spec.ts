@@ -37,8 +37,13 @@ test('ajout : un seul résultat BGG -> fiche remplie -> ludothèque', async ({ p
   await page.getByRole('button', { name: 'Ajouter à la ludothèque' }).click();
 
   await expect(page).toHaveURL(/\/etagere$/);
-  // pochette simulée absente : la boîte apparaît avec son placeholder ♟
+  // Soirée (créateur pré-coché), puis étagère vide (v3) : ajout via le sélecteur
   await page.getByRole('button', { name: /Lancer la soirée|Créer la soirée/ }).click();
+  await page.getByRole('button', { name: 'Ajouter des jeux depuis ma ludothèque' }).click();
+  const sheet = page.locator('.picker-sheet');
+  await expect(sheet).toBeVisible();
+  await sheet.getByRole('button', { name: /Ajouter Through the Desert/ }).click();
+  await sheet.getByRole('button', { name: 'Terminé' }).click();
   // Aucun filtre appliqué par défaut : la boîte est là malgré le solo (2–5 joueurs)
   await page.getByRole('button', { name: /Filtres/ }).click(); // panneau replié par défaut
   await expect(page.locator('.shelf-count')).toContainText('1 jeu sur 1');
@@ -91,7 +96,13 @@ test('ajout : BGG indisponible (token absent) -> saisie à la main', async ({ pa
   await page.getByLabel('Éditeur').fill('Next Move Games');
   await page.getByRole('button', { name: 'Ajouter à la ludothèque' }).click();
   await expect(page).toHaveURL(/\/etagere$/);
+  // Soirée, puis étagère vide (v3) : ajout via le sélecteur
   await page.getByRole('button', { name: /Lancer la soirée|Créer la soirée/ }).click();
+  await page.getByRole('button', { name: 'Ajouter des jeux depuis ma ludothèque' }).click();
+  const sheet2 = page.locator('.picker-sheet');
+  await expect(sheet2).toBeVisible();
+  await sheet2.getByRole('button', { name: /Ajouter Azul/ }).click();
+  await sheet2.getByRole('button', { name: 'Terminé' }).click();
   await page.locator('.box').first().click();
   await expect(page.locator('.bottom-sheet')).toContainText('Azul');
 });

@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { gameIdByTitle, putOnShelf } from './helpers/shelf';
 
 // Stamp base 36 : « parc-marc- » + 8 caractères ≤ limite d'inscription (20)
 const stamp = Date.now().toString(36);
@@ -37,7 +38,11 @@ test('parcours complet : deux joueurs, sélection, tirage, historique', async ({
   await a.getByLabel(new RegExp(`parc-lea-${stamp}`)).check();
   await a.getByRole('button', { name: /Créer la soirée/ }).click();
 
-  // Les deux bibliothèques sont sur l'étagère ; sélection + tirage
+  // Étagère vide à la création (v3) : chacun pose son jeu depuis SA session —
+  // le cœur du flux (Léa ne peut pas poser le jeu de Marc, ni l'inverse)
+  await putOnShelf(a, await gameIdByTitle(a, 'Terraforming Mars'));
+  await putOnShelf(b, await gameIdByTitle(b, 'Harmonies'));
+  await a.goto('/etagere');
   await expect(a.locator('.box')).toHaveCount(2);
   await a.locator('.box').nth(0).click();
   // Review Focus n°1 : sans pochette (ni BGG ni upload), la fiche affiche le

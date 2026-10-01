@@ -43,6 +43,15 @@ CREATE TABLE IF NOT EXISTS night_excludes (
   game_id INTEGER NOT NULL REFERENCES games(id) ON DELETE CASCADE,
   UNIQUE(night_id, game_id)
 );
+-- v2.0.0 (étagère v3) : ce que chaque joueur a ajouté à la soirée depuis sa ludothèque.
+-- night_excludes reste en base pour l'historique (le « Pas ce soir » n'existe plus).
+CREATE TABLE IF NOT EXISTS night_games (
+  night_id INTEGER NOT NULL REFERENCES nights(id) ON DELETE CASCADE,
+  game_id INTEGER NOT NULL REFERENCES games(id) ON DELETE CASCADE,
+  added_by INTEGER NOT NULL REFERENCES users(id),
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE(night_id, game_id)
+);
 CREATE TABLE IF NOT EXISTS picks (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   night_id INTEGER NOT NULL REFERENCES nights(id) ON DELETE CASCADE,

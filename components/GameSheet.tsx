@@ -5,7 +5,7 @@ import type { Game, UserLite } from '@/lib/types';
 
 const fmt = (n: number) => n.toLocaleString('fr-FR', { maximumFractionDigits: 1 });
 
-export default function GameSheet({ game, players, playsCount, inSelection, onToggle, onClose, mode = 'shelf', excluded = false, onToggleExcluded }: {
+export default function GameSheet({ game, players, playsCount, inSelection, onToggle, onClose, mode = 'shelf', onRemoveShelf }: {
   game: Game;
   players: UserLite[];
   playsCount: number;
@@ -13,8 +13,7 @@ export default function GameSheet({ game, players, playsCount, inSelection, onTo
   onToggle: () => void;
   onClose: () => void;
   mode?: 'shelf' | 'library';
-  excluded?: boolean;
-  onToggleExcluded?: () => void;
+  onRemoveShelf?: () => void;
 }) {
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -75,14 +74,14 @@ export default function GameSheet({ game, players, playsCount, inSelection, onTo
             <span>Voir la fiche ↗</span>
           </a>
         )}
-        {mode === 'shelf' && !excluded && (
+        {mode === 'shelf' && (
           <button type="button" className={`btn-copper ${inSelection ? 'is-sel' : ''}`} onClick={onToggle}>
             {inSelection ? '✓ Retirer de la sélection' : '＋ Ajouter à la sélection'}
           </button>
         )}
-        {mode === 'shelf' && onToggleExcluded && (
-          <button type="button" className="btn-exclude" onClick={onToggleExcluded}>
-            {excluded ? '↩ Remettre ce soir' : 'Pas ce soir — écarte du tirage'}
+        {mode === 'shelf' && onRemoveShelf && (
+          <button type="button" className="btn-exclude" onClick={onRemoveShelf}>
+            Retirer de la soirée
           </button>
         )}
       </div>

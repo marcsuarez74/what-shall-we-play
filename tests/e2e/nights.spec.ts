@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { gameIdByTitle, putOnShelf } from './helpers/shelf';
 
 test('soirées : historique avec date, joueurs et tirages', async ({ page }) => {
   const pseudo = `nights-${Date.now()}`; // 20 caractères exactement (limite d'inscription)
@@ -21,6 +22,10 @@ test('soirées : historique avec date, joueurs et tirages', async ({ page }) => 
   // Soirée via le sélecteur (affiché sur l'étagère tant qu'il n'y a pas de soirée
   // en cours ; créateur déjà pré-coché, on crée directement)
   await page.getByRole('button', { name: 'Créer la soirée' }).click();
+
+  // Étagère vide à la création (v3) : Marc pose Azul, sa ludothèque est la sienne
+  await putOnShelf(page, await gameIdByTitle(page, 'Azul'));
+  await page.goto('/etagere');
 
   // Étagère : boîte → fiche → « Ajouter à la sélection » → Escape → tirage
   await page.locator('.box').first().click();

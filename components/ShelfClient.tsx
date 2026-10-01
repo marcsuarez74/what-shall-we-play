@@ -12,15 +12,17 @@ import PlayerChip from './PlayerChip';
 import BoxImage from './BoxImage';
 import ShelfControls from './ShelfControls';
 import OwnerBadge from './OwnerBadge';
+import ShelfPicker from './ShelfPicker';
 
-export default function ShelfClient({ night, players, games, excludedGames, users, plays, me }: {
-  night: Night; players: UserLite[]; games: Game[]; excludedGames: Game[]; users: UserLite[]; plays: Record<number, number>;
+export default function ShelfClient({ night, players, games, myLibrary, users, plays, me }: {
+  night: Night; players: UserLite[]; games: Game[]; myLibrary: Game[]; users: UserLite[]; plays: Record<number, number>;
   me: UserLite;
 }) {
   const router = useRouter();
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [detail, setDetail] = useState<Game | null>(null);
   const [editingNight, setEditingNight] = useState(false);
+  const [addingGames, setAddingGames] = useState(false);
   const [pickMode, setPickMode] = useState(false);
   const menuRef = useRef<HTMLDetailsElement>(null);
   const pressRef = useRef<LongPress | null>(null);
@@ -31,7 +33,6 @@ export default function ShelfClient({ night, players, games, excludedGames, user
   });
   const filtered = useMemo(() => filterShelf(games, filters), [games, filters]);
   const byFormat = useMemo(() => FORMATS.map((f) => ({ f, list: filtered.filter((g) => g.box_format === f) })), [filtered]);
-  const excludedIds = useMemo(() => new Set(excludedGames.map((g) => g.id)), [excludedGames]);
 
   useEffect(() => {
     function closeMenu(e: MouseEvent) {
@@ -58,11 +59,12 @@ export default function ShelfClient({ night, players, games, excludedGames, user
     router.refresh();
   }
 
-  async function toggleExclude(g: Game) {
-    await fetch(`/api/nights/${night.id}/excludes`, {
+  async function removeFromNight(g: Game) {
+    await fetch(`/api/nights/${night.id}/games`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ gameId: g.id, excluded: !excludedIds.has(g.id) }),
+      body: JSON.stringify({ gameId: g.id, added: false }),
     });
+    setDetail(null);
     router.refresh();
   }
 
@@ -115,7 +117,24 @@ export default function ShelfClient({ night, players, games, excludedGames, user
         </div>
         <div className="chips">{players.map((p) => <PlayerChip key={p.id} u={p} />)}</div>
       </section>
-      <ShelfControls filters={filters} setFilters={setFilters} visible={filtered.length} total={games.length} />
+      {games.length > 0 && (
+        <ShelfControls filters={filters} setFilters={setFilters} visible={filtered.length} total={games.length} />
+      )}
+      {games.length === 0 ? (
+        <section className="empty-shelf">
+          <div className="big" aria-hidden="true">📦</div>
+          <h3>L&apos;étagère est vide</h3>
+          <p>Ce soir, on met sur l&apos;étagère ce dont on a envie — chacun depuis sa ludothèque, sur son téléphone.</p>
+          <button type="button" className="btn-copper" onClick={() => setAddingGames(true)}>
+            Ajouter des jeux depuis ma ludothèque
+          </button>
+          <p className="hint">Les autres joueurs voient le même bouton de leur côté.</p>
+        </section>
+      ) : (
+        <div className="add-more">
+          <button type="button" className="link-btn" onClick={() => setAddingGames(true)}>+ Ajouter d&apos;autres jeux</button>
+        </div>
+      )}
       {byFormat.map(({ f, list }) => list.length === 0 ? null : (
         <section key={f} className="shelf-block">
           <div className="row" role="list">
@@ -144,24 +163,6 @@ export default function ShelfClient({ night, players, games, excludedGames, user
           <p className="row-label">{FORMAT_LABEL[f]} — on swipe ›</p>
         </section>
       ))}
-      {excludedGames.length > 0 && (
-        <section className="shelf-block excluded-block">
-          <h2 className="excluded-title">Écartés ce soir ({excludedGames.length})</h2>
-          <div className="row excluded-row" role="list">
-            {excludedGames.map((g) => (
-              <button key={g.id} role="listitem" className="box ex"
-                      onClick={() => setDetail(g)}>
-                <BoxImage game={g} />
-                {g.owner_pseudo && (
-                  <OwnerBadge owner={{ pseudo: g.owner_pseudo, sticker: g.owner_sticker ?? null, avatar_path: g.owner_avatar_path ?? null }} />
-                )}
-              </button>
-            ))}
-          </div>
-          <div className="rail" />
-          <p className="row-label">De retour demain — tap pour remettre ›</p>
-        </section>
-      )}
       {pickMode && (
         <div className="pick-banner" role="status">
           <span>Sélection — touche les boîtes</span>
@@ -177,8 +178,11 @@ export default function ShelfClient({ night, players, games, excludedGames, user
       {detail && <GameSheet game={detail} players={players} playsCount={plays[detail.id] ?? 0}
                             inSelection={selected.has(detail.id)}
                             onToggle={() => toggle(detail.id)} onClose={() => setDetail(null)}
-                            excluded={excludedIds.has(detail.id)}
-                            onToggleExcluded={() => toggleExclude(detail)} />}
+                            onRemoveShelf={() => removeFromNight(detail)} />}
+      {addingGames && (
+        <ShelfPicker nightId={night.id} myLibrary={myLibrary}
+                     shelfIds={games.map((g) => g.id)} onClose={() => setAddingGames(false)} />
+      )}
       {editingNight && (
         <div className="sheet-backdrop" onClick={() => setEditingNight(false)}>
           <div className="bottom-sheet" role="dialog" aria-modal="true" aria-label="Modifier la soirée"

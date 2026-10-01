@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { gameIdByTitle, putOnShelf } from './helpers/shelf';
 
 async function registerAndStart(page: import('@playwright/test').Page, pseudo: string) {
   await page.goto('/register');
@@ -69,11 +70,12 @@ test('avatar photo : chip ronde, aucun hash bcrypt dans la page, boîtes non sé
     multipart: { avatar: { name: 'photo.png', mimeType: 'image/png', buffer: png } },
   });
   if (!up.ok()) throw new Error('upload avatar: ' + up.status() + ' ' + await up.text());
-  // un jeu pour avoir une boîte sur l'étagère
+  // un jeu pour avoir une boîte sur l'étagère (v3 : posée explicitement)
   const gform = new FormData();
   gform.set('title', 'Avec pochette'); gform.set('box_format', 'moyen');
   const gp = await page.request.post('/api/games', { form: gform });
   if (!gp.ok()) throw new Error('ajout jeu: ' + gp.status());
+  await putOnShelf(page, ((await gp.json()) as { id: number }).id);
   await page.goto('/etagere');
   // C1 : aucun hash bcrypt ne doit fuiter dans le payload RSC
   const html = await page.content();

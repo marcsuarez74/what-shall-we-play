@@ -5,7 +5,7 @@ import {
   createFoyer, joinFoyerByCode, resolveDupe, leaveFoyer, dissolveFoyer,
   renameFoyer, getFoyerForUser, getUserFoyerId,
 } from '@/lib/foyers';
-import { createNight, getShelfGames, getExcludedGames, excludeGame } from '@/lib/nights';
+import { createNight, getShelfGames, addNightGame, removeNightGame } from '@/lib/nights';
 import { getProfileStats, deleteAccount } from '@/lib/users';
 import { getDb } from '@/lib/db';
 
@@ -108,20 +108,22 @@ describe('foyer — bibliothèque partagée', () => {
     expect(getFoyerForUser(marc)?.name).toBe('Chez Marc & Léa');
   });
 
-  it('étagère : la collection du foyer entière est là, même si l autre membre est absent de la soirée', () => {
+  it('étagère v3 : chacun ajoute depuis SA ludothèque — Marc pose un jeu du foyer ajouté par Léa, absente de la soirée', () => {
     const marc = uid('f-sm'); const lea = uid('f-sl'); const ami = uid('f-sa');
-    const gm = createGame(marc, { title: 'Du foyer (Marc)', box_format: 'grand' });
     const gl = createGame(lea, { title: 'Du foyer (Léa)', box_format: 'moyen' });
     const ga = createGame(ami, { title: 'À l ami', box_format: 'petit' });
-    const foyer = createFoyer(marc);   // les jeux de Marc deviennent ceux du foyer
-    joinFoyerByCode(lea, foyer.code);  // ceux de Léa aussi
+    const foyer = createFoyer(marc);          // les jeux de Marc entrent au foyer
+    joinFoyerByCode(lea, foyer.code);         // ceux de Léa aussi (gl)
     const n = createNight(marc, [marc, ami]); // Léa absente
-    const ids = getShelfGames(n).map((x) => x.id);
-    expect(ids).toContain(gm);
-    expect(ids).toContain(gl); // ajouté par Léa, absente : le foyer la porte quand même
-    expect(ids).toContain(ga);
-    excludeGame(n, gm);
-    expect(getExcludedGames(n).map((x) => x.id)).toContain(gm); // « écartés » suit la même logique
+    expect(getShelfGames(n)).toEqual([]);     // étagère vide à la création
+    expect(addNightGame(n, gl, marc)).toEqual({ ok: true }); // le foyer entier est dans MA ludothèque
+    const res = addNightGame(n, ga, marc);
+    expect("error" in res && res.status).toBe(403);          // le jeu de l'ami n'est pas chez moi
+    const shelf = getShelfGames(n);
+    expect(shelf.map((x) => x.id)).toEqual([gl]);
+    expect(shelf[0].owner_pseudo).toBe('f-sm'); // badge = qui l'a ajoutée à la soirée
+    expect(removeNightGame(n, gl, ami)).toEqual({ ok: true }); // retrait collectif
+    expect(getShelfGames(n)).toEqual([]);
   });
 
   it('suppression d un jeu : chaque membre du foyer le peut, un hors-foyer non', () => {

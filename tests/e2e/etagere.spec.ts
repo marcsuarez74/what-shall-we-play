@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { gameIdByTitle, putOnShelf } from './helpers/shelf';
 
 test('étagère : sélection via fiche, CTA compteur', async ({ page }) => {
   await page.goto('/register');
@@ -14,6 +15,9 @@ test('étagère : sélection via fiche, CTA compteur', async ({ page }) => {
   // Soirée : le créateur est déjà pré-coché — on ne touche à aucune autre case
   // (les autres utilisateurs listés appartiennent à d'autres comptes)
   await page.getByRole('button', { name: /Lancer la soirée|Créer la soirée/ }).click();
+  // Étagère vide à la création (v3) : le joueur pose sa boîte
+  await putOnShelf(page, await gameIdByTitle(page, 'Terraforming Mars'));
+  await page.goto('/etagere');
   // Sélection vide : CTA désactivé, aucune sélection possible (Review Focus n°6)
   await expect(page.getByRole('button', { name: 'Touchez une boîte pour l\'ajouter' })).toBeDisabled();
   // Étagère : boîte -> fiche (la fiche enrichie affiche les facts) -> ajouter
