@@ -56,6 +56,8 @@ export default function ShelfClient({ night, players, games, myLibrary, users, p
     if (!tousPrets && !sur) { setSur(true); return; } // il manque du monde : « Sûr ? »
     lancer();
   }
+  // si tout le monde devient prêt entre-temps (sync live), le « Sûr ? » s'efface
+  const surAffiche = sur && !tousPrets;
 
   async function removeFromNight(g: Game) {
     await fetch(`/api/nights/${night.id}/games`, {
@@ -141,7 +143,7 @@ export default function ShelfClient({ night, players, games, myLibrary, users, p
           <>
             {games.length > 0 && (
               <button type="button" className="btn-copper" onClick={clicLancer}>
-                {sur ? 'Sûr ? Lancer' : `Lancer le tirage · ${games.length}`}
+                {surAffiche ? 'Sûr ? Lancer' : `Lancer le tirage · ${games.length}`}
               </button>
             )}
             {games.length > 0 && (

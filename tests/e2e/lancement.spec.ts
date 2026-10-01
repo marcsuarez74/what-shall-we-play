@@ -31,6 +31,10 @@ test('barre de lancement + validation visibles sans scroller (4 rangées)', asyn
   await peuplerEtagere(page, nightId, [['Alpha', 'grand'], ['Bravo', 'moyen'], ['Charlie', 'petit'], ['Delta', 'mini']]);
   await page.locator('.box').first().waitFor();
 
+  // Le créateur valide sa sélection (solo → tout le monde est prêt), puis lance
+  await page.getByRole('button', { name: 'Valider ma sélection' }).click();
+  await expect(page.locator('.pret-line')).toContainText('Ta sélection est validée');
+
   // Sans aucun scroll : la zone d'action est entièrement dans le viewport
   const inView = await page.evaluate(() => {
     const r = document.querySelector('.cta-zone')!.getBoundingClientRect();
@@ -48,11 +52,8 @@ test('les filtres réduisent la vue, jamais le pool du tirage', async ({ page })
   await peuplerEtagere(page, nightId, [['Alpha', 'grand'], ['Bravo', 'moyen'], ['Charlie', 'petit'], ['Delta', 'mini']]);
   await page.locator('.box').first().waitFor();
 
-  // Filtre « grandes boîtes » : une seule rangée visible
-  await page.locator('.filters [aria-label*="Format"], .filters select').first().selectOption?.('grand').catch(() => {});
-  await page.getByRole('button', { name: 'Grandes boîtes' }).click().catch(() => {});
-  // Peu importe le sélecteur exact : on filtre par la recherche, plus robuste
-  await page.getByLabel('Rechercher', { exact: false }).fill('Alpha');
+  // Filtre par la recherche : une seule boîte visible
+  await page.getByLabel('Rechercher un jeu').fill('Alpha');
   await expect(page.locator('.shelf-block .box')).toHaveCount(1);
 
   // Le lanceur compte quand même TOUTES les boîtes de l'étagère

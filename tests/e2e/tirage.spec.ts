@@ -26,6 +26,7 @@ test('tirage : roue plein écran puis verdict sur le jeu tiré', async ({ page }
 
   // v3.0.0 : valider sa sélection puis lancer
   await page.getByRole('button', { name: 'Valider ma sélection' }).click();
+  await expect(page.locator('.pret-line')).toContainText('Ta sélection est validée'); // la validation est enregistrée avant de cliquer
   await page.getByRole('button', { name: 'Lancer le tirage · 1' }).click();
 
   // La roue tourne (~3,5 s) puis le verdict tombe

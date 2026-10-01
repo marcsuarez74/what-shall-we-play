@@ -15,26 +15,50 @@ async function register(page: import('@playwright/test').Page, pseudo: string) {
   await page.waitForURL('/etagere');
 }
 
+/** Pose une boîte sur l'étagère de la soirée via l'API (ludothèque du joueur). */
+async function poserBoite(page: import('@playwright/test').Page, nightId: number, titre: string) {
+  const form = new FormData();
+  form.set('title', titre);
+  form.set('box_format', 'grand');
+  const g = await page.request.post('/api/games', { form });
+  if (!g.ok()) throw new Error(`jeu ${titre}: ${g.status()}`);
+  const gid = ((await g.json()) as { id: number }).id;
+  const put = await page.request.post(`/api/nights/${nightId}/games`, { data: { gameId: gid, added: true } });
+  if (!put.ok()) throw new Error(`pose ${titre}: ${put.status()}`);
+}
+
+async function creerPartie(a: import('@playwright/test').Page, pseudoInvite: string) {
+  // la liste des joueurs est rendue côté serveur : recharger pour voir l'invité
+  // inscrit entre-temps (marc s'est inscrit avant léa)
+  await a.reload();
+  await a.locator('.player-list label', { hasText: pseudoInvite }).locator('input').check();
+  const nightDone = a.waitForResponse((r) => r.url().endsWith('/api/nights') && r.request().method() === 'POST');
+  await a.getByRole('button', { name: 'Créer la partie' }).click();
+  const { nightId } = await (await nightDone).json() as { nightId: number };
+  return nightId;
+}
+
 test('valider : la phrase « xxx a validé sa sélection » apparaît chez les autres en direct', async ({ browser }) => {
   const s = Date.now().toString(36);
   const ctxA = await browser.newContext();
   const a = await ctxA.newPage();
   await register(a, `val-m-${s}`);
 
-  // Marc crée la partie avec Léa (inscrite avant lui → dans sa liste)
+  // Marc invite Léa (inscrite avant lui → dans sa liste)
   const ctxB = await browser.newContext();
   const b = await ctxB.newPage();
   await register(b, `val-l-${s}`);
-  await a.getByLabel(new RegExp(`val-l-${s}`)).check();
-  const nightDone = a.waitForResponse((r) => r.url().endsWith('/api/nights') && r.request().method() === 'POST');
-  await a.getByRole('button', { name: 'Créer la partie' }).click();
-  const { nightId } = await (await nightDone).json() as { nightId: number };
+  const nightId = await creerPartie(a, `val-l-${s}`);
+
+  // Marc pose une boîte : la ligne d'état « X/Y prêts » existe chez le créateur
+  await poserBoite(a, nightId, 'Le jeu de marc');
 
   // Les deux pages sont sur l'étagère, flux SSE connectés
   await expect(a.locator('body')).toHaveAttribute('data-sync', 'on', { timeout: 15_000 });
   await expect(b.locator('body')).toHaveAttribute('data-sync', 'on', { timeout: 15_000 });
+  await expect(a.locator('.cta-zone .etat-line')).toContainText('0/2 prêts');
 
-  // Léa valide DEPUIT SON TÉLÉPHONE (page b) : la phrase apparaît chez Marc sans recharger
+  // Léa valide DEPUIS SON TÉLÉPHONE (page b) : la phrase apparaît chez Marc sans recharger
   await b.getByRole('button', { name: 'Valider ma sélection' }).click();
   await expect(a.locator('.etats')).toContainText('a validé sa sélection', { timeout: 5_000 });
   await expect(a.locator('.etats')).toContainText(`val-l-${s}`);
@@ -43,13 +67,7 @@ test('valider : la phrase « xxx a validé sa sélection » apparaît chez les a
   await expect(b.locator('.pret-line')).toContainText('Ta sélection est validée');
 
   // Léa ajoute une boîte via l'API : sa validation saute, Marc le voit en direct
-  const form = new FormData();
-  form.set('title', 'Tardivement ajouté'); form.set('box_format', 'moyen');
-  const g = await b.request.post('/api/games', { form });
-  if (!g.ok()) throw new Error(`jeu léa: ${g.status()}`);
-  const gid = ((await g.json()) as { id: number }).id;
-  const put = await b.request.post(`/api/nights/${nightId}/games`, { data: { gameId: gid, added: true } });
-  if (!put.ok()) throw new Error(`pose: ${put.status()}`);
+  await poserBoite(b, nightId, 'Tardivement ajouté');
   await expect(a.locator('.etats')).toContainText("n'a pas encore validé", { timeout: 5_000 });
   await expect(a.locator('.cta-zone .etat-line')).toContainText('0/2 prêts');
   // Chez Léa : re-validation exigée
@@ -67,30 +85,20 @@ test('lancer : un appui quand tout le monde a validé, double-appui sinon', asyn
   const ctxB = await browser.newContext();
   const b = await ctxB.newPage();
   await register(b, `lan-l-${s}`);
-  await a.getByLabel(new RegExp(`lan-l-${s}`)).check();
-  const nightDone = a.waitForResponse((r) => r.url().endsWith('/api/nights') && r.request().method() === 'POST');
-  await a.getByRole('button', { name: 'Créer la partie' }).click();
-  const { nightId: nightId2 } = await (await nightDone).json() as { nightId: number };
-
-  // Marc pose une boîte (l'étagère ne doit pas être vide pour lancer)
-  const form = new FormData();
-  form.set('title', 'Le jeu du soir'); form.set('box_format', 'grand');
-  const g = await a.request.post('/api/games', { form });
-  if (!g.ok()) throw new Error(`jeu: ${g.status()}`);
-  const gid = ((await g.json()) as { id: number }).id;
-  const put = await a.request.post(`/api/nights/${nightId2}/games`, { data: { gameId: gid, added: true } });
-  if (!put.ok()) throw new Error(`pose: ${put.status()}`);
+  const nightId = await creerPartie(a, `lan-l-${s}`);
+  await poserBoite(a, nightId, 'Le jeu du soir');
 
   // Marc valide : 1/2 prêts — le bouton demande confirmation au premier appui
   await a.getByRole('button', { name: 'Valider ma sélection' }).click();
+  await expect(a.locator('.pret-line')).toContainText('Ta sélection est validée');
   const lancer = a.getByRole('button', { name: /Lancer le tirage · 1|Sûr \? Lancer/ });
   await lancer.click();
   await expect(a.getByRole('button', { name: 'Sûr ? Lancer' })).toBeVisible();
 
-  // Léa valide (API) : la ligne passe à « Tout le monde est prêt ! » en direct…
+  // Léa valide : la ligne passe à « Tout le monde est prêt ! » en direct…
   await b.getByRole('button', { name: 'Valider ma sélection' }).click();
   await expect(a.locator('.cta-zone .etat-line.pret')).toContainText('Tout le monde est prêt !', { timeout: 5_000 });
-  // …et le bouton revient à son libellé simple ; un SEUL appui lance
+  // …et le « Sûr ? » s'efface : un SEUL appui lance
   await expect(a.getByRole('button', { name: 'Lancer le tirage · 1' })).toBeVisible();
   await a.getByRole('button', { name: 'Lancer le tirage · 1' }).click();
   await expect(a).toHaveURL(/\/tirage\//);

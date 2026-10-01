@@ -26,11 +26,16 @@ export default function UserSync() {
         const reader = res.body.getReader();
         const decoder = new TextDecoder();
         document.body.dataset.sync = 'on';
+        router.refresh(); // (re)connexion : rattrape tout ce qui a changé pendant la coupure
         for (;;) {
           const { done, value } = await reader.read();
           if (done) break;
-          if (decoder.decode(value).includes('event: change')) {
+          const texte = decoder.decode(value);
+          if (texte.includes('event: change') || texte.includes(': battement')) {
+            // change = un joueur a bougé qqch ; battement = 30 s : l'app qui
+            // dormait (téléphone en veille) rattrape son retard au réveil.
             if (timer) continue; // regroupe les rafales d'événements
+            if (texte.includes(': battement') && document.visibilityState !== 'visible') continue;
             timer = setTimeout(() => { timer = null; router.refresh(); }, 250);
           }
         }

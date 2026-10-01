@@ -82,4 +82,18 @@ describe('validation de sélection', () => {
     const nightId = createNight(marc, [marc]);
     expect(() => validateSelection(nightId, zzz)).toThrow(/pas dans/);
   });
+  it('modifier la liste des joueurs préserve la validation de ceux qui restent', () => {
+    const marc = (registerUser('v-marc3', '1234') as { id: number }).id;
+    const lea = (registerUser('v-lea3', '1234') as { id: number }).id;
+    const nightId = createNight(marc, [marc, lea]);
+    validateSelection(nightId, lea);
+    setNightPlayers(nightId, [marc, lea]); // ré-enregistrement sans changement
+    expect(getNightPlayers(nightId).find((p) => p.id === lea)?.validated_at).not.toBeNull();
+    // un joueur qui arrive n'est PAS validé d'office
+    const thib = (registerUser('v-thib3', '1234') as { id: number }).id;
+    setNightPlayers(nightId, [marc, lea, thib]);
+    const joueurs = getNightPlayers(nightId);
+    expect(joueurs.find((p) => p.id === thib)?.validated_at).toBeNull();
+    expect(joueurs.find((p) => p.id === lea)?.validated_at).not.toBeNull(); // léa n'a pas bougé
+  });
 });

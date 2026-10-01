@@ -44,9 +44,15 @@ export function getNight(nightId: number): Night | null {
 }
 export function setNightPlayers(nightId: number, playerIds: number[]): void {
   const db = getDb();
+  // v3.0.0 : la validation de sélection de ceux qui restent ne saute pas —
+  // seul un joueur qui ARRIVE n'est pas validé (et devra se déclarer prêt).
+  const avant = db.prepare('SELECT user_id, validated_at FROM night_players WHERE night_id = ?')
+    .all(nightId) as { user_id: number; validated_at: string | null }[];
   db.prepare('DELETE FROM night_players WHERE night_id = ?').run(nightId);
-  const ins = db.prepare('INSERT OR IGNORE INTO night_players (night_id, user_id) VALUES (?, ?)');
-  for (const id of new Set(playerIds)) ins.run(nightId, id);
+  const ins = db.prepare('INSERT OR IGNORE INTO night_players (night_id, user_id, validated_at) VALUES (?, ?, ?)');
+  for (const id of new Set(playerIds)) {
+    ins.run(nightId, id, avant.find((r) => r.user_id === id)?.validated_at ?? null);
+  }
   notifyNight(nightId); // les joueurs — y compris le nouvel arrivé — voient la partie
 }
 export function getNightPlayers(nightId: number): UserLite[] {
