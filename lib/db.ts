@@ -92,6 +92,7 @@ export function getDb(): Database.Database {
     'ALTER TABLE users ADD COLUMN avatar_path TEXT',
     'ALTER TABLE users ADD COLUMN foyer_id INTEGER REFERENCES foyers(id)',
     'ALTER TABLE games ADD COLUMN foyer_id INTEGER REFERENCES foyers(id)',
+    'ALTER TABLE night_players ADD COLUMN validated_at TEXT',
   ]) {
     try { db.exec(stmt); } catch { /* colonne déjà présente */ }
   }

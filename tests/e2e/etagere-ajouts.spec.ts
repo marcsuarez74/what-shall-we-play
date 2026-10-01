@@ -164,7 +164,8 @@ test('retirer de la partie : depuis la fiche, l\'étagère redevient vide', asyn
   await page.locator('.shelf-block .box').first().click();
   await page.getByRole('button', { name: 'Retirer de la partie' }).click();
   await expect(page.locator('.empty-shelf')).toBeVisible();
-  await expect(page.locator('.chip.selcount')).toContainText('0');
+  // v3.0.0 : sans boîte, plus de lanceur — mais la validation reste possible
+  await expect(page.getByRole('button', { name: 'Valider ma sélection' })).toBeVisible();
 });
 
 test('étagère : spinner pendant le chargement des pochettes', async ({ browser }) => {
@@ -311,4 +312,57 @@ test('bibliothèque : recherche, filtres (dont Boîte) et compteur', async ({ pa
   // Reset : « Tout afficher »
   await page.getByRole('button', { name: 'Tout afficher' }).click();
   await expect(page.locator('.lib-card')).toHaveCount(3);
+});
+
+// v3.0.0 — repro du signal du 2026-10-01 : « l'ajout d'un joueur à une partie
+// ne lui fait pas voir les jeux présents sur l'étagère ». La joueuse ajoutée
+// ENSUITE (via modifier) doit voir la partie ET les jeux posés AVANT son arrivée.
+test('joueur ajouté ensuite via modifier : elle voit la partie et les jeux déjà posés', async ({ browser }) => {
+  const s = Date.now().toString(36);
+  // Léa s'inscrit et reste sur l'écran « nouvelle partie », flux connecté
+  const ctxB = await browser.newContext();
+  const b = await ctxB.newPage();
+  await b.goto('/register');
+  await b.getByLabel('Pseudo').fill(`mod-l-${s}`);
+  await b.getByLabel('Code secret').fill('1234');
+  const regB = b.waitForResponse((r) => r.url().endsWith('/api/auth/register'));
+  await b.getByRole('button', { name: 'Créer mon compte' }).click();
+  await regB;
+  await b.waitForURL('/etagere');
+  await expect(b.locator('.player-list')).toBeVisible();
+  await expect(b.locator('body')).toHaveAttribute('data-sync', 'on', { timeout: 15_000 });
+
+  // Marc crée une partie SANS elle, pose 2 jeux, PUIS l'ajoute via « modifier »
+  const ctxA = await browser.newContext();
+  const a = await ctxA.newPage();
+  await a.goto('/register');
+  await a.getByLabel('Pseudo').fill(`mod-m-${s}`);
+  await a.getByLabel('Code secret').fill('1234');
+  const regA = a.waitForResponse((r) => r.url().endsWith('/api/auth/register'));
+  await a.getByRole('button', { name: 'Créer mon compte' }).click();
+  await regA;
+  const nightDone = a.waitForResponse((r) => r.url().endsWith('/api/nights') && r.request().method() === 'POST');
+  await a.getByRole('button', { name: 'Créer la partie' }).click();
+  const { nightId } = await (await nightDone).json() as { nightId: number };
+  await putOnShelf(a, await newGame(a, 'Posé avant elle 1', 'grand'), nightId);
+  await putOnShelf(a, await newGame(a, 'Posé avant elle 2', 'petit'), nightId);
+
+  await a.reload(); // la liste des joueurs est rendue côté serveur : léa apparaît
+  await a.getByRole('button', { name: 'modifier' }).click();
+  await a.locator('.player-list label', { hasText: `mod-l-${s}` }).locator('input').check();
+  await a.getByRole('button', { name: 'Enregistrer' }).click();
+
+  // La page de Léa, restée ouverte, bascule toute seule : partie + les 2 jeux DÉJÀ posés
+  await expect(b.locator('.night-card')).toBeVisible({ timeout: 5_000 });
+  await expect(b.locator('.night-card')).toContainText('PARTIE EN COURS');
+  await expect(b.locator('.night-card')).toContainText(`mod-l-${s}`);
+  await expect(b.locator('.shelf-block .box')).toHaveCount(2);
+  await expect(b.getByRole('button', { name: '+ Ajouter d\'autres jeux' })).toBeVisible();
+
+  // Et une ouverture fraîche de son côté montre la même chose
+  await b.reload();
+  await expect(b.locator('.night-card')).toContainText('PARTIE EN COURS');
+  await expect(b.locator('.shelf-block .box')).toHaveCount(2);
+  await ctxA.close();
+  await ctxB.close();
 });

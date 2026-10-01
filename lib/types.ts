@@ -2,7 +2,7 @@ export type BoxFormat = 'mini' | 'petit' | 'moyen' | 'grand';
 
 export interface UserRow { id: number; pseudo: string; code_hash: string; created_at: string;
   sticker?: string | null; avatar_path?: string | null; }
-export interface UserLite { id: number; pseudo: string; sticker?: string | null; avatar_path?: string | null; }
+export interface UserLite { id: number; pseudo: string; sticker?: string | null; avatar_path?: string | null; validated_at?: string | null; }
 export interface Game {
   id: number; owner_id: number; foyer_id?: number | null; bgg_id: number | null; title: string;
   year: number | null; publisher: string | null; cover_url: string | null; cover_path: string | null;
