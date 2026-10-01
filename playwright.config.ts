@@ -3,7 +3,10 @@ import { defineConfig } from '@playwright/test';
 export default defineConfig({
   testDir: './tests/e2e',
   workers: 1, // les specs partagent un serveur dev et une base SQLite — l'exécution est sérialisée
-  use: { baseURL: 'http://localhost:3000' },
+  use: {
+    baseURL: 'http://localhost:3000',
+    trace: 'retain-on-failure', // diagnostic des rouges CI (artefacts uploadés)
+  },
   webServer: {
     command: 'npm run dev',
     url: 'http://localhost:3000',
