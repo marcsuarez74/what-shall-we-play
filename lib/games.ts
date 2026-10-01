@@ -29,11 +29,11 @@ export function validateGameInput(body: unknown): { ok: true; value: NewGame } |
   };
 }
 
-export function createGame(ownerId: number, g: NewGame, coverPath: string | null = null): number {
+export function createGame(ownerId: number, g: NewGame, coverPath: string | null = null, foyerId: number | null = null): number {
   const info = getDb().prepare(`
-    INSERT INTO games (owner_id, title, box_format, bgg_id, year, publisher, min_players, max_players, playtime_min, weight, bgg_rating, designer, artist, best_players, cover_path)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(
-    ownerId, g.title, g.box_format, g.bgg_id ?? null, g.year ?? null, g.publisher ?? null,
+    INSERT INTO games (owner_id, foyer_id, title, box_format, bgg_id, year, publisher, min_players, max_players, playtime_min, weight, bgg_rating, designer, artist, best_players, cover_path)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(
+    ownerId, foyerId, g.title, g.box_format, g.bgg_id ?? null, g.year ?? null, g.publisher ?? null,
     g.min_players ?? null, g.max_players ?? null, g.playtime_min ?? null,
     g.weight ?? null, g.bgg_rating ?? null, g.designer ?? null, g.artist ?? null, g.best_players ?? null, coverPath);
   return Number(info.lastInsertRowid);
@@ -46,17 +46,33 @@ export function getPickCounts(): Record<number, number> {
   return Object.fromEntries(rows.map((r) => [r.game_id, r.c]));
 }
 
-export function listMyGames(ownerId: number): Game[] {
-  return getDb().prepare('SELECT * FROM games WHERE owner_id = ? ORDER BY box_format, title').all(ownerId) as Game[];
+// La bibliothèque d'un utilisateur : celle de son foyer s'il en a un, sinon ses jeux perso.
+// Chaque ligne porte l'ajouteur (badge « apporté par » sur les cartes).
+export function listUserLibrary(userId: number): Game[] {
+  return getDb().prepare(`
+    SELECT g.*, u2.pseudo AS owner_pseudo, u2.sticker AS owner_sticker, u2.avatar_path AS owner_avatar_path
+    FROM games g
+    JOIN users u ON u.id = ?
+    LEFT JOIN users u2 ON u2.id = g.owner_id
+    WHERE (u.foyer_id IS NOT NULL AND g.foyer_id = u.foyer_id)
+       OR (u.foyer_id IS NULL AND g.owner_id = ? AND g.foyer_id IS NULL)
+    ORDER BY g.box_format, g.title`).all(userId, userId) as Game[];
 }
 
 export function getGame(id: number): Game | null {
   return (getDb().prepare('SELECT * FROM games WHERE id = ?').get(id) as Game | undefined) ?? null;
 }
 
-export function deleteGame(ownerId: number, id: number): { ok: true } | { error: string; status: number } {
+// Collection commune : un jeu du foyer peut être retiré par n'importe quel membre du foyer.
+export function deleteGame(userId: number, id: number): { ok: true } | { error: string; status: number } {
   const g = getGame(id);
-  if (!g || g.owner_id !== ownerId) return { error: 'Jeu introuvable', status: 404 };
+  if (!g) return { error: 'Jeu introuvable', status: 404 };
+  if (g.foyer_id != null) {
+    const me = getDb().prepare('SELECT foyer_id FROM users WHERE id = ?').get(userId) as { foyer_id: number | null } | undefined;
+    if (!me || me.foyer_id !== g.foyer_id) return { error: 'Jeu introuvable', status: 404 };
+  } else if (g.owner_id !== userId) {
+    return { error: 'Jeu introuvable', status: 404 };
+  }
   const picked = getDb().prepare('SELECT 1 FROM picks WHERE game_id = ? LIMIT 1').get(id);
   if (picked) return { error: 'Ce jeu a déjà été tiré lors d\'une soirée', status: 409 };
   getDb().prepare('DELETE FROM games WHERE id = ?').run(id);

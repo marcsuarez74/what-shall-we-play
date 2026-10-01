@@ -11,10 +11,14 @@ export { ALLOWED_STICKERS };
 export function getProfileStats(userId: number): { plays: number; nights: number; games: number } {
   const db = getDb();
   const one = (sql: string) => Number((db.prepare(sql).get(userId) as { n: number }).n);
+  // la bibliothèque du foyer si j'en ai un, sinon mes jeux perso
+  const games = Number((db.prepare(`SELECT COUNT(*) AS n FROM games g JOIN users u ON u.id = ?
+    WHERE (u.foyer_id IS NOT NULL AND g.foyer_id = u.foyer_id)
+       OR (u.foyer_id IS NULL AND g.owner_id = ? AND g.foyer_id IS NULL)`).get(userId, userId) as { n: number }).n);
   return {
     plays: one('SELECT COUNT(*) AS n FROM picks WHERE spinner_id = ?'),
     nights: one('SELECT COUNT(*) AS n FROM night_players WHERE user_id = ?'),
-    games: one('SELECT COUNT(*) AS n FROM games WHERE owner_id = ?'),
+    games,
   };
 }
 
@@ -42,6 +46,23 @@ export function deleteAccount(userId: number): { ok: true; removedGames: number 
   const files: string[] = [];
   const user = db.prepare('SELECT avatar_path FROM users WHERE id = ?').get(userId) as { avatar_path: string | null } | undefined;
   if (user?.avatar_path) files.push(coverPathOnDisk(user.avatar_path));
+
+  // Foyer : la collection commune survit à mon départ. Mes jeux du foyer sont
+  // réattribués à un autre membre (ou me suivent si je suis le dernier — et
+  // disparaissent alors avec le compte, comme mes jeux perso).
+  const me = db.prepare('SELECT foyer_id FROM users WHERE id = ?').get(userId) as { foyer_id: number | null } | undefined;
+  if (me?.foyer_id) {
+    const other = db.prepare('SELECT id FROM users WHERE foyer_id = ? AND id != ? ORDER BY id LIMIT 1')
+      .get(me.foyer_id, userId) as { id: number } | undefined;
+    if (other) {
+      db.prepare('UPDATE games SET owner_id = ? WHERE owner_id = ? AND foyer_id = ?').run(other.id, userId, me.foyer_id);
+    } else {
+      db.prepare('UPDATE games SET foyer_id = NULL WHERE owner_id = ? AND foyer_id = ?').run(userId, me.foyer_id);
+      db.prepare('DELETE FROM foyers WHERE id = ?').run(me.foyer_id);
+    }
+    db.prepare('UPDATE users SET foyer_id = NULL WHERE id = ?').run(userId);
+  }
+
   for (const c of db.prepare('SELECT cover_path FROM games WHERE owner_id = ?').all(userId) as { cover_path: string | null }[])
     if (c.cover_path) files.push(coverPathOnDisk(c.cover_path));
 

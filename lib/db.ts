@@ -55,6 +55,13 @@ CREATE TABLE IF NOT EXISTS bgg_cache (
   payload_json TEXT NOT NULL,
   fetched_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS foyers (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  invite_code TEXT NOT NULL UNIQUE,
+  created_by INTEGER NOT NULL REFERENCES users(id),
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
 `;
 
 let db: Database.Database | null = null;
@@ -74,6 +81,8 @@ export function getDb(): Database.Database {
     'ALTER TABLE nights ADD COLUMN ended_at TEXT',
     'ALTER TABLE users ADD COLUMN sticker TEXT',
     'ALTER TABLE users ADD COLUMN avatar_path TEXT',
+    'ALTER TABLE users ADD COLUMN foyer_id INTEGER REFERENCES foyers(id)',
+    'ALTER TABLE games ADD COLUMN foyer_id INTEGER REFERENCES foyers(id)',
   ]) {
     try { db.exec(stmt); } catch { /* colonne déjà présente */ }
   }
