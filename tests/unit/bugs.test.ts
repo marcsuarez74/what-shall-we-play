@@ -13,6 +13,11 @@ const input = (userId: number, pseudo: string) => ({
   uaBrut: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0)',
 });
 const issueOk = (n: number) => new Response(JSON.stringify({ number: n, html_url: `https://github.com/org/repo-test/issues/${n}` }), { status: 201 });
+const erreurDe = async (r: Promise<Awaited<ReturnType<typeof createBugReport>>>): Promise<{ error: string; status: number }> => {
+  const res = await r;
+  if (!('error' in res)) throw new Error(`attendu en erreur, reçu ok : ${JSON.stringify(res)}`);
+  return res;
+};
 
 describe('validerSignalement', () => {
   it('borne titre et description, type whitelisté', () => {
@@ -74,12 +79,12 @@ describe('createBugReport', () => {
   it('quota : 3 OK puis 429 — et les échecs ne consomment pas le quota', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => issueOk(1)));
     const lea = uid('bug-lea');
-    for (let i = 0; i < 3; i++) expect((await createBugReport(input(lea, 'bug-lea'))).ok).toBe(true);
-    expect((await createBugReport(input(lea, 'bug-lea'))).status).toBe(429);
+    for (let i = 0; i < 3; i++) expect(await createBugReport(input(lea, 'bug-lea'))).toMatchObject({ ok: true });
+    expect((await erreurDe(createBugReport(input(lea, 'bug-lea')))).status).toBe(429);
     // échec GitHub : pas d'insertion → le compte d'un autre joueur part de zéro
     const zoe = uid('bug-zoe');
     vi.stubGlobal('fetch', vi.fn(async () => new Response('{"message":"boom"}', { status: 500 })));
-    expect((await createBugReport(input(zoe, 'bug-zoe'))).status).toBe(502);
+    expect((await erreurDe(createBugReport(input(zoe, 'bug-zoe')))).status).toBe(502);
     expect((getDb().prepare('SELECT COUNT(*) AS t FROM bug_reports WHERE user_id = ?').get(zoe) as { t: number }).t).toBe(0);
   });
 
@@ -89,7 +94,6 @@ describe('createBugReport', () => {
     expect(r).toEqual({ error: 'Signalement indisponible pour le moment — réessaie plus tard', status: 503 });
     vi.stubEnv('GITHUB_BUG_TOKEN', 'jeton-test');
     vi.stubGlobal('fetch', vi.fn(async () => { throw new Error('réseau'); }));
-    const r2 = await createBugReport(input(uid('bug-off'), 'bug-off'));
-    expect(r2.status).toBe(502);
+    expect((await erreurDe(createBugReport(input(uid('bug-off'), 'bug-off')))).status).toBe(502);
   });
 });

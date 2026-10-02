@@ -41,7 +41,7 @@ describe('db', () => {
 
   it('v3.4 : table bug_reports prête (défaut de date locale, issue_url nullable)', () => {
     const db = getDb();
-    const tables = db.prepare(`SELECT name FROM sqlite_master WHERE type='table'`).all().map((r: { name: string }) => r.name);
+    const tables = (db.prepare(`SELECT name FROM sqlite_master WHERE type='table'`).all() as { name: string }[]).map((r) => r.name);
     expect(tables).toContain('bug_reports');
     const u = db.prepare(`INSERT INTO users (pseudo, code_hash) VALUES ('bug-user', 'x')`).run();
     const info = db.prepare(`INSERT INTO bug_reports (user_id, type, titre) VALUES (?, 'bug', 'test')`).run(u.lastInsertRowid);
