@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FORMATS, FORMAT_SCALE, FORMAT_LABEL, coverSrc } from '@/lib/formats';
 import type { Game, Night, UserLite } from '@/lib/types';
+import type { ShelfVote } from '@/lib/nights';
 import { filterShelf, type ShelfFilters } from '@/lib/filters';
 import GameSheet from './GameSheet';
 import NightPicker from './NightPicker';
@@ -19,8 +20,9 @@ import UserMenu from './UserMenu';
 // est prêt — un appui si tout le monde a validé, double-appui « Sûr ? » sinon.
 // v3.3 — la carte porte l'ÉTAT de la soirée (badge), et une fois la boîte
 // sortie (en_jeu) l'étagère gèle : bandeau vert, plus d'ajout ni de validation.
-export default function ShelfClient({ night, partyGame, players, games, myLibrary, users, plays, me }: {
+export default function ShelfClient({ night, partyGame, players, games, myLibrary, users, plays, votes, me }: {
   night: Night; partyGame: Game | null; players: UserLite[]; games: Game[]; myLibrary: Game[]; users: UserLite[]; plays: Record<number, number>;
+  votes: ShelfVote[];
   me: UserLite;
 }) {
   const router = useRouter();
@@ -37,6 +39,25 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
   const enJeu = night.status === 'en_jeu';
   // En jeu : LA boîte de la partie a quitté l'étagère — elle ne revient pas dans les rangées.
   const byFormat = useMemo(() => FORMATS.map((f) => ({ f, list: filtered.filter((g) => g.id !== partyGame?.id && g.box_format === f) })), [filtered, partyGame]);
+
+  // v3.5 — votes de la soirée, vus par boîte : total, c'est MON vote, prénoms.
+  const votesParJeu = useMemo(() => {
+    const m = new Map<number, { total: number; votants: string[]; moi: boolean }>();
+    for (const v of votes) {
+      const e = m.get(v.game_id) ?? { total: 0, votants: [], moi: false };
+      e.total += 1;
+      e.votants.push(v.pseudo.split(' ')[0]);
+      if (v.user_id === me.id) e.moi = true;
+      m.set(v.game_id, e);
+    }
+    return m;
+  }, [votes, me.id]);
+
+  // v3.5 — les boîtes qui portent au moins un vote : le pool « Votés 👍 ».
+  const jeuxVotes = useMemo(
+    () => games.filter((g) => (votesParJeu.get(g.id)?.total ?? 0) > 0),
+    [games, votesParJeu],
+  );
   const cover = partyGame ? coverSrc(partyGame) : null;
 
   const estCreateur = night.creator_id === me.id;
@@ -67,6 +88,14 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
   }
   // si tout le monde devient prêt entre-temps (sync live), le « Sûr ? » s'efface
   const surAffiche = sur && !tousPrets;
+
+  async function voter(gameId: number) {
+    await fetch(`/api/nights/${night.id}/votes`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ gameId }),
+    });
+    router.refresh();
+  }
 
   async function removeFromNight(g: Game) {
     await fetch(`/api/nights/${night.id}/games`, {
@@ -144,6 +173,18 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
                 {g.owner_pseudo && (
                   <OwnerBadge owner={{ pseudo: g.owner_pseudo, sticker: g.owner_sticker ?? null, avatar_path: g.owner_avatar_path ?? null }} />
                 )}
+                {!enJeu && (() => {
+                  const v = votesParJeu.get(g.id);
+                  return (
+                    <span className={'vote-badge' + (v?.moi ? ' vote-moi' : '')} role="button"
+                          aria-pressed={v?.moi ?? false}
+                          aria-label={`${v?.total ?? 0} vote${(v?.total ?? 0) > 1 ? 's' : ''} pour ${g.title}`}
+                          title={v?.votants.length ? v.votants.slice(0, 4).join(' · ') + (v.votants.length > 4 ? ' …' : '') : undefined}
+                          onClick={(e) => { e.stopPropagation(); voter(g.id); }}>
+                      <span className="emoji" aria-hidden="true">👍</span>{v?.total ?? 0}
+                    </span>
+                  );
+                })()}
               </button>
             ))}
           </div>
