@@ -1642,6 +1642,13 @@ input[type='file'] {
   margin-top: 8px;
 }
 
+/* v3.3 — verdict provisoire puis verrou : la boîte sortie démarre la partie */
+.pastille { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; border-radius: 999px; padding: 4px 11px; font-size: 11.5px; font-weight: 600; }
+.pastille.prov { border: 1px dashed var(--cuivre); color: var(--cuivre); }
+.pastille.ok { background: color-mix(in srgb, var(--vert) 16%, transparent); color: var(--vert); border: 1px solid color-mix(in srgb, var(--vert) 45%, transparent); }
+.tirage-stage.voilee .wheel { filter: grayscale(.5) brightness(.55); }
+.verrou-note { display: flex; align-items: center; justify-content: center; gap: 7px; font-size: 12px; color: var(--doux-clair); margin-top: 10px; }
+
 /* ---------- Soirées (historique) ---------- */
 .nights-list {
   list-style: none;

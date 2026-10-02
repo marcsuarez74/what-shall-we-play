@@ -1,6 +1,6 @@
 import { notFound, redirect } from 'next/navigation';
 import { getSessionUser } from '@/lib/session';
-import { getNight, userCanAccessNight, getShelfGames, getNightPlayers } from '@/lib/nights';
+import { getNight, userCanAccessNight, getShelfGames, getNightPlayers, getNightGame } from '@/lib/nights';
 import TirageClient from '@/components/TirageClient';
 
 export default async function TiragePage({ params, searchParams }: {
@@ -21,5 +21,7 @@ export default async function TiragePage({ params, searchParams }: {
   if (selected.length === 0) redirect('/etagere');
   // Annonce WhatsApp au verdict : qui attend quoi, et l'heure programmée éventuelle
   const waitingPseudos = getNightPlayers(night.id).map((p) => p.pseudo);
-  return <TirageClient nightId={night.id} games={selected} waitingPseudos={waitingPseudos} startTime={night.start_time ?? null} />;
+  return <TirageClient nightId={night.id} games={selected} waitingPseudos={waitingPseudos}
+                       startTime={night.start_time ?? null} status={night.status}
+                       partyGame={getNightGame(night.id)} />;
 }
