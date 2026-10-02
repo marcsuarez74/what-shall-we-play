@@ -67,6 +67,15 @@ CREATE TABLE IF NOT EXISTS bug_reports (
   capture_name TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now','localtime'))
 );
+-- v3.5.0 (vote sur l'étagère) : les envies du soir — UNIQUE par (soirée, jeu, joueur),
+-- révocable (la bascule est dans lib/nights). Une boîte retirée emporte ses votes.
+CREATE TABLE IF NOT EXISTS game_votes (
+  night_id INTEGER NOT NULL REFERENCES nights(id) ON DELETE CASCADE,
+  game_id INTEGER NOT NULL REFERENCES games(id) ON DELETE CASCADE,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TEXT NOT NULL DEFAULT (datetime('now','localtime')),
+  UNIQUE(night_id, game_id, user_id)
+);
 CREATE TABLE IF NOT EXISTS picks (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   night_id INTEGER NOT NULL REFERENCES nights(id) ON DELETE CASCADE,

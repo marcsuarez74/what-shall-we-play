@@ -50,4 +50,27 @@ describe('db', () => {
     expect(row.issue_url).toBeNull();
     expect(row.capture_name).toBeNull();
   });
+
+  it('v3.5 : table game_votes prête (UNIQUE par joueur, CASCADE, date locale)', () => {
+    const db = getDb();
+    const tables = db.prepare(`SELECT name FROM sqlite_master WHERE type='table'`).all().map((r: { name: string }) => r.name);
+    expect(tables).toContain('game_votes');
+    const marc = db.prepare(`INSERT INTO users (pseudo, code_hash) VALUES ('gv-marc', 'x')`).run();
+    const lea = db.prepare(`INSERT INTO users (pseudo, code_hash) VALUES ('gv-lea', 'x')`).run();
+    const night = db.prepare(`INSERT INTO nights (creator_id) VALUES (?)`).run(marc.lastInsertRowid);
+    const game = db.prepare(`INSERT INTO games (owner_id, title, box_format) VALUES (?, 'Azul', 'moyen')`).run(marc.lastInsertRowid);
+    db.prepare(`INSERT INTO game_votes (night_id, game_id, user_id) VALUES (?, ?, ?)`)
+      .run(night.lastInsertRowid, game.lastInsertRowid, marc.lastInsertRowid);
+    const row = db.prepare('SELECT created_at FROM game_votes WHERE night_id = ?').get(night.lastInsertRowid) as { created_at: string };
+    expect(row.created_at).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/);
+    // UNIQUE : le même joueur ne vote pas deux fois
+    expect(() => db.prepare(`INSERT INTO game_votes (night_id, game_id, user_id) VALUES (?, ?, ?)`)
+      .run(night.lastInsertRowid, game.lastInsertRowid, marc.lastInsertRowid)).toThrow();
+    // deux joueurs peuvent voter le même jeu
+    db.prepare(`INSERT INTO game_votes (night_id, game_id, user_id) VALUES (?, ?, ?)`)
+      .run(night.lastInsertRowid, game.lastInsertRowid, lea.lastInsertRowid);
+    // suppression de la partie → votes emportés (CASCADE)
+    db.prepare('DELETE FROM nights WHERE id = ?').run(night.lastInsertRowid);
+    expect(db.prepare('SELECT COUNT(*) AS t FROM game_votes').get() as { t: number }).toEqual({ t: 0 });
+  });
 });
