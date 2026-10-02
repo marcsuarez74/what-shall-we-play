@@ -48,6 +48,8 @@ export function setNightPlayers(nightId: number, playerIds: number[]): void {
   for (const id of new Set(playerIds)) {
     ins.run(nightId, id, avant.find((r) => r.user_id === id)?.validated_at ?? null);
   }
+  // v3.5 — un joueur retiré de la soirée emporte ses votes (idiome « pas de vote fantôme »)
+  getDb().prepare(`DELETE FROM game_votes WHERE night_id = ? AND user_id NOT IN (SELECT user_id FROM night_players WHERE night_id = ?)`).run(nightId, nightId);
   notifyNight(nightId); // les joueurs — y compris le nouvel arrivé — voient la partie
 }
 export function getNightPlayers(nightId: number): UserLite[] {
@@ -229,7 +231,7 @@ export function toggleNightVote(nightId: number, gameId: number, userId: number)
   const night = getNight(nightId);
   if (!night) return { error: 'Partie introuvable', status: 404 };
   if (!isNightParticipant(nightId, userId)) return { error: 'Seuls les joueurs de la partie peuvent voter', status: 403 };
-  if (night.status === 'en_jeu') return { error: 'La partie a commencé — les votes sont figés', status: 409 };
+  if (night.status !== 'creation') return { error: night.status === 'en_jeu' ? 'La partie a commencé — les votes sont figés' : 'La soirée est terminée — les votes sont figés', status: 409 };
   if (!isGameOnShelf(nightId, gameId)) return { error: "Ce jeu n'est pas sur l'étagère", status: 403 };
   if (db.prepare('SELECT 1 FROM game_votes WHERE night_id = ? AND game_id = ? AND user_id = ?').get(nightId, gameId, userId)) {
     db.prepare('DELETE FROM game_votes WHERE night_id = ? AND game_id = ? AND user_id = ?').run(nightId, gameId, userId);

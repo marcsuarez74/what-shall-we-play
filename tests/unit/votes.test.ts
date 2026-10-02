@@ -4,7 +4,7 @@ import { createGame } from '@/lib/games';
 import { getDb } from '@/lib/db';
 import {
   createNight, addNightGame, removeNightGame, toggleNightVote,
-  getShelfVotes, getNightPlayers, validateSelection,
+  getShelfVotes, getNightPlayers, validateSelection, setNightPlayers,
 } from '@/lib/nights';
 
 const uid = (p: string) => (registerUser(p, '1234') as { id: number }).id;
@@ -42,6 +42,11 @@ describe('toggleNightVote', () => {
     const r = toggleNightVote(n, g, marc);
     expect('error' in r && r.error).toBe('La partie a commencé — les votes sont figés');
     expect('error' in r && r.status).toBe(409);
+
+    getDb().prepare(`UPDATE nights SET status = 'termine' WHERE id = ?`).run(n);
+    const rt = toggleNightVote(n, g, marc);
+    expect('error' in rt && rt.error).toBe('La soirée est terminée — les votes sont figés');
+    expect('error' in rt && rt.status).toBe(409);
   });
 
   it('voter ne saute jamais la validation (contrairement à l ajout/retrait d une boîte)', () => {
@@ -66,5 +71,20 @@ describe('toggleNightVote', () => {
     toggleNightVote(n, g, lea);
     removeNightGame(n, g, marc);
     expect(getShelfVotes(n)).toEqual([]);
+  });
+
+  it('un joueur retiré de la soirée emporte ses votes (pas de vote fantôme)', () => {
+    const marc = uid('vt-pj'); const lea = uid('vt-pl');
+    const g = createGame(marc, { title: 'Cascadia', box_format: 'grand' });
+    const n = createNight(marc, [marc, lea]);
+    addNightGame(n, g, marc);
+    toggleNightVote(n, g, marc);
+    toggleNightVote(n, g, lea);
+
+    setNightPlayers(n, [marc]); // léa retirée de la soirée
+    expect(getShelfVotes(n)).toEqual([{ game_id: g, user_id: marc, pseudo: 'vt-pj' }]);
+
+    setNightPlayers(n, [marc, lea]); // léa re-ajoutée
+    expect(getShelfVotes(n)).toEqual([{ game_id: g, user_id: marc, pseudo: 'vt-pj' }]); // son vote ne revient pas
   });
 });
