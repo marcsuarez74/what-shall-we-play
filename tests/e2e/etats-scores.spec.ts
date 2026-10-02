@@ -94,7 +94,89 @@ test('carnet des scores : créateur seulement, médailles en direct, égalité, 
   await expect(page.locator('.carnet .med').nth(1)).toHaveText('👑');
   await page.getByRole('button', { name: '✓ Enregistrer et terminer' }).click();
   await page.waitForURL(`**/nights/${nid}`);
-  // RULING Task 7 : le podium (.pod1) est livré par Task 8 — ici on valide la
-  // redirection vers /nights/[id] et la page « Partie terminée » (placeholder T7).
-  await expect(page.getByText('Partie terminée')).toBeVisible();
+  // Task 8 livre le détail réel : la redirection du carnet affiche le podium
+  // (24/24 → égalité, les deux premiers partagent la carte 👑)
+  await expect(page.locator('.pod1')).toContainText('👑');
+  await expect(page.locator('.pod1')).toContainText('24');
+  await expect(page.locator('.badge-etat')).toContainText('Terminée');
+});
+
+test('historique : une carte par partie, détail avec podium et partage', async ({ page, browser }) => {
+  // RULING : le helper établi crée des soirées à 2 joueurs (le brief visait 3,
+  // scores 24/19/10) — on valide .pod1 + .pod23 (👑/🥈) et l'ABSENCE de .pod-autres.
+  const s = Date.now().toString(36);
+  const invite = await browser.newContext();
+  const p2 = await invite.newPage();
+  await p2.goto('/register');
+  await p2.getByLabel('Pseudo').fill(`his-${s}`);
+  await p2.getByLabel('Code secret').fill('1234');
+  await p2.getByRole('button', { name: 'Créer mon compte' }).click();
+  await p2.waitForURL('**/etagere');
+
+  await registerAndStart2Joueurs(page, `pod-${s}`, `his-${s}`);
+  const g = await newGame(page, 'Cascadia', 'moyen');
+  await putOnShelf(page, g);
+  const nid = await nightIdOf(page);
+  const draw = await page.request.post('/api/draw', { data: { nightId: nid, gameIds: [g] } });
+  const { gameId } = await draw.json();
+  await page.request.post(`/api/nights/${nid}/box-out`, { data: { gameId } });
+
+  // « Ce soir » : badge d'état + jeu de la partie — les picks cumulés ont disparu
+  await page.goto('/nights');
+  await expect(page.locator('[aria-label="Ce soir"] .badge-etat')).toContainText('En jeu');
+  await expect(page.locator('.jeu-partie')).toContainText('Cascadia');
+  await expect(page.locator('.night-picks')).toHaveCount(0);
+
+  // scores 24/19 puis fin de partie → redirection vers le détail
+  await page.goto(`/nights/${nid}/scores`);
+  const inputs = page.locator('.score-in');
+  await inputs.nth(0).fill('24');
+  await inputs.nth(1).fill('19');
+  await page.getByRole('button', { name: '✓ Enregistrer et terminer' }).click();
+  await page.waitForURL(`**/nights/${nid}`);
+
+  // détail : carte 👑 bordée cuivre, duo 🥈, pas de .pod-autres (2 joueurs), partage
+  await expect(page.locator('.pod1')).toContainText('👑');
+  await expect(page.locator('.pod1')).toContainText('24');
+  await expect(page.locator('.pod23')).toContainText('🥈');
+  await expect(page.locator('.pod23')).toContainText('19');
+  await expect(page.locator('.pod-autres')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: '💬 Partager les résultats' })).toBeVisible();
+
+  // l'historique porte UNE carte : gagnant 👑 · score, date, clic → détail
+  await page.goto('/nights');
+  const carte = page.locator('.hist-card').first();
+  await expect(carte).toContainText('Cascadia');
+  await expect(carte.locator('.gagnant')).toContainText('👑');
+  await expect(carte.locator('.gagnant')).toContainText('24 pts');
+  await carte.click();
+  await page.waitForURL('**/nights/*');
+  await expect(page.locator('.pod1')).toContainText('👑');
+  await expect(page.locator('.pod23')).toContainText('🥈');
+});
+
+test('soirée terminée sans scores : détail sobre, aucune erreur', async ({ page }) => {
+  await registerAndStart(page, `sans-${Date.now().toString(36)}`);
+  const g = await newGame(page, 'Harmonies', 'moyen');
+  await putOnShelf(page, g);
+  const nid = await nightIdOf(page);
+  const draw = await page.request.post('/api/draw', { data: { nightId: nid, gameIds: [g] } });
+  const { gameId } = await draw.json();
+  await page.request.post(`/api/nights/${nid}/box-out`, { data: { gameId } });
+
+  // « Terminer sans scores » depuis le carnet → la carte d'historique dit « pas de scores »
+  await page.goto(`/nights/${nid}/scores`);
+  await page.getByRole('button', { name: 'Terminer sans scores' }).click();
+  await page.waitForURL(`**/nights/${nid}`);
+  await page.goto('/nights');
+  const carte = page.locator('.hist-card').first();
+  await expect(carte).toContainText('Harmonies');
+  await expect(carte.locator('.gagnant')).toContainText('pas de scores');
+  await carte.click();
+  await page.waitForURL('**/nights/*');
+  // détail sobre : ni podium ni partage, le message des annales
+  await expect(page.locator('.sans-score')).toBeVisible();
+  await expect(page.locator('.sans-score')).toContainText('Pas de scores ce soir');
+  await expect(page.locator('.pod1')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: '💬 Partager les résultats' })).toHaveCount(0);
 });

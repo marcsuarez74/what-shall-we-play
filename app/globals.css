@@ -1682,25 +1682,6 @@ input[type='file'] {
   font-weight: 600;
 }
 
-.night-picks {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  border-top: 1px solid rgba(185, 165, 140, 0.25);
-  padding-top: 10px;
-  font-size: 15px;
-  color: var(--doux-clair);
-}
-
-.night-picks strong {
-  color: var(--creme);
-}
-
-.night-picks li::before {
-  content: '🎯 ';
-}
-
 .empty a {
   color: var(--cuivre);
   font-weight: 600;
@@ -1920,12 +1901,58 @@ input[type='file'] {
 .carnet-foot .btn-copper { min-height: 46px; font-size: 15px; }
 .egalite { font-size: 11.5px; color: var(--doux-clair); text-align: center; margin-top: 8px; min-height: 14px; }
 
-/* ⚠️ PLACEHOLDER Task 7 (fin-page) — remplacé par la mise en page du détail de
-   soirée (Task 8) ; ne sert qu'à la redirection du carnet. */
-.fin-page { text-align: center; }
-.fin-hero { display: grid; justify-items: center; gap: 10px; margin: 26px 0 16px; }
-.fin-check {
-  width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center;
-  font-size: 30px; font-weight: 800; color: #fff; background: var(--vert);
-  outline: 3px solid color-mix(in srgb, var(--vert) 40%, transparent); outline-offset: 4px;
+/* ---------- Détail de soirée (v3.3 — podium, partage, variante sans scores) ---------- */
+.retour-btn {
+  display: inline-block; margin-bottom: 12px;
+  color: var(--cuivre); font-size: 13.5px; font-weight: 600; text-decoration: none;
 }
+.dt-hero { display: flex; align-items: center; gap: 13px; margin-bottom: 14px; }
+.dt-cov { width: 64px; height: 64px; border-radius: 11px; overflow: hidden; flex: none; background: var(--surface); display: grid; place-items: center; }
+.dt-cov img { width: 100%; height: 100%; object-fit: cover; }
+.dt-cov .cover-placeholder { font-size: 26px; }
+.dt-hero h3 { font-family: var(--font-display), var(--font-ui), sans-serif; font-size: 20px; }
+.dt-hero p { font-size: 12px; color: var(--doux-clair); margin-top: 3px; }
+.pod-lb { font-size: 11px; font-weight: 700; letter-spacing: .14em; color: var(--doux-clair); margin: 14px 0 8px; }
+.pod1 {
+  display: flex; align-items: center; gap: 13px; padding: 14px 16px; border-radius: 16px;
+  border: 2px solid var(--cuivre); background: color-mix(in srgb, var(--cuivre) 10%, var(--surface));
+}
+.pod1 .avs { width: 46px; height: 46px; font-size: 22px; }
+.pod1 .pd { flex: 1; min-width: 0; }
+.pod1 .pd b { font-family: var(--font-display), var(--font-ui), sans-serif; font-size: 17px; display: block; }
+.pod1 .pd span { font-size: 12px; color: var(--doux-clair); }
+.pod1 .sc { font-family: var(--font-ui), system-ui, sans-serif; font-weight: 700; font-size: 25px; }
+.pod23 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+.pod23 .p { display: flex; align-items: center; gap: 9px; background: var(--surface); border-radius: 14px; padding: 11px 12px; }
+.pod23 .p .avs { width: 36px; height: 36px; font-size: 17px; }
+.pod23 .p b { font-size: 13px; display: block; }
+.pod23 .p span { font-size: 12px; color: var(--doux-clair); }
+.pod-autres {
+  margin-top: 10px; border-radius: 14px; overflow: hidden;
+  background: color-mix(in srgb, var(--surface) 60%, transparent);
+}
+.pod-autres div { display: flex; align-items: center; gap: 10px; padding: 10px 14px; font-size: 13px; border-bottom: 1px solid color-mix(in srgb, var(--doux) 22%, transparent); }
+.pod-autres div:last-child { border-bottom: none; }
+.pod-autres .avs { width: 30px; height: 30px; font-size: 14px; }
+.pod-autres .sc { margin-left: auto; color: var(--doux-clair); font-weight: 600; }
+.sans-score { text-align: center; color: var(--doux-clair); font-size: 13.5px; padding: 16px 0 6px; }
+.detail-page .partager-btn { margin-top: 16px; width: 100%; }
+
+/* ---------- Historique à cartes (v3.3 — une carte par partie) ---------- */
+.hist-liste { display: grid; gap: 10px; }
+.hist-card {
+  display: flex; align-items: center; gap: 12px; background: var(--surface);
+  border-radius: 15px; padding: 11px 13px; color: inherit; text-decoration: none; text-align: left;
+}
+.hist-card:active { transform: scale(.985); }
+.hist-card .hc { flex: 1; min-width: 0; }
+.hist-card .hc b { font-size: 14.5px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hist-card .hc span { font-size: 12px; color: var(--doux-clair); }
+.hist-card .hc .gagnant { color: var(--creme); }
+.hist-card .dt { text-align: right; flex: none; }
+.hist-card .dt span { display: block; font-size: 11px; color: var(--doux-clair); }
+.hist-card .dt .med-mini { font-size: 17px; }
+
+/* La carte « Ce soir » : le jeu de la partie remplace les picks cumulés (v3.3.0) */
+.jeu-partie { margin: 10px 0 0; padding-top: 10px; border-top: 1px solid rgba(185, 165, 140, 0.25); font-size: 13px; font-weight: 600; color: var(--cuivre); }
+.jeu-partie::before { content: '🎯 '; }

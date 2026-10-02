@@ -56,7 +56,9 @@ test('parcours complet : deux joueurs, sélection, tirage, historique', async ({
   await lancer.click(); // « Sûr ? Lancer » → on lance quand même
   await expect(a.getByText('LA ROUE A PARLÉ')).toBeVisible({ timeout: 10_000 });
 
-  // Historique
+  // Historique : la soirée du jour vit dans « Ce soir » (badge d'état) — les picks
+  // cumulés ne s'affichent plus (v3.3.0), le jeu de la partie attend la boîte sortie
   await a.goto('/nights');
-  await expect(a.getByText(/Terraforming Mars|Harmonies/)).toBeVisible();
+  await expect(a.locator('[aria-label="Ce soir"] .badge-etat')).toContainText('En préparation');
+  await expect(a.locator('[aria-label="Ce soir"] .chips')).toContainText(`parc-marc-${stamp}`);
 });

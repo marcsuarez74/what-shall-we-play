@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { getSessionUser } from '@/lib/session';
-import { getActiveNight, getPlannedNights, getMyNights, getNightPlayers, getNightPicks } from '@/lib/nights';
+import { getActiveNight, getPlannedNights, getHistoryCards, getNightPlayers, getNightGame } from '@/lib/nights';
+import { medaille } from '@/lib/ranks';
 import { getDb } from '@/lib/db';
 import type { UserLite } from '@/lib/types';
 import PlayerChip from '@/components/PlayerChip';
@@ -26,22 +27,11 @@ export default async function Page() {
   if (!user) redirect('/login');
   const active = getActiveNight(user.id);
   const planned = getPlannedNights(user.id);
-  // Historique : parties passées uniquement (la nuit du jour vit dans « Ce soir »)
-  const today = new Date().toLocaleDateString('sv-SE');
-  const history = getMyNights(user.id).filter((n) => n.played_at <= today && (!active || n.id !== active.id));
+  // Historique : une carte par partie terminée (gagnant 👑 · score, date) → détail.
+  const cartes = getHistoryCards(user.id);
+  // Le jeu de la partie (boîte sortie) — les picks cumulés ne s'affichent plus (v3.3.0).
+  const activeGame = active?.game_id ? getNightGame(active.id) : null;
   const users = getDb().prepare('SELECT id, pseudo, sticker, avatar_path FROM users ORDER BY pseudo COLLATE NOCASE').all() as UserLite[];
-
-  const Picks = ({ nightId }: { nightId: number }) => {
-    const picks = getNightPicks(nightId);
-    if (picks.length === 0) return null;
-    return (
-      <ul className="night-picks">
-        {picks.map((p) => (
-          <li key={p.id}><strong>{p.title}</strong> — tiré par {p.pseudo}</li>
-        ))}
-      </ul>
-    );
-  };
 
   return (
     <main className="page">
@@ -56,13 +46,15 @@ export default async function Page() {
           <ul className="nights-list">
             <li className="night-card live">
               <div className="night-card-head">
-                <span className="night-label">PARTIE EN COURS</span>
+                {active.status === 'en_jeu'
+                  ? <span className="badge-etat b-enjeu"><span className="pt" />En jeu</span>
+                  : <span className="badge-etat b-prep"><span className="pt" />En préparation</span>}
                 {active.creator_id === user.id && <TerminerNight nightId={active.id} status={active.status} />}
               </div>
               <div className="chips">
                 {getNightPlayers(active.id).map((p) => <PlayerChip key={p.id} u={p} />)}
               </div>
-              <Picks nightId={active.id} />
+              {activeGame && <p className="jeu-partie">🎯 {activeGame.title} — jeu de la partie</p>}
             </li>
           </ul>
         ) : (
@@ -113,28 +105,16 @@ export default async function Page() {
 
       <section className="qg-section" aria-label="Historique">
         <h2>Historique</h2>
-        {history.length === 0 ? (
-          <p className="empty">Aucune partie passée — les tirages terminés atterriront ici.</p>
-        ) : (
-          <ul className="hist-list">
-            {history.map((n) => {
-              const picks = getNightPicks(n.id);
-              return (
-                <li key={n.id} className="hist-row">
-                  <span className="hist-date">{dateFormat.format(new Date(`${n.played_at}T12:00:00`))}</span>
-                  <div className="hist-players">
-                    {getNightPlayers(n.id).map((p) => <PlayerChip key={p.id} u={p} />)}
-                  </div>
-                  {picks.length > 0 && (
-                    <span className="hist-picks">
-                      {picks.map((p) => p.title).join(', ')}
-                    </span>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        )}
+        <div className="hist-liste">
+          {cartes.map((n) => (
+            <a key={n.id} className="hist-card" href={`/nights/${n.id}`}>
+              <span className="hc"><b>{n.game_title ?? 'Soirée de jeux'}</b>
+                <span className="gagnant">{n.gagnant_pseudo ? `👑 ${n.gagnant_pseudo} · ${n.gagnant_score} pts` : 'pas de scores'}</span></span>
+              <span className="dt"><span className="med-mini">{medaille(1)}</span><span>{dateFormat.format(new Date(`${n.played_at}T12:00:00`))}</span></span>
+            </a>
+          ))}
+          {cartes.length === 0 && <p className="hint">Aucune partie terminée — tout est devant vous.</p>}
+        </div>
       </section>
     </main>
   );
