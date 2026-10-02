@@ -95,8 +95,11 @@ async function setupTirage(page: import('@playwright/test').Page, s: string) {
   await page.getByRole('button', { name: 'Valider ma sélection' }).click();
   const lancer = page.getByRole('button', { name: /Lancer · 1|Sûr \? Lancer/ });
   await lancer.click(); // 1/2 prêts → demande de confirmation
+  // Flake CI (run pull_request du 2026-10-02) : le 2ᵉ clic partait avant le
+  // re-render « Sûr ? » — on attend l'état armé au lieu de cliquer à l'aveugle.
+  await expect(lancer).toHaveAccessibleName(/Sûr \? Lancer/);
   await lancer.click(); // « Sûr ? Lancer » → on lance quand même
-  await expect(page.getByText('LA ROUE A PARLÉ')).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByText('LA ROUE A PARLÉ')).toBeVisible({ timeout: 20_000 });
 }
 
 test('verdict : « Annoncer sur WhatsApp » partage le bon message (partage natif)', async ({ page }) => {
