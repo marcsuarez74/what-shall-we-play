@@ -52,7 +52,7 @@ describe('soirées programmées', () => {
     const marc = uid('p-fin');
     const n = createNight(marc, [marc]);
     expect(getActiveNight(marc)?.id).toBe(n);
-    endNight(n);
+    endNight(n, marc);
     expect(getActiveNight(marc)).toBeNull(); // plus de soirée en cours
     expect(getMyNights(marc).map((x) => x.id)).toContain(n); // l historique conserve la nuit
     expect(getNight(n)?.ended_at).not.toBeNull();

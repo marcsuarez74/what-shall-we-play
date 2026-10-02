@@ -6,14 +6,9 @@ export function getActiveNight(userId: number): Night | null {
   return (getDb().prepare(`
     SELECT n.* FROM nights n
     WHERE n.played_at = date('now','localtime')
-      AND n.ended_at IS NULL
+      AND n.status != 'termine'
       AND (n.creator_id = ? OR EXISTS (SELECT 1 FROM night_players np WHERE np.night_id = n.id AND np.user_id = ?))
     ORDER BY n.id DESC LIMIT 1`).get(userId, userId) as Night | undefined) ?? null;
-}
-
-// Terminer la partie : elle quitte l'état actif, l'historique la conserve.
-export function endNight(nightId: number): void {
-  getDb().prepare("UPDATE nights SET ended_at = datetime('now','localtime') WHERE id = ?").run(nightId);
 }
 
 // Parties à venir (créateur OU participant), la plus proche d'abord.
@@ -83,6 +78,90 @@ export function getMyNights(userId: number): Night[] {
        OR EXISTS (SELECT 1 FROM night_players np WHERE np.night_id = n.id AND np.user_id = ?)
     ORDER BY n.played_at DESC, n.id DESC`)
     .all(userId, userId) as Night[];
+}
+export type NightStateError = { error: string; status: number };
+
+// La boîte sort : LE vrai début de la partie. N'importe quel joueur de la soirée
+// peut la sortir (c'est physique : celui qui va chercher la boîte). Le jeu est
+// alors verrouillé — plus de relance, plus d'ajout/retrait sur l'étagère.
+export function boxOutNight(nightId: number, userId: number, gameId: number): { ok: true } | NightStateError {
+  const night = getNight(nightId);
+  if (!night) return { error: 'Soirée introuvable', status: 404 };
+  if (!userCanAccessNight(userId, nightId)) return { error: 'Seuls les joueurs de la soirée peuvent sortir la boîte', status: 403 };
+  if (night.status === 'en_jeu') return { error: 'La boîte est déjà sortie', status: 409 };
+  if (night.status === 'termine') return { error: 'Cette partie est terminée', status: 409 };
+  if (!getShelfGames(nightId).some((g) => g.id === gameId)) return { error: "Ce jeu n'est pas sur l'étagère", status: 400 };
+  getDb().prepare(`UPDATE nights SET game_id = ?, status = 'en_jeu' WHERE id = ?`).run(gameId, nightId);
+  notifyNight(nightId);
+  return { ok: true };
+}
+
+// Le tirage n'existe qu'avant la sortie de boîte.
+export function drawAllowed(nightId: number): { ok: true } | NightStateError {
+  const night = getNight(nightId);
+  if (!night) return { error: 'Soirée introuvable', status: 404 };
+  if (night.status === 'en_jeu') return { error: 'La boîte est sortie — le jeu est verrouillé', status: 409 };
+  if (night.status === 'termine') return { error: 'Cette partie est terminée', status: 409 };
+  return { ok: true };
+}
+
+// Terminer : créateur seulement. Scores optionnels { [userId]: nombre } — un seul
+// appel atomique (insertion + état) : rien ne se semi-enregistre. Depuis
+// creation = abandon (sans scores). Double end refusé.
+export function endNight(nightId: number, userId: number, scores?: Record<string, number>): { ok: true } | NightStateError {
+  const night = getNight(nightId);
+  if (!night) return { error: 'Soirée introuvable', status: 404 };
+  if (night.creator_id !== userId) return { error: 'Seul le créateur peut terminer la soirée', status: 403 };
+  if (night.status === 'termine') return { error: 'La partie est déjà terminée', status: 409 };
+  const db = getDb();
+  const joueurs = new Set((db.prepare('SELECT user_id FROM night_players WHERE night_id = ?').all(nightId) as { user_id: number }[]).map((r) => r.user_id));
+  const lignes: [number, number][] = [];
+  if (scores) {
+    for (const [k, v] of Object.entries(scores)) {
+      const uid = Number(k);
+      if (!joueurs.has(uid) || !Number.isFinite(v)) return { error: 'Score invalide', status: 400 };
+      lignes.push([uid, v]);
+    }
+  }
+  db.transaction(() => {
+    const ins = db.prepare('INSERT OR REPLACE INTO night_scores (night_id, user_id, score) VALUES (?, ?, ?)');
+    for (const [uid, v] of lignes) ins.run(nightId, uid, v);
+    db.prepare(`UPDATE nights SET status = 'termine', ended_at = datetime('now','localtime') WHERE id = ?`).run(nightId);
+  })();
+  notifyNight(nightId);
+  return { ok: true };
+}
+
+// LA boîte de la partie (une seule, jamais la liste des relances).
+export function getNightGame(nightId: number): Game | null {
+  const night = getNight(nightId);
+  if (!night?.game_id) return null;
+  return (getDb().prepare('SELECT * FROM games WHERE id = ?').get(night.game_id) as Game | undefined) ?? null;
+}
+export type NightScoreRow = { user_id: number; pseudo: string; sticker: string | null; avatar_path: string | null; score: number | null };
+export function getNightScores(nightId: number): NightScoreRow[] {
+  return getDb().prepare(`
+    SELECT ns.user_id, u.pseudo, u.sticker, u.avatar_path, ns.score
+    FROM night_scores ns JOIN users u ON u.id = ns.user_id
+    WHERE ns.night_id = ?`).all(nightId) as NightScoreRow[];
+}
+export type NightCard = Night & { game_title: string | null; game_cover_path: string | null; game_cover_url: string | null; gagnant_pseudo: string | null; gagnant_score: number | null };
+export function getHistoryCards(userId: number): NightCard[] {
+  return getDb().prepare(`
+    SELECT n.*, g.title AS game_title, g.cover_path AS game_cover_path, g.cover_url AS game_cover_url,
+      (SELECT u.pseudo FROM night_scores ns JOIN users u ON u.id = ns.user_id
+        WHERE ns.night_id = n.id AND ns.score IS NOT NULL ORDER BY ns.score DESC, u.pseudo LIMIT 1) AS gagnant_pseudo,
+      (SELECT ns.score FROM night_scores ns WHERE ns.night_id = n.id AND ns.score IS NOT NULL ORDER BY ns.score DESC LIMIT 1) AS gagnant_score
+    FROM nights n LEFT JOIN games g ON g.id = n.game_id
+    WHERE n.status = 'termine' AND (n.creator_id = ? OR EXISTS (SELECT 1 FROM night_players np WHERE np.night_id = n.id AND np.user_id = ?))
+    ORDER BY n.played_at DESC, n.id DESC`).all(userId, userId) as NightCard[];
+}
+export function getTodayTermineeNight(userId: number): (Night & { game_title: string | null }) | null {
+  return (getDb().prepare(`
+    SELECT n.*, g.title AS game_title FROM nights n LEFT JOIN games g ON g.id = n.game_id
+    WHERE n.played_at = date('now','localtime') AND n.status = 'termine'
+      AND (n.creator_id = ? OR EXISTS (SELECT 1 FROM night_players np WHERE np.night_id = n.id AND np.user_id = ?))
+    ORDER BY n.id DESC LIMIT 1`).get(userId, userId) as (Night & { game_title: string | null }) | undefined) ?? null;
 }
 export type ShelfGame = Game & {
   owner_pseudo: string; owner_sticker: string | null; owner_avatar_path: string | null;

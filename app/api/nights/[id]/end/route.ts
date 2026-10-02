@@ -11,6 +11,6 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
   if (night.creator_id !== user.id) {
     return NextResponse.json({ error: 'Seul le créateur peut terminer la soirée' }, { status: 403 });
   }
-  endNight(night.id);
+  endNight(night.id, user.id);
   return NextResponse.json({ ok: true });
 }
