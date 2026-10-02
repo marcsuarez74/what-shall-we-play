@@ -54,7 +54,7 @@ Erreurs mappées : token absent → **503** « Signalement indisponible pour le 
 | Champ | Source | Exemple |
 |---|---|---|
 | Version de l'app | `pkg.version` (import comme UserMenu) | `v3.4.0` |
-| Page d'origine | `usePathname()` | `/tirage/12` |
+| Page d'origine | le menu passe la page courante en `?depuis=<path>` (un `usePathname()` dans `/bugs` donnerait `/bugs`) ; défaut `/bugs` | `/tirage/12` |
 | Appareil | `navigator.userAgentData.getHighEntropyValues(['model','platform','platformVersion'])` si dispo (Android = modèle exact), sinon parse du User-Agent | `SM-S918B · Android 15` / `iPhone · iOS 18.0` |
 | Navigateur | brands de `userAgentData`, sinon parse UA | `Chrome 130` / `Safari 18` |
 | Écran | `screen.width × height` × `devicePixelRatio` | `390 × 844 @3x` |
