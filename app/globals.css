@@ -10,6 +10,7 @@
 :root {
   --noyer: #2A1F17;        /* fond */
   --surface: #3A2B1F;      /* cartes, feuilles */
+  --surface-plus: #46352a; /* surface surélevée (segment actif du pool) */
   --creme: #F3E9DC;        /* texte */
   --cuivre: #C96F3B;       /* action */
   --vert: #3E9B6E;         /* validation */
