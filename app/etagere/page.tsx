@@ -1,9 +1,10 @@
 import { redirect } from 'next/navigation';
 import { getSessionUser } from '@/lib/session';
-import { getActiveNight, getNightPlayers, getShelfGames } from '@/lib/nights';
+import { getActiveNight, getNightPlayers, getShelfGames, getNightGame, getTodayTermineeNight } from '@/lib/nights';
 import { getPickCounts, listUserLibrary } from '@/lib/games';
 import NightPicker from '@/components/NightPicker';
 import ShelfClient from '@/components/ShelfClient';
+import TermineeCard from '@/components/TermineeCard';
 import UserMenu from '@/components/UserMenu';
 import UserSync from '@/components/UserSync';
 import { getDb } from '@/lib/db';
@@ -16,18 +17,21 @@ export default async function Page() {
   const night = getActiveNight(user.id);
   if (!night) {
     // Pas de partie en cours : on choisit les joueurs présents (créateur pré-coché).
+    // Si la soirée du jour est terminée, on l'affiche au-dessus du picker.
+    const terminee = getTodayTermineeNight(user.id);
     return <main className="page">
       <UserSync />
       <div className="page-head">
         <h1>L&apos;étagère</h1>
         <UserMenu me={user} />
       </div>
+      {terminee && <TermineeCard nightId={terminee.id} gameTitle={terminee.game_title} />}
       <NightPicker users={users} prechecked={[user.id]} />
     </main>;
   }
   return <main className="page">
     <UserSync />
-    <ShelfClient night={night} players={getNightPlayers(night.id)} games={getShelfGames(night.id)}
+    <ShelfClient night={night} partyGame={getNightGame(night.id)} players={getNightPlayers(night.id)} games={getShelfGames(night.id)}
                  myLibrary={listUserLibrary(user.id)} users={users}
                  plays={getPickCounts()} me={{ id: user.id, pseudo: user.pseudo, sticker: user.sticker, avatar_path: user.avatar_path }} />
   </main>;

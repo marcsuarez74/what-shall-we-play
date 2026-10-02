@@ -129,7 +129,7 @@ test('ajouter un joueur : sa page ouverte bascule sur la partie en cours (sync)'
 
   // La page de Léa, restée sur « nouvelle partie », bascule TOUTE SEULE
   await expect(b.locator('.night-card')).toBeVisible({ timeout: 5000 });
-  await expect(b.locator('.night-card')).toContainText('PARTIE EN COURS');
+  await expect(b.locator('.night-card')).toContainText('En préparation'); // v3.3 : badge d'état
   await expect(b.locator('.night-card')).toContainText(`add-l-${s}`);
 
   // Marc pose un jeu : Léa le voit apparaître aussi, sans recharger
@@ -354,14 +354,14 @@ test('joueur ajouté ensuite via modifier : elle voit la partie et les jeux déj
 
   // La page de Léa, restée ouverte, bascule toute seule : partie + les 2 jeux DÉJÀ posés
   await expect(b.locator('.night-card')).toBeVisible({ timeout: 5_000 });
-  await expect(b.locator('.night-card')).toContainText('PARTIE EN COURS');
+  await expect(b.locator('.night-card')).toContainText('En préparation'); // v3.3 : badge d'état
   await expect(b.locator('.night-card')).toContainText(`mod-l-${s}`);
   await expect(b.locator('.shelf-block .box')).toHaveCount(2);
   await expect(b.getByRole('button', { name: '+ Ajouter d\'autres jeux' })).toBeVisible();
 
   // Et une ouverture fraîche de son côté montre la même chose
   await b.reload();
-  await expect(b.locator('.night-card')).toContainText('PARTIE EN COURS');
+  await expect(b.locator('.night-card')).toContainText('En préparation'); // v3.3 : badge d'état
   await expect(b.locator('.shelf-block .box')).toHaveCount(2);
   await ctxA.close();
   await ctxB.close();
