@@ -15,7 +15,7 @@ export async function POST(req: Request) {
   const champ = (k: string) => { const v = form.get(k); return typeof v === 'string' ? v : ''; };
 
   let device: Record<string, unknown> = {};
-  try { device = JSON.parse(champ('device')); } catch { /* bloc technique absent : le corps reste correct */ }
+  try { device = JSON.parse(champ('device')) ?? {}; } catch { /* bloc technique absent : le corps reste correct */ }
   const d = (k: string) => (typeof device[k] === 'string' && (device[k] as string).length <= 120 ? (device[k] as string) : '');
 
   let captureName: string | null = null;
