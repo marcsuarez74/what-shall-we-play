@@ -103,7 +103,7 @@ test('pool : segmenté seulement avec des votes, Votés → Lancer · M, tirage 
   // B vote pour Wingspan : chez A, le segmenté remplace la pill (live)
   await b.request.post(`/api/nights/${nightId}/votes`, { data: { gameId: g2 } });
   await expect(a.locator('.choix-pool')).toBeVisible({ timeout: 5_000 });
-  await expect(a.locator('.choix-pool button.actif')).toContainText('Tous les jeux'); // défaut = tous
+  await expect(a.locator('.choix-pool button.actif')).toContainText('Tous'); // défaut = tous
   await expect(a.getByRole('button', { name: 'Lancer · 2' })).toBeVisible();
 
   // « Votés 👍 » → le bouton compte les votés
@@ -163,8 +163,7 @@ test('ajout tardif : la validation saute, le segmenté disparaît, le fantôme c
   await expect(a.getByRole('button', { name: 'Lancer · 2' })).toBeVisible();
 });
 
-test('gelé en jeu : plus de badge vote une fois la boîte sortie', async ({ browser }) => {
-  const s = Date.now().toString(36);
+test('gelé en jeu : plus de badge vote une fois la boîte sortie', async ({ browser }) => {  const s = Date.now().toString(36);
   const page = await browser.newContext().then((c) => c.newPage());
   await register(page, `vg-${s}`);
   const nightId = await creerPartieSolo(page);
@@ -184,4 +183,45 @@ test('gelé en jeu : plus de badge vote une fois la boîte sortie', async ({ bro
   await page.goto('/etagere');
   await expect(page.locator('.bandeau.v')).toContainText('est sortie de l');
   await expect(page.locator('.vote-badge')).toHaveCount(0);
+});
+
+test('issue #31 : le segmenté du pool tient dans la rangée CTA, le bouton Lancer reste compact', async ({ page }) => {
+  test.setTimeout(60_000);
+  await register(page, `vc-${Date.now().toString(36)}`);
+  const nightDone = page.waitForResponse((r) => r.url().endsWith('/api/nights') && r.request().method() === 'POST');
+  await page.getByRole('button', { name: 'Créer la partie' }).click();
+  const { nightId } = await (await nightDone).json() as { nightId: number };
+
+  for (const t of ['Azul', 'Wingspan', 'Cascadia']) {
+    const gid = await newGame(page, t, 'moyen');
+    await putOnShelf(page, gid, nightId);
+  }
+  await page.goto('/etagere');
+  const gid0 = ((await (await page.request.get('/api/games')).json()) as { games: { id: number }[] }).games[0].id;
+  await page.request.post(`/api/nights/${nightId}/votes`, { data: { gameId: gid0 } });
+  await page.getByRole('button', { name: 'Valider ma sélection' }).click();
+  await page.locator('.choix-pool').waitFor();
+
+  // aux deux largeurs du rapport (Galaxy S22 Ultra 412px) et du pire cas (360px) :
+  // ni la rangée CTA ni le segmenté ne débordent, et le Lancer reste compact
+  for (const largeur of [412, 360]) {
+    await page.setViewportSize({ width: largeur, height: 883 });
+    await page.waitForTimeout(200);
+    const m = await page.evaluate(() => {
+      const row = document.querySelector('.cta-row')!;
+      const pool = document.querySelector('.choix-pool')!;
+      const btn = document.querySelector('.cta-row .btn-copper')!;
+      const cellules = [...document.querySelectorAll('.choix-pool button')];
+      return {
+        rowDeborde: row.scrollWidth > row.clientWidth,
+        poolDeborde: pool.scrollWidth > pool.clientWidth,
+        cellulesDebordent: cellules.some((b) => b.scrollWidth > b.clientWidth + 1),
+        btnLargeur: Math.round(btn.getBoundingClientRect().width),
+      };
+    });
+    expect(m.rowDeborde, `cta-row déborde à ${largeur}px`).toBe(false);
+    expect(m.poolDeborde, `choix-pool déborde à ${largeur}px`).toBe(false);
+    expect(m.cellulesDebordent, `cellules débordent à ${largeur}px`).toBe(false);
+    expect(m.btnLargeur, `Lancer trop large à ${largeur}px`).toBeLessThanOrEqual(150);
+  }
 });

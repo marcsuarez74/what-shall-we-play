@@ -216,7 +216,7 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
               {estCreateur && jeuxVotes.length > 0 ? (
                 <div className="choix-pool" role="radiogroup" aria-label="Pool du tirage">
                   <button type="button" className={poolActif === 'tous' ? 'actif' : ''} onClick={() => setPool('tous')}>
-                    Tous les jeux<span className="n">{games.length}</span>
+                    Tous<span className="n">{games.length}</span>
                   </button>
                   <button type="button" className={poolActif === 'votes' ? 'actif' : ''} onClick={() => setPool('votes')}>
                     Votés 👍<span className="n">{jeuxVotes.length}</span>
