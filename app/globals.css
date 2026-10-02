@@ -1952,6 +1952,8 @@ input[type='file'] {
 .hist-card .dt { text-align: right; flex: none; }
 .hist-card .dt span { display: block; font-size: 11px; color: var(--doux-clair); }
 .hist-card .dt .med-mini { font-size: 17px; }
+.hist-card .hist-cov { width: 44px; height: 44px; border-radius: 8px; overflow: hidden; flex: 0 0 auto; background: var(--surface); display: grid; place-items: center; font-size: 22px; }
+.hist-card .hist-cov img { width: 100%; height: 100%; object-fit: cover; }
 
 /* La carte « Ce soir » : le jeu de la partie remplace les picks cumulés (v3.3.0) */
 .jeu-partie { margin: 10px 0 0; padding-top: 10px; border-top: 1px solid rgba(185, 165, 140, 0.25); font-size: 13px; font-weight: 600; color: var(--cuivre); }

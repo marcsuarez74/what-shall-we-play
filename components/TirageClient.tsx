@@ -11,13 +11,14 @@ const fmt = (n: number) => n.toLocaleString('fr-FR', { maximumFractionDigits: 1 
 const SPIN_MS = 3600;      // verdict après l'animation (transition 3,5 s)
 const REDUCED_MS = 500;    // prefers-reduced-motion : transition 0,4 s
 
-export default function TirageClient({ nightId, games, waitingPseudos, startTime, status, partyGame }: {
+export default function TirageClient({ nightId, games, waitingPseudos, startTime, status, partyGame, estCreateur }: {
   nightId: number;
   games: Game[];
   waitingPseudos: string[];
   startTime: string | null;
   status: Night['status'];
   partyGame: Game | null;
+  estCreateur: boolean;
 }) {
   type Phase = 'spin' | 'verdict' | 'enjeu' | 'error';
   const [phase, setPhase] = useState<Phase>(status === 'en_jeu' && partyGame ? 'enjeu' : 'spin');
@@ -51,7 +52,7 @@ export default function TirageClient({ nightId, games, waitingPseudos, startTime
       setRotation((cur) => cur + ((((target - cur) % 360) + 360) % 360) + 5 * 360);
       const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       timer.current = setTimeout(() => {
-        setPhase('verdict');
+        setPhase((p) => (p === 'spin' ? 'verdict' : p)); // la boîte peut sortir pendant le spin (sync live)
         navigator.vibrate?.(80);
       }, reduced ? REDUCED_MS : SPIN_MS);
     } catch {
@@ -155,7 +156,9 @@ export default function TirageClient({ nightId, games, waitingPseudos, startTime
             {partyGame.bgg_rating != null && <span className="chip">⭐ {fmt(partyGame.bgg_rating)} / 10</span>}
           </div>
           <div className="verdict-actions">
-            <a className="btn-copper" role="button" href={`/nights/${nightId}/scores`}>🏁 Partie terminée</a>
+            {estCreateur
+              ? <a className="btn-copper" role="button" href={`/nights/${nightId}/scores`}>🏁 Partie terminée</a>
+              : <span className="lance-par">En jeu — la boîte est sortie</span>}
             <button type="button" className="btn-ghost" onClick={() => shareMessage(buildResultMessage({
               title: partyGame.title,
               ownerPseudo: partyGame.owner_pseudo ?? '',

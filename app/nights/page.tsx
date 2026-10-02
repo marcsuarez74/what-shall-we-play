@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { getSessionUser } from '@/lib/session';
 import { getActiveNight, getPlannedNights, getHistoryCards, getNightPlayers, getNightGame } from '@/lib/nights';
-import { medaille } from '@/lib/ranks';
+import { coverSrc } from '@/lib/formats';
 import { getDb } from '@/lib/db';
 import type { UserLite } from '@/lib/types';
 import PlayerChip from '@/components/PlayerChip';
@@ -106,13 +106,19 @@ export default async function Page() {
       <section className="qg-section" aria-label="Historique">
         <h2>Historique</h2>
         <div className="hist-liste">
-          {cartes.map((n) => (
-            <a key={n.id} className="hist-card" href={`/nights/${n.id}`}>
-              <span className="hc"><b>{n.game_title ?? 'Soirée de jeux'}</b>
-                <span className="gagnant">{n.gagnant_pseudo ? `👑 ${n.gagnant_pseudo} · ${n.gagnant_score} pts` : 'pas de scores'}</span></span>
-              <span className="dt"><span className="med-mini">{medaille(1)}</span><span>{dateFormat.format(new Date(`${n.played_at}T12:00:00`))}</span></span>
-            </a>
-          ))}
+          {cartes.map((n) => {
+            const cover = coverSrc({ cover_path: n.game_cover_path, cover_url: n.game_cover_url });
+            return (
+              <a key={n.id} className="hist-card" href={`/nights/${n.id}`}>
+                {cover
+                  ? <span className="cov hist-cov"><img src={cover} alt="" loading="lazy" /></span>
+                  : <span className="cov hist-cov">🎲</span>}
+                <span className="hc"><b>{n.game_title ?? 'Soirée de jeux'}</b>
+                  <span className="gagnant">{n.gagnant_pseudo ? `👑 ${n.gagnant_pseudo} · ${n.gagnant_score} pts` : 'pas de scores'}</span></span>
+                <span className="dt"><span>{dateFormat.format(new Date(`${n.played_at}T12:00:00`))}</span></span>
+              </a>
+            );
+          })}
           {cartes.length === 0 && <p className="hint">Aucune partie terminée — tout est devant vous.</p>}
         </div>
       </section>
