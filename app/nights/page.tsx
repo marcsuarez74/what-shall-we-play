@@ -57,7 +57,7 @@ export default async function Page() {
             <li className="night-card live">
               <div className="night-card-head">
                 <span className="night-label">PARTIE EN COURS</span>
-                {active.creator_id === user.id && <TerminerNight nightId={active.id} />}
+                {active.creator_id === user.id && <TerminerNight nightId={active.id} status={active.status} />}
               </div>
               <div className="chips">
                 {getNightPlayers(active.id).map((p) => <PlayerChip key={p.id} u={p} />)}
