@@ -1979,3 +1979,43 @@ input[type='file'] {
 .mp-row .dt { text-align: right; flex: none; }
 .mp-row .dt b { font-size: 15px; display: block; }
 .mp-row .med { width: auto; opacity: 1; transform: none; font-size: 18px; }
+
+/* ===== v3.4 — rapporter un bug ===== */
+.bug-intro { color: var(--doux-clair); font-size: 13.5px; line-height: 1.5; margin: 4px 0 16px; }
+.bug-field { margin-bottom: 15px; }
+.bug-field > label { display: block; font-size: 11px; letter-spacing: .12em; color: var(--doux); font-weight: 700; margin-bottom: 7px; }
+.bug-field input[type="text"], .bug-field textarea { width: 100%; background: var(--surface); border: 1px solid color-mix(in srgb, var(--doux) 40%, transparent); border-radius: 12px; color: var(--creme); font: inherit; font-size: 16px; padding: 11px 13px; outline: none; }
+.bug-field input:focus, .bug-field textarea:focus { border-color: var(--cuivre); }
+.bug-field textarea { min-height: 118px; resize: none; line-height: 1.5; }
+.bug-aide { display: block; text-align: right; font-size: 11px; color: var(--doux); margin-top: 4px; }
+.bug-types { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+.bug-type { background: var(--surface); border: 1.5px solid color-mix(in srgb, var(--doux) 40%, transparent); border-radius: 13px; padding: 12px 10px; text-align: center; cursor: pointer; font: inherit; font-size: 13.5px; color: var(--doux-clair); }
+.bug-type .t { font-size: 21px; display: block; margin-bottom: 4px; }
+.bug-type.on { border-color: var(--cuivre); color: var(--creme); background: color-mix(in srgb, var(--cuivre) 14%, transparent); font-weight: 600; }
+.bug-type.amelio.on { border-color: var(--vert); background: color-mix(in srgb, var(--vert) 14%, transparent); }
+.bug-drop { width: 100%; border: 1.5px dashed color-mix(in srgb, var(--doux) 55%, transparent); border-radius: 13px; background: none; color: var(--doux-clair); font: inherit; font-size: 13.5px; padding: 15px 12px; cursor: pointer; }
+.bug-drop:hover { border-color: var(--cuivre); color: var(--creme); }
+.bug-apercu { display: flex; align-items: center; gap: 10px; background: var(--surface); border-radius: 12px; padding: 9px 11px; }
+.bug-apercu .mini { width: 40px; height: 40px; border-radius: 8px; overflow: hidden; background: color-mix(in srgb, var(--doux) 30%, transparent); display: grid; place-items: center; font-size: 17px; flex: none; }
+.bug-apercu .mini img { width: 100%; height: 100%; object-fit: cover; }
+.bug-apercu b { display: block; font-size: 12.5px; overflow-wrap: anywhere; }
+.bug-apercu div span { color: var(--doux-clair); font-size: 11.5px; }
+.bug-apercu .retirer { margin-left: auto; color: var(--cuivre); background: none; border: 0; font: inherit; font-size: 12px; cursor: pointer; }
+.bug-infos { background: color-mix(in srgb, var(--surface) 60%, transparent); border: 1px solid color-mix(in srgb, var(--doux) 30%, transparent); border-radius: 12px; margin: 6px 0 16px; }
+.bug-infos summary { cursor: pointer; list-style: none; padding: 11px 13px; font-size: 12.5px; color: var(--doux-clair); display: flex; align-items: center; gap: 8px; }
+.bug-infos summary::-webkit-details-marker { display: none; }
+.bug-infos summary::after { content: '▸'; margin-left: auto; transition: transform .18s; }
+.bug-infos[open] summary::after { transform: rotate(90deg); }
+.bug-infos ul { padding: 2px 15px 12px; list-style: none; }
+.bug-infos li { font-size: 12px; color: var(--doux-clair); padding: 3.5px 0; display: flex; justify-content: space-between; gap: 10px; border-top: 1px dashed color-mix(in srgb, var(--doux) 25%, transparent); }
+.bug-infos li:first-child { border-top: 0; }
+.bug-infos li b { color: var(--creme); font-weight: 500; text-align: right; overflow-wrap: anywhere; }
+.bugs-page .btn-copper { width: 100%; border-radius: 14px; font-size: 15.5px; padding: 14px; border: 0; cursor: pointer; font: inherit; font-weight: 700; background: var(--cuivre); color: #fff; }
+.bugs-page .btn-copper:disabled { opacity: .45; cursor: not-allowed; }
+.bug-annuler { display: block; width: 100%; background: none; border: 1px solid color-mix(in srgb, var(--doux) 45%, transparent); color: var(--doux-clair); border-radius: 14px; font: inherit; font-size: 13.5px; padding: 11px; cursor: pointer; text-align: center; margin-top: 9px; }
+.bug-succes { text-align: center; padding-top: 120px; }
+.bug-succes .bug-rond { width: 86px; height: 86px; border-radius: 50%; background: color-mix(in srgb, var(--vert) 18%, transparent); border: 2px solid var(--vert); display: grid; place-items: center; font-size: 38px; margin: 0 auto 18px; }
+.bug-succes h3 { font-family: var(--font-display), sans-serif; font-size: 21px; margin-bottom: 8px; }
+.bug-succes p { color: var(--doux-clair); font-size: 14px; line-height: 1.55; max-width: 300px; margin: 0 auto 22px; }
+.bug-succes .bug-lien { display: inline-block; background: var(--surface); border: 1px solid color-mix(in srgb, var(--doux) 45%, transparent); border-radius: 11px; color: var(--cuivre); text-decoration: none; font-size: 13px; padding: 10px 16px; font-weight: 600; overflow-wrap: anywhere; }
+.bug-succes .bug-annuler { margin-top: 22px; }
