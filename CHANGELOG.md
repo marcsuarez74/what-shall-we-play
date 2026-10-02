@@ -4,6 +4,16 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [3.5.1] — 2026-10-02
+
+### Corrigé
+- **Le segmenté du pool s'affiche mal sur les écrans étroits** (issue #31,
+  Galaxy S22 Ultra 412px) : les cellules « Tous les jeux / Votés 👍 » refusaient
+  de rétrécir (`1fr` = minimum contenu) et débordaient de 52px. Les cellules sont
+  rétractables (`minmax(0, 1fr)`) et le segmenté prend l'espace libéré.
+- **Le bouton Lancer prenait trop de place** à côté du segmenté (228px) : il ne
+  grossit plus au-delà de son texte (~106px). Libellé raccourci en « Tous · N ».
+
 ## [3.5.0] — 2026-10-02
 
 ### Ajouté

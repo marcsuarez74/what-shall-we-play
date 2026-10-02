@@ -1,4 +1,4 @@
-const CACHE = 'wsp-v3.5.0'; // remplacé à chaque build par la version de package.json (scripts/sync-sw-version.mjs)
+const CACHE = 'wsp-v3.5.1'; // remplacé à chaque build par la version de package.json (scripts/sync-sw-version.mjs)
 self.addEventListener('install', (e) => self.skipWaiting());
 self.addEventListener('activate', (e) => e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== CACHE).map((k) => caches.delete(k))))));
 self.addEventListener('fetch', (e) => {
