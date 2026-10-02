@@ -1956,3 +1956,24 @@ input[type='file'] {
 /* La carte « Ce soir » : le jeu de la partie remplace les picks cumulés (v3.3.0) */
 .jeu-partie { margin: 10px 0 0; padding-top: 10px; border-top: 1px solid rgba(185, 165, 140, 0.25); font-size: 13px; font-weight: 600; color: var(--cuivre); }
 .jeu-partie::before { content: '🎯 '; }
+
+/* ---------- Profil : podiums dans les stats + « Mes parties » (v3.3) ---------- */
+.stat .medailles { font-size: 15.5px; letter-spacing: .02em; }
+.mes-parties { display: grid; gap: 8px; }
+.mp-row {
+  display: flex; align-items: center; gap: 11px; background: var(--surface);
+  border-radius: 14px; padding: 9px 12px; color: inherit; text-decoration: none;
+}
+.mp-row:active { transform: scale(.985); }
+.mp-row .cov {
+  position: relative; width: 40px; height: 40px; border-radius: 9px; overflow: hidden; flex: none;
+  background: color-mix(in srgb, var(--doux) 25%, transparent); display: grid; place-items: center;
+}
+.mp-row .cov img { width: 100%; height: 100%; object-fit: cover; }
+.mp-row .cov .cover-placeholder { font-size: 18px; }
+.mp-row .mpd { flex: 1; min-width: 0; }
+.mp-row .mpd b { font-size: 14px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mp-row .mpd span { font-size: 11.5px; color: var(--doux-clair); }
+.mp-row .dt { text-align: right; flex: none; }
+.mp-row .dt b { font-size: 15px; display: block; }
+.mp-row .med { width: auto; opacity: 1; transform: none; font-size: 18px; }
