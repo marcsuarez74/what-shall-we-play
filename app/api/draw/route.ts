@@ -9,7 +9,10 @@ import { getDb } from '@/lib/db';
 export async function POST(req: Request) {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: 'Non connecté' }, { status: 401 });
-  const { nightId, gameIds } = await req.json();
+  // Corps absent ou avorté (requête coupée en plein vol) → 400 propre, pas de 500 bruyant.
+  let body: { nightId?: unknown; gameIds?: unknown };
+  try { body = await req.json(); } catch { return NextResponse.json({ error: 'Requête invalide' }, { status: 400 }); }
+  const { nightId, gameIds } = body;
   const night = getNight(Number(nightId));
   if (!night || !userCanAccessNight(user.id, night.id))
     return NextResponse.json({ error: 'Soirée introuvable' }, { status: 404 });
