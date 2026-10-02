@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { getSessionUser } from '@/lib/session';
-import { getActiveNight, getNightPlayers, getShelfGames, getNightGame, getTodayTermineeNight } from '@/lib/nights';
+import { getActiveNight, getNightPlayers, getShelfGames, getNightGame, getTodayTermineeNight, getShelfVotes } from '@/lib/nights';
 import { getPickCounts, listUserLibrary } from '@/lib/games';
 import NightPicker from '@/components/NightPicker';
 import ShelfClient from '@/components/ShelfClient';
@@ -33,6 +33,7 @@ export default async function Page() {
     <UserSync />
     <ShelfClient night={night} partyGame={getNightGame(night.id)} players={getNightPlayers(night.id)} games={getShelfGames(night.id)}
                  myLibrary={listUserLibrary(user.id)} users={users}
-                 plays={getPickCounts()} me={{ id: user.id, pseudo: user.pseudo, sticker: user.sticker, avatar_path: user.avatar_path }} />
+                 plays={getPickCounts()} votes={getShelfVotes(night.id)}
+                 me={{ id: user.id, pseudo: user.pseudo, sticker: user.sticker, avatar_path: user.avatar_path }} />
   </main>;
 }

@@ -4,6 +4,16 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [3.5.0] — 2026-10-02
+
+### Ajouté
+- **Vote sur l'étagère 👍** : chacun touche le badge d'une boîte pour voter
+  (badge cuivré = ton vote), re-toucher retire son vote. Compteurs partagés en
+  direct, modifiables jusqu'au lancement — même après avoir validé sa sélection.
+- **Choix du pool au lancement** : quand au moins un jeu a un vote, le créateur
+  tire parmi « Tous les jeux · N » ou « Votés 👍 · N » (défaut : tous). La roue
+  reçoit simplement une liste plus courte ; sans vote, le lancement est inchangé.
+
 ## [3.4.0] — 2026-10-02
 
 ### Ajouté

@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FORMATS, FORMAT_SCALE, FORMAT_LABEL, coverSrc } from '@/lib/formats';
 import type { Game, Night, UserLite } from '@/lib/types';
+import type { ShelfVote } from '@/lib/nights';
 import { filterShelf, type ShelfFilters } from '@/lib/filters';
 import GameSheet from './GameSheet';
 import NightPicker from './NightPicker';
@@ -19,8 +20,9 @@ import UserMenu from './UserMenu';
 // est prêt — un appui si tout le monde a validé, double-appui « Sûr ? » sinon.
 // v3.3 — la carte porte l'ÉTAT de la soirée (badge), et une fois la boîte
 // sortie (en_jeu) l'étagère gèle : bandeau vert, plus d'ajout ni de validation.
-export default function ShelfClient({ night, partyGame, players, games, myLibrary, users, plays, me }: {
+export default function ShelfClient({ night, partyGame, players, games, myLibrary, users, plays, votes, me }: {
   night: Night; partyGame: Game | null; players: UserLite[]; games: Game[]; myLibrary: Game[]; users: UserLite[]; plays: Record<number, number>;
+  votes: ShelfVote[];
   me: UserLite;
 }) {
   const router = useRouter();
@@ -29,6 +31,7 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
   const [addingGames, setAddingGames] = useState(false);
   const [sur, setSur] = useState(false); // double-appui « Sûr ? Lancer »
   const [busy, setBusy] = useState(false);
+  const [pool, setPool] = useState<'tous' | 'votes'>('tous'); // choix du pool : état client, jamais stocké
   // Aucun filtre appliqué par défaut : l'étagère montre toute la collection.
   const [filters, setFilters] = useState<ShelfFilters>({
     q: '', players: null, weight: 'all', duration: 'all', format: 'all',
@@ -37,11 +40,32 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
   const enJeu = night.status === 'en_jeu';
   // En jeu : LA boîte de la partie a quitté l'étagère — elle ne revient pas dans les rangées.
   const byFormat = useMemo(() => FORMATS.map((f) => ({ f, list: filtered.filter((g) => g.id !== partyGame?.id && g.box_format === f) })), [filtered, partyGame]);
+
+  // v3.5 — votes de la soirée, vus par boîte : total, c'est MON vote, prénoms.
+  const votesParJeu = useMemo(() => {
+    const m = new Map<number, { total: number; votants: string[]; moi: boolean }>();
+    for (const v of votes) {
+      const e = m.get(v.game_id) ?? { total: 0, votants: [], moi: false };
+      e.total += 1;
+      e.votants.push(v.pseudo.split(' ')[0]);
+      if (v.user_id === me.id) e.moi = true;
+      m.set(v.game_id, e);
+    }
+    return m;
+  }, [votes, me.id]);
+
+  // v3.5 — les boîtes qui portent au moins un vote : le pool « Votés 👍 ».
+  const jeuxVotes = useMemo(
+    () => games.filter((g) => (votesParJeu.get(g.id)?.total ?? 0) > 0),
+    [games, votesParJeu],
+  );
   const cover = partyGame ? coverSrc(partyGame) : null;
 
   const estCreateur = night.creator_id === me.id;
   const monEtat = players.find((p) => p.id === me.id);
   const jAiValide = !!monEtat?.validated_at;
+  // hors branche du créateur validé, le pool vaut toujours « tous » (garde anti-état fantôme)
+  const poolActif = jAiValide ? pool : 'tous';
   const enAttente = players.filter((p) => !p.validated_at);
   const tousPrets = players.length > 0 && enAttente.length === 0;
   const prenom = (p: UserLite) => p.pseudo.split(' ')[0];
@@ -55,11 +79,16 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
   }
   function lancer() {
     if (games.length === 0) return;
+    // La liste du pool est recalculée ICI : une boîte votée retirée ou dé-votée
+    // au même moment (sync live) ne peut pas glisser un id fantôme dans ?games=.
+    const ids = poolActif === 'votes' && jeuxVotes.length > 0
+      ? jeuxVotes.map((g) => g.id)
+      : games.map((g) => g.id);
     // Navigation document (et non router.push) : le refresh du sync live qui
     // tombe au même moment pouvait annuler le push doux — on restait sur
     // l'étagère, bouton armé, sans erreur (flake CI v3.3). Le tirage est un
     // écran plein : le rechargement complet y est invisible et sans course.
-    window.location.assign(`/tirage/${night.id}?games=${games.map((g) => g.id).join(',')}`);
+    window.location.assign(`/tirage/${night.id}?games=${ids.join(',')}`);
   }
   function clicLancer() {
     if (!tousPrets && !sur) { setSur(true); return; } // il manque du monde : « Sûr ? »
@@ -67,6 +96,14 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
   }
   // si tout le monde devient prêt entre-temps (sync live), le « Sûr ? » s'efface
   const surAffiche = sur && !tousPrets;
+
+  async function voter(gameId: number) {
+    await fetch(`/api/nights/${night.id}/votes`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ gameId }),
+    });
+    router.refresh();
+  }
 
   async function removeFromNight(g: Game) {
     await fetch(`/api/nights/${night.id}/games`, {
@@ -144,6 +181,18 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
                 {g.owner_pseudo && (
                   <OwnerBadge owner={{ pseudo: g.owner_pseudo, sticker: g.owner_sticker ?? null, avatar_path: g.owner_avatar_path ?? null }} />
                 )}
+                {!enJeu && (() => {
+                  const v = votesParJeu.get(g.id);
+                  return (
+                    <span className={'vote-badge' + (v?.moi ? ' vote-moi' : '')} role="button"
+                          aria-pressed={v?.moi ?? false}
+                          aria-label={`${v?.total ?? 0} vote${(v?.total ?? 0) > 1 ? 's' : ''} pour ${g.title}`}
+                          title={v?.votants.length ? v.votants.slice(0, 4).join(' · ') + (v.votants.length > 4 ? ' …' : '') : undefined}
+                          onClick={(e) => { e.stopPropagation(); voter(g.id); }}>
+                      <span className="emoji" aria-hidden="true">👍</span>{v?.total ?? 0}
+                    </span>
+                  );
+                })()}
               </button>
             ))}
           </div>
@@ -164,10 +213,21 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
         ) : jAiValide ? (
           <>
             <div className="cta-row">
-              <span className="pill-ok" aria-label="sélection validée">✓ Validée</span>
+              {estCreateur && jeuxVotes.length > 0 ? (
+                <div className="choix-pool" role="radiogroup" aria-label="Pool du tirage">
+                  <button type="button" className={poolActif === 'tous' ? 'actif' : ''} onClick={() => setPool('tous')}>
+                    Tous les jeux<span className="n">{games.length}</span>
+                  </button>
+                  <button type="button" className={poolActif === 'votes' ? 'actif' : ''} onClick={() => setPool('votes')}>
+                    Votés 👍<span className="n">{jeuxVotes.length}</span>
+                  </button>
+                </div>
+              ) : (
+                <span className="pill-ok" aria-label="sélection validée">✓ Validée</span>
+              )}
               {estCreateur && games.length > 0 ? (
                 <button type="button" className={`btn-copper ${tousPrets ? 'pret' : ''}`} onClick={clicLancer}>
-                  {surAffiche ? 'Sûr ? Lancer' : `Lancer · ${games.length}`}
+                  {surAffiche ? 'Sûr ? Lancer' : `Lancer · ${poolActif === 'votes' && jeuxVotes.length > 0 ? jeuxVotes.length : games.length}`}
                 </button>
               ) : (
                 !estCreateur && (

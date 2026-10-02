@@ -10,6 +10,7 @@
 :root {
   --noyer: #2A1F17;        /* fond */
   --surface: #3A2B1F;      /* cartes, feuilles */
+  --surface-plus: #46352a; /* surface surélevée (segment actif du pool) */
   --creme: #F3E9DC;        /* texte */
   --cuivre: #C96F3B;       /* action */
   --vert: #3E9B6E;         /* validation */
@@ -2019,3 +2020,40 @@ input[type='file'] {
 .bug-succes p { color: var(--doux-clair); font-size: 14px; line-height: 1.55; max-width: 300px; margin: 0 auto 22px; }
 .bug-succes .bug-lien { display: inline-block; background: var(--surface); border: 1px solid color-mix(in srgb, var(--doux) 45%, transparent); border-radius: 11px; color: var(--cuivre); text-decoration: none; font-size: 13px; padding: 10px 16px; font-weight: 600; overflow-wrap: anywhere; }
 .bug-succes .bug-annuler { margin-top: 22px; }
+
+/* ===== v3.5 — vote sur l'étagère ===== */
+.vote-badge {
+  position: absolute; top: -7px; right: -5px; z-index: 3;
+  display: flex; align-items: center; gap: 2px;
+  border: 1.5px solid var(--doux); border-radius: 999px;
+  background: var(--noyer); color: var(--doux-clair);
+  font: inherit; font-size: 10.5px; font-weight: 800;
+  padding: 3px 7px; cursor: pointer;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.55);
+  transition: transform .12s ease;
+  user-select: none;
+}
+.vote-badge:active { transform: scale(.9); }
+.vote-badge.vote-moi { border-color: var(--cuivre); background: var(--cuivre); color: #fff; }
+.vote-badge .emoji { font-size: 9.5px; }
+.choix-pool {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 3px;
+  flex: 1.25; min-width: 0;
+  background: var(--noyer);
+  border: 1px solid color-mix(in srgb, var(--doux) 40%, transparent);
+  border-radius: 13px; padding: 3px;
+}
+.choix-pool button {
+  border: 0; background: none; color: var(--doux-clair);
+  font: inherit; font-size: 12px; font-weight: 600;
+  padding: 9px 4px; border-radius: 10px; cursor: pointer;
+  transition: all .15s ease;
+  white-space: nowrap;
+}
+.choix-pool button .n {
+  display: inline-grid; place-items: center;
+  background: color-mix(in srgb, var(--doux) 30%, transparent);
+  border-radius: 999px; padding: 1px 7px; font-size: 10.5px; margin-left: 4px;
+}
+.choix-pool button.actif { background: var(--surface-plus); color: var(--creme); font-weight: 700; }
+.choix-pool button.actif .n { background: var(--cuivre); color: #fff; }
