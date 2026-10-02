@@ -95,13 +95,22 @@ async function setupTirage(page: import('@playwright/test').Page, s: string) {
   await page.getByRole('button', { name: 'Valider ma sélection' }).click();
   const lancer = page.getByRole('button', { name: /Lancer · 1|Sûr \? Lancer/ });
   await lancer.click(); // 1/2 prêts → demande de confirmation
-  // Flake CI (run pull_request du 2026-10-02) : le 2ᵉ clic partait avant le
-  // re-render « Sûr ? » — on attend l'état armé au lieu de cliquer à l'aveugle.
+  // Flake CI (v3.3.1) : un refresh du sync live qui tombe entre mousedown et
+  // mouseup peut échanger le nœud — le clic part, la navigation non. On relance
+  // le clic tant qu'on n'est pas sur l'écran du tirage (3 essais max).
   await expect(lancer).toHaveAccessibleName(/Sûr \? Lancer/);
   await lancer.click(); // « Sûr ? Lancer » → on lance quand même
-  // Le lancement navigue vers l'écran plein du tirage (navigation document
-  // depuis v3.3.1) : on attend l'URL, un échec ici = le clic n'a pas lancé.
-  await page.waitForURL('**/tirage/**', { timeout: 20_000 });
+  let surTirage = false;
+  for (let essai = 0; essai < 3 && !surTirage; essai++) {
+    try {
+      await page.waitForURL('**/tirage/**', { timeout: 8_000 });
+      surTirage = true;
+    } catch {
+      if (essai === 2) throw new Error('Le lancement n\u2019a jamais navigué vers le tirage');
+      await expect(lancer).toBeVisible(); // encore armé : ce clic part directement
+      await lancer.click();
+    }
+  }
   await expect(page.getByText('LA ROUE A PARLÉ')).toBeVisible({ timeout: 20_000 });
 }
 
