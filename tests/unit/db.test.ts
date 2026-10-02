@@ -38,4 +38,16 @@ describe('db', () => {
     runMigrations(db); // idempotent : rejouable à chaud
     expect((db.prepare('SELECT status FROM nights WHERE id = ?').get(n.lastInsertRowid) as { status: string }).status).toBe('termine');
   });
+
+  it('v3.4 : table bug_reports prête (défaut de date locale, issue_url nullable)', () => {
+    const db = getDb();
+    const tables = (db.prepare(`SELECT name FROM sqlite_master WHERE type='table'`).all() as { name: string }[]).map((r) => r.name);
+    expect(tables).toContain('bug_reports');
+    const u = db.prepare(`INSERT INTO users (pseudo, code_hash) VALUES ('bug-user', 'x')`).run();
+    const info = db.prepare(`INSERT INTO bug_reports (user_id, type, titre) VALUES (?, 'bug', 'test')`).run(u.lastInsertRowid);
+    const row = db.prepare('SELECT created_at, issue_url, capture_name FROM bug_reports WHERE id = ?').get(info.lastInsertRowid) as { created_at: string; issue_url: string | null; capture_name: string | null };
+    expect(row.created_at).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/);
+    expect(row.issue_url).toBeNull();
+    expect(row.capture_name).toBeNull();
+  });
 });

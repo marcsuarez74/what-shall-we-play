@@ -4,6 +4,17 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [3.4.0] — 2026-10-02
+
+### Ajouté
+- **« Rapporter un bug »** depuis le menu utilisateur : titre, type (🐛 bug /
+  ✨ amélioration), description, capture jointe optionnelle. Les infos
+  techniques partent automatiquement (version, page d'origine, appareil,
+  écran, langue, app installée) et le serveur ouvre l'issue GitHub avec son
+  label — confirmation avec le lien vers l'issue.
+- Quota de 3 signalements par joueur et par jour ; les envois en échec ne
+  consomment pas le quota.
+
 ## [3.3.1] — 2026-10-02
 
 ### Ajusté

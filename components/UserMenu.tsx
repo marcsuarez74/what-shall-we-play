@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
 import pkg from '../package.json';
 import { avatarSrc } from '@/lib/formats';
 import type { UserLite } from '@/lib/types';
@@ -9,6 +10,7 @@ import type { UserLite } from '@/lib/types';
 // La roue et les écrans de connexion restent plein écran, sans menu.
 export default function UserMenu({ me }: { me: UserLite }) {
   const router = useRouter();
+  const pathname = usePathname();
   const ref = useRef<HTMLDetailsElement>(null);
 
   useEffect(() => {
@@ -35,8 +37,9 @@ export default function UserMenu({ me }: { me: UserLite }) {
         {' '}{initial} ▾
       </summary>
       <div className="user-menu">
-        <a href="/profil">Mon profil</a>
+        <Link href="/profil">Mon profil</Link>
         <button type="button" onClick={logout}>Se déconnecter</button>
+        <Link href={{ pathname: '/bugs', query: { depuis: pathname } }}>🐞 Rapporter un bug</Link>
         <span className="user-version">v{pkg.version}</span>
       </div>
     </details>
