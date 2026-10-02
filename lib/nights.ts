@@ -179,6 +179,14 @@ export function getShelfGames(nightId: number): ShelfGame[] {
     ORDER BY CASE g.box_format WHEN 'grand' THEN 0 WHEN 'moyen' THEN 1 WHEN 'petit' THEN 2 ELSE 3 END, g.title`)
     .all(nightId) as ShelfGame[];
 }
+// v3.5 — les votes de la soirée (badge 👍, segmenté « Votés ») : qui a voté quoi.
+export type ShelfVote = { game_id: number; user_id: number; pseudo: string };
+export function getShelfVotes(nightId: number): ShelfVote[] {
+  return getDb().prepare(`
+    SELECT gv.game_id, gv.user_id, u.pseudo FROM game_votes gv
+    JOIN users u ON u.id = gv.user_id
+    WHERE gv.night_id = ? ORDER BY gv.created_at, gv.user_id`).all(nightId) as ShelfVote[];
+}
 export function isGameOnShelf(nightId: number, gameId: number): boolean {
   return !!getDb().prepare('SELECT 1 FROM night_games WHERE night_id = ? AND game_id = ?').get(nightId, gameId);
 }
@@ -206,9 +214,29 @@ export function addNightGame(nightId: number, gameId: number, userId: number): N
 export function removeNightGame(nightId: number, gameId: number, userId: number): NightGameResult {
   if (!isNightParticipant(nightId, userId)) return { error: 'Seuls les joueurs de la partie peuvent retirer des jeux', status: 403 };
   getDb().prepare('DELETE FROM night_games WHERE night_id = ? AND game_id = ?').run(nightId, gameId);
+  // une boîte retirée emporte ses votes (v3.5) — pas de vote fantôme dans « Votés 👍 »
+  getDb().prepare('DELETE FROM game_votes WHERE night_id = ? AND game_id = ?').run(nightId, gameId);
   // sa sélection a changé : sa validation saute (idiome v3.0.0, cf. addNightGame)
   getDb().prepare('UPDATE night_players SET validated_at = NULL WHERE night_id = ? AND user_id = ?').run(nightId, userId);
   notifyNight(nightId); // sync live : la boîte disparaît chez les autres joueurs
+  return { ok: true };
+}
+
+// v3.5 — le vote sur l'étagère : bascule révocable, comme poser/retirer une boîte,
+// mais SANS toucher à la validation (le vote n'est pas une boîte).
+export function toggleNightVote(nightId: number, gameId: number, userId: number): NightGameResult {
+  const db = getDb();
+  const night = getNight(nightId);
+  if (!night) return { error: 'Partie introuvable', status: 404 };
+  if (!isNightParticipant(nightId, userId)) return { error: 'Seuls les joueurs de la partie peuvent voter', status: 403 };
+  if (night.status === 'en_jeu') return { error: 'La partie a commencé — les votes sont figés', status: 409 };
+  if (!isGameOnShelf(nightId, gameId)) return { error: "Ce jeu n'est pas sur l'étagère", status: 403 };
+  if (db.prepare('SELECT 1 FROM game_votes WHERE night_id = ? AND game_id = ? AND user_id = ?').get(nightId, gameId, userId)) {
+    db.prepare('DELETE FROM game_votes WHERE night_id = ? AND game_id = ? AND user_id = ?').run(nightId, gameId, userId);
+  } else {
+    db.prepare('INSERT OR IGNORE INTO game_votes (night_id, game_id, user_id) VALUES (?, ?, ?)').run(nightId, gameId, userId);
+  }
+  notifyNight(nightId); // sync live : le compteur bouge chez tout le monde
   return { ok: true };
 }
 export function isNightParticipant(nightId: number, userId: number): boolean {
