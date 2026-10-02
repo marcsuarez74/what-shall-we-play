@@ -31,6 +31,7 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
   const [addingGames, setAddingGames] = useState(false);
   const [sur, setSur] = useState(false); // double-appui « Sûr ? Lancer »
   const [busy, setBusy] = useState(false);
+  const [pool, setPool] = useState<'tous' | 'votes'>('tous'); // choix du pool : état client, jamais stocké
   // Aucun filtre appliqué par défaut : l'étagère montre toute la collection.
   const [filters, setFilters] = useState<ShelfFilters>({
     q: '', players: null, weight: 'all', duration: 'all', format: 'all',
@@ -63,6 +64,8 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
   const estCreateur = night.creator_id === me.id;
   const monEtat = players.find((p) => p.id === me.id);
   const jAiValide = !!monEtat?.validated_at;
+  // hors branche du créateur validé, le pool vaut toujours « tous » (garde anti-état fantôme)
+  const poolActif = jAiValide ? pool : 'tous';
   const enAttente = players.filter((p) => !p.validated_at);
   const tousPrets = players.length > 0 && enAttente.length === 0;
   const prenom = (p: UserLite) => p.pseudo.split(' ')[0];
@@ -76,11 +79,16 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
   }
   function lancer() {
     if (games.length === 0) return;
+    // La liste du pool est recalculée ICI : une boîte votée retirée ou dé-votée
+    // au même moment (sync live) ne peut pas glisser un id fantôme dans ?games=.
+    const ids = poolActif === 'votes' && jeuxVotes.length > 0
+      ? jeuxVotes.map((g) => g.id)
+      : games.map((g) => g.id);
     // Navigation document (et non router.push) : le refresh du sync live qui
     // tombe au même moment pouvait annuler le push doux — on restait sur
     // l'étagère, bouton armé, sans erreur (flake CI v3.3). Le tirage est un
     // écran plein : le rechargement complet y est invisible et sans course.
-    window.location.assign(`/tirage/${night.id}?games=${games.map((g) => g.id).join(',')}`);
+    window.location.assign(`/tirage/${night.id}?games=${ids.join(',')}`);
   }
   function clicLancer() {
     if (!tousPrets && !sur) { setSur(true); return; } // il manque du monde : « Sûr ? »
@@ -205,10 +213,21 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
         ) : jAiValide ? (
           <>
             <div className="cta-row">
-              <span className="pill-ok" aria-label="sélection validée">✓ Validée</span>
+              {estCreateur && jeuxVotes.length > 0 ? (
+                <div className="choix-pool" role="radiogroup" aria-label="Pool du tirage">
+                  <button type="button" className={poolActif === 'tous' ? 'actif' : ''} onClick={() => setPool('tous')}>
+                    Tous les jeux<span className="n">{games.length}</span>
+                  </button>
+                  <button type="button" className={poolActif === 'votes' ? 'actif' : ''} onClick={() => setPool('votes')}>
+                    Votés 👍<span className="n">{jeuxVotes.length}</span>
+                  </button>
+                </div>
+              ) : (
+                <span className="pill-ok" aria-label="sélection validée">✓ Validée</span>
+              )}
               {estCreateur && games.length > 0 ? (
                 <button type="button" className={`btn-copper ${tousPrets ? 'pret' : ''}`} onClick={clicLancer}>
-                  {surAffiche ? 'Sûr ? Lancer' : `Lancer · ${games.length}`}
+                  {surAffiche ? 'Sûr ? Lancer' : `Lancer · ${poolActif === 'votes' && jeuxVotes.length > 0 ? jeuxVotes.length : games.length}`}
                 </button>
               ) : (
                 !estCreateur && (

@@ -75,3 +75,113 @@ test('sync live : le vote de A monte le badge chez B sans rechargement', async (
   await expect(b.locator('.box .vote-badge')).toContainText('1', { timeout: 5_000 });
   await expect(b.locator('.box .vote-badge')).not.toHaveClass(/vote-moi/); // pas LE vote de B
 });
+
+test('pool : segmenté seulement avec des votes, Votés → Lancer · M, tirage sur les votés', async ({ browser }) => {
+  const s = Date.now().toString(36);
+  const ctxA = await browser.newContext();
+  const a = await ctxA.newPage();
+  await register(a, `vp-a-${s}`);
+  const ctxB = await browser.newContext();
+  const b = await ctxB.newPage();
+  await register(b, `vp-b-${s}`);
+  const nightId = await creerPartie(a, `vp-b-${s}`);
+
+  const g1 = await newGame(a, 'Cascadia', 'grand');
+  const g2 = await newGame(a, 'Wingspan', 'moyen');
+  await putOnShelf(a, g1, nightId);
+  await putOnShelf(a, g2, nightId);
+  await a.goto('/etagere');
+  await expect(a.locator('body')).toHaveAttribute('data-sync', 'on', { timeout: 15_000 });
+  await expect(b.locator('body')).toHaveAttribute('data-sync', 'on', { timeout: 15_000 });
+
+  // A valide : sans vote, la rangée est exactement celle d'aujourd'hui (pill + Lancer · 2)
+  await a.getByRole('button', { name: 'Valider ma sélection' }).click();
+  await expect(a.locator('.pill-ok')).toContainText('✓ Validée');
+  await expect(a.locator('.choix-pool')).toHaveCount(0);
+  await expect(a.getByRole('button', { name: 'Lancer · 2' })).toBeVisible();
+
+  // B vote pour Wingspan : chez A, le segmenté remplace la pill (live)
+  await b.request.post(`/api/nights/${nightId}/votes`, { data: { gameId: g2 } });
+  await expect(a.locator('.choix-pool')).toBeVisible({ timeout: 5_000 });
+  await expect(a.locator('.choix-pool button.actif')).toContainText('Tous les jeux'); // défaut = tous
+  await expect(a.getByRole('button', { name: 'Lancer · 2' })).toBeVisible();
+
+  // « Votés 👍 » → le bouton compte les votés
+  await a.locator('.choix-pool button', { hasText: 'Votés' }).click();
+  await expect(a.getByRole('button', { name: 'Lancer · 1' })).toBeVisible();
+
+  // B dé-vote : le segmenté disparaît, la pill revient, le lancer retombe sur tous
+  await b.request.post(`/api/nights/${nightId}/votes`, { data: { gameId: g2 } });
+  await expect(a.locator('.choix-pool')).toHaveCount(0, { timeout: 5_000 });
+  await expect(a.locator('.pill-ok')).toContainText('✓ Validée');
+  await expect(a.getByRole('button', { name: 'Lancer · 2' })).toBeVisible();
+
+  // B revote les deux boîtes → A choisit « Votés » et lance : la roue reçoit les deux ids
+  await b.request.post(`/api/nights/${nightId}/votes`, { data: { gameId: g1 } });
+  await b.request.post(`/api/nights/${nightId}/votes`, { data: { gameId: g2 } });
+  await expect(a.locator('.choix-pool')).toBeVisible({ timeout: 5_000 });
+  await a.locator('.choix-pool button', { hasText: 'Votés' }).click();
+  await expect(a.getByRole('button', { name: 'Lancer · 2' })).toBeVisible();
+  const tirage = a.waitForURL(new RegExp(`/tirage/${nightId}\\?games=${g1},${g2}$`));
+  // B n'a pas validé : idiome v3.0.0 du double-appui « Sûr ? » (cf. parcours.spec.ts)
+  await a.getByRole('button', { name: 'Lancer · 2' }).click(); // 1/2 prêts → demande de confirmation
+  await a.getByRole('button', { name: 'Sûr ? Lancer' }).click(); // confirmation → la roue
+  await tirage;
+});
+
+test('ajout tardif : la validation saute, le segmenté disparaît, le fantôme compte tous les jeux', async ({ browser }) => {
+  const s = Date.now().toString(36);
+  const ctxA = await browser.newContext();
+  const a = await ctxA.newPage();
+  await register(a, `vl-a-${s}`);
+  const ctxB = await browser.newContext();
+  const b = await ctxB.newPage();
+  await register(b, `vl-b-${s}`);
+  const nightId = await creerPartie(a, `vl-b-${s}`);
+
+  const g1 = await newGame(a, 'Azul', 'grand');
+  await putOnShelf(a, g1, nightId);
+  await a.goto('/etagere');
+  await expect(a.locator('body')).toHaveAttribute('data-sync', 'on', { timeout: 15_000 });
+  await expect(b.locator('body')).toHaveAttribute('data-sync', 'on', { timeout: 15_000 });
+
+  // B vote d'abord ; puis A valide → segmenté visible, choisit « Votés 👍 » → Lancer · 1
+  await b.request.post(`/api/nights/${nightId}/votes`, { data: { gameId: g1 } });
+  await a.getByRole('button', { name: 'Valider ma sélection' }).click();
+  await expect(a.locator('.choix-pool')).toBeVisible({ timeout: 5_000 });
+  await a.locator('.choix-pool button', { hasText: 'Votés' }).click();
+  await expect(a.getByRole('button', { name: 'Lancer · 1' })).toBeVisible();
+
+  // ajout tardif : l'idiome v3.0.0 fait sauter la validation de l'AJOUTEUR (cf.
+  // addNightGame — seul l'ajouteur re-valide) → chez A la validation saute :
+  // branche « Valider ma sélection », segmenté absent, et le Lancer fantôme
+  // compte TOUS les jeux (2) — jamais l'ancien choix « Votés » (1)
+  const g2 = await newGame(a, 'Tardif', 'petit');
+  await putOnShelf(a, g2, nightId);
+  await expect(a.getByRole('button', { name: 'Valider ma sélection' })).toBeVisible({ timeout: 5_000 });
+  await expect(a.locator('.choix-pool')).toHaveCount(0);
+  await expect(a.getByRole('button', { name: 'Lancer · 2' })).toBeVisible();
+});
+
+test('gelé en jeu : plus de badge vote une fois la boîte sortie', async ({ browser }) => {
+  const s = Date.now().toString(36);
+  const page = await browser.newContext().then((c) => c.newPage());
+  await register(page, `vg-${s}`);
+  const nightId = await creerPartieSolo(page);
+  const gid = await newGame(page, '7 Wonders', 'moyen');
+  await putOnShelf(page, gid, nightId);
+  await page.goto('/etagere');
+  await page.locator('.box').first().waitFor();
+
+  await page.getByRole('button', { name: 'Valider ma sélection' }).click();
+  await expect(page.locator('.pill-ok')).toContainText('✓ Validée');
+  await page.getByRole('button', { name: 'Lancer · 1' }).click();
+  await page.waitForURL(/\/tirage\//);
+
+  // sortie de la boîte (l'étagère passe en_jeu) → retour étagère : plus aucun badge
+  const out = await page.request.post(`/api/nights/${nightId}/box-out`, { data: { gameId: gid } });
+  expect(out.ok()).toBeTruthy();
+  await page.goto('/etagere');
+  await expect(page.locator('.bandeau.v')).toContainText('est sortie de l');
+  await expect(page.locator('.vote-badge')).toHaveCount(0);
+});

@@ -2035,3 +2035,24 @@ input[type='file'] {
 .vote-badge:active { transform: scale(.9); }
 .vote-badge.vote-moi { border-color: var(--cuivre); background: var(--cuivre); color: #fff; }
 .vote-badge .emoji { font-size: 9.5px; }
+.choix-pool {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 3px;
+  flex: 1.25; min-width: 0;
+  background: var(--noyer);
+  border: 1px solid color-mix(in srgb, var(--doux) 40%, transparent);
+  border-radius: 13px; padding: 3px;
+}
+.choix-pool button {
+  border: 0; background: none; color: var(--doux-clair);
+  font: inherit; font-size: 12px; font-weight: 600;
+  padding: 9px 4px; border-radius: 10px; cursor: pointer;
+  transition: all .15s ease;
+  white-space: nowrap;
+}
+.choix-pool button .n {
+  display: inline-grid; place-items: center;
+  background: color-mix(in srgb, var(--doux) 30%, transparent);
+  border-radius: 999px; padding: 1px 7px; font-size: 10.5px; margin-left: 4px;
+}
+.choix-pool button.actif { background: var(--surface-plus); color: var(--creme); font-weight: 700; }
+.choix-pool button.actif .n { background: var(--cuivre); color: #fff; }
