@@ -16,6 +16,9 @@ PWA Next.js de tirage au sort du jeu du soir — https://etagere.marc-suarez.fr
   - **PATCH** : correction ou retouche cosmétique
 - Chaîne obligatoire : branche → PR → CI verte (3 jobs) → fusion → déploiement →
   tag annoté → release GitHub → vérifier la prod (`curl -s https://etagere.marc-suarez.fr/sw.js | grep -o "wsp-v[0-9.]*"`).
+- **Toujours passer par une Pull Request — sans exception**, y compris pour les
+  changements de docs (le fait d'être admin qui bypass les required checks ne
+  dispense pas de la PR : c'est elle qui porte l'historique et la relecture).
 - Jamais de commit direct sur main. Jamais de force-push.
 
 ## 3. Documentation
