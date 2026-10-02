@@ -58,6 +58,15 @@ CREATE TABLE IF NOT EXISTS night_scores (
   score REAL,
   UNIQUE(night_id, user_id)
 );
+CREATE TABLE IF NOT EXISTS bug_reports (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  type TEXT NOT NULL,
+  titre TEXT NOT NULL,
+  issue_url TEXT,
+  capture_name TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now','localtime'))
+);
 CREATE TABLE IF NOT EXISTS picks (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   night_id INTEGER NOT NULL REFERENCES nights(id) ON DELETE CASCADE,
