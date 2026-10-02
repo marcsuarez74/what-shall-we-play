@@ -80,9 +80,9 @@ export async function createBugReport(input: BugInput): Promise<BugResult> {
     captureUrl: input.captureName ? `${host}/api/bugs/capture/${input.captureName}` : null,
   });
 
-  let res: Response;
+  let issue: { number: number; html_url: string };
   try {
-    res = await fetch(`${api}/repos/${repo}/issues`, {
+    const res = await fetch(`${api}/repos/${repo}/issues`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -93,12 +93,11 @@ export async function createBugReport(input: BugInput): Promise<BugResult> {
       body: JSON.stringify({ title: `${PREFIXES[input.type]}${input.title.trim()}`, body, labels: [LABELS[input.type]] }),
       signal: AbortSignal.timeout(10_000),
     });
+    if (!res.ok) return { error: 'GitHub n\u2019a pas répondu — ton signalement n\u2019est pas perdu, réessaie', status: 502 };
+    issue = (await res.json()) as { number: number; html_url: string };
   } catch {
     return { error: 'GitHub n\u2019a pas répondu — ton signalement n\u2019est pas perdu, réessaie', status: 502 };
   }
-  if (!res.ok) return { error: 'GitHub n\u2019a pas répondu — ton signalement n\u2019est pas perdu, réessaie', status: 502 };
-
-  const issue = (await res.json()) as { number: number; html_url: string };
   // Le quota ne compte que les signalements qui ont DÉBOUCHÉ sur une issue.
   db.prepare('INSERT INTO bug_reports (user_id, type, titre, issue_url, capture_name) VALUES (?, ?, ?, ?, ?)')
     .run(input.userId, input.type, input.title.trim(), issue.html_url, input.captureName ?? null);

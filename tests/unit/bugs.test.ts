@@ -95,5 +95,8 @@ describe('createBugReport', () => {
     vi.stubEnv('GITHUB_BUG_TOKEN', 'jeton-test');
     vi.stubGlobal('fetch', vi.fn(async () => { throw new Error('réseau'); }));
     expect((await erreurDe(createBugReport(input(uid('bug-off'), 'bug-off')))).status).toBe(502);
+    // corps 2xx illisible : le parse doit être sous le try → 502, pas d'exception non gérée
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('pas du json', { status: 201 })));
+    expect((await erreurDe(createBugReport(input(uid('bug-json'), 'bug-json')))).status).toBe(502);
   });
 });
