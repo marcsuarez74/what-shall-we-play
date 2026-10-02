@@ -21,6 +21,8 @@ export default defineConfig({
     url: 'http://localhost:3000',
     reuseExistingServer: true,
     timeout: 120_000,
-    env: { DATA_DIR: dataDir },
+    // GITHUB_BUG_TOKEN forcé à vide : un jeton hérité du shell ouvrirait une
+    // vraie issue GitHub (et ferait échouer la suite, qui attend un 503 sans jeton).
+    env: { DATA_DIR: dataDir, GITHUB_BUG_TOKEN: '' },
   },
 });

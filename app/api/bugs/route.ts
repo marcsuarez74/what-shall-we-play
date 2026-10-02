@@ -3,7 +3,7 @@
 // est stockée sur le VPS avant l'assemblage du corps markdown.
 import { NextResponse } from 'next/server';
 import { getSessionUser } from '@/lib/session';
-import { createBugReport, type BugType } from '@/lib/bugs';
+import { createBugReport, validerSignalement, type BugType } from '@/lib/bugs';
 import { saveBugCapture, COVER_EXT, type CoverExt } from '@/lib/storage';
 
 export async function POST(req: Request) {
@@ -13,6 +13,13 @@ export async function POST(req: Request) {
   const form = await req.formData().catch(() => null);
   if (!form) return NextResponse.json({ error: 'Requête invalide' }, { status: 400 });
   const champ = (k: string) => { const v = form.get(k); return typeof v === 'string' ? v : ''; };
+
+  // Validation AVANT le bloc capture (spec : 1 validation, 2 quota, 3 capture) —
+  // une requête invalide ne doit rien écrire sur le VPS : l'uuid d'un fichier
+  // orphelin ne serait jamais renvoyé au client en échec. Le double appel avec
+  // createBugReport est voulu : la lib reste l'entrée autonome des tests.
+  const invalide = validerSignalement({ title: champ('title'), description: champ('description'), type: champ('type') });
+  if (invalide) return NextResponse.json({ error: invalide.error }, { status: invalide.status });
 
   let device: Record<string, unknown> = {};
   try { device = JSON.parse(champ('device')) ?? {}; } catch { /* bloc technique absent : le corps reste correct */ }

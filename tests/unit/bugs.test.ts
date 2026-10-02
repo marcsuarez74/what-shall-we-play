@@ -2,6 +2,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { registerUser } from '@/lib/auth';
 import { createBugReport, corpsIssue, validerSignalement } from '@/lib/bugs';
 import { getDb } from '@/lib/db';
+import { saveBugCapture } from '@/lib/storage';
+import { GET } from '@/app/api/bugs/capture/[name]/route';
 import pkg from '../../package.json';
 
 const uid = (p: string) => (registerUser(p, '1234') as { id: number }).id;
@@ -56,15 +58,16 @@ describe('createBugReport', () => {
     const fetchMock = vi.fn(async () => issueOk(14));
     vi.stubGlobal('fetch', fetchMock);
     const marc = uid('bug-marc');
-    const r = await createBugReport(input(marc, 'bug-marc'));
+    const r = await createBugReport({ ...input(marc, 'bug-marc'), captureName: '3f0f7c1e-1c2b-4a5d-9e8f-0a1b2c3d4e5f.png' });
     expect(r).toEqual({ ok: true, issueUrl: 'https://github.com/org/repo-test/issues/14', issueNumber: 14 });
     const [url, opts] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
     expect(url).toContain('/repos/org/repo-test/issues');
     expect(JSON.parse(String(opts.body)).title).toBe('[Bug] La roue reste bloquée');
     expect(JSON.parse(String(opts.body)).labels).toEqual(['bug']);
-    const row = getDb().prepare('SELECT issue_url, type FROM bug_reports WHERE user_id = ?').get(marc) as { issue_url: string; type: string };
+    const row = getDb().prepare('SELECT issue_url, type, capture_name FROM bug_reports WHERE user_id = ?').get(marc) as { issue_url: string; type: string; capture_name: string };
     expect(row.issue_url).toBe('https://github.com/org/repo-test/issues/14');
     expect(row.type).toBe('bug');
+    expect(row.capture_name).toBe('3f0f7c1e-1c2b-4a5d-9e8f-0a1b2c3d4e5f.png');
   });
 
   it('amélioration : préfixe et label ✨', async () => {
@@ -98,5 +101,19 @@ describe('createBugReport', () => {
     // corps 2xx illisible : le parse doit être sous le try → 502, pas d'exception non gérée
     vi.stubGlobal('fetch', vi.fn(async () => new Response('pas du json', { status: 201 })));
     expect((await erreurDe(createBugReport(input(uid('bug-json'), 'bug-json')))).status).toBe(502);
+  });
+});
+
+describe('GET /api/bugs/capture/[name]', () => {
+  it('sert le fichier (200, Content-Type image) et 404 pour un nom inconnu/mauvais', async () => {
+    const name = saveBugCapture(Buffer.from('png-fake'), 'png');
+    const ok = await GET(new Request('https://x/y'), { params: Promise.resolve({ name }) });
+    expect(ok.status).toBe(200);
+    expect(ok.headers.get('Content-Type')).toBe('image/png');
+    expect(ok.headers.get('Cache-Control')).toContain('immutable');
+    const inconnu = await GET(new Request('https://x/y'), { params: Promise.resolve({ name: '00000000-0000-4000-8000-000000000000.png' }) });
+    expect(inconnu.status).toBe(404);
+    const traversée = await GET(new Request('https://x/y'), { params: Promise.resolve({ name: '../../etc/passwd.png' }) });
+    expect(traversée.status).toBe(404);
   });
 });

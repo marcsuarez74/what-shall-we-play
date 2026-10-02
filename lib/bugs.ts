@@ -93,9 +93,15 @@ export async function createBugReport(input: BugInput): Promise<BugResult> {
       body: JSON.stringify({ title: `${PREFIXES[input.type]}${input.title.trim()}`, body, labels: [LABELS[input.type]] }),
       signal: AbortSignal.timeout(10_000),
     });
-    if (!res.ok) return { error: 'GitHub n\u2019a pas répondu — ton signalement n\u2019est pas perdu, réessaie', status: 502 };
+    if (!res.ok) {
+      // Diagnostic VPS : le status suffit (401 = jeton mal scopé, risque prod n°1) —
+      // jamais le corps de la réponse, jamais le jeton.
+      console.error(`bugs: GitHub status ${res.status}`);
+      return { error: 'GitHub n\u2019a pas répondu — ton signalement n\u2019est pas perdu, réessaie', status: 502 };
+    }
     issue = (await res.json()) as { number: number; html_url: string };
-  } catch {
+  } catch (error) {
+    console.error('bugs: GitHub réseau', error);
     return { error: 'GitHub n\u2019a pas répondu — ton signalement n\u2019est pas perdu, réessaie', status: 502 };
   }
   // Le quota ne compte que les signalements qui ont DÉBOUCHÉ sur une issue.
