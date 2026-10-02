@@ -1,4 +1,5 @@
 import { notFound, redirect } from 'next/navigation';
+import Link from 'next/link';
 import { getSessionUser } from '@/lib/session';
 import { getNight, userCanAccessNight, getNightGame, getNightScores } from '@/lib/nights';
 import { rankScores } from '@/lib/ranks';
@@ -23,7 +24,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
     avatarSrc(u) ? <img className="avs" src={avatarSrc(u)!} alt="" /> : <span className="avs">{u.sticker ?? '🎲'}</span>;
   return (
     <main className="page detail-page">
-      <a className="retour-btn" href="/nights">← Parties</a>
+      <Link className="retour-btn" href="/nights">← Parties</Link>
       <div className="dt-hero">
         {game && <span className="cov dt-cov"><BoxImage game={game} /></span>}
         <div><h3>{game?.title ?? 'Soirée de jeux'}</h3>
