@@ -53,7 +53,7 @@ describe('db', () => {
 
   it('v3.5 : table game_votes prête (UNIQUE par joueur, CASCADE, date locale)', () => {
     const db = getDb();
-    const tables = db.prepare(`SELECT name FROM sqlite_master WHERE type='table'`).all().map((r: { name: string }) => r.name);
+    const tables = (db.prepare(`SELECT name FROM sqlite_master WHERE type='table'`).all() as { name: string }[]).map((r) => r.name);
     expect(tables).toContain('game_votes');
     const marc = db.prepare(`INSERT INTO users (pseudo, code_hash) VALUES ('gv-marc', 'x')`).run();
     const lea = db.prepare(`INSERT INTO users (pseudo, code_hash) VALUES ('gv-lea', 'x')`).run();

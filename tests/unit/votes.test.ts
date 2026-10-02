@@ -33,8 +33,10 @@ describe('toggleNightVote', () => {
     addNightGame(n, g, marc);
 
     expect(toggleNightVote(99999, g, marc)).toEqual({ error: 'Partie introuvable', status: 404 });
-    expect(toggleNightVote(n, g, zarb).status).toBe(403); // pas joueur de la soirée
-    expect(toggleNightVote(n, g + 1, marc).status).toBe(403); // jeu pas sur l'étagère
+    const rnp = toggleNightVote(n, g, zarb);
+    expect('error' in rnp && rnp.status).toBe(403); // pas joueur de la soirée
+    const rhe = toggleNightVote(n, g + 1, marc);
+    expect('error' in rhe && rhe.status).toBe(403); // jeu pas sur l'étagère
 
     getDb().prepare(`UPDATE nights SET status = 'en_jeu' WHERE id = ?`).run(n);
     const r = toggleNightVote(n, g, marc);
