@@ -52,6 +52,12 @@ CREATE TABLE IF NOT EXISTS night_games (
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   UNIQUE(night_id, game_id)
 );
+CREATE TABLE IF NOT EXISTS night_scores (
+  night_id INTEGER NOT NULL REFERENCES nights(id) ON DELETE CASCADE,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  score REAL,
+  UNIQUE(night_id, user_id)
+);
 CREATE TABLE IF NOT EXISTS picks (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   night_id INTEGER NOT NULL REFERENCES nights(id) ON DELETE CASCADE,
@@ -74,14 +80,9 @@ CREATE TABLE IF NOT EXISTS foyers (
 `;
 
 let db: Database.Database | null = null;
-export function getDb(): Database.Database {
-  if (db) return db;
-  fs.mkdirSync(DATA_DIR, { recursive: true });
-  db = new Database(DB_PATH);
-  db.pragma('journal_mode = WAL');
-  db.pragma('foreign_keys = ON');
-  db.exec(SCHEMA);
-  // Migrations incrémentales v1 : ALTER idempotent (« duplicate column » = déjà en place).
+
+// Migrations incrémentales v1 : ALTER idempotent (« duplicate column » = déjà en place).
+export function runMigrations(db: Database.Database): void {
   for (const stmt of [
     'ALTER TABLE games ADD COLUMN designer TEXT',
     'ALTER TABLE games ADD COLUMN artist TEXT',
@@ -93,8 +94,22 @@ export function getDb(): Database.Database {
     'ALTER TABLE users ADD COLUMN foyer_id INTEGER REFERENCES foyers(id)',
     'ALTER TABLE games ADD COLUMN foyer_id INTEGER REFERENCES foyers(id)',
     'ALTER TABLE night_players ADD COLUMN validated_at TEXT',
+    "ALTER TABLE nights ADD COLUMN status TEXT NOT NULL DEFAULT 'creation'",
+    'ALTER TABLE nights ADD COLUMN game_id INTEGER REFERENCES games(id)',
   ]) {
     try { db.exec(stmt); } catch { /* colonne déjà présente */ }
   }
+  // v3.3 : les soirées archivées avant l'existence des états deviennent « termine ».
+  db.prepare(`UPDATE nights SET status = 'termine' WHERE ended_at IS NOT NULL AND status = 'creation'`).run();
+}
+
+export function getDb(): Database.Database {
+  if (db) return db;
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+  db = new Database(DB_PATH);
+  db.pragma('journal_mode = WAL');
+  db.pragma('foreign_keys = ON');
+  db.exec(SCHEMA);
+  runMigrations(db);
   return db;
 }
