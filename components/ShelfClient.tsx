@@ -55,7 +55,11 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
   }
   function lancer() {
     if (games.length === 0) return;
-    router.push(`/tirage/${night.id}?games=${games.map((g) => g.id).join(',')}`);
+    // Navigation document (et non router.push) : le refresh du sync live qui
+    // tombe au même moment pouvait annuler le push doux — on restait sur
+    // l'étagère, bouton armé, sans erreur (flake CI v3.3). Le tirage est un
+    // écran plein : le rechargement complet y est invisible et sans course.
+    window.location.assign(`/tirage/${night.id}?games=${games.map((g) => g.id).join(',')}`);
   }
   function clicLancer() {
     if (!tousPrets && !sur) { setSur(true); return; } // il manque du monde : « Sûr ? »

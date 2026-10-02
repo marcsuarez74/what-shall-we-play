@@ -17,6 +17,10 @@ const spaceGrotesk = Space_Grotesk({
 export const metadata: Metadata = {
   title: "What Shall We Play?",
   description: "L'étagère qui tire le jeu du soir à la roue.",
+  icons: {
+    icon: "/icons/icon-192.png",
+    apple: "/icons/apple-touch-icon.png",
+  },
 };
 
 export const viewport: Viewport = {

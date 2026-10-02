@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const TABS = [
-  { href: '/etagere', icon: '♟', label: 'Étagère' },
+  { href: '/etagere', icon: '🗄️', label: 'Étagère' },
   { href: '/library', icon: '📚', label: 'Ludothèque' },
   { href: '/games/add', icon: '➕', label: 'Ajouter' },
   { href: '/nights', icon: '🎲', label: 'Parties' },

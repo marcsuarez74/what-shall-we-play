@@ -4,6 +4,15 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [3.3.1] — 2026-10-02
+
+### Ajusté
+- **Nouvelle icône de la PWA** — fournie par Marc : écran d'accueil iOS/Android
+  (apple-touch + manifest 192/512) et favicon du navigateur.
+- **L'onglet Étagère** porte 🗄️ dans la barre de navigation (fin du pion ♟).
+- **Respirations** : espace entre « Mes parties » et « Changer mon code » sur le
+  profil ; espace entre « Soirée du jour » et « Nouvelle partie » sur l'étagère.
+
 ## [3.3.0] — 2026-10-02
 
 ### Ajouté

@@ -99,6 +99,9 @@ async function setupTirage(page: import('@playwright/test').Page, s: string) {
   // re-render « Sûr ? » — on attend l'état armé au lieu de cliquer à l'aveugle.
   await expect(lancer).toHaveAccessibleName(/Sûr \? Lancer/);
   await lancer.click(); // « Sûr ? Lancer » → on lance quand même
+  // Le lancement navigue vers l'écran plein du tirage (navigation document
+  // depuis v3.3.1) : on attend l'URL, un échec ici = le clic n'a pas lancé.
+  await page.waitForURL('**/tirage/**', { timeout: 20_000 });
   await expect(page.getByText('LA ROUE A PARLÉ')).toBeVisible({ timeout: 20_000 });
 }
 
