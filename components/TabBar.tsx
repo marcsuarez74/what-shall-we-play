@@ -14,7 +14,7 @@ const HIDDEN = ['/login', '/register', '/tirage'];
 
 export default function TabBar() {
   const path = usePathname();
-  if (path === '/' || HIDDEN.includes(path)) return null;
+  if (path === '/' || HIDDEN.includes(path) || path.endsWith('/scores')) return null;
   return (
     <nav className="tabbar" aria-label="Navigation principale">
       {TABS.map((t) => {

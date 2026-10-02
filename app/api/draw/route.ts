@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { getSessionUser } from '@/lib/session';
 import { pickGameId } from '@/lib/draw';
 import { getNight, getShelfGames, userCanAccessNight } from '@/lib/nights';
+import { drawAllowed } from '@/lib/nights';
 import { getDb } from '@/lib/db';
 
 export async function POST(req: Request) {
@@ -12,6 +13,8 @@ export async function POST(req: Request) {
   const night = getNight(Number(nightId));
   if (!night || !userCanAccessNight(user.id, night.id))
     return NextResponse.json({ error: 'Soirée introuvable' }, { status: 404 });
+  const gate = drawAllowed(night.id);
+  if ('error' in gate) return NextResponse.json({ error: gate.error }, { status: gate.status });
   const shelf = getShelfGames(night.id);
   const allowed = new Set(shelf.map((g) => g.id));
   const ids: number[] = [...new Set((gameIds as number[]).map(Number))].filter((id) => allowed.has(id));

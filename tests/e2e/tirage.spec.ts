@@ -33,12 +33,14 @@ test('tirage : roue plein écran puis verdict sur le jeu tiré', async ({ page }
   await expect(page.getByText('LA ROUE A PARLÉ')).toBeVisible({ timeout: 10_000 });
   await expect(page.getByRole('heading', { name: 'Cascadia' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Sortir la boîte 📦' })).toBeVisible();
-  await page.getByRole('button', { name: 'Sortir la boîte 📦' }).click();
-  await expect(page.getByRole('button', { name: 'Boîte sortie ✓' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Relancer le tirage' })).toBeVisible();
-
-  // Relance : la roue repart, un second verdict tombe
-  await page.getByRole('button', { name: 'Relancer le tirage' }).click();
+  await expect(page.locator('.pastille.prov')).toContainText('jeu pressenti');
+  // Relancer AVANT la boîte : le verdict se remplace, rien ne s'accumule
+  await page.getByRole('button', { name: '↻ Relancer le tirage' }).click();
   await expect(page.getByText('LA ROUE A PARLÉ')).toBeVisible({ timeout: 10_000 });
-  await expect(page.getByRole('heading', { name: 'Cascadia' })).toBeVisible();
+  // Sortir la boîte : la partie démarre, tout se verrouille
+  await page.getByRole('button', { name: 'Sortir la boîte 📦' }).click();
+  await expect(page.locator('.pastille.ok')).toContainText('jeu de la partie');
+  await expect(page.getByRole('button', { name: 'Relancer le tirage' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: '🏁 Partie terminée' })).toBeVisible();
+  await expect(page.locator('.verrou-note')).toContainText('jeu verrouillé');
 });

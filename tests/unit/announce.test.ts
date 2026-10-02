@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildInviteMessage, buildResultMessage, frJoin } from '@/lib/announce';
+import { buildInviteMessage, buildResultMessage, buildPodiumMessage, frJoin } from '@/lib/announce';
 
 describe('messages de soirée', () => {
   it('frJoin : énumération française', () => {
@@ -50,5 +50,14 @@ describe('messages de soirée', () => {
       '🎲 Solo a été tiré au sort !\n'
       + '👉 marc ramène son jeu\n'
       + '🔗 etagere.marc-suarez.fr');
+  });
+
+  it('construit le message de podium WhatsApp', () => {
+    const msg = buildPodiumMessage({ title: 'Cascadia', classement: [
+      { pseudo: 'Marc', score: 24, rank: 1 }, { pseudo: 'Lucie', score: 24, rank: 1 }, { pseudo: 'Théo', score: 15, rank: 2 },
+    ] });
+    expect(msg).toContain('Cascadia');
+    expect(msg).toContain('👑 Marc & Lucie — 24 pts');
+    expect(msg).toContain('🥈 Théo — 15 pts');
   });
 });

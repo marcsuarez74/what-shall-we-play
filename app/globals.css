@@ -317,6 +317,25 @@ input[type='file'] {
 .night-card .etats { display: grid; gap: 3px; margin-top: 9px; }
 .night-card .etats p { font-size: 12.5px; color: var(--doux-clair); }
 .night-card .etats p.ok { color: var(--vert); font-weight: 600; }
+
+/* v3.3 — l'état vit dans la carte d'étagère */
+.badge-etat { display: inline-flex; align-items: center; gap: 7px; border-radius: 999px; padding: 5px 12px; font-size: 12px; font-weight: 600; }
+.badge-etat .pt { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.b-prep { background: color-mix(in srgb, var(--cuivre) 16%, transparent); color: var(--cuivre); }
+.b-enjeu { background: color-mix(in srgb, var(--vert) 16%, transparent); color: var(--vert); }
+.b-term { background: color-mix(in srgb, var(--doux) 26%, transparent); color: var(--doux-clair); }
+.night-card.enjeu { border-color: var(--vert); }
+.night-card.terminee { border-color: color-mix(in srgb, var(--doux) 55%, transparent); }
+.bandeau { display: flex; align-items: center; gap: 11px; margin-top: 12px; padding: 12px 13px; border-radius: 12px; font-size: 13px; line-height: 1.4; }
+.bandeau .b-cov { width: 44px; height: 44px; border-radius: 8px; flex: none; display: grid; place-items: center; font-size: 20px; }
+.bandeau.v { background: color-mix(in srgb, var(--vert) 13%, transparent); border: 1px solid color-mix(in srgb, var(--vert) 45%, transparent); }
+.bandeau.v .b-cov { background: var(--vert); color: #fff; }
+.bandeau.g { background: color-mix(in srgb, var(--doux) 12%, transparent); border: 1px solid color-mix(in srgb, var(--doux) 40%, transparent); }
+.bandeau.g .b-cov { background: var(--doux); color: var(--noyer); }
+.bandeau b { display: block; }
+.bandeau span { color: var(--doux-clair); font-size: 12px; }
+.bandeau .b-cov img { width: 100%; height: 100%; border-radius: 8px; object-fit: cover; }
+.btn-copper.vert { background: var(--vert); color: #fff; }
 .cta-zone { gap: 7px; }
 .cta-row { display: flex; gap: 10px; align-items: center; }
 .cta-row .btn-copper { flex: 1 1 auto; min-width: 0; white-space: nowrap; }
@@ -1642,6 +1661,13 @@ input[type='file'] {
   margin-top: 8px;
 }
 
+/* v3.3 — verdict provisoire puis verrou : la boîte sortie démarre la partie */
+.pastille { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; border-radius: 999px; padding: 4px 11px; font-size: 11.5px; font-weight: 600; }
+.pastille.prov { border: 1px dashed var(--cuivre); color: var(--cuivre); }
+.pastille.ok { background: color-mix(in srgb, var(--vert) 16%, transparent); color: var(--vert); border: 1px solid color-mix(in srgb, var(--vert) 45%, transparent); }
+.tirage-stage.voilee .wheel { filter: grayscale(.5) brightness(.55); }
+.verrou-note { display: flex; align-items: center; justify-content: center; gap: 7px; font-size: 12px; color: var(--doux-clair); margin-top: 10px; }
+
 /* ---------- Soirées (historique) ---------- */
 .nights-list {
   list-style: none;
@@ -1654,25 +1680,6 @@ input[type='file'] {
   color: var(--creme);
   font-size: 14px;
   font-weight: 600;
-}
-
-.night-picks {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  border-top: 1px solid rgba(185, 165, 140, 0.25);
-  padding-top: 10px;
-  font-size: 15px;
-  color: var(--doux-clair);
-}
-
-.night-picks strong {
-  color: var(--creme);
-}
-
-.night-picks li::before {
-  content: '🎯 ';
 }
 
 .empty a {
@@ -1859,3 +1866,116 @@ input[type='file'] {
 .hist-players { display: flex; flex-wrap: wrap; gap: 6px; }
 .hist-picks { color: var(--creme); font-size: 13px; }
 .hist-picks::before { content: '🎯 '; }
+
+/* ---------- Carnet des scores (v3.3 — plein écran créateur) ---------- */
+.score-page { padding-bottom: 24px; }
+.carnet-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.carnet-head .cov { width: 58px; height: 58px; border-radius: 10px; overflow: hidden; flex: none; background: var(--surface); display: grid; place-items: center; }
+.carnet-head .cov img { width: 100%; height: 100%; object-fit: cover; }
+.carnet-head .cov .cover-placeholder { font-size: 24px; }
+.carnet-head h3 { font-family: var(--font-display), var(--font-ui), sans-serif; font-size: 20px; }
+.carnet-head p { font-size: 12px; color: var(--doux-clair); margin-top: 2px; }
+.carnet { background: var(--surface); border-radius: 16px; overflow: hidden; }
+.carnet-row { display: flex; align-items: center; gap: 11px; padding: 12px 14px; border-bottom: 1px solid color-mix(in srgb, var(--doux) 30%, transparent); }
+.carnet-row:last-child { border-bottom: none; }
+.avs {
+  width: 40px; height: 40px; border-radius: 50%; background: var(--noyer);
+  border: 1px solid color-mix(in srgb, var(--doux) 45%, transparent);
+  display: grid; place-items: center; font-size: 19px; flex: none; overflow: hidden;
+}
+.avs img { width: 100%; height: 100%; object-fit: cover; }
+.carnet-row .ps { flex: 1; min-width: 0; }
+.carnet-row .ps b { font-size: 14.5px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.score-in {
+  width: 82px; background: var(--noyer); border: 1.5px solid var(--doux); border-radius: 10px;
+  color: var(--creme); font-family: var(--font-ui), system-ui, sans-serif; font-weight: 700;
+  font-size: 16px; /* 16 px obligatoire : iOS zoome les champs < 16 px */
+  text-align: right; padding: 8px 10px; appearance: none;
+}
+.score-in:focus { outline: none; border-color: var(--cuivre); }
+.score-in::placeholder { color: var(--doux); font-weight: 400; font-size: 13px; }
+.med { width: 30px; text-align: center; font-size: 22px; opacity: 0; transform: scale(0.4); transition: 0.18s ease; }
+.med.on { opacity: 1; transform: scale(1); }
+.carnet-foot { display: grid; gap: 9px; margin-top: 16px; }
+.carnet-foot .btn-ghost { background: none; border: 1.5px solid color-mix(in srgb, var(--doux) 70%, transparent); border-radius: 14px; font-weight: 600; font-size: 14px; min-height: 46px; padding: 9px 16px; }
+.carnet-foot .btn-copper { min-height: 46px; font-size: 15px; }
+.egalite { font-size: 11.5px; color: var(--doux-clair); text-align: center; margin-top: 8px; min-height: 14px; }
+
+/* ---------- Détail de soirée (v3.3 — podium, partage, variante sans scores) ---------- */
+.retour-btn {
+  display: inline-block; margin-bottom: 12px;
+  color: var(--cuivre); font-size: 13.5px; font-weight: 600; text-decoration: none;
+}
+.dt-hero { display: flex; align-items: center; gap: 13px; margin-bottom: 14px; }
+.dt-cov { width: 64px; height: 64px; border-radius: 11px; overflow: hidden; flex: none; background: var(--surface); display: grid; place-items: center; }
+.dt-cov img { width: 100%; height: 100%; object-fit: cover; }
+.dt-cov .cover-placeholder { font-size: 26px; }
+.dt-hero h3 { font-family: var(--font-display), var(--font-ui), sans-serif; font-size: 20px; }
+.dt-hero p { font-size: 12px; color: var(--doux-clair); margin-top: 3px; }
+.pod-lb { font-size: 11px; font-weight: 700; letter-spacing: .14em; color: var(--doux-clair); margin: 14px 0 8px; }
+.pod1 {
+  display: flex; align-items: center; gap: 13px; padding: 14px 16px; border-radius: 16px;
+  border: 2px solid var(--cuivre); background: color-mix(in srgb, var(--cuivre) 10%, var(--surface));
+}
+.pod1 .avs { width: 46px; height: 46px; font-size: 22px; }
+.pod1 .pd { flex: 1; min-width: 0; }
+.pod1 .pd b { font-family: var(--font-display), var(--font-ui), sans-serif; font-size: 17px; display: block; }
+.pod1 .pd span { font-size: 12px; color: var(--doux-clair); }
+.pod1 .sc { font-family: var(--font-ui), system-ui, sans-serif; font-weight: 700; font-size: 25px; }
+.pod23 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+.pod23 .p { display: flex; align-items: center; gap: 9px; background: var(--surface); border-radius: 14px; padding: 11px 12px; }
+.pod23 .p .avs { width: 36px; height: 36px; font-size: 17px; }
+.pod23 .p b { font-size: 13px; display: block; }
+.pod23 .p span { font-size: 12px; color: var(--doux-clair); }
+.pod-autres {
+  margin-top: 10px; border-radius: 14px; overflow: hidden;
+  background: color-mix(in srgb, var(--surface) 60%, transparent);
+}
+.pod-autres div { display: flex; align-items: center; gap: 10px; padding: 10px 14px; font-size: 13px; border-bottom: 1px solid color-mix(in srgb, var(--doux) 22%, transparent); }
+.pod-autres div:last-child { border-bottom: none; }
+.pod-autres .avs { width: 30px; height: 30px; font-size: 14px; }
+.pod-autres .sc { margin-left: auto; color: var(--doux-clair); font-weight: 600; }
+.sans-score { text-align: center; color: var(--doux-clair); font-size: 13.5px; padding: 16px 0 6px; }
+.detail-page .partager-btn { margin-top: 16px; width: 100%; }
+
+/* ---------- Historique à cartes (v3.3 — une carte par partie) ---------- */
+.hist-liste { display: grid; gap: 10px; }
+.hist-card {
+  display: flex; align-items: center; gap: 12px; background: var(--surface);
+  border-radius: 15px; padding: 11px 13px; color: inherit; text-decoration: none; text-align: left;
+}
+.hist-card:active { transform: scale(.985); }
+.hist-card .hc { flex: 1; min-width: 0; }
+.hist-card .hc b { font-size: 14.5px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hist-card .hc span { font-size: 12px; color: var(--doux-clair); }
+.hist-card .hc .gagnant { color: var(--creme); }
+.hist-card .dt { text-align: right; flex: none; }
+.hist-card .dt span { display: block; font-size: 11px; color: var(--doux-clair); }
+.hist-card .dt .med-mini { font-size: 17px; }
+.hist-card .hist-cov { width: 44px; height: 44px; border-radius: 8px; overflow: hidden; flex: 0 0 auto; background: var(--surface); display: grid; place-items: center; font-size: 22px; }
+.hist-card .hist-cov img { width: 100%; height: 100%; object-fit: cover; }
+
+/* La carte « Ce soir » : le jeu de la partie remplace les picks cumulés (v3.3.0) */
+.jeu-partie { margin: 10px 0 0; padding-top: 10px; border-top: 1px solid rgba(185, 165, 140, 0.25); font-size: 13px; font-weight: 600; color: var(--cuivre); }
+.jeu-partie::before { content: '🎯 '; }
+
+/* ---------- Profil : podiums dans les stats + « Mes parties » (v3.3) ---------- */
+.stat .medailles { font-size: 15.5px; letter-spacing: .02em; }
+.mes-parties { display: grid; gap: 8px; }
+.mp-row {
+  display: flex; align-items: center; gap: 11px; background: var(--surface);
+  border-radius: 14px; padding: 9px 12px; color: inherit; text-decoration: none;
+}
+.mp-row:active { transform: scale(.985); }
+.mp-row .cov {
+  position: relative; width: 40px; height: 40px; border-radius: 9px; overflow: hidden; flex: none;
+  background: color-mix(in srgb, var(--doux) 25%, transparent); display: grid; place-items: center;
+}
+.mp-row .cov img { width: 100%; height: 100%; object-fit: cover; }
+.mp-row .cov .cover-placeholder { font-size: 18px; }
+.mp-row .mpd { flex: 1; min-width: 0; }
+.mp-row .mpd b { font-size: 14px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mp-row .mpd span { font-size: 11.5px; color: var(--doux-clair); }
+.mp-row .dt { text-align: right; flex: none; }
+.mp-row .dt b { font-size: 15px; display: block; }
+.mp-row .med { width: auto; opacity: 1; transform: none; font-size: 18px; }

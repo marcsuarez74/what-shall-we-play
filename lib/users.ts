@@ -8,18 +8,48 @@ import type { UserRow } from './types';
 
 export { ALLOWED_STICKERS };
 
-export function getProfileStats(userId: number): { plays: number; nights: number; games: number } {
+export function getProfileStats(userId: number): {
+  plays: number; nights: number; games: number;
+  podiums: { un: number; deux: number; trois: number };
+} {
   const db = getDb();
   const one = (sql: string) => Number((db.prepare(sql).get(userId) as { n: number }).n);
   // la bibliothèque du foyer si j'en ai un, sinon mes jeux perso
   const games = Number((db.prepare(`SELECT COUNT(*) AS n FROM games g JOIN users u ON u.id = ?
     WHERE (u.foyer_id IS NOT NULL AND g.foyer_id = u.foyer_id)
        OR (u.foyer_id IS NULL AND g.owner_id = ? AND g.foyer_id IS NULL)`).get(userId, userId) as { n: number }).n);
+  // Podiums : DENSE_RANK par soirée (égalité = même médaille), scores non nuls
+  // uniquement. Le rang se calcule sur TOUS les joueurs de la soirée — le filtre
+  // user_id vient APRÈS la fenêtre, sinon chaque rang serait 1.
+  const pod = db.prepare(`
+    SELECT SUM(CASE WHEN rank = 1 THEN 1 ELSE 0 END) AS un,
+           SUM(CASE WHEN rank = 2 THEN 1 ELSE 0 END) AS deux,
+           SUM(CASE WHEN rank = 3 THEN 1 ELSE 0 END) AS trois
+    FROM (SELECT rank FROM (
+            SELECT user_id, DENSE_RANK() OVER (PARTITION BY night_id ORDER BY score DESC) AS rank
+            FROM night_scores WHERE score IS NOT NULL)
+          WHERE user_id = ?)`)
+    .get(userId) as { un: number | null; deux: number | null; trois: number | null };
   return {
     plays: one('SELECT COUNT(*) AS n FROM picks WHERE spinner_id = ?'),
     nights: one('SELECT COUNT(*) AS n FROM night_players WHERE user_id = ?'),
     games,
+    podiums: { un: pod.un ?? 0, deux: pod.deux ?? 0, trois: pod.trois ?? 0 },
   };
+}
+
+// « Mes parties » : mes soirées terminées où j'ai un score, la plus récente d'abord.
+// La médaille n'est PAS stockée : la page (côté serveur) recalcule mon rang via
+// rankScores(getNightScores(id)) — au plus `limit` soirées, pas de N+1 client.
+export function getMyParties(userId: number, limit = 6) {
+  return getDb().prepare(`
+    SELECT n.id, n.played_at, g.title AS game_title, g.cover_path, g.cover_url, ns.score
+    FROM nights n
+    JOIN night_scores ns ON ns.night_id = n.id AND ns.user_id = ?
+    LEFT JOIN games g ON g.id = n.game_id
+    WHERE n.status = 'termine'
+    ORDER BY n.played_at DESC, n.id DESC LIMIT ?`)
+    .all(userId, limit) as { id: number; played_at: string; game_title: string | null; cover_path: string | null; cover_url: string | null; score: number | null }[];
 }
 
 export function setSticker(userId: number, sticker: unknown): { ok: true } | { error: string; status: number } {

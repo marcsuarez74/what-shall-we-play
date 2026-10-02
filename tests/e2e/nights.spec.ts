@@ -37,14 +37,15 @@ test('soirées : historique avec date, joueurs et tirages', async ({ page }) => 
   await page.goto('/etagere');
   await page.getByRole('link', { name: 'Parties' }).click();
 
-  // La soirée du jour : section « Ce soir » (PARTIE EN COURS) ; l'historique reste vide
+  // La soirée du jour : section « Ce soir » (badge d'état) ; l'historique reste vide
   await expect(page.getByRole('heading', { name: 'Mes parties' })).toBeVisible();
   await expect(page.locator('.night-card')).toHaveCount(1); // Ce soir seulement
-  await expect(page.locator('[aria-label="Ce soir"] .night-card')).toContainText('PARTIE EN COURS');
+  // v3.3.0 : la carte « Ce soir » porte un badge d'état ; les picks cumulés ne
+  // s'affichent plus (le jeu de la partie vit sur la boîte sortie, nights.game_id)
+  await expect(page.locator('[aria-label="Ce soir"] .badge-etat')).toContainText('En préparation');
   await expect(page.locator('[aria-label="Ce soir"] .chips')).toContainText(pseudo);
-  await expect(page.locator('[aria-label="Ce soir"] .night-picks')).toContainText('Azul');
-  await expect(page.locator('[aria-label="Ce soir"] .night-picks')).toContainText(`tiré par ${pseudo}`);
-  await expect(page.locator('[aria-label="Historique"] .empty')).toContainText('Aucune partie passée');
+  await expect(page.locator('.night-picks')).toHaveCount(0);
+  await expect(page.locator('[aria-label="Historique"] .hint')).toContainText('Aucune partie terminée');
 });
 
 test('soirées : écran vide pour un nouveau compte', async ({ page }) => {
@@ -61,6 +62,6 @@ test('soirées : écran vide pour un nouveau compte', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Mes parties' })).toBeVisible();
   await expect(page.locator('[aria-label="Ce soir"] .empty')).toContainText('Pas de partie aujourd');
   await expect(page.locator('[aria-label="Programmées"] .empty')).toContainText('Aucune partie programmée');
-  await expect(page.locator('[aria-label="Historique"] .empty')).toContainText('Aucune partie passée');
+  await expect(page.locator('[aria-label="Historique"] .hint')).toContainText('Aucune partie terminée');
   await expect(page.locator('[aria-label="Ce soir"] .empty a')).toHaveAttribute('href', '/etagere');
 });

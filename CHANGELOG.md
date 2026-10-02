@@ -4,6 +4,27 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [3.3.0] — 2026-10-02
+
+### Ajouté
+- **La vie d'une partie en trois états** — en préparation, en jeu (la boîte sortie
+  verrouille le jeu, plus de relance), terminée (scores enregistrés). Le badge
+  d'état vit sur l'étagère, le tirage, les Parties et le profil.
+- **Le carnet des scores** — « Partie terminée » ouvre la saisie : image du jeu,
+  un joueur par ligne, médailles 👑🥈🥉 placées en direct, égalité = même médaille,
+  « Terminer sans scores » pour les soirées sans compte.
+- **L'historique qui raconte** — une carte par partie (la boîte sortie, le gagnant),
+  et le détail avec le podium complet + partage WhatsApp.
+- **Le profil à médailles** — podiums comptés dans les stats et « Mes parties »
+  avec ma médaille par soirée.
+
+### Corrigé
+- **Fini l'accumulation de jeux aux relances** — relancer le tirage remplace le jeu
+  pressenti ; une seule boîte peut sortir ; une seule ligne par partie dans
+  l'historique.
+- **« Sortir la boîte » est désormais le vrai début de partie** (état serveur,
+  synchronisé en direct chez tous les joueurs), plus un simple effet visuel.
+
 ## [3.2.1] — 2026-10-01
 
 ### Corrigé

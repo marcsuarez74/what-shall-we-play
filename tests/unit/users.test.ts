@@ -1,11 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { registerUser } from '@/lib/auth';
-import { createNight } from '@/lib/nights';
+import { createNight, addNightGame, boxOutNight, endNight } from '@/lib/nights';
 import { createGame } from '@/lib/games';
 import { getDb } from '@/lib/db';
 import fs from 'node:fs';
 import path from 'node:path';
-import { getProfileStats, setSticker, ALLOWED_STICKERS, deleteAccount, setAvatar } from '@/lib/users';
+import { getProfileStats, getMyParties, setSticker, ALLOWED_STICKERS, deleteAccount, setAvatar } from '@/lib/users';
 import { avatarSrc } from '@/lib/formats';
 
 const uid = (p: string) => (registerUser(p, '1234') as { id: number }).id;
@@ -22,8 +22,8 @@ describe('profil', () => {
     createNight(lea, [lea]);
     pick(n1, g1, marc);
     pick(n1, g2, marc);
-    expect(getProfileStats(marc)).toEqual({ plays: 2, nights: 1, games: 2 });
-    expect(getProfileStats(lea)).toEqual({ plays: 0, nights: 2, games: 0 });
+    expect(getProfileStats(marc)).toEqual({ plays: 2, nights: 1, games: 2, podiums: { un: 0, deux: 0, trois: 0 } });
+    expect(getProfileStats(lea)).toEqual({ plays: 0, nights: 2, games: 0, podiums: { un: 0, deux: 0, trois: 0 } });
   });
 
   it('setSticker accepte un emoji de la liste et rejette le reste', () => {
@@ -80,6 +80,29 @@ describe('profil', () => {
     expect(avatarSrc({ avatar_path: r2.path, sticker: '🦊' })).toBe(`/api/cover/${r2.path}`);
     expect(avatarSrc({ avatar_path: null, sticker: '🦊' })).toBeNull();
     expect(setAvatar(u, fake, 'exe')).toEqual({ error: 'Format : jpg, png ou webp', status: 400 });
+  });
+
+  it('compte les podiums et liste mes parties avec ma médaille', () => {
+    const a = (registerUser('u-pod-a', '1234') as { id: number }).id;
+    const b = (registerUser('u-pod-b', '1234') as { id: number }).id;
+    // deux soirées, chacune avec son jeu posé avant la sortie de boîte
+    const n1 = createNight(a, [a, b]);
+    const g1 = createGame(a, { title: 'Cascadia', box_format: 'moyen' });
+    addNightGame(n1, g1, a);
+    boxOutNight(n1, a, g1);
+    const n2 = createNight(a, [a, b]);
+    const g2 = createGame(a, { title: 'Azul', box_format: 'petit' });
+    addNightGame(n2, g2, a);
+    boxOutNight(n2, a, g2);
+    // n1 : a premier ; n2 : a deuxième
+    expect(endNight(n1, a, { [a]: 24, [b]: 19 })).toEqual({ ok: true });
+    expect(endNight(n2, a, { [a]: 10, [b]: 30 })).toEqual({ ok: true });
+    const stats = getProfileStats(a);
+    expect(stats.podiums).toEqual({ un: 1, deux: 1, trois: 0 });
+    const parties = getMyParties(a);
+    expect(parties).toHaveLength(2);
+    expect(parties.map((p) => p.score).sort((x, y) => (x ?? 0) - (y ?? 0))).toEqual([10, 24]);
+    expect(parties.every((p) => p.game_title)).toBe(true);
   });
 
   it('revenir au sticker efface la photo de disque', () => {

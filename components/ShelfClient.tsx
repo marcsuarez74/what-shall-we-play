@@ -1,7 +1,7 @@
 'use client';
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { FORMATS, FORMAT_SCALE, FORMAT_LABEL } from '@/lib/formats';
+import { FORMATS, FORMAT_SCALE, FORMAT_LABEL, coverSrc } from '@/lib/formats';
 import type { Game, Night, UserLite } from '@/lib/types';
 import { filterShelf, type ShelfFilters } from '@/lib/filters';
 import GameSheet from './GameSheet';
@@ -17,8 +17,10 @@ import UserMenu from './UserMenu';
 // Le tirage se fait parmi toutes les boîtes. Chacun VALIDE quand sa sélection
 // est complète (signal partagé, pas verrou) ; le créateur lance, il voit qui
 // est prêt — un appui si tout le monde a validé, double-appui « Sûr ? » sinon.
-export default function ShelfClient({ night, players, games, myLibrary, users, plays, me }: {
-  night: Night; players: UserLite[]; games: Game[]; myLibrary: Game[]; users: UserLite[]; plays: Record<number, number>;
+// v3.3 — la carte porte l'ÉTAT de la soirée (badge), et une fois la boîte
+// sortie (en_jeu) l'étagère gèle : bandeau vert, plus d'ajout ni de validation.
+export default function ShelfClient({ night, partyGame, players, games, myLibrary, users, plays, me }: {
+  night: Night; partyGame: Game | null; players: UserLite[]; games: Game[]; myLibrary: Game[]; users: UserLite[]; plays: Record<number, number>;
   me: UserLite;
 }) {
   const router = useRouter();
@@ -32,7 +34,10 @@ export default function ShelfClient({ night, players, games, myLibrary, users, p
     q: '', players: null, weight: 'all', duration: 'all', format: 'all',
   });
   const filtered = useMemo(() => filterShelf(games, filters), [games, filters]);
-  const byFormat = useMemo(() => FORMATS.map((f) => ({ f, list: filtered.filter((g) => g.box_format === f) })), [filtered]);
+  const enJeu = night.status === 'en_jeu';
+  // En jeu : LA boîte de la partie a quitté l'étagère — elle ne revient pas dans les rangées.
+  const byFormat = useMemo(() => FORMATS.map((f) => ({ f, list: filtered.filter((g) => g.id !== partyGame?.id && g.box_format === f) })), [filtered, partyGame]);
+  const cover = partyGame ? coverSrc(partyGame) : null;
 
   const estCreateur = night.creator_id === me.id;
   const monEtat = players.find((p) => p.id === me.id);
@@ -74,23 +79,35 @@ export default function ShelfClient({ night, players, games, myLibrary, users, p
         <h1>L&apos;étagère</h1>
         <UserMenu me={me} />
       </header>
-      <section className="night-card">
+      <section className={'night-card' + (enJeu ? ' enjeu' : '')}>
         <div className="night-card-head">
-          <span className="night-label">PARTIE EN COURS</span>
-          <button type="button" className="link-btn" onClick={() => setEditingNight(true)}>modifier</button>
+          {enJeu
+            ? <span className="badge-etat b-enjeu"><span className="pt" />En jeu</span>
+            : <span className="badge-etat b-prep"><span className="pt" />En préparation</span>}
+          {!enJeu && <button type="button" className="link-btn" onClick={() => setEditingNight(true)}>modifier</button>}
         </div>
-        <div className="chips">
-          {players.map((p) => <PlayerChip key={p.id} u={p} etat={p.validated_at ? 'ok' : 'attente'} />)}
-        </div>
-        <div className="etats">
-          {players.map((p) => (
-            <p key={p.id} className={p.validated_at ? 'ok' : ''}>
-              {p.validated_at
-                ? <>✓ {prenom(p)} a validé sa sélection</>
-                : <>⏳ {prenom(p)} n&apos;a pas encore validé</>}
-            </p>
-          ))}
-        </div>
+        {enJeu && partyGame && (
+          <div className="bandeau v">
+            <span className="b-cov">{cover ? <img src={cover} alt="" /> : '📦'}</span>
+            <div><b>{partyGame.title} est sortie de l&apos;étagère</b></div>
+          </div>
+        )}
+        {!enJeu && (
+          <>
+            <div className="chips">
+              {players.map((p) => <PlayerChip key={p.id} u={p} etat={p.validated_at ? 'ok' : 'attente'} />)}
+            </div>
+            <div className="etats">
+              {players.map((p) => (
+                <p key={p.id} className={p.validated_at ? 'ok' : ''}>
+                  {p.validated_at
+                    ? <>✓ {prenom(p)} a validé sa sélection</>
+                    : <>⏳ {prenom(p)} n&apos;a pas encore validé</>}
+                </p>
+              ))}
+            </div>
+          </>
+        )}
       </section>
       {games.length > 0 && (
         <ShelfControls filters={filters} setFilters={setFilters} visible={filtered.length} total={games.length} />
@@ -105,13 +122,13 @@ export default function ShelfClient({ night, players, games, myLibrary, users, p
           </button>
           <p className="hint">Les autres joueurs voient le même bouton de leur côté.</p>
         </section>
-      ) : (
+      ) : !enJeu ? (
         <div className="add-more">
           <button type="button" className="link-btn" onClick={() => setAddingGames(true)}>
             + Ajouter d&apos;autres jeux{jAiValide ? <span className="revalide"> · à re-valider ensuite</span> : null}
           </button>
         </div>
-      )}
+      ) : null}
       {byFormat.map(({ f, list }) => list.length === 0 ? null : (
         <section key={f} className="shelf-block">
           <div className="row" role="list">
@@ -131,7 +148,16 @@ export default function ShelfClient({ night, players, games, myLibrary, users, p
         </section>
       ))}
       <div className="cta-zone">
-        {jAiValide ? (
+        {enJeu ? (
+          <>
+            <div className="cta-row">
+              {estCreateur
+                ? <a className="btn-copper pret" href={`/nights/${night.id}/scores`}>🏁 Partie terminée</a>
+                : <span className="lance-par">En jeu — la boîte est sortie</span>}
+            </div>
+            <p className="cta-statut">{partyGame?.title} · {players.length} joueurs</p>
+          </>
+        ) : jAiValide ? (
           <>
             <div className="cta-row">
               <span className="pill-ok" aria-label="sélection validée">✓ Validée</span>

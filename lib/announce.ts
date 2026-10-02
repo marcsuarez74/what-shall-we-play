@@ -1,6 +1,8 @@
 // Composition pure des messages de partie — pas de bot WhatsApp : l'app compose,
 // l'utilisateur envoie via le partage natif (navigator.share) sinon lien wa.me.
 
+import { medaille } from './ranks';
+
 // Énumération française : « A », « A et B », « A, B et C ».
 export function frJoin(names: string[]): string {
   if (names.length <= 1) return names.join('');
@@ -27,6 +29,19 @@ export function buildResultMessage({ title, ownerPseudo, waiting, time }: {
     ? `\n🕗 On attend ${frJoin(waiting)}${time ? ` — ce soir à ${time}` : ''}`
     : '';
   return `🎲 ${title} a été tiré au sort !\n👉 ${ownerPseudo} ramène son jeu${attente}\n🔗 etagere.marc-suarez.fr`;
+}
+
+// Podium partagé : 👑 les premiers (ex æquo groupés), puis 🥈/🥉, puis le reste.
+// Les ex æquo s'affichent « A & B » — même idiome que la carte pod1 du détail.
+export function buildPodiumMessage({ title, classement }: { title: string; classement: { pseudo: string; score: number; rank: number }[] }): string {
+  const lignes: string[] = [];
+  for (let r = 1; r <= Math.max(3, ...classement.map((c) => c.rank)); r++) {
+    const duRang = classement.filter((c) => c.rank === r);
+    if (duRang.length === 0) continue;
+    const med = medaille(r) || '•';
+    lignes.push(`${med} ${duRang.map((c) => c.pseudo).join(' & ')} — ${duRang[0].score} pts`);
+  }
+  return `🎲 ${title} — c'est fini !\n${lignes.join('\n')}`;
 }
 
 // Partage : natif si disponible (https + geste utilisateur), sinon ouverture de wa.me.

@@ -1,5 +1,5 @@
-import { test, expect } from '@playwright/test';
-import { gameIdByTitle, putOnShelf } from './helpers/shelf';
+import { test, expect, Page } from '@playwright/test';
+import { newGame, gameIdByTitle, nightIdOf, putOnShelf } from './helpers/shelf';
 
 async function registerAndStart(page: import('@playwright/test').Page, pseudo: string) {
   await page.goto('/register');
@@ -129,6 +129,55 @@ test('profil : suppression du compte puis connexion impossible', async ({ page }
   const res = await login;
   expect(res.status()).toBe(401);
   await expect(page.locator('.auth-form .error')).toContainText('Identifiants incorrects');
+});
+
+test('profil : podiums dans les stats et mes parties médailles', async ({ page, browser }) => {
+  // Pattern établi (etats-scores.spec.ts) : l'invité s'inscrit D'ABORD, le créateur
+  // le coche puis crée la partie ; tirage + sortie de boîte via l'API.
+  const s = Date.now().toString(36);
+  const invite = await browser.newContext();
+  const p2 = await invite.newPage();
+  await p2.goto('/register');
+  await p2.getByLabel('Pseudo').fill(`inv-${s}`);
+  await p2.getByLabel('Code secret').fill('1234');
+  await p2.getByRole('button', { name: 'Créer mon compte' }).click();
+  await p2.waitForURL('**/etagere');
+
+  await page.goto('/register');
+  await page.getByLabel('Pseudo').fill(`pod-${s}`);
+  await page.getByLabel('Code secret').fill('1234');
+  const reg = page.waitForResponse((r) => r.url().endsWith('/api/auth/register'));
+  await page.getByRole('button', { name: 'Créer mon compte' }).click();
+  await reg;
+  await page.waitForURL('/etagere');
+  await page.reload(); // la liste des joueurs est rendue côté serveur
+  await page.locator('.player-list label', { hasText: `inv-${s}` }).locator('input').check();
+  const nightDone = page.waitForResponse((r) => r.url().endsWith('/api/nights') && r.request().method() === 'POST');
+  await page.getByRole('button', { name: 'Créer la partie' }).click();
+  await nightDone;
+  await page.waitForURL('/etagere');
+
+  const g = await newGame(page, 'Cascadia', 'moyen');
+  await putOnShelf(page, g);
+  const nid = await nightIdOf(page);
+  const draw = await page.request.post('/api/draw', { data: { nightId: nid, gameIds: [g] } });
+  const { gameId } = await draw.json();
+  await page.request.post(`/api/nights/${nid}/box-out`, { data: { gameId } });
+
+  // carnet : 'inv-' < 'pod-' → 1er input = invité (19), créateur 24 → 👑
+  await page.goto(`/nights/${nid}/scores`);
+  const inputs = page.locator('.score-in');
+  await inputs.nth(0).fill('19');
+  await inputs.nth(1).fill('24');
+  await page.getByRole('button', { name: '✓ Enregistrer et terminer' }).click();
+  await page.waitForURL(`**/nights/${nid}`);
+
+  // profil : podiums comptés, la soirée listée avec ma médaille et son lien détail
+  await page.goto('/profil');
+  await expect(page.locator('.stat', { hasText: 'podiums' })).toContainText('👑');
+  await expect(page.locator('.mp-row').first()).toContainText('Cascadia');
+  await expect(page.locator('.mp-row .med').first()).toHaveText('👑');
+  await expect(page.locator('.mp-row').first()).toHaveAttribute('href', `/nights/${nid}`);
 });
 
 test('pas de rebond de page : overscroll désactivé (PWA iOS)', async ({ page }) => {

@@ -1,17 +1,26 @@
 'use client';
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { avatarSrc } from '@/lib/formats';
 import { cropDisplaySize, cropSourceRect, clampCropOffset, AVATAR_SIZE, CROP_SQ } from '@/lib/crop';
 import { ALLOWED_STICKERS } from '@/lib/stickers';
+import type { Game } from '@/lib/types';
 import PinInput from './PinInput';
 import FoyerCard, { type FoyerData } from './FoyerCard';
+import BoxImage from './BoxImage';
 import UserMenu from './UserMenu';
 
 type Me = { id: number; pseudo: string; sticker: string | null; avatar_path: string | null };
-type Stats = { plays: number; nights: number; games: number };
+type Stats = { plays: number; nights: number; games: number; podiums: { un: number; deux: number; trois: number } };
+type Partie = {
+  id: number; played_at: string; game_title: string | null;
+  cover_path: string | null; cover_url: string | null; score: number | null; med: string;
+};
 
-export default function ProfileClient({ me, stats, foyer }: { me: Me; stats: Stats; foyer: FoyerData | null }) {
+const dateFmt = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' });
+
+export default function ProfileClient({ me, stats, foyer, parties }: { me: Me; stats: Stats; foyer: FoyerData | null; parties: Partie[] }) {
   const router = useRouter();
   const [pickerOpen, setPickerOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -154,10 +163,30 @@ export default function ProfileClient({ me, stats, foyer }: { me: Me; stats: Sta
       <div className="stats">
         <div className="stat"><b>{stats.plays}</b><span>parties jouées</span></div>
         <div className="stat"><b>{stats.nights}</b><span>parties</span></div>
-        <div className="stat"><b>{stats.games}</b><span>jeux</span></div>
+        <div className="stat"><b className="medailles">👑 {stats.podiums.un} · 🥈 {stats.podiums.deux} · 🥉 {stats.podiums.trois}</b><span>podiums</span></div>
       </div>
 
       <FoyerCard foyer={foyer} meId={me.id} />
+
+      <p className="pod-lb">MES PARTIES</p>
+      {parties.length === 0 ? (
+        <p className="hint">Aucune partie terminée — tout est devant vous.</p>
+      ) : (
+        <div className="mes-parties">
+          {parties.map((p) => (
+            <Link key={p.id} href={`/nights/${p.id}`} className="mp-row">
+              <span className="cov">
+                <BoxImage game={{ title: p.game_title ?? '', cover_path: p.cover_path, cover_url: p.cover_url } as Game} />
+              </span>
+              <span className="mpd">
+                <b>{p.game_title ?? 'Soirée de jeux'}</b>
+                <span>{dateFmt.format(new Date(`${p.played_at}T12:00:00`))}</span>
+              </span>
+              <span className="dt"><b>{p.score ?? '—'}</b><span className="med">{p.med}</span></span>
+            </Link>
+          ))}
+        </div>
+      )}
 
       <div className="actions">
         <button type="button" className="action" onClick={() => { setCodeOpen(true); setCodeStep(1); }}>
