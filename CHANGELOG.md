@@ -4,6 +4,15 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [3.6.1] — 2026-10-04
+
+### Corrigé
+- La pastille utilisateur (menu en haut à droite) se faisait compresser par les
+  titres de page longs en viewport mobile — sur « Importer une collection »,
+  l'icône, l'initiale et le carret se retrouvaient empilés sur deux lignes.
+  Elle garde désormais sa taille intrinsèque sur toutes les pages ; un test E2E
+  l'épingle.
+
 ## [3.6.0] — 2026-10-03
 
 ### Ajouté
