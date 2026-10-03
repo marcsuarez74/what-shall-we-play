@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { FORMATS, FORMAT_SCALE, FORMAT_LABEL } from '@/lib/formats';
+import { FORMATS, FORMAT_SCALE, FORMAT_SHORT } from '@/lib/formats';
 import { planifierImport, type LigneImport } from '@/lib/import-bgg';
 import type { BoxFormat, UserLite } from '@/lib/types';
 import UserMenu from './UserMenu';
@@ -107,7 +107,7 @@ export default function ImportBggClient({ me }: { me: UserLite }) {
   const nDeja = lignes.filter((l) => l.etat === 'dup-bgg').length;
 
   return (
-    <div>
+    <div className="imp-page">
       <div className="page-head">
         <h1>Importer une collection</h1>
         <UserMenu me={me} />
@@ -134,13 +134,13 @@ export default function ImportBggClient({ me }: { me: UserLite }) {
       {stage === 'preview' && (
         <div>
           <p className="imp-sous">{lignes.length} jeu{lignes.length > 1 ? 'x' : ''} trouvé{lignes.length > 1 ? 's' : ''} sur BGG — les doublons sont déjà repérés.</p>
-          <p className="field-label">Format des boîtes importées · {FORMAT_LABEL[global]} par défaut</p>
+          <p className="field-label">Format des boîtes importées · {FORMAT_SHORT[global]} par défaut</p>
           <div className="seg" role="group" aria-label="Format par défaut des boîtes importées">
             {FORMATS.map((f) => (
               <button key={f} type="button" className={global === f ? 'on' : ''} aria-pressed={global === f}
                       onClick={() => majGlobal(f)}>
                 <span className="box" style={{ width: 9 + 4 * FORMAT_SCALE[f], height: 9 + 4 * FORMAT_SCALE[f] }} />
-                <span className="lbl">{FORMAT_LABEL[f]}</span>
+                <span className="lbl">{FORMAT_SHORT[f]}</span>
               </button>
             ))}
           </div>
@@ -181,7 +181,7 @@ export default function ImportBggClient({ me }: { me: UserLite }) {
                     <button type="button" className="fmt"
                             aria-label={`Format de ${l.jeu.titre} : ${formats[l.jeu.bggId] ?? global}`}
                             onClick={() => setFormats((p) => ({ ...p, [l.jeu.bggId]: CYCLE[p[l.jeu.bggId] ?? global] }))}>
-                      📦 {FORMAT_LABEL[formats[l.jeu.bggId] ?? global]}
+                      📦 {FORMAT_SHORT[formats[l.jeu.bggId] ?? global]}
                     </button>
                   )}
                 </li>

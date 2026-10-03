@@ -608,13 +608,13 @@ input[type='file'] {
   border-color: var(--cuivre);
 }
 
-.add-form .field-label {
+.add-form .field-label, .imp-page .field-label {
   color: var(--doux-clair);
   font-size: 12.5px;
   margin: 6px 0 -4px;
 }
 
-.add-form .help {
+.add-form .help, .imp-page .help {
   color: var(--doux-clair);
   font-size: 12.5px;
   line-height: 1.45;
