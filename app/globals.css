@@ -1046,6 +1046,9 @@ input[type='file'] {
   gap: 10px; margin-bottom: 14px;
 }
 .page-head h1 { margin-bottom: 0; }
+/* La pastille ne se comprime jamais sous le long titre d'une page (sinon son
+   contenu se replie sur deux lignes) : c'est le titre qui absorbe le flex. */
+.page-head .user-chip { flex: none; }
 /* Profil : la pastille vient se poser en haut à droite de la carte */
 .profile { position: relative; }
 .profile > .user-chip { position: absolute; top: 0; right: 0; }
@@ -1070,6 +1073,7 @@ input[type='file'] {
   color: var(--creme);
   font-size: 15px;
   font-weight: 700;
+  white-space: nowrap;
   padding: 8px 14px;
 }
 
