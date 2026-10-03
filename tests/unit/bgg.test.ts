@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
-import { parseThingXml, getThing, attachCover } from '@/lib/bgg';
+import { parseThingXml, getThing, attachCover, collectionUtilisateur, parseCollectionXml } from '@/lib/bgg';
 import { isSafeCoverName } from '@/lib/storage';
-import { THING_XML } from './bgg.fixture';
+import { THING_XML, COLLECTION_XML, COLLECTION_ERRORS_XML } from './bgg.fixture';
 
 describe('bgg', () => {
   it('parse la fiche d\'un jeu', () => {
@@ -53,5 +53,49 @@ describe('bgg', () => {
     await Promise.all([getThing(111), getThing(222)]);
     expect(fired).toHaveLength(2);
     expect(fired[1]! - fired[0]!).toBeGreaterThanOrEqual(950);
+  });
+});
+
+describe('collection BGG (import)', () => {
+  it('parse les items possédés (name, année, thumbnail @value ou @src)', () => {
+    expect(parseCollectionXml(COLLECTION_XML)).toEqual([
+      { bggId: 174430, titre: 'Gloomhaven', annee: 2017, thumb: 'https://cf.geekdo-images.com/t-gh.jpg' },
+      { bggId: 266192, titre: 'Wingspan', annee: 2019, thumb: 'https://cf.geekdo-images.com/t-ws.jpg' },
+    ]);
+  });
+  it('XML vide ou sans items -> []', () => {
+    expect(parseCollectionXml('<items total="0"></items>')).toEqual([]);
+    expect(parseCollectionXml('')).toEqual([]);
+  });
+  it('épingles Review Focus n°2 : <errors> BGG -> 404 (pas une collection vide)', async () => {
+    global.fetch = vi.fn().mockResolvedValue(new Response(COLLECTION_ERRORS_XML, { status: 200 }));
+    expect(await collectionUtilisateur('introuvable')).toEqual({
+      error: 'Collection BGG introuvable ou privée', status: 404 });
+  });
+  it('pseudo vide ou trop long -> 400, sans appel réseau', async () => {
+    global.fetch = vi.fn();
+    expect(await collectionUtilisateur('  ')).toEqual({ error: 'Pseudo BGG invalide', status: 400 });
+    expect(await collectionUtilisateur('x'.repeat(61))).toEqual({ error: 'Pseudo BGG invalide', status: 400 });
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+  it('202 puis 200 -> réessai et succès (Retry-After respecté, plafonné à 5 s)', async () => {
+    global.fetch = vi.fn()
+      .mockResolvedValueOnce(new Response('', { status: 202, headers: { 'Retry-After': '1' } }))
+      .mockResolvedValueOnce(new Response(COLLECTION_XML, { status: 200 }));
+    const r = await collectionUtilisateur('quelquun');
+    expect(r).toMatchObject({ ok: true });
+    expect((r as { jeux: unknown[] }).jeux).toHaveLength(2);
+    expect(global.fetch).toHaveBeenCalledTimes(2);
+  });
+  it('épingles Review Focus n°1 : 202 en boucle -> 503 dès le budget dépassé', async () => {
+    global.fetch = vi.fn().mockResolvedValue(new Response('', { status: 202, headers: { 'Retry-After': '1' } }));
+    const r = await collectionUtilisateur('quelquun', 1500);
+    expect(r).toEqual({ error: 'BGG prépare ta collection — réessaie dans un instant', status: 503 });
+  });
+  it('HTTP 404/500 ou réseau -> 502', async () => {
+    global.fetch = vi.fn().mockResolvedValue(new Response('', { status: 500 }));
+    expect(await collectionUtilisateur('quelquun')).toEqual({ error: 'BGG ne répond pas', status: 502 });
+    global.fetch = vi.fn().mockRejectedValue(new Error('network down'));
+    expect(await collectionUtilisateur('quelquun')).toEqual({ error: 'BGG ne répond pas', status: 502 });
   });
 });
