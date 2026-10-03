@@ -41,6 +41,7 @@ export default function ImportBggClient({ me }: { me: UserLite }) {
       const jeux = (data.jeux ?? []) as LigneImport['jeu'][];
       if (jeux.length === 0) { setError('Aucun jeu possédé sur BGG — vérifie que ta collection est publique.'); return; }
       const res2 = await fetch('/api/games');
+      if (!res2.ok) { setError('Impossible de lire ta ludothèque — réessaie'); return; }
       const ludo = ((await res2.json()).games ?? []) as Parameters<typeof planifierImport>[1];
       const l = planifierImport(jeux, ludo);
       setLignes(l);
