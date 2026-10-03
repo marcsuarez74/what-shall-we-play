@@ -3,15 +3,15 @@
 > **Fichier vivant** : les idées se déposent ici en vrac, chaque feature partira d'ici vers un vrai
 > brainstorming (maquette → spec → plan) au moment de la lancer.
 > Tailles indicatives : 🟢 S · 🟡 M · 🔴 L · 🔴+ XL
-> Dernière mise à jour : 2026-10-02
+> Dernière mise à jour : 2026-10-03
 
 ## Ordre suggéré
 
 | # | Feature | Taille | Pourquoi dans cet ordre |
 |---|---------|--------|--------------------------|
-| 1 | Vote sur l'étagère 👍 | 🟡 M | Indépendant, petit, très « What Shall We Play ? » |
+| 1 | Vote sur l'étagère 👍 — ✓ v3.5.0 | 🟡 M | Indépendant, petit, très « What Shall We Play ? » |
 | 2 | Joueurs invités (sans compte) | 🟡 M | LE débloqueur des soirées réelles ; se combine avec le vote |
-| 3 | Import de collection BGG | 🟢 S | Supprime le plus gros frottement : saisir ses jeux |
+| 3 | Import de collection BGG — ✓ v3.6.0 | 🟢 S | Supprime le plus gros frottement : saisir ses jeux |
 | 4 | Le verdict du jeu 😍🙂😐 | 🟢 S | Une ligne d'état, un gros effet sur les stats et les tirages |
 | 5 | Ajout au calendrier | 🟢 S | Minuscule, collé au flow WhatsApp existant |
 | 6 | Suggestions intelligentes | 🟡 M | La roue garde le dernier mot, mais informée (données BGG déjà là) |

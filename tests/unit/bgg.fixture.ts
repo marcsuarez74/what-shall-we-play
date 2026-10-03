@@ -37,3 +37,31 @@ export const THING_XML = `<?xml version="1.0" encoding="utf-8"?>
     </statistics>
   </item>
 </items>`;
+
+// Forme XMLAPI2 /collection : @objectid (attribut), name/yearpublished/thumbnail en @value.
+// (thing, lui, met l'image dans @src — le parseur accepte les deux.)
+export const COLLECTION_XML = `<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<items total="2" termsofuse="https://boardgamegeek.com/xmlapi/termsofuse">
+  <item objectid="174430" collid="9001" subtype="boardgame">
+    <name sortindex="1" value="Gloomhaven"/>
+    <yearpublished value="2017"/>
+    <image value="https://cf.geekdo-images.com/f-gh.jpg"/>
+    <thumbnail value="https://cf.geekdo-images.com/t-gh.jpg"/>
+    <status own="1" prevowned="0" fortrade="0" want="0" wanttoplay="0" wanttobuy="0" wishlist="0"/>
+    <numplays value="7"/>
+  </item>
+  <item objectid="266192" collid="9002" subtype="boardgame">
+    <name sortindex="1" value="Wingspan"/>
+    <yearpublished value="2019"/>
+    <thumbnail src="https://cf.geekdo-images.com/t-ws.jpg"/>
+    <status own="1" prevowned="0" fortrade="0" want="0" wanttoplay="0" wanttobuy="0" wishlist="0"/>
+    <numplays value="0"/>
+  </item>
+</items>`;
+
+export const COLLECTION_ERRORS_XML = `<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<errors>
+  <error>
+    <message>Invalid username specified</message>
+  </error>
+</errors>`;

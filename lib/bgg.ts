@@ -1,6 +1,7 @@
 import { XMLParser } from 'fast-xml-parser';
 import { getDb } from './db';
 import { saveCover } from './storage';
+import type { JeuBgg } from './import-bgg';
 
 const BASE = 'https://api.geekdo.com/xmlapi2';
 const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: '@_' });
@@ -125,4 +126,57 @@ export async function attachCover(thing: ThingResult): Promise<ThingResult> {
     }
   } catch { /* pochette optionnelle, ne casse jamais la fiche */ }
   return thing;
+}
+
+// ── Import de collection (v3.6.0) ─────────────────────────────────────────────
+// La collection XMLAPI2 ne donne ni joueurs ni durée ni poids : le client les
+// récupérera jeu par jeu via getThing pendant l'import (cache + garde).
+export function parseCollectionXml(xml: string): JeuBgg[] {
+  const root = parser.parse(xml)?.items;
+  const items = root?.item ? (Array.isArray(root.item) ? root.item : [root.item]) : [];
+  const out: JeuBgg[] = [];
+  for (const i of items as Record<string, unknown>[]) {
+    if (i['@_subtype'] && i['@_subtype'] !== 'boardgame') continue;
+    const bggId = Number(i['@_objectid']);
+    const titre = (i.name as Record<string, unknown> | undefined)?.['@_value'] as string | undefined;
+    if (!Number.isFinite(bggId) || bggId <= 0 || !titre) continue;
+    const th = i.thumbnail as Record<string, unknown> | undefined;
+    out.push({
+      bggId, titre,
+      annee: n((i.yearpublished as Record<string, unknown> | undefined)?.['@_value']),
+      thumb: (th?.['@_value'] ?? th?.['@_src'] ?? null) as string | null,
+    });
+  }
+  return out;
+}
+
+// 202 = BGG prépare la collection (file d'attente) : réessais dans un budget,
+// Retry-After plafonné à 5 s. Le budget est injectable pour les tests.
+export async function collectionUtilisateur(username: string, budgetMs = 15000):
+  Promise<{ ok: true; jeux: JeuBgg[] } | { error: string; status: number }> {
+  const pseudo = username.trim();
+  if (pseudo.length < 1 || pseudo.length > 60) return { error: 'Pseudo BGG invalide', status: 400 };
+  const url = `${BASE}/collection?username=${encodeURIComponent(pseudo)}&own=1`;
+  const debut = Date.now();
+  for (;;) {
+    let res: Response;
+    try {
+      await bggGate();
+      res = await fetch(url, { headers: headers(), signal: AbortSignal.timeout(8000) });
+    } catch { return { error: 'BGG ne répond pas', status: 502 }; }
+    if (res.status === 202) {
+      const attente = Math.min(Number(res.headers.get('retry-after')) || 2, 5);
+      if (Date.now() - debut + attente * 1000 > budgetMs)
+        return { error: 'BGG prépare ta collection — réessaie dans un instant', status: 503 };
+      await new Promise((r) => setTimeout(r, attente * 1000));
+      continue;
+    }
+    if (!res.ok) return { error: 'BGG ne répond pas', status: 502 };
+    let xml: string;
+    try {
+      xml = await res.text();
+    } catch { return { error: 'BGG ne répond pas', status: 502 }; } // coupure en pleine lecture
+    if (parser.parse(xml)?.errors) return { error: 'Collection BGG introuvable ou privée', status: 404 };
+    return { ok: true, jeux: parseCollectionXml(xml) };
+  }
 }

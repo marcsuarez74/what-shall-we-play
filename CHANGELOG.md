@@ -4,6 +4,17 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [3.6.0] — 2026-10-03
+
+### Ajouté
+- **Import de collection BGG** : depuis « Ajouter », un lien « Importer toute une
+  collection » — ton pseudo BGG préremplit la ludothèque avec les jeux que tu
+  possèdes. Preview avec pochettes et doublons repérés, format de boîte choisi
+  globalement (défaut « grand ») et ajustable boîte par boîte, import ~1 s par jeu
+  avec progression. Relançable à volonté : les jeux déjà présents sont ignorés et
+  une fiche saisie à la main du même titre est enrichie (joueurs, durée, poids,
+  pochette) plutôt que doublée — un échec ne bloque jamais le reste.
+
 ## [3.5.1] — 2026-10-02
 
 ### Corrigé

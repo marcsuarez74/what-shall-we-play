@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FORMATS, FORMAT_SCALE } from '@/lib/formats';
 import type { UserLite } from '@/lib/types';
@@ -146,6 +147,7 @@ export default function AddGameForm({ me }: { me: UserLite }) {
             {busy ? 'Récupération…' : 'Récupérer les infos'}
           </button>
           <p className="btn-note">Année, éditeur, joueurs, durée, créateur, pochette…</p>
+          <Link className="link-import" href="/games/import">Importer toute une collection (BGG) ›</Link>
           <button type="button" className="link-manual" onClick={goManual}>Saisir à la main</button>
         </>
       )}
