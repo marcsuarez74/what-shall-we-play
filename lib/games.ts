@@ -1,4 +1,5 @@
 import { getDb } from './db';
+import { isSafeCoverName } from './storage';
 import type { Game, BoxFormat } from './types';
 
 const FORMATS: BoxFormat[] = ['mini', 'petit', 'moyen', 'grand'];
@@ -79,5 +80,26 @@ export function deleteGame(userId: number, id: number): { ok: true } | { error: 
   const picked = getDb().prepare('SELECT 1 FROM picks WHERE game_id = ? LIMIT 1').get(id);
   if (picked) return { error: 'Ce jeu a déjà été tiré lors d\'une partie', status: 409 };
   getDb().prepare('DELETE FROM games WHERE id = ?').run(id);
+  return { ok: true };
+}
+
+// ── Import BGG (v3.6.0) : enrichissement d'une fiche saisie à la main ────────
+// N'écrit JAMAIS title/box_format (fidèle à la saisie du joueur) et ne remplace
+// jamais une photo perso (COALESCE).
+export interface BggEnrich {
+  bgg_id: number | null; year: number | null; publisher: string | null;
+  min_players: number | null; max_players: number | null; playtime_min: number | null;
+  weight: number | null; bgg_rating: number | null; designer: string | null; artist: string | null;
+  best_players: number | null; cover_name: string | null;
+}
+export function enrichirJeu(userId: number, id: number, e: BggEnrich): { ok: true } | { error: string; status: number } {
+  const g = getGame(id);
+  if (!g || !canManageGame(userId, g)) return { error: 'Jeu introuvable', status: 404 };
+  const cover = e.cover_name && isSafeCoverName(e.cover_name) ? e.cover_name : null;
+  getDb().prepare(`UPDATE games SET bgg_id=?, year=?, publisher=?, min_players=?, max_players=?,
+                   playtime_min=?, weight=?, bgg_rating=?, designer=?, artist=?, best_players=?,
+                   cover_path=COALESCE(cover_path, ?) WHERE id=?`)
+    .run(e.bgg_id, e.year, e.publisher, e.min_players, e.max_players, e.playtime_min, e.weight,
+         e.bgg_rating, e.designer, e.artist, e.best_players, cover, id);
   return { ok: true };
 }
