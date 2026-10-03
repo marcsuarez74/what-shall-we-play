@@ -98,4 +98,11 @@ describe('collection BGG (import)', () => {
     global.fetch = vi.fn().mockRejectedValue(new Error('network down'));
     expect(await collectionUtilisateur('quelquun')).toEqual({ error: 'BGG ne répond pas', status: 502 });
   });
+  it('coupure pendant la lecture du corps -> 502 (contrat réseau)', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true, status: 200, headers: new Headers(),
+      text: () => Promise.reject(new Error('body cut')),
+    });
+    expect(await collectionUtilisateur('quelquun')).toEqual({ error: 'BGG ne répond pas', status: 502 });
+  });
 });

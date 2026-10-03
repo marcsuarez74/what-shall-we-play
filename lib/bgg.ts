@@ -172,7 +172,10 @@ export async function collectionUtilisateur(username: string, budgetMs = 15000):
       continue;
     }
     if (!res.ok) return { error: 'BGG ne répond pas', status: 502 };
-    const xml = await res.text();
+    let xml: string;
+    try {
+      xml = await res.text();
+    } catch { return { error: 'BGG ne répond pas', status: 502 }; } // coupure en pleine lecture
     if (parser.parse(xml)?.errors) return { error: 'Collection BGG introuvable ou privée', status: 404 };
     return { ok: true, jeux: parseCollectionXml(xml) };
   }
