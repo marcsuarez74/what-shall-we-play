@@ -1,7 +1,9 @@
 import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
 import { getSessionUser } from '@/lib/session';
-import { getNight, userCanAccessNight, getNightGame, getNightScores } from '@/lib/nights';
+import { getNight, userCanAccessNight, getNightGame, getNightScores, getNightPlayers, getNightPicks } from '@/lib/nights';
+import { listUserLibrary, getGame } from '@/lib/games';
+import { getFoyerForUser } from '@/lib/foyers';
 import { rankScores } from '@/lib/ranks';
 import { avatarSrc } from '@/lib/formats';
 import { t } from '@/lib/i18n';
@@ -10,6 +12,7 @@ import { getLang } from '@/lib/i18n/server';
 import BoxImage from '@/components/BoxImage';
 import PartagerResultats from '@/components/PartagerResultats';
 import VerdictBloc from '@/components/VerdictBloc';
+import CorrigerPartie from '@/components/CorrigerPartie';
 import UserSync from '@/components/UserSync';
 import { verdictsDeNuit, monVerdict } from '@/lib/verdicts';
 
@@ -25,6 +28,14 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   if (!night || !userCanAccessNight(user.id, night.id)) notFound();
   const game = getNightGame(night.id);
   const scores = getNightScores(night.id);
+  const joueurs = getNightPlayers(night.id);
+  const nbTirages = getNightPicks(night.id).length;
+  const jeux = listUserLibrary(user.id);
+  if (night.game_id && !jeux.some((g) => g.id === night.game_id)) {
+    const jeuActuel = getGame(night.game_id);
+    if (jeuActuel) jeux.push(jeuActuel);
+  }
+  const membres = getFoyerForUser(user.id)?.members ?? [];
   const classe = rankScores(scores);
   const un = classe.filter((c) => c.rank === 1), deux = classe.filter((c) => c.rank === 2), trois = classe.filter((c) => c.rank === 3);
   const autres = classe.filter((c) => c.rank > 3);
@@ -62,6 +73,11 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
       {night.status === 'termine' && game && (
         <VerdictBloc nightId={night.id} titreJeu={game.title}
           initial={monVerdict(night.id, user.id)} compteurs={verdictsDeNuit(night.id)} />
+      )}
+      {night.status === 'termine' && (
+        <CorrigerPartie nightId={night.id} playedAt={night.played_at} gameId={night.game_id ?? null}
+          titreJeu={game?.title ?? null} joueurs={joueurs} candidats={membres} scores={scores} jeux={jeux}
+          compteurs={verdictsDeNuit(night.id)} nbTirages={nbTirages} />
       )}
       <PartagerResultats titre={game?.title ?? t(lang, 'soiree.sansJeu')} classement={classe.map((c) => ({ pseudo: c.pseudo, score: c.score as number, rank: c.rank }))} />
     </main>
