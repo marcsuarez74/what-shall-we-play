@@ -51,9 +51,10 @@ test('parcours complet : deux joueurs, sélection, tirage, historique', async ({
   await a.keyboard.press('Escape'); // fermer la fiche avant le CTA
   // v3.0.0 : Marc valide puis lance — Léa n'a pas validé : double-appui « Sûr ? »
   await a.getByRole('button', { name: 'Valider ma sélection' }).click();
-  const lancer = a.getByRole('button', { name: /Lancer · 2|Sûr \? Lancer/ });
-  await lancer.click(); // 1/2 prêts → demande de confirmation
-  await lancer.click(); // « Sûr ? Lancer » → on lance quand même
+  await a.getByRole('button', { name: /Lancer · 2/ }).click(); // 1/2 prêts → demande de confirmation
+  // Le 2ᵉ clic attend le libellé de confirmation : re-cliquer le même locuteur
+  // regex peut retomber sur l'ancien bouton avant le re-render (race CI, lent).
+  await a.getByRole('button', { name: 'Sûr ? Lancer' }).click(); // confirmation → lancer
   await expect(a.getByText('LA ROUE A PARLÉ')).toBeVisible({ timeout: 10_000 });
 
   // Historique : la soirée du jour vit dans « Ce soir » (badge d'état) — les picks

@@ -6,11 +6,12 @@ import { avatarSrc } from '@/lib/formats';
 import { cropDisplaySize, cropSourceRect, clampCropOffset, AVATAR_SIZE, CROP_SQ } from '@/lib/crop';
 import { ALLOWED_STICKERS } from '@/lib/stickers';
 import { formatDate } from '@/lib/i18n/format';
-import type { Game } from '@/lib/types';
+import type { Game, UserLite } from '@/lib/types';
 import PinInput from './PinInput';
 import FoyerCard, { type FoyerData } from './FoyerCard';
 import BoxImage from './BoxImage';
 import UserMenu from './UserMenu';
+import CreerPartiePassee from './CreerPartiePassee';
 import { useI18n } from './LanguageProvider';
 
 type Me = { id: number; pseudo: string; sticker: string | null; avatar_path: string | null };
@@ -19,15 +20,16 @@ type VerdictStat = { game_id: number; jeu: string; adore: number; total: number 
 type Partie = {
   id: number; played_at: string; game_title: string | null;
   cover_path: string | null; cover_url: string | null; score: number | null; med: string;
-  mon_verdict: string | null;
+  mon_verdict: string | null; a_scores: number;
 };
 
-export default function ProfileClient({ me, stats, verdictStats, foyer, parties }: { me: Me; stats: Stats; verdictStats: VerdictStat[]; foyer: FoyerData | null; parties: Partie[] }) {
+export default function ProfileClient({ me, stats, verdictStats, foyer, parties, jeux, membres }: { me: Me; stats: Stats; verdictStats: VerdictStat[]; foyer: FoyerData | null; parties: Partie[]; jeux: Game[]; membres: UserLite[] }) {
   const { lang, t } = useI18n();
   const router = useRouter();
   const [pickerOpen, setPickerOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [creerOuvert, setCreerOuvert] = useState(false);
 
   // Photo → recadrage
   const [cropSrc, setCropSrc] = useState<string | null>(null);
@@ -179,6 +181,8 @@ export default function ProfileClient({ me, stats, verdictStats, foyer, parties 
       <FoyerCard foyer={foyer} meId={me.id} />
 
       <p className="pod-lb">{t('profil.mesParties')}</p>
+      <button type="button" className="cp-creer" onClick={() => setCreerOuvert((o) => !o)}>{t('parties.creerPassee')}</button>
+      {creerOuvert && <CreerPartiePassee jeux={jeux} joueurs={membres} moiId={me.id} />}
       {parties.length === 0 ? (
         <p className="hint">{t('soiree.aucuneTerminee')}</p>
       ) : (
@@ -192,6 +196,7 @@ export default function ProfileClient({ me, stats, verdictStats, foyer, parties 
                 <b>{p.game_title ?? t('soiree.sansJeu')}</b>
                 <span>{formatDate(lang, `${p.played_at}T12:00:00`, { dateStyle: 'long' })}</span>
                 {p.mon_verdict === null && <span className="mp-verdict">{t('profil.donneVerdict')}</span>}
+                {!p.a_scores && <span className="mp-pastille">{t('parties.pastilleScores')}</span>}
               </span>
               <span className="dt"><b>{p.score ?? '—'}</b><span className="med">{p.med}</span></span>
             </Link>

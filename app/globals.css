@@ -2238,3 +2238,34 @@ a.btn-go.as-link { display: flex; align-items: center; justify-content: center; 
 .faq-page details.faq[open] summary .caret { transform: rotate(90deg); }
 .faq-page details.faq .rep { padding: 12px 14px; font-size: 13px; color: var(--doux-clair); line-height: 1.6; }
 .faq-page details.faq .rep b { color: var(--creme); }
+
+/* v4.2.0 — corriger / supprimer une partie (maquette onglets 1 et 4) */
+.corriger-bloc { background: var(--surface); border: 1px solid color-mix(in srgb, var(--doux) 30%, transparent); border-radius: 16px; padding: 14px; margin-top: 14px; }
+.corriger-toggle { width: 100%; text-align: left; background: none; border: none; color: var(--cuivre); font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; padding: 0; }
+.corriger-form { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
+.corriger-alerte, .corriger-err { font-size: 12.5px; line-height: 1.45; border-radius: 12px; padding: 10px 12px; margin: 0; }
+.corriger-alerte { background: color-mix(in srgb, var(--ambre) 12%, transparent); border: 1px solid color-mix(in srgb, var(--ambre) 45%, transparent); color: #EAD9A8; }
+.corriger-err { background: color-mix(in srgb, var(--rouge) 12%, transparent); border: 1px solid color-mix(in srgb, var(--rouge) 45%, transparent); color: #F2C7BB; }
+.corriger-champ { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 600; color: var(--doux-clair); }
+.corriger-champ input, .corriger-champ select { font-family: inherit; font-size: 14px; color: var(--creme); background: var(--noyer); border: 1px solid color-mix(in srgb, var(--doux) 40%, transparent); border-radius: 10px; padding: 10px 12px; }
+.corriger-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.corriger-chip { display: inline-flex; align-items: center; gap: 6px; background: var(--surface-plus); color: var(--creme); border-radius: 999px; padding: 5px 10px; font-size: 12.5px; font-weight: 600; cursor: pointer; border: none; font-family: inherit; }
+.corriger-chip.hors { background: transparent; border: 1px dashed color-mix(in srgb, var(--doux) 55%, transparent); color: var(--doux-clair); }
+.corriger-chip[disabled] { opacity: 0.55; cursor: default; } /* l'auteur (non-décochable) */
+.corriger-score { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; }
+.corriger-score input { width: 84px; text-align: center; font-family: inherit; font-size: 15px; font-weight: 700; color: var(--creme); background: var(--noyer); border: 1px solid color-mix(in srgb, var(--doux) 40%, transparent); border-radius: 10px; padding: 8px 6px; }
+.btn-cuivre { width: 100%; background: var(--cuivre); color: var(--noyer); font-family: inherit; font-size: 14px; font-weight: 700; border: none; border-radius: 12px; padding: 11px 16px; cursor: pointer; }
+.btn-rouge { width: 100%; margin-top: 12px; background: color-mix(in srgb, var(--rouge) 18%, transparent); color: #F2B7A6; border: 1px solid color-mix(in srgb, var(--rouge) 55%, transparent); font-family: inherit; font-size: 14px; font-weight: 700; border-radius: 12px; padding: 11px 16px; cursor: pointer; }
+.corriger-note { text-align: center; font-size: 12px; color: var(--doux); margin-top: 8px; }
+.corriger-voile { position: fixed; inset: 0; background: rgba(20,13,8,.72); display: grid; place-items: center; padding: 24px; z-index: 60; }
+.corriger-modale { background: var(--surface); border: 1px solid color-mix(in srgb, var(--doux) 35%, transparent); border-radius: 18px; padding: 18px; width: min(420px, 100%); color: var(--creme); }
+.corriger-modale h3 { font-size: 17px; font-weight: 800; margin: 0 0 8px; }
+.corriger-modale ul { margin: 10px 0 12px; padding-left: 18px; font-size: 13px; line-height: 1.7; color: var(--doux-clair); }
+.corriger-actions { display: flex; gap: 8px; }
+.corriger-actions button { flex: 1; font-family: inherit; font-weight: 700; font-size: 14px; border-radius: 12px; padding: 11px 16px; cursor: pointer; background: transparent; color: var(--doux-clair); border: 1px solid color-mix(in srgb, var(--doux) 45%, transparent); }
+.corriger-actions .btn-rouge { margin-top: 0; width: auto; }
+
+/* v4.2.0 — créer une partie passée + Mes parties */
+.cp-creer { background: none; border: none; color: var(--cuivre); font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; padding: 0; margin-bottom: 10px; }
+.cp-form { background: var(--surface); border: 1px solid color-mix(in srgb, var(--doux) 30%, transparent); border-radius: 16px; padding: 14px; margin: 10px 0 14px; display: flex; flex-direction: column; gap: 12px; }
+.mp-pastille { display: inline-block; width: fit-content; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: color-mix(in srgb, var(--ambre) 18%, transparent); color: #EAD9A8; }

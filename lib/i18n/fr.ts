@@ -186,11 +186,39 @@ export const fr = {
   'soiree.errVotesFigesEnJeu': 'La partie a commencé — les votes sont figés',
   'soiree.errVotesFigesTermine': 'La partie est terminée — les votes sont figés',
   'soiree.errDoitEtreDansSoiree': 'Vous devez être dans la partie',
+  'soiree.errCorrigerNonTerminee': 'Seule une partie terminée peut être corrigée',
+  'soiree.errJoueurIntrouvable': 'Joueur introuvable',
   'soiree.errDateInvalide': 'Date invalide',
   'soiree.errDatePassee': 'La date ne peut pas être dans le passé',
   'soiree.errHeureInvalide': 'Heure invalide',
   'soiree.errJeuInvalide': 'Jeu invalide',
   'soiree.errSelectionVide': 'Sélection vide',
+  // v4.2.0 — corriger / supprimer une partie terminée (maquette onglets 1 et 4).
+  'corriger.titre': 'Corriger cette partie',
+  'corriger.alerteJeu': 'Changer de jeu réinitialise les verdicts 😍🙂😐 de cette partie — ils jugaient l’ancienne boîte.', // apostrophes typographiques
+  'corriger.date': 'Date de la partie',
+  'corriger.jeu': 'Jeu joué',
+  'corriger.participants': 'Participants',
+  'corriger.ajouter': '＋ Ajouter',
+  'corriger.scores': 'Scores',
+  'corriger.scoreDe': ({ pseudo }: Record<string, string | number>) => `Score de ${pseudo}`,
+  'corriger.enregistrer': 'Enregistrer',
+  'corriger.supprimer': '🗑️ Supprimer cette partie',
+  'corriger.modaleTitre': 'Supprimer cette partie ?',
+  'corriger.modaleIntro': 'Cette action est définitive. Disparaîtront :',
+  'corriger.modaleScores': ({ detail }: Record<string, string | number>) => `les scores (${detail})`,
+  'corriger.modaleVerdicts': ({ detail }: Record<string, string | number>) => `les verdicts 😍🙂😐 (${detail})`,
+  'corriger.modaleTirage': ({ detail }: Record<string, string | number>) => `l’historique de tirage (${detail} tirages)`, // apostrophe typographique
+  'corriger.modaleStats': 'Les stats de profils se mettront à jour.',
+  'corriger.garder': 'Garder',
+  'corriger.confirmerSupprimer': 'Supprimer',
+  'corriger.droits': 'Le créateur et les participants peuvent corriger ou supprimer.',
+  // v4.2.0 — créer une partie passée (maquette onglet 3) + Mes parties.
+  'parties.creerPassee': '＋ Créer une partie passée',
+  'parties.creerPasseeIntro': 'On a joué sans l’app ? Note tout d’un coup — la partie arrivera dans les stats de tout le monde.', // apostrophes typographiques
+  'parties.alerteDate': 'La date doit être passée ou aujourd’hui — pour une partie à venir, passe par « Planifier ».', // apostrophe typographique
+  'parties.creerBouton': 'Créer la partie',
+  'parties.pastilleScores': 'Scores à saisir',
   // Écran du tirage (TirageClient) + route /api/draw.
   'tirage.roueTourne': 'La roue tourne…',
   'tirage.roueAParle': 'LA ROUE A PARLÉ',

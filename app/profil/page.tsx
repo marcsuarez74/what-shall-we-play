@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import type { Metadata } from 'next';
 import { getSessionUser } from '@/lib/session';
 import { getProfileStats, getMyParties } from '@/lib/users';
+import { listUserLibrary } from '@/lib/games';
 import { verdictPersoStats } from '@/lib/verdicts';
 import { getNightScores } from '@/lib/nights';
 import { rankScores, medaille } from '@/lib/ranks';
@@ -23,6 +24,10 @@ export default async function Page() {
     const moi = rankScores(getNightScores(p.id)).find((r) => r.user_id === user.id);
     return { ...p, med: moi ? medaille(moi.rank) : '' };
   });
+  // Le formulaire « partie passée » liste le foyer ; sans foyer, moi seul —
+  // le composant suppose que moiId est dans la liste (chips + ligne de score).
+  const membres = getFoyerForUser(user.id)?.members
+    ?? [{ id: user.id, pseudo: user.pseudo, sticker: user.sticker ?? null, avatar_path: user.avatar_path ?? null }];
   return (
     <main className="page profile-page">
       <ProfileClient
@@ -31,6 +36,8 @@ export default async function Page() {
         verdictStats={verdictPersoStats(user.id)}
         foyer={getFoyerForUser(user.id)}
         parties={parties}
+        jeux={listUserLibrary(user.id)}
+        membres={membres}
       />
     </main>
   );
