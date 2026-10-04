@@ -1,6 +1,7 @@
 import { getDb } from './db';
 import type { Foyer, Game } from './types';
 import { getPickCounts } from './games';
+import { t, type Lang } from './i18n';
 
 // Un foyer partage UNE collection : les jeux appartiennent au foyer (games.foyer_id),
 // chaque membre les ajoute, les modifie, les écarte. owner_id reste « qui l'a ajouté »
@@ -39,9 +40,9 @@ export function getFoyerForUser(userId: number):
   };
 }
 
-export function createFoyer(userId: number, name?: string): { id: number; code: string; name: string } {
+export function createFoyer(userId: number, name?: string, lang: Lang = 'fr'): { id: number; code: string; name: string } {
   const pseudo = (getDb().prepare('SELECT pseudo FROM users WHERE id = ?').get(userId) as { pseudo: string }).pseudo;
-  const foyerName = name?.trim().slice(0, 60) || `Chez ${pseudo}`;
+  const foyerName = name?.trim().slice(0, 60) || t(lang, 'foyer.nomDefaut', { p: pseudo });
   for (let attempt = 0; attempt < 20; attempt++) {
     const code = genCode();
     try {
@@ -52,14 +53,14 @@ export function createFoyer(userId: number, name?: string): { id: number; code: 
       return { id, code, name: foyerName };
     } catch { /* collision de code : on régénère */ }
   }
-  throw new Error('Impossible de générer un code — réessayez');
+  throw new Error(t(lang, 'foyer.errCodeGen'));
 }
 
-export function joinFoyerByCode(userId: number, rawCode: string): { id: number; name: string; dupes: { a: Game; b: Game }[] } {
+export function joinFoyerByCode(userId: number, rawCode: string, lang: Lang = 'fr'): { id: number; name: string; dupes: { a: Game; b: Game }[] } {
   const code = rawCode.trim().toUpperCase();
   const foyer = getDb().prepare('SELECT * FROM foyers WHERE invite_code = ?').get(code) as Foyer | undefined;
-  if (!foyer) throw new Error('Code inconnu — vérifiez auprès du membre qui invite');
-  if (getUserFoyerId(userId)) throw new Error('Vous êtes déjà dans un foyer — quittez-le avant d\'en rejoindre un autre');
+  if (!foyer) throw new Error(t(lang, 'foyer.errCodeInconnu'));
+  if (getUserFoyerId(userId)) throw new Error(t(lang, 'foyer.errDejaFoyer'));
   getDb().prepare('UPDATE users SET foyer_id = ? WHERE id = ?').run(foyer.id, userId);
   getDb().prepare('UPDATE games SET foyer_id = ? WHERE owner_id = ? AND foyer_id IS NULL').run(foyer.id, userId);
   return { id: foyer.id, name: foyer.name, dupes: findDupes(foyer.id) };
@@ -95,12 +96,12 @@ export function findDupes(foyerId: number): { a: Game; b: Game }[] {
 }
 
 // Fusion guidée : la fiche conservée absorbe l'historique de l'autre, qui disparaît.
-export function resolveDupe(keepId: number, removeId: number): void {
+export function resolveDupe(keepId: number, removeId: number, lang: Lang = 'fr'): void {
   const db = getDb();
   const keep = db.prepare('SELECT * FROM games WHERE id = ?').get(keepId) as Game | undefined;
   const remove = db.prepare('SELECT * FROM games WHERE id = ?').get(removeId) as Game | undefined;
   if (!keep || !remove || keep.foyer_id == null || keep.foyer_id !== remove.foyer_id)
-    throw new Error('Ces deux fiches ne sont pas dans le même foyer');
+    throw new Error(t(lang, 'foyer.errMemeFoyer'));
   db.transaction(() => {
     db.prepare('UPDATE picks SET game_id = ? WHERE game_id = ?').run(keepId, removeId);
     db.prepare('DELETE FROM night_excludes WHERE game_id = ?').run(removeId);
@@ -123,21 +124,21 @@ export function leaveFoyer(userId: number): void {
 
 // Retirer un membre : geste réservé au créateur. La règle de sortie s'applique —
 // ses ajouts le suivent, la collection commune reste au foyer.
-export function removeMember(foyerId: number, targetId: number, byId: number): { ok: true } | { error: string; status: number } {
+export function removeMember(foyerId: number, targetId: number, byId: number, lang: Lang = 'fr'): { ok: true } | { error: string; status: number } {
   const foyer = getDb().prepare('SELECT * FROM foyers WHERE id = ?').get(foyerId) as Foyer | undefined;
-  if (!foyer) return { error: 'Foyer introuvable', status: 404 };
-  if (foyer.created_by !== byId) return { error: 'Seul le créateur peut retirer un membre', status: 403 };
-  if (targetId === byId) return { error: 'Utilisez « Quitter le foyer » pour partir', status: 400 };
-  if (getUserFoyerId(targetId) !== foyerId) return { error: "Ce membre n'est pas dans ce foyer", status: 404 };
+  if (!foyer) return { error: t(lang, 'foyer.errIntrouvable'), status: 404 };
+  if (foyer.created_by !== byId) return { error: t(lang, 'foyer.errSeulCreateurRetrait'), status: 403 };
+  if (targetId === byId) return { error: t(lang, 'foyer.errUtilisezQuitter'), status: 400 };
+  if (getUserFoyerId(targetId) !== foyerId) return { error: t(lang, 'foyer.errMembreHorsFoyer'), status: 404 };
   leaveFoyer(targetId);
   return { ok: true };
 }
 
-export function dissolveFoyer(userId: number): void {
+export function dissolveFoyer(userId: number, lang: Lang = 'fr'): void {
   const db = getDb();
   const foyerId = getUserFoyerId(userId);
   const foyer = db.prepare('SELECT * FROM foyers WHERE id = ? AND created_by = ?').get(foyerId, userId) as Foyer | undefined;
-  if (!foyerId || !foyer) throw new Error('Seul le créateur peut dissoudre le foyer');
+  if (!foyerId || !foyer) throw new Error(t(lang, 'foyer.errSeulCreateurDissoudre'));
   db.transaction(() => {
     // chaque jeu retourne à son ajouteur (owner_id conservé, foyer décollé)
     db.prepare('UPDATE games SET foyer_id = NULL WHERE foyer_id = ?').run(foyer.id);
@@ -146,9 +147,9 @@ export function dissolveFoyer(userId: number): void {
   })();
 }
 
-export function renameFoyer(userId: number, name: string): void {
+export function renameFoyer(userId: number, name: string, lang: Lang = 'fr'): void {
   const foyerId = getUserFoyerId(userId);
   const n = name.trim().slice(0, 60);
-  if (!foyerId || !n) throw new Error('Nom de foyer requis');
+  if (!foyerId || !n) throw new Error(t(lang, 'foyer.errNomRequis'));
   getDb().prepare('UPDATE foyers SET name = ? WHERE id = ?').run(n, foyerId);
 }

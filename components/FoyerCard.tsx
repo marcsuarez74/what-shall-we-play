@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { avatarSrc } from '@/lib/formats';
 import type { Game } from '@/lib/types';
 import DedupeFlow from './DedupeFlow';
+import { useI18n } from './LanguageProvider';
 
 export type FoyerData = {
   id: number; name: string; invite_code: string; created_by: number;
@@ -15,6 +16,7 @@ type GP = Game & { picks?: number };
 // en foyer, montrer la collection partagée (nom, membres, code) et permettre d'en sortir.
 // Quitter/dissoudre suivent l'idiome de l'app : double-tap de confirmation.
 export default function FoyerCard({ foyer, meId }: { foyer: FoyerData | null; meId: number }) {
+  const { t } = useI18n();
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -97,18 +99,18 @@ export default function FoyerCard({ foyer, meId }: { foyer: FoyerData | null; me
   if (!foyer) {
     return (
       <div className="foyer-card solo">
-        <div className="foyer-head"><span className="foyer-ico" aria-hidden>🏠</span><span className="foyer-name small">Bibliothèque personnelle</span></div>
+        <div className="foyer-head"><span className="foyer-ico" aria-hidden>🏠</span><span className="foyer-name small">{t('foyer.biblioPerso')}</span></div>
         <div className="foyer-empty">
-          <p>Vous jouez avec votre propre bibliothèque. En couple ou en colocation ? Créez un <b>foyer</b> pour partager une seule collection, tenue à plusieurs.</p>
-          <button type="button" className="btn-copper foyer-btn" disabled={busy} onClick={create}>Créer un foyer</button>
+          <p>{t('foyer.videAvant')}<b>{t('foyer.mot')}</b>{t('foyer.videApres')}</p>
+          <button type="button" className="btn-copper foyer-btn" disabled={busy} onClick={create}>{t('foyer.creer')}</button>
           {!joinOpen ? (
-            <button type="button" className="btn-ghost" onClick={() => { setJoinOpen(true); setError(null); }}>Rejoindre avec un code</button>
+            <button type="button" className="btn-ghost" onClick={() => { setJoinOpen(true); setError(null); }}>{t('foyer.rejoindreCode')}</button>
           ) : (
             <div className="join-form">
-              <input className="code-input" aria-label="Code du foyer" placeholder="Code à 6 caractères"
+              <input className="code-input" aria-label={t('foyer.codeAria')} placeholder={t('foyer.codePh')}
                      maxLength={6} autoComplete="off" value={code}
                      onChange={(e) => setCode(e.target.value.toUpperCase())} />
-              <button type="button" className="btn-copper foyer-btn" disabled={busy || code.trim().length !== 6} onClick={join}>Rejoindre</button>
+              <button type="button" className="btn-copper foyer-btn" disabled={busy || code.trim().length !== 6} onClick={join}>{t('foyer.rejoindre')}</button>
             </div>
           )}
           {error && <p className="error" role="alert">{error}</p>}
@@ -127,18 +129,18 @@ export default function FoyerCard({ foyer, meId }: { foyer: FoyerData | null; me
         <span className="foyer-ico" aria-hidden>🏠</span>
         {renaming ? (
           <span className="rename-row">
-            <input className="rename-input" aria-label="Nom du foyer" value={name} maxLength={60}
+            <input className="rename-input" aria-label={t('foyer.nomAria')} value={name} maxLength={60}
                    onChange={(e) => setName(e.target.value)} />
-            <button type="button" className="link-btn" aria-label="Enregistrer le nom" disabled={busy || !name.trim()} onClick={saveRename}>✓</button>
-            <button type="button" className="link-btn" aria-label="Annuler" onClick={() => setRenaming(false)}>✕</button>
+            <button type="button" className="link-btn" aria-label={t('foyer.enregistrerNomAria')} disabled={busy || !name.trim()} onClick={saveRename}>✓</button>
+            <button type="button" className="link-btn" aria-label={t('soiree.annuler')} onClick={() => setRenaming(false)}>✕</button>
           </span>
         ) : (
           <span className="foyer-name">{foyer.name}
-            <button type="button" className="pen" aria-label="Renommer le foyer" onClick={() => { setName(foyer.name); setRenaming(true); }}>✏️</button>
+            <button type="button" className="pen" aria-label={t('foyer.renommerAria')} onClick={() => { setName(foyer.name); setRenaming(true); }}>✏️</button>
           </span>
         )}
       </div>
-      <p className="foyer-sub">Une collection commune — chacun ajoute, modifie, écarte.</p>
+      <p className="foyer-sub">{t('foyer.sub')}</p>
       <div className="members">
         {foyer.members.map((m) => (
           <div key={m.id} className="member">
@@ -146,12 +148,12 @@ export default function FoyerCard({ foyer, meId }: { foyer: FoyerData | null; me
               ? <img className="st" src={avatarSrc(m) as string} alt="" />
               : <span className="st" aria-hidden>{m.sticker ?? '🎲'}</span>}
             <b>{m.pseudo}</b>
-            <span className="role">{m.role}</span>
+            <span className="role">{t(m.role === 'créateur' ? 'foyer.roleCreateur' : 'foyer.roleMembre')}</span>
             {isCreator && m.id !== meId && (
               <button type="button" className={`kick ${armedKick === m.id ? 'armed' : ''}`}
-                      aria-label={armedKick === m.id ? `Sûr ? Retirer ${m.pseudo} du foyer` : `Retirer ${m.pseudo} du foyer`}
+                      aria-label={armedKick === m.id ? t('foyer.kickSurAria', { p: m.pseudo }) : t('foyer.kickAria', { p: m.pseudo })}
                       disabled={busy} onClick={() => kick(m.id)}>
-                {armedKick === m.id ? 'Sûr ? Retirer' : '✕'}
+                {armedKick === m.id ? t('foyer.kickSur') : '✕'}
               </button>
             )}
           </div>
@@ -159,17 +161,17 @@ export default function FoyerCard({ foyer, meId }: { foyer: FoyerData | null; me
       </div>
       <div className="code-zone">
         <span className="code">{foyer.invite_code}</span>
-        <button type="button" onClick={copyCode}>{copied ? 'Copié ✓' : 'Copier'}</button>
+        <button type="button" onClick={copyCode}>{copied ? t('foyer.copie') : t('foyer.copier')}</button>
       </div>
-      <p className="foyer-hint">Pour inviter quelqu&apos;un qui joue sous ce toit : dictez-lui ce code, il le saisit dans son profil.</p>
+      <p className="foyer-hint">{t('foyer.inviteHint')}</p>
       <button type="button" className={`btn-ghost danger ${armed === 'leave' ? 'armed' : ''}`} disabled={busy}
               onClick={() => act('leave')}>
-        {armed === 'leave' ? 'Sûr ? Quitter' : 'Quitter le foyer'}
+        {armed === 'leave' ? t('foyer.quitterSur') : t('foyer.quitter')}
       </button>
       {isCreator && (
         <button type="button" className={`btn-ghost danger ${armed === 'dissolve' ? 'armed' : ''}`} disabled={busy}
                 onClick={() => act('dissolve')}>
-          {armed === 'dissolve' ? 'Sûr ? Dissoudre' : 'Dissoudre le foyer'}
+          {armed === 'dissolve' ? t('foyer.dissoudreSur') : t('foyer.dissoudre')}
         </button>
       )}
       {error && <p className="error" role="alert">{error}</p>}

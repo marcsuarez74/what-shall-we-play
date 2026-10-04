@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import { validateCode } from './auth';
 import { saveCover, coverPathOnDisk } from './storage';
 import { ALLOWED_STICKERS } from './stickers';
+import { t, type Lang } from './i18n';
 import type { UserRow } from './types';
 import type { Verdict } from './verdicts';
 
@@ -56,21 +57,21 @@ export function getMyParties(userId: number, limit = 6) {
     .all(userId, userId, limit) as { id: number; played_at: string; game_title: string | null; cover_path: string | null; cover_url: string | null; score: number | null; mon_verdict: Verdict | null }[];
 }
 
-export function setSticker(userId: number, sticker: unknown): { ok: true } | { error: string; status: number } {
+export function setSticker(userId: number, sticker: unknown, lang: Lang = 'fr'): { ok: true } | { error: string; status: number } {
   if (typeof sticker !== 'string' || !ALLOWED_STICKERS.includes(sticker))
-    return { error: 'Sticker inconnu', status: 400 };
+    return { error: t(lang, 'compte.errSticker'), status: 400 };
   const prev = (getDb().prepare('SELECT avatar_path FROM users WHERE id = ?').get(userId) as { avatar_path: string | null }).avatar_path;
   getDb().prepare('UPDATE users SET sticker = ?, avatar_path = NULL WHERE id = ?').run(sticker, userId);
   if (prev) { try { fs.unlinkSync(coverPathOnDisk(prev)); } catch { /* absent */ } }
   return { ok: true };
 }
 
-export function changeCode(userId: number, current: unknown, next: unknown): { ok: true } | { error: string; status: number } {
+export function changeCode(userId: number, current: unknown, next: unknown, lang: Lang = 'fr'): { ok: true } | { error: string; status: number } {
   const row = getDb().prepare('SELECT code_hash FROM users WHERE id = ?').get(userId) as UserRow | undefined;
   if (!row || !bcrypt.compareSync(String(current ?? ''), row.code_hash))
-    return { error: 'Code actuel incorrect', status: 401 };
+    return { error: t(lang, 'compte.errCodeActuel'), status: 401 };
   const err = validateCode(next);
-  if (err) return { error: 'Nouveau code : 4 chiffres', status: 400 };
+  if (err) return { error: t(lang, 'compte.errNouveauCode'), status: 400 };
   getDb().prepare('UPDATE users SET code_hash = ? WHERE id = ?').run(bcrypt.hashSync(next as string, 10), userId);
   return { ok: true };
 }
@@ -116,8 +117,8 @@ export function deleteAccount(userId: number): { ok: true; removedGames: number 
 }
 
 const AVATAR_EXT = ['jpg', 'jpeg', 'png', 'webp'];
-export function setAvatar(userId: number, buf: Buffer, ext: string): { ok: true; path: string } | { error: string; status: number } {
-  if (!AVATAR_EXT.includes(ext)) return { error: 'Format : jpg, png ou webp', status: 400 };
+export function setAvatar(userId: number, buf: Buffer, ext: string, lang: Lang = 'fr'): { ok: true; path: string } | { error: string; status: number } {
+  if (!AVATAR_EXT.includes(ext)) return { error: t(lang, 'compte.errFormat'), status: 400 };
   const prev = (getDb().prepare('SELECT avatar_path FROM users WHERE id = ?').get(userId) as { avatar_path: string | null }).avatar_path;
   const name = saveCover(buf, ext as 'jpg' | 'jpeg' | 'png' | 'webp');
   getDb().prepare('UPDATE users SET avatar_path = ?, sticker = NULL WHERE id = ?').run(name, userId);

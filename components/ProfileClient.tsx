@@ -5,11 +5,13 @@ import Link from 'next/link';
 import { avatarSrc } from '@/lib/formats';
 import { cropDisplaySize, cropSourceRect, clampCropOffset, AVATAR_SIZE, CROP_SQ } from '@/lib/crop';
 import { ALLOWED_STICKERS } from '@/lib/stickers';
+import { formatDate } from '@/lib/i18n/format';
 import type { Game } from '@/lib/types';
 import PinInput from './PinInput';
 import FoyerCard, { type FoyerData } from './FoyerCard';
 import BoxImage from './BoxImage';
 import UserMenu from './UserMenu';
+import { useI18n } from './LanguageProvider';
 
 type Me = { id: number; pseudo: string; sticker: string | null; avatar_path: string | null };
 type Stats = { plays: number; nights: number; games: number; podiums: { un: number; deux: number; trois: number } };
@@ -20,9 +22,8 @@ type Partie = {
   mon_verdict: string | null;
 };
 
-const dateFmt = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' });
-
 export default function ProfileClient({ me, stats, verdictStats, foyer, parties }: { me: Me; stats: Stats; verdictStats: VerdictStat[]; foyer: FoyerData | null; parties: Partie[] }) {
+  const { lang, t } = useI18n();
   const router = useRouter();
   const [pickerOpen, setPickerOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -93,13 +94,13 @@ export default function ProfileClient({ me, stats, verdictStats, foyer, parties 
     setBusy(true); setError(null);
     try {
       await img.decode().catch(() => undefined); // jamais de drawImage sur une image vide
-      if (!img.naturalWidth) { setError('Photo pas encore chargée — réessaie'); return; }
+      if (!img.naturalWidth) { setError(t('profil.errPhotoChargee')); return; }
       const r = cropSourceRect(img.naturalWidth, img.naturalHeight, zoom, off.x, off.y);
       const canvas = document.createElement('canvas');
       canvas.width = AVATAR_SIZE; canvas.height = AVATAR_SIZE;
       canvas.getContext('2d')!.drawImage(img, r.sx, r.sy, r.sw, r.sh, 0, 0, AVATAR_SIZE, AVATAR_SIZE);
       const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, 'image/jpeg', 0.9));
-      if (!blob) { setError('Recadrage impossible'); return; }
+      if (!blob) { setError(t('profil.errRecadrage')); return; }
       const form = new FormData();
       form.set('avatar', new File([blob], 'avatar.jpg', { type: 'image/jpeg' }));
       const res = await fetch('/api/me/avatar', { method: 'POST', body: form });
@@ -107,7 +108,7 @@ export default function ProfileClient({ me, stats, verdictStats, foyer, parties 
       setCropSrc(null);
       router.refresh();
     } catch {
-      setError('Recadrage impossible');
+      setError(t('profil.errRecadrage'));
     } finally {
       setBusy(false);
     }
@@ -126,7 +127,7 @@ export default function ProfileClient({ me, stats, verdictStats, foyer, parties 
   }
 
   async function submitCode() {
-    if (c2 !== c3) { setCodeMsg('Les deux nouveaux codes diffèrent'); return; }
+    if (c2 !== c3) { setCodeMsg(t('profil.errCodesDifferents')); return; }
     setBusy(true); setCodeMsg(null);
     const res = await fetch('/api/me/code', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -134,7 +135,7 @@ export default function ProfileClient({ me, stats, verdictStats, foyer, parties 
     });
     setBusy(false);
     if (!res.ok) { setCodeMsg((await res.json()).error); return; }
-    setCodeMsg('Code enregistré ✓');
+    setCodeMsg(t('profil.codeEnregistre'));
     setTimeout(() => { setCodeOpen(false); setCodeStep(1); setC1(''); setC2(''); setC3(''); setCodeMsg(null); }, 900);
   }
 
@@ -156,30 +157,30 @@ export default function ProfileClient({ me, stats, verdictStats, foyer, parties 
     <div className="profile">
       <UserMenu me={me} />
       <div className="avatar-zone">
-        <button type="button" className="avatar" aria-label="Changer d'avatar" onClick={() => setPickerOpen(true)}>
+        <button type="button" className="avatar" aria-label={t('profil.changerAvatar')} onClick={() => setPickerOpen(true)}>
           {src ? <img src={src} alt="" /> : sticker}
         </button>
         <p className="pseudo">{me.pseudo}</p>
       </div>
 
       <div className="stats">
-        <div className="stat"><b>{stats.plays}</b><span>parties jouées</span></div>
-        <div className="stat"><b>{stats.nights}</b><span>parties</span></div>
-        <div className="stat"><b className="medailles">👑 {stats.podiums.un} · 🥈 {stats.podiums.deux} · 🥉 {stats.podiums.trois}</b><span>podiums</span></div>
+        <div className="stat"><b>{stats.plays}</b><span>{t('profil.statPlays')}</span></div>
+        <div className="stat"><b>{stats.nights}</b><span>{t('profil.statNights')}</span></div>
+        <div className="stat"><b className="medailles">👑 {stats.podiums.un} · 🥈 {stats.podiums.deux} · 🥉 {stats.podiums.trois}</b><span>{t('profil.statPodiums')}</span></div>
       </div>
       {verdictStats.some((v) => v.adore > 0) && (
         <div className="verdict-stats">
           {verdictStats.filter((v) => v.adore > 0).map((v) => (
-            <p key={v.game_id}>Tu as adoré <b>{v.jeu}</b> : {v.adore} fois sur {v.total}</p>
+            <p key={v.game_id}>{t('profil.adoreAvant')}<b>{v.jeu}</b>{t('profil.adoreApres', { a: v.adore, tot: v.total })}</p>
           ))}
         </div>
       )}
 
       <FoyerCard foyer={foyer} meId={me.id} />
 
-      <p className="pod-lb">MES PARTIES</p>
+      <p className="pod-lb">{t('profil.mesParties')}</p>
       {parties.length === 0 ? (
-        <p className="hint">Aucune partie terminée — tout est devant vous.</p>
+        <p className="hint">{t('soiree.aucuneTerminee')}</p>
       ) : (
         <div className="mes-parties">
           {parties.map((p) => (
@@ -188,9 +189,9 @@ export default function ProfileClient({ me, stats, verdictStats, foyer, parties 
                 <BoxImage game={{ title: p.game_title ?? '', cover_path: p.cover_path, cover_url: p.cover_url } as Game} />
               </span>
               <span className="mpd">
-                <b>{p.game_title ?? 'Soirée de jeux'}</b>
-                <span>{dateFmt.format(new Date(`${p.played_at}T12:00:00`))}</span>
-                {p.mon_verdict === null && <span className="mp-verdict">🗳️ Donne ton verdict</span>}
+                <b>{p.game_title ?? t('soiree.sansJeu')}</b>
+                <span>{formatDate(lang, `${p.played_at}T12:00:00`, { dateStyle: 'long' })}</span>
+                {p.mon_verdict === null && <span className="mp-verdict">{t('profil.donneVerdict')}</span>}
               </span>
               <span className="dt"><b>{p.score ?? '—'}</b><span className="med">{p.med}</span></span>
             </Link>
@@ -200,10 +201,10 @@ export default function ProfileClient({ me, stats, verdictStats, foyer, parties 
 
       <div className="actions">
         <button type="button" className="action" onClick={() => { setCodeOpen(true); setCodeStep(1); }}>
-          Changer mon code <span className="n">4 chiffres</span>
+          {t('profil.changerCode')} <span className="n">{t('profil.quatreChiffres')}</span>
         </button>
         <button type="button" className="action danger" onClick={() => { setDelOpen(true); setDelCode(''); }}>
-          Supprimer mon profil <span className="n">irréversible</span>
+          {t('profil.supprimer')} <span className="n">{t('profil.irreversible')}</span>
         </button>
       </div>
 
@@ -212,11 +213,11 @@ export default function ProfileClient({ me, stats, verdictStats, foyer, parties 
       {/* Sélecteur de sticker */}
       {pickerOpen && (
         <div className="sheet-backdrop" onClick={() => setPickerOpen(false)}>
-          <div className="bottom-sheet picker" role="dialog" aria-modal="true" aria-label="Choisir un sticker"
+          <div className="bottom-sheet picker" role="dialog" aria-modal="true" aria-label={t('profil.stickerAria')}
                onClick={(e) => e.stopPropagation()}>
-            <button type="button" className="sheet-close" aria-label="Fermer" onClick={() => setPickerOpen(false)}>✕</button>
-            <h2>Choisis ton sticker</h2>
-            <p className="hint">Il remplace le dé partout : chips de joueurs, tirages, historique.</p>
+            <button type="button" className="sheet-close" aria-label={t('etagere.fermer')} onClick={() => setPickerOpen(false)}>✕</button>
+            <h2>{t('profil.stickerTitre')}</h2>
+            <p className="hint">{t('profil.stickerHint')}</p>
             <div className="sticker-grid">
               {ALLOWED_STICKERS.map((s) => (
                 <button key={s} type="button" className={s === sticker ? 'on' : ''} disabled={busy}
@@ -224,8 +225,8 @@ export default function ProfileClient({ me, stats, verdictStats, foyer, parties 
               ))}
             </div>
             <div className="photo-opts">
-              <button type="button" onClick={() => camRef.current?.click()}>📷 Prendre une photo</button>
-              <button type="button" onClick={() => galRef.current?.click()}>🖼 Choisir dans la galerie</button>
+              <button type="button" onClick={() => camRef.current?.click()}>{t('profil.photoCam')}</button>
+              <button type="button" onClick={() => galRef.current?.click()}>{t('profil.photoGalerie')}</button>
             </div>
             <input ref={camRef} type="file" accept="image/*" capture="environment" className="sr-input" onChange={openPhoto} />
             <input ref={galRef} type="file" accept="image/*" className="sr-input" onChange={openPhoto} />
@@ -235,11 +236,11 @@ export default function ProfileClient({ me, stats, verdictStats, foyer, parties 
 
       {/* Recadrage carré */}
       {cropSrc && (
-        <div className="crop" role="dialog" aria-modal="true" aria-label="Recadrer ta photo">
+        <div className="crop" role="dialog" aria-modal="true" aria-label={t('profil.cropAria')}>
           <div className="crop-head">
-            <button type="button" aria-label="Annuler" onClick={() => setCropSrc(null)}>✕</button>
-            <span>Recadre ta photo</span>
-            <button type="button" className="ok" disabled={busy || !nat} onClick={useCrop}>Recadrer ✓</button>
+            <button type="button" aria-label={t('soiree.annuler')} onClick={() => setCropSrc(null)}>✕</button>
+            <span>{t('profil.cropTitre')}</span>
+            <button type="button" className="ok" disabled={busy || !nat} onClick={useCrop}>{t('profil.cropOk')}</button>
           </div>
           <div className="crop-zone">
             <div className="crop-sq"
@@ -252,10 +253,10 @@ export default function ProfileClient({ me, stats, verdictStats, foyer, parties 
             </div>
           </div>
           <div className="crop-foot">
-            <label htmlFor="crop-zoom">Zoom</label>
+            <label htmlFor="crop-zoom">{t('profil.zoom')}</label>
             <input id="crop-zoom" type="range" min={1} max={3} step={0.01} value={zoom}
                    onChange={(e) => onZoom(Number(e.target.value))} />
-            <p>Glisse pour cadrer — <b>256×256</b> à l&apos;enregistrement</p>
+            <p>{t('profil.cropGlisse')}<b>256×256</b>{t('profil.cropApres')}</p>
           </div>
         </div>
       )}
@@ -263,34 +264,34 @@ export default function ProfileClient({ me, stats, verdictStats, foyer, parties 
       {/* Changer le code — 3 étapes */}
       {codeOpen && (
         <div className="sheet-backdrop" onClick={() => setCodeOpen(false)}>
-          <div className="bottom-sheet" role="dialog" aria-modal="true" aria-label="Changer mon code"
+          <div className="bottom-sheet" role="dialog" aria-modal="true" aria-label={t('profil.changerCode')}
                onClick={(e) => e.stopPropagation()}>
-            <button type="button" className="sheet-close" aria-label="Fermer" onClick={() => setCodeOpen(false)}>✕</button>
-            <h2>Changer mon code</h2>
+            <button type="button" className="sheet-close" aria-label={t('etagere.fermer')} onClick={() => setCodeOpen(false)}>✕</button>
+            <h2>{t('profil.changerCode')}</h2>
             <div className="steps" aria-hidden="true"><i className={codeStep >= 1 ? 'on' : ''} /><i className={codeStep >= 2 ? 'on' : ''} /><i className={codeStep >= 3 ? 'on' : ''} /></div>
             {codeStep === 1 && (
               <>
-                <p className="pin-label">Étape 1/3 — ton code actuel</p>
-                <PinInput label="Code actuel" value={c1} onChange={setC1} autoComplete="current-password" />
+                <p className="pin-label">{t('profil.etape1')}</p>
+                <PinInput label={t('profil.codeActuel')} value={c1} onChange={setC1} autoComplete="current-password" />
                 <button type="button" className="btn-go" disabled={c1.length !== 4}
-                        onClick={() => setCodeStep(2)}>Continuer</button>
+                        onClick={() => setCodeStep(2)}>{t('profil.continuer')}</button>
               </>
             )}
             {codeStep === 2 && (
               <>
-                <p className="pin-label">Étape 2/3 — nouveau code</p>
-                <PinInput label="Nouveau code" value={c2} onChange={setC2} autoComplete="new-password" />
+                <p className="pin-label">{t('profil.etape2')}</p>
+                <PinInput label={t('profil.nouveauCode')} value={c2} onChange={setC2} autoComplete="new-password" />
                 <button type="button" className="btn-go" disabled={c2.length !== 4}
-                        onClick={() => setCodeStep(3)}>Continuer</button>
+                        onClick={() => setCodeStep(3)}>{t('profil.continuer')}</button>
               </>
             )}
             {codeStep === 3 && (
               <>
-                <p className="pin-label">Étape 3/3 — confirme le nouveau code</p>
-                <PinInput label="Confirmer le nouveau code" value={c3} onChange={setC3} autoComplete="new-password" />
+                <p className="pin-label">{t('profil.etape3')}</p>
+                <PinInput label={t('profil.confirmCode')} value={c3} onChange={setC3} autoComplete="new-password" />
                 {codeMsg && <p className={codeMsg.includes('✓') ? 'ok-msg' : 'error'} role="alert">{codeMsg}</p>}
                 <button type="button" className="btn-go" disabled={busy || c3.length !== 4}
-                        onClick={submitCode}>Enregistrer le nouveau code</button>
+                        onClick={submitCode}>{t('profil.enregistrerCode')}</button>
               </>
             )}
           </div>
@@ -300,19 +301,18 @@ export default function ProfileClient({ me, stats, verdictStats, foyer, parties 
       {/* Suppression */}
       {delOpen && (
         <div className="sheet-backdrop" onClick={() => setDelOpen(false)}>
-          <div className="bottom-sheet" role="dialog" aria-modal="true" aria-label="Supprimer mon profil"
+          <div className="bottom-sheet" role="dialog" aria-modal="true" aria-label={t('profil.supprimer')}
                onClick={(e) => e.stopPropagation()}>
-            <button type="button" className="sheet-close" aria-label="Fermer" onClick={() => setDelOpen(false)}>✕</button>
-            <h2>Supprimer mon profil ?</h2>
+            <button type="button" className="sheet-close" aria-label={t('etagere.fermer')} onClick={() => setDelOpen(false)}>✕</button>
+            <h2>{t('profil.supprimerTitre')}</h2>
             <p className="warn">
-              Ton profil, tes <b>{stats.games} jeux</b> et tes tirages quittent l&apos;app.
-              Les parties des autres restent, sans toi. <b>Irréversible.</b>
+              {t('profil.delAvant')}<b>{t('ludotheque.nbJeux', { n: stats.games })}</b>{t('profil.delMilieu')}<b>{t('profil.delIrreversible')}</b>
             </p>
-            <p className="pin-label">Confirme avec ton code secret</p>
-            <PinInput label="Code secret" value={delCode} onChange={setDelCode} />
+            <p className="pin-label">{t('profil.delConfirme')}</p>
+            <PinInput label={t('auth.codeSecretLabel')} value={delCode} onChange={setDelCode} />
             {error && <p className="error" role="alert">{error}</p>}
             <button type="button" className="btn-danger" disabled={busy || delCode.length !== 4} onClick={deleteMe}>
-              Supprimer définitivement
+              {t('profil.delDefinitif')}
             </button>
           </div>
         </div>
