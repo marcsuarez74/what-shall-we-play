@@ -23,6 +23,11 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     setNightPlayers(nightId, playerIds);
     return NextResponse.json({ ok: true });
   }
+  // Corps malformé → 400 propre (même classe que la branche v1 au-dessus), jamais un 500.
+  if (body.playerIds !== undefined && !Array.isArray(body.playerIds))
+    return NextResponse.json({ error: t(lang, 'erreurs.requeteInvalide') }, { status: 400 });
+  if (body.scores !== undefined && (!body.scores || typeof body.scores !== 'object'))
+    return NextResponse.json({ error: t(lang, 'erreurs.requeteInvalide') }, { status: 400 });
   const patch: NuitPatch = {};
   if (body.playedAt !== undefined) patch.playedAt = body.playedAt;
   if (body.gameId !== undefined) patch.gameId = Number(body.gameId);
