@@ -208,6 +208,35 @@ export function supprimerNuit(nightId: number, userId: number, lang: Lang = 'fr'
   return { ok: true };
 }
 
+// v4.2.0 — créer une partie passée en un geste : date passée + jeu + participants
+// + scores optionnels, créée directement terminée avec le jeu posé. L'auteur en
+// devient le créateur (auto-ajouté). Pour une partie à venir : le flux Planifier.
+export function creerNuitRetro(userId: number, entree: { playedAt: string; gameId: number; playerIds: number[]; scores?: Record<string, number> }, lang: Lang = 'fr'): { ok: true; nightId: number } | NightStateError {
+  const db = getDb();
+  if (!datePasseeValide(entree.playedAt)) // helper posé en Task 1 — même validation
+    return { error: t(lang, 'soiree.errDateInvalide'), status: 400 };
+  if (!db.prepare('SELECT 1 FROM games WHERE id = ?').get(entree.gameId)) return { error: t(lang, 'soiree.errJeuIntrouvable'), status: 400 };
+  const joueurs = [...new Set(entree.playerIds.includes(userId) ? entree.playerIds : [...entree.playerIds, userId])];
+  for (const pid of joueurs)
+    if (!db.prepare('SELECT 1 FROM users WHERE id = ?').get(pid)) return { error: t(lang, 'soiree.errJoueurIntrouvable'), status: 400 };
+  const lignes: [number, number][] = [];
+  if (entree.scores) {
+    for (const [k, v] of Object.entries(entree.scores)) {
+      const uid = Number(k);
+      if (!joueurs.includes(uid) || !Number.isFinite(v)) return { error: t(lang, 'soiree.errScoreInvalide'), status: 400 };
+      lignes.push([uid, v]);
+    }
+  }
+  const info = db.prepare(`INSERT INTO nights (creator_id, played_at, game_id, status, ended_at) VALUES (?, ?, ?, 'termine', datetime('now','localtime'))`)
+    .run(userId, entree.playedAt, entree.gameId);
+  const nightId = Number(info.lastInsertRowid);
+  const insP = db.prepare('INSERT OR IGNORE INTO night_players (night_id, user_id) VALUES (?, ?)');
+  for (const id of joueurs) insP.run(nightId, id);
+  const insS = db.prepare('INSERT OR REPLACE INTO night_scores (night_id, user_id, score) VALUES (?, ?, ?)');
+  for (const [uid, v] of lignes) insS.run(nightId, uid, v);
+  return { ok: true, nightId }; // pas de notifyNight : une partie du passé n'a personne en live
+}
+
 // LA boîte de la partie (une seule, jamais la liste des relances).
 export function getNightGame(nightId: number): Game | null {
   const night = getNight(nightId);

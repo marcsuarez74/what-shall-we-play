@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { registerUser } from '@/lib/auth';
 import { createGame } from '@/lib/games';
-// Task 3 étendra cet import avec creerNuitRetro (et getMyParties en Task 5).
-import { createNight, corrigerNuit, getNight, getNightScores, getNightPlayers, supprimerNuit } from '@/lib/nights';
+// Task 5 étendra cet import avec getMyParties.
+import { createNight, corrigerNuit, getNight, getNightScores, getNightPlayers, supprimerNuit, creerNuitRetro } from '@/lib/nights';
 import { poserVerdict } from '@/lib/verdicts';
 import { getDb } from '@/lib/db';
 
@@ -80,5 +80,29 @@ describe('supprimerNuit', () => {
     expect(getNight(n.nightId)).toBeNull();
     for (const table of ['night_players', 'night_scores', 'picks', 'night_verdicts'])
       expect((getDb().prepare(`SELECT COUNT(*) AS c FROM ${table} WHERE night_id = ?`).get(n.nightId) as { c: number }).c).toBe(0);
+  });
+});
+
+describe('creerNuitRetro', () => {
+  it('crée directement terminée : jeu posé, joueurs, scores, créateur = l\'auteur', () => {
+    const marc = (registerUser(`e-r-marc-${Math.random().toString(36).slice(2, 8)}`, '1234') as { id: number }).id;
+    const lea = (registerUser(`e-r-lea-${Math.random().toString(36).slice(2, 8)}`, '1234') as { id: number }).id;
+    const game = createGame(marc, { title: 'Dune', box_format: 'grand' });
+    const res = creerNuitRetro(marc, { playedAt: hier, gameId: game, playerIds: [lea], scores: { [marc]: 44, [lea]: 39 } });
+    expect((res as { ok: boolean }).ok).toBe(true);
+    const night = getNight((res as { nightId: number }).nightId)!;
+    expect(night.status).toBe('termine');
+    expect(night.game_id).toBe(game);
+    expect(night.creator_id).toBe(marc);
+    expect(night.played_at).toBe(hier);
+    expect(getNightPlayers(night.id).map((p) => p.id).sort()).toEqual([marc, lea].sort()); // créateur auto-ajouté
+    expect(Object.fromEntries(getNightScores(night.id).map((s) => [s.user_id, s.score]))).toEqual({ [marc]: 44, [lea]: 39 });
+  });
+  it('date future rejetée (400) ; score d\'un absent rejeté (400) ; nuit hors stats d\'autrui', () => {
+    const marc = (registerUser(`e-r2-${Math.random().toString(36).slice(2, 8)}`, '1234') as { id: number }).id;
+    const game = createGame(marc, { title: 'Azul', box_format: 'petit' });
+    expect((creerNuitRetro(marc, { playedAt: demain, gameId: game, playerIds: [marc] }) as { status: number }).status).toBe(400);
+    const res = creerNuitRetro(marc, { playedAt: hier, gameId: game, playerIds: [marc], scores: { [999999]: 5 } });
+    expect((res as { status: number }).status).toBe(400);
   });
 });
