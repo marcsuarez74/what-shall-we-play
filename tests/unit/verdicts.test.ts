@@ -3,7 +3,7 @@ import { registerUser } from '@/lib/auth';
 import { createGame } from '@/lib/games';
 import { getDb } from '@/lib/db';
 import { createNight, addNightGame, boxOutNight, endNight } from '@/lib/nights';
-import { poserVerdict, verdictsDeNuit, monVerdict, type Verdict } from '@/lib/verdicts';
+import { poserVerdict, poidsVerdicts, verdictsDeNuit, monVerdict, type Verdict } from '@/lib/verdicts';
 
 const uid = (p: string) => (registerUser(p, '1234') as { id: number }).id;
 
@@ -16,6 +16,21 @@ function soireeJouee(pseudo: string, titre: string) {
   boxOutNight(n, hote, jeu);
   endNight(n, hote);
   return { hote, jeu, n };
+}
+
+// Soirée jugée : k participants plantent leurs verdicts sur le jeu de la nuit.
+// Jeu unique par appel : poidsVerdicts agrège par jeu sur toutes les soirées
+// de la base de test (partagée entre les tests du fichier).
+function soireeJugee(prefixe: string, titre: string, verdicts: Verdict[]) {
+  const joueurs = verdicts.map((_, i) => uid(`${prefixe}-${i}`));
+  const hote = joueurs[0];
+  const jeu = createGame(hote, { title: titre, box_format: 'moyen' });
+  const n = createNight(hote, joueurs);
+  addNightGame(n, jeu, hote);
+  boxOutNight(n, hote, jeu);
+  endNight(n, hote);
+  joueurs.forEach((j, i) => expect(poserVerdict(n, j, verdicts[i])).toEqual({ ok: true }));
+  return { jeu, n };
 }
 
 describe('poserVerdict', () => {
@@ -93,5 +108,81 @@ describe('poserVerdict', () => {
     expect(poserVerdict(n, hote, 'adore')).toEqual({ ok: true });
     expect(poserVerdict(n, invite, 'neutre')).toEqual({ ok: true });
     expect(verdictsDeNuit(n)).toEqual({ adore: 1, bien: 0, neutre: 1 });
+  });
+});
+
+// Formule normative (design) : score = (😍 − 😐)/total ∈ [−1, +1],
+// mult = 1 + 0,08·score·min(1, n/3) si score > 0, 1 + 0,02·score·min(1, n/3) sinon.
+// Borne garantée [×0,98 ; ×1,08] — garde-fou du backlog.
+describe('poidsVerdicts', () => {
+  it('sans verdict → ×1,00 exact', () => {
+    const p = poidsVerdicts([999]);
+    expect(p.get(999)).toBe(1);
+  });
+
+  it('unanimement adoré, 3+ verdicts → ×1,08 (borne haute)', () => {
+    const { jeu } = soireeJugee('pw-uni', 'Cascadia', ['adore', 'adore', 'adore']);
+    expect(poidsVerdicts([jeu]).get(jeu)).toBeCloseTo(1.08, 5);
+  });
+
+  it('un seul adore → confiance 1/3 → ×1 + 0,08×1×(1/3)', () => {
+    const { jeu } = soireeJugee('pw-solo', 'Azul', ['adore']);
+    expect(poidsVerdicts([jeu]).get(jeu)).toBeCloseTo(1 + 0.08 / 3, 5);
+  });
+
+  it('1 adore + 1 bien → score 0,5 → ×1 + 0,08×0,5×(2/3) ≈ 1,0267', () => {
+    const { jeu } = soireeJugee('pw-mi', 'Harmonies', ['adore', 'bien']);
+    expect(poidsVerdicts([jeu]).get(jeu)).toBeCloseTo(1 + 0.08 * 0.5 * (2 / 3), 5);
+  });
+
+  it('1 adore + 1 neutre → le neutre équilibre le score vers 0 → ×1,00', () => {
+    const { jeu } = soireeJugee('pw-eq', 'Wingspan', ['adore', 'neutre']);
+    expect(poidsVerdicts([jeu]).get(jeu)).toBeCloseTo(1, 5);
+  });
+
+  it('unanimement bien → score 0 → ×1,00 exact', () => {
+    const { jeu } = soireeJugee('pw-bien', '7 Wonders', ['bien', 'bien']);
+    expect(poidsVerdicts([jeu]).get(jeu)).toBeCloseTo(1, 5);
+  });
+
+  it('dominant neutre (2 neutre, 1 adore) → score −1/3 → ≈ 0,99333, jamais sous 0,98', () => {
+    const { jeu } = soireeJugee('pw-dom', 'Dune', ['neutre', 'neutre', 'adore']);
+    expect(poidsVerdicts([jeu]).get(jeu)).toBeCloseTo(1 + 0.02 * (-1 / 3), 5);
+  });
+
+  it('unanimement neutre (3+) → score −1 → ×0,98 (borne basse)', () => {
+    const { jeu } = soireeJugee('pw-bas', 'Root', ['neutre', 'neutre', 'neutre']);
+    expect(poidsVerdicts([jeu]).get(jeu)).toBeCloseTo(0.98, 5);
+  });
+
+  it('jamais hors bornes [0,98 ; 1,08] quel que soit le mélange planté', () => {
+    const cas = [
+      soireeJugee('pw-x1', 'Scythe', ['adore']),
+      soireeJugee('pw-x2', 'Brass', ['bien', 'bien', 'bien', 'bien', 'bien']),
+      soireeJugee('pw-x3', 'Gaia', ['neutre']),
+      soireeJugee('pw-x4', 'Everdell', ['adore', 'adore', 'neutre', 'adore', 'bien', 'adore', 'adore']),
+      soireeJugee('pw-x5', 'Spirit Island', ['neutre', 'adore', 'neutre', 'bien', 'neutre']),
+      soireeJugee('pw-x6', 'Ark Nova', ['neutre', 'neutre', 'neutre', 'neutre', 'neutre', 'neutre']),
+    ];
+    const p = poidsVerdicts(cas.map((c) => c.jeu));
+    for (const c of cas) {
+      const w = p.get(c.jeu) as number;
+      expect(w).toBeGreaterThanOrEqual(0.98);
+      expect(w).toBeLessThanOrEqual(1.08);
+    }
+  });
+
+  it('agrège par jeu sur toutes les soirées : deux nuits du même jeu cumulent', () => {
+    const hote = uid('pw-deuxnuits');
+    const jeu = createGame(hote, { title: 'Cascadia', box_format: 'moyen' });
+    for (const prefixe of ['a', 'b']) {
+      const n = createNight(hote, [hote]);
+      addNightGame(n, jeu, hote);
+      boxOutNight(n, hote, jeu);
+      endNight(n, hote);
+      expect(poserVerdict(n, hote, 'adore')).toEqual({ ok: true });
+    }
+    // n = 2 verdicts sur le même jeu → confiance 2/3
+    expect(poidsVerdicts([jeu]).get(jeu)).toBeCloseTo(1 + 0.08 * (2 / 3), 5);
   });
 });

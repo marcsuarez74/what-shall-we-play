@@ -41,3 +41,31 @@ export function monVerdict(nightId: number, userId: number): Verdict | null {
   ).get(nightId, userId) as { verdict: Verdict } | undefined;
   return row?.verdict ?? null;
 }
+
+// Poids doux au tirage : score = (😍 − 😐)/total, amplitude +8 %/−2 % (asymétrie
+// volontaire) lissée par la confiance min(1, n/3). Borne garantée : [×0,98 ; ×1,08]
+// — garde-fou du backlog.
+export function poidsVerdicts(gameIds: number[]): Map<number, number> {
+  const poids = new Map<number, number>();
+  if (gameIds.length === 0) return poids;
+  const q = gameIds.map(() => '?').join(',');
+  const rows = getDb().prepare(`
+    SELECT game_id,
+           SUM(verdict = 'adore') AS adore,
+           SUM(verdict = 'neutre') AS neutre,
+           COUNT(*) AS n
+    FROM night_verdicts WHERE game_id IN (${q}) GROUP BY game_id
+  `).all(...gameIds) as { game_id: number; adore: number; neutre: number; n: number }[];
+  const parJeu = new Map(rows.map((r) => [r.game_id, r] as const));
+  for (const id of gameIds) {
+    const r = parJeu.get(id);
+    if (!r) { poids.set(id, 1); continue; }
+    const score = (r.adore - r.neutre) / r.n;
+    const confiance = Math.min(1, r.n / 3);
+    const mult = score > 0 ? 1 + 0.08 * score * confiance
+               : score < 0 ? 1 + 0.02 * score * confiance
+               : 1;
+    poids.set(id, Math.min(1.08, Math.max(0.98, mult)));
+  }
+  return poids;
+}

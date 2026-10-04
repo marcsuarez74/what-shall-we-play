@@ -1,10 +1,11 @@
 // app/api/draw/route.ts
 import { NextResponse } from 'next/server';
 import { getSessionUser } from '@/lib/session';
-import { pickGameId } from '@/lib/draw';
+import { pickWeightedGameId } from '@/lib/draw';
 import { getNight, getShelfGames, userCanAccessNight } from '@/lib/nights';
 import { drawAllowed } from '@/lib/nights';
 import { getDb } from '@/lib/db';
+import { poidsVerdicts } from '@/lib/verdicts';
 
 export async function POST(req: Request) {
   const user = await getSessionUser();
@@ -22,7 +23,8 @@ export async function POST(req: Request) {
   const allowed = new Set(shelf.map((g) => g.id));
   const ids: number[] = [...new Set((gameIds as number[]).map(Number))].filter((id) => allowed.has(id));
   if (ids.length === 0) return NextResponse.json({ error: 'Sélection vide' }, { status: 400 });
-  const gameId = pickGameId(ids);
+  const poids = poidsVerdicts(ids);
+  const gameId = pickWeightedGameId(ids.map((id) => ({ id, poids: poids.get(id) ?? 1 })));
   const info = getDb().prepare('INSERT INTO picks (night_id, game_id, spinner_id) VALUES (?, ?, ?)')
     .run(night.id, gameId, user.id);
   return NextResponse.json({ pickId: Number(info.lastInsertRowid), gameId });
