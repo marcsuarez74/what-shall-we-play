@@ -3,7 +3,7 @@ import { registerUser } from '@/lib/auth';
 import { createGame } from '@/lib/games';
 import { getDb } from '@/lib/db';
 import { createNight, addNightGame, boxOutNight, endNight } from '@/lib/nights';
-import { poserVerdict, poidsVerdicts, verdictsDeNuit, monVerdict, verdictPersoStats, verdictsJeu, type Verdict } from '@/lib/verdicts';
+import { poserVerdict, poidsVerdicts, verdictsDeNuit, monVerdict, verdictPersoStats, verdictsJeu, verdictsParJeu, type Verdict } from '@/lib/verdicts';
 import { getMyParties } from '@/lib/users';
 
 const uid = (p: string) => (registerUser(p, '1234') as { id: number }).id;
@@ -216,6 +216,30 @@ describe('verdictsJeu', () => {
   });
 });
 
+// Même donnée que verdictsJeu, groupée pour TOUTE la ludothèque (fiche jeu en
+// mode ludothèque) — Record par game_id, sans N+1.
+describe('verdictsParJeu', () => {
+  it('cumul multi-nuits par game_id ; jeu jamais jugé → absent du record', () => {
+    const hote = uid('vpj-hote');
+    const invite = uid('vpj-invite');
+    const jeu = createGame(hote, { title: 'Cascadia VPJ', box_format: 'moyen' });
+    const jamais = createGame(hote, { title: 'Everdell VPJ', box_format: 'moyen' });
+    const n1 = createNight(hote, [hote, invite]);
+    addNightGame(n1, jeu, hote);
+    boxOutNight(n1, hote, jeu);
+    endNight(n1, hote);
+    expect(poserVerdict(n1, hote, 'adore')).toEqual({ ok: true });
+    expect(poserVerdict(n1, invite, 'bien')).toEqual({ ok: true });
+    const n2 = createNight(hote, [hote]); // 2e nuit sur le même jeu : les compteurs s'additionnent
+    addNightGame(n2, jeu, hote);
+    boxOutNight(n2, hote, jeu);
+    endNight(n2, hote);
+    expect(poserVerdict(n2, hote, 'neutre')).toEqual({ ok: true });
+    expect(verdictsParJeu()[jeu]).toEqual({ adore: 1, bien: 1, neutre: 1 });
+    expect(verdictsParJeu()[jamais]).toBeUndefined();
+  });
+});
+
 // « Tu as adoré X : n fois sur total » — agrégat de MES verdicts personnels,
 // top 3 trié par total desc (égalité : adore desc).
 describe('verdictPersoStats', () => {
@@ -233,7 +257,7 @@ describe('verdictPersoStats', () => {
       endNight(n, moi);
       expect(poserVerdict(n, moi, v)).toEqual({ ok: true });
     }
-    expect(verdictPersoStats(moi)).toEqual([{ jeu: 'Cascadia', adore: 1, total: 2 }]);
+    expect(verdictPersoStats(moi)).toEqual([{ game_id: jeu, jeu: 'Cascadia', adore: 1, total: 2 }]);
   });
 
   it('top 3 : total desc puis adore desc — le 4e jeu (total le plus faible) sort', () => {
@@ -244,8 +268,10 @@ describe('verdictPersoStats', () => {
       ['EgalSans', ['bien', 'neutre']],           // total 2, adore 0 → 3e
       ['PetitTotal', ['adore']],                  // total 1 → hors top 3
     ];
+    const ids: Record<string, number> = {};
     for (const [titre, vs] of plantes) {
       const jeu = createGame(moi, { title: titre, box_format: 'moyen' });
+      ids[titre] = jeu;
       for (const v of vs) {
         const n = createNight(moi, [moi]);
         addNightGame(n, jeu, moi);
@@ -255,9 +281,9 @@ describe('verdictPersoStats', () => {
       }
     }
     expect(verdictPersoStats(moi)).toEqual([
-      { jeu: 'GrosTotal', adore: 1, total: 3 },
-      { jeu: 'EgalAdore', adore: 2, total: 2 },
-      { jeu: 'EgalSans', adore: 0, total: 2 },
+      { game_id: ids.GrosTotal, jeu: 'GrosTotal', adore: 1, total: 3 },
+      { game_id: ids.EgalAdore, jeu: 'EgalAdore', adore: 2, total: 2 },
+      { game_id: ids.EgalSans, jeu: 'EgalSans', adore: 0, total: 2 },
     ]);
   });
 });

@@ -45,12 +45,13 @@ export function monVerdict(nightId: number, userId: number): Verdict | null {
 // Top 3 de mes jeux « Tu as adoré X : n fois sur total » — agrégat de MES
 // verdicts personnels, toutes soirées confondues. Tri total desc, adore desc ;
 // la ligne ne s'affiche que si adore ≥ 1 (filtrage UI, pas SQL — KISS).
+// game_id voyage avec la ligne : clé React stable même entre jeux homonymes.
 export function verdictPersoStats(userId: number) {
   return getDb().prepare(`
-    SELECT g.title AS jeu, SUM(nv.verdict = 'adore') AS adore, COUNT(*) AS total
+    SELECT nv.game_id, g.title AS jeu, SUM(nv.verdict = 'adore') AS adore, COUNT(*) AS total
     FROM night_verdicts nv JOIN games g ON g.id = nv.game_id
     WHERE nv.user_id = ? GROUP BY nv.game_id ORDER BY total DESC, adore DESC LIMIT 3
-  `).all(userId) as { jeu: string; adore: number; total: number }[];
+  `).all(userId) as { game_id: number; jeu: string; adore: number; total: number }[];
 }
 
 // Compteurs 😍🙂😐 d'un jeu, toutes soirées confondues (fiche jeu).

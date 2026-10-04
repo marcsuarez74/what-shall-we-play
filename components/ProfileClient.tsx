@@ -13,7 +13,7 @@ import UserMenu from './UserMenu';
 
 type Me = { id: number; pseudo: string; sticker: string | null; avatar_path: string | null };
 type Stats = { plays: number; nights: number; games: number; podiums: { un: number; deux: number; trois: number } };
-type VerdictStat = { jeu: string; adore: number; total: number };
+type VerdictStat = { game_id: number; jeu: string; adore: number; total: number };
 type Partie = {
   id: number; played_at: string; game_title: string | null;
   cover_path: string | null; cover_url: string | null; score: number | null; med: string;
@@ -170,7 +170,7 @@ export default function ProfileClient({ me, stats, verdictStats, foyer, parties 
       {verdictStats.some((v) => v.adore > 0) && (
         <div className="verdict-stats">
           {verdictStats.filter((v) => v.adore > 0).map((v) => (
-            <p key={v.jeu}>Tu as adoré <b>{v.jeu}</b> : {v.adore} fois sur {v.total}</p>
+            <p key={v.game_id}>Tu as adoré <b>{v.jeu}</b> : {v.adore} fois sur {v.total}</p>
           ))}
         </div>
       )}
