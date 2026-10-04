@@ -19,7 +19,7 @@
 | 8 | Monétisation premium | 🟡 M | Infra paiement ; ouvre la voie au financement de la ludothèque |
 | 9 | Ludothèque virtuelle | 🔴+ XL | Dépend des cercles ; le prêt communautaire pourrait être la feature premium |
 | 10 | Notifications push | 🔴 L | Le plus d'infra ; prend tout son sens une fois les cercles en place |
-| 11 | FAQ | 🟢 S | Petite, sans dépendance — à glisser au fil de l'eau, quand le contenu existe |
+| 11 | FAQ — ✓ v3.8.0 | 🟢 S | Petite, sans dépendance — à glisser au fil de l'eau, quand le contenu existe |
 
 ---
 
