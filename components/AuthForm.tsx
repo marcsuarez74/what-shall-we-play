@@ -2,10 +2,13 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import PinInput from './PinInput';
+import LanguageSwitch from './LanguageSwitch';
+import { useI18n } from './LanguageProvider';
 import { ALLOWED_STICKERS } from '@/lib/stickers';
 
 export default function AuthForm({ mode }: { mode: 'login' | 'register' }) {
   const router = useRouter();
+  const { lang, t } = useI18n();
   const [pseudo, setPseudo] = useState('');
   const [code, setCode] = useState('');
   const [sticker, setSticker] = useState('🎲');
@@ -25,31 +28,32 @@ export default function AuthForm({ mode }: { mode: 'login' | 'register' }) {
 
   return (
     <form onSubmit={submit} className="auth-form">
-      <h1>{mode === 'login' ? 'Bonsoir !' : 'Créer un compte'}</h1>
-      <label>Pseudo
+      <h1>{t(mode === 'login' ? 'auth.titreLogin' : 'auth.titreRegister')}</h1>
+      <label>{t('auth.pseudo')}
         <input value={pseudo} onChange={(e) => setPseudo(e.target.value)} autoComplete="username" required />
       </label>
-      <span className="pin-label">Code secret — 4 chiffres</span>
-      <PinInput label="Code secret" value={code} onChange={setCode}
+      <span className="pin-label">{t('auth.codeSecret')}</span>
+      <PinInput label={t('auth.codeSecretLabel')} value={code} onChange={setCode}
                 autoComplete={mode === 'login' ? 'current-password' : 'new-password'} />
       {mode === 'register' && (
         <>
-          <span className="pin-label">Choisis ton avatar — modifiable au profil</span>
-          <div className="sticker-grid" role="group" aria-label="Choisis ton avatar">
+          <span className="pin-label">{t('auth.avatarChoix')}</span>
+          <div className="sticker-grid" role="group" aria-label={t('auth.avatarGroupe')}>
             {ALLOWED_STICKERS.map((s) => (
               <button type="button" key={s} className={s === sticker ? 'on' : ''}
-                      aria-pressed={s === sticker} aria-label={`Avatar ${s}`}
+                      aria-pressed={s === sticker} aria-label={t('auth.avatarUn', { s })}
                       onClick={() => setSticker(s)}>{s}</button>
             ))}
           </div>
         </>
       )}
       {error && <p className="error" role="alert">{error}</p>}
-      <button disabled={busy || code.length !== 4}>{mode === 'login' ? 'Entrer' : 'Créer mon compte'}</button>
-      <a href="/faq">❓ Questions fréquentes</a>
+      <button disabled={busy || code.length !== 4}>{t(mode === 'login' ? 'auth.entrer' : 'auth.creer')}</button>
+      <a href="/faq">{t('auth.faq')}</a>
       <a href={mode === 'login' ? '/register' : '/login'}>
-        {mode === 'login' ? 'Pas de compte ? Le créer' : 'Déjà un compte ? Entrer'}
+        {t(mode === 'login' ? 'auth.lienLogin' : 'auth.lienRegister')}
       </a>
+      <LanguageSwitch lang={lang} />
     </form>
   );
 }

@@ -2,9 +2,10 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { FORMATS, FORMAT_SCALE, FORMAT_SHORT } from '@/lib/formats';
+import { FORMATS, FORMAT_SCALE, formatShort } from '@/lib/formats';
 import { planifierImport, type LigneImport } from '@/lib/import-bgg';
 import type { BoxFormat, UserLite } from '@/lib/types';
+import { useI18n } from './LanguageProvider';
 import UserMenu from './UserMenu';
 
 type Thing = {
@@ -19,6 +20,7 @@ const CYCLE: Record<BoxFormat, BoxFormat> = { mini: 'petit', petit: 'moyen', moy
 
 export default function ImportBggClient({ me }: { me: UserLite }) {
   const router = useRouter();
+  const { lang, t } = useI18n();
   const [stage, setStage] = useState<Stage>('pseudo');
   const [pseudo, setPseudo] = useState('');
   const [busy, setBusy] = useState(false);
@@ -37,11 +39,11 @@ export default function ImportBggClient({ me }: { me: UserLite }) {
     try {
       const res = await fetch(`/api/bgg/collection?username=${encodeURIComponent(pseudo.trim())}`);
       const data = await res.json();
-      if (!res.ok) { setError(data.error ?? 'BGG ne répond pas'); return; }
+      if (!res.ok) { setError(data.error ?? t('bgg.errPasReponse')); return; }
       const jeux = (data.jeux ?? []) as LigneImport['jeu'][];
-      if (jeux.length === 0) { setError('Aucun jeu possédé sur BGG — vérifie que ta collection est publique.'); return; }
+      if (jeux.length === 0) { setError(t('import.errAucunPossede')); return; }
       const res2 = await fetch('/api/games');
-      if (!res2.ok) { setError('Impossible de lire ta ludothèque — réessaie'); return; }
+      if (!res2.ok) { setError(t('import.errLectureLudo')); return; }
       const ludo = ((await res2.json()).games ?? []) as Parameters<typeof planifierImport>[1];
       const l = planifierImport(jeux, ludo);
       setLignes(l);
@@ -49,7 +51,7 @@ export default function ImportBggClient({ me }: { me: UserLite }) {
       for (const li of l) { f[li.jeu.bggId] = global; i[li.jeu.bggId] = true; if (li.etat === 'dup-titre') m[li.jeu.bggId] = 'enrichir'; }
       setFormats(f); setModes(m); setInclus(i);
       setStage('preview');
-    } catch { setError('BGG ne répond pas'); } finally { setBusy(false); }
+    } catch { setError(t('bgg.errPasReponse')); } finally { setBusy(false); }
   }
 
   function majGlobal(f: BoxFormat) {
@@ -110,38 +112,36 @@ export default function ImportBggClient({ me }: { me: UserLite }) {
   return (
     <div className="imp-page">
       <div className="page-head">
-        <h1>Importer une collection</h1>
+        <h1>{t('import.titre')}</h1>
         <UserMenu me={me} />
       </div>
       {error && <p className="hint" role="alert">{error}</p>}
 
       {stage === 'pseudo' && (
         <div className="imp-bloc">
-          <p className="imp-sous">Entre ton pseudo BoardGameGeek : les jeux que tu possèdes
-          arrivent dans ta ludothèque — titre, année, pochette, joueurs, durée, poids.</p>
-          <label htmlFor="imp-pseudo">Pseudo BGG</label>
+          <p className="imp-sous">{t('import.intro')}</p>
+          <label htmlFor="imp-pseudo">{t('import.pseudoLabel')}</label>
           <input id="imp-pseudo" value={pseudo} autoComplete="off"
-                 onChange={(e) => setPseudo(e.target.value)} placeholder="ex. marcsua74" />
-          <p className="help">Ta collection doit être publique sur BGG. Lecture seule :
-          rien n&apos;est modifié sur BGG. Import relançable — les jeux déjà présents sont ignorés.</p>
+                 onChange={(e) => setPseudo(e.target.value)} placeholder={t('import.pseudoExemple')} />
+          <p className="help">{t('import.aide')}</p>
           <button type="button" className="btn-go" disabled={busy || pseudo.trim().length < 1}
                   onClick={fetchCollection}>
-            {busy ? 'BGG prépare ta collection…' : 'Récupérer ma collection'}
+            {busy ? t('import.preparation') : t('import.recuperer')}
           </button>
-          <Link className="cancel" href="/games/add">‹ Annuler</Link>
+          <Link className="cancel" href="/games/add">{t('import.annuler')}</Link>
         </div>
       )}
 
       {stage === 'preview' && (
         <div>
-          <p className="imp-sous">{lignes.length} jeu{lignes.length > 1 ? 'x' : ''} trouvé{lignes.length > 1 ? 's' : ''} sur BGG — les doublons sont déjà repérés.</p>
-          <p className="field-label">Format des boîtes importées · {FORMAT_SHORT[global]} par défaut</p>
-          <div className="seg" role="group" aria-label="Format par défaut des boîtes importées">
+          <p className="imp-sous">{t('import.trouves', { n: lignes.length })}</p>
+          <p className="field-label">{t('import.fmtDefaut', { f: formatShort(global, lang) })}</p>
+          <div className="seg" role="group" aria-label={t('import.fmtGroupeAria')}>
             {FORMATS.map((f) => (
               <button key={f} type="button" className={global === f ? 'on' : ''} aria-pressed={global === f}
                       onClick={() => majGlobal(f)}>
                 <span className="box" style={{ width: 9 + 4 * FORMAT_SCALE[f], height: 9 + 4 * FORMAT_SCALE[f] }} />
-                <span className="lbl">{FORMAT_SHORT[f]}</span>
+                <span className="lbl">{formatShort(f, lang)}</span>
               </button>
             ))}
           </div>
@@ -153,7 +153,7 @@ export default function ImportBggClient({ me }: { me: UserLite }) {
                 <li key={l.jeu.bggId} className={`imp-jeu${exclu ? ' exclu' : ''}${l.etat === 'dup-bgg' ? ' fige' : ''}`}>
                   {l.etat !== 'dup-bgg' && (
                     <button type="button" className="puce" aria-pressed={!exclu}
-                            aria-label={`Importer ${l.jeu.titre}`}
+                            aria-label={t('import.importerAria', { j: l.jeu.titre })}
                             onClick={() => setInclus((p) => ({ ...p, [l.jeu.bggId]: !p[l.jeu.bggId] }))}>✓</button>
                   )}
                   {l.jeu.thumb
@@ -162,27 +162,27 @@ export default function ImportBggClient({ me }: { me: UserLite }) {
                   <span className="mid">
                     <b className="titre">{l.jeu.titre}</b>
                     <span className="meta">{l.jeu.annee ?? '—'}</span>
-                    {l.etat === 'dup-bgg' && <span className="badge ok">= Déjà dans ta ludothèque</span>}
+                    {l.etat === 'dup-bgg' && <span className="badge ok">{t('import.dejaLudo')}</span>}
                     {l.etat === 'dup-titre' && (
                       <>
-                        <span className="badge dup">↻ Doublon probable</span>
+                        <span className="badge dup">{t('import.doublon')}</span>
                         <span className="choix-dup">
                           <button type="button" className={mode === 'enrichir' ? 'on' : ''} aria-pressed={mode === 'enrichir'}
-                                  aria-label={`Enrichir la fiche ${l.jeu.titre}`}
-                                  onClick={() => setModes((p) => ({ ...p, [l.jeu.bggId]: 'enrichir' }))}>↻ Enrichir</button>
+                                  aria-label={t('import.enrichirAria', { j: l.jeu.titre })}
+                                  onClick={() => setModes((p) => ({ ...p, [l.jeu.bggId]: 'enrichir' }))}>{t('import.enrichir')}</button>
                           <button type="button" className={mode === 'nouveau' ? 'on nouveau' : ''} aria-pressed={mode === 'nouveau'}
-                                  aria-label={`Ajouter ${l.jeu.titre} comme nouveau jeu`}
-                                  onClick={() => setModes((p) => ({ ...p, [l.jeu.bggId]: 'nouveau' }))}>＋ Nouveau</button>
+                                  aria-label={t('import.nouveauAria', { j: l.jeu.titre })}
+                                  onClick={() => setModes((p) => ({ ...p, [l.jeu.bggId]: 'nouveau' }))}>{t('import.nouveau')}</button>
                         </span>
                       </>
                     )}
-                    {l.etat === 'nouveau' && <span className="badge new">+ Nouveau</span>}
+                    {l.etat === 'nouveau' && <span className="badge new">{t('import.badgeNouveau')}</span>}
                   </span>
                   {l.etat !== 'dup-bgg' && mode !== 'enrichir' && (
                     <button type="button" className="fmt"
-                            aria-label={`Format de ${l.jeu.titre} : ${formats[l.jeu.bggId] ?? global}`}
+                            aria-label={t('import.fmtAria', { j: l.jeu.titre, f: formats[l.jeu.bggId] ?? global })}
                             onClick={() => setFormats((p) => ({ ...p, [l.jeu.bggId]: CYCLE[p[l.jeu.bggId] ?? global] }))}>
-                      📦 {FORMAT_SHORT[formats[l.jeu.bggId] ?? global]}
+                      📦 {formatShort(formats[l.jeu.bggId] ?? global, lang)}
                     </button>
                   )}
                 </li>
@@ -192,24 +192,24 @@ export default function ImportBggClient({ me }: { me: UserLite }) {
           <div className="imp-bas">
             <button type="button" className="btn-go" disabled={selection.length === 0 || busy}
                     onClick={() => importer()}>
-              {selection.length === 0 ? 'Rien à importer' : `Importer ${selection.length} jeu${selection.length > 1 ? 'x' : ''}`}
+              {selection.length === 0 ? t('import.rienAImporter') : t('import.importerN', { n: selection.length })}
             </button>
-            <Link className="cancel" href="/games/add">‹ Autre pseudo</Link>
+            <Link className="cancel" href="/games/add">{t('import.autrePseudo')}</Link>
           </div>
         </div>
       )}
 
       {stage === 'import' && (
         <div>
-          <p className="imp-encours">{enCours ? `${enCours}…` : 'Préparation…'}</p>
+          <p className="imp-encours">{enCours ? `${enCours}…` : t('import.preparationEnCours')}</p>
           <div className="imp-barre"><div className="fill" style={{ width: `${faits.length * 100 / Math.max(totalCible, 1)}%` }} /></div>
-          <p className="imp-num">{faits.length} / {totalCible} · ~1 s par jeu</p>
+          <p className="imp-num">{faits.length} / {totalCible} · {t('import.parJeu')}</p>
           <ul className="imp-journal">
             {faits.map((f) => (
               <li key={f.bggId} className={f.resultat}>
                 <span className="ico">{f.resultat === 'importe' ? '✓' : f.resultat === 'enrichi' ? '↻' : '✕'}</span>
                 {f.titre}
-                <span className="pourquoi">{f.resultat === 'importe' ? 'importé' : f.resultat === 'enrichi' ? 'fiche enrichie' : 'BGG n\u2019a pas répondu'}</span>
+                <span className="pourquoi">{f.resultat === 'importe' ? t('import.faitImporte') : f.resultat === 'enrichi' ? t('import.faitEnrichi') : t('import.faitEchec')}</span>
               </li>
             ))}
           </ul>
@@ -220,21 +220,21 @@ export default function ImportBggClient({ me }: { me: UserLite }) {
         <div>
           <div className="imp-recap">
             <p className="grand">{nKo > 0 ? '🫤' : '🎉'}</p>
-            <h2>{nKo > 0 ? 'Presque tout est importé' : 'Collection importée ✓'}</h2>
+            <h2>{nKo > 0 ? t('import.presqueTout') : t('import.termine')}</h2>
           </div>
           <ul className="imp-stats">
-            <li className="ok"><span>📥 Jeux importés</span><b>{nImp}</b></li>
-            <li className="enr"><span>↻ Fiches enrichies</span><b>{nEnr}</b></li>
-            <li className="dup"><span>= Déjà présents</span><b>{nDeja}</b></li>
-            {nKo > 0 && <li className="ko"><span>⚠️ Échecs</span><b>{nKo}</b></li>}
+            <li className="ok"><span>{t('import.statsImportes')}</span><b>{nImp}</b></li>
+            <li className="enr"><span>{t('import.statsEnrichies')}</span><b>{nEnr}</b></li>
+            <li className="dup"><span>{t('import.statsDeja')}</span><b>{nDeja}</b></li>
+            {nKo > 0 && <li className="ko"><span>{t('import.statsEchecs')}</span><b>{nKo}</b></li>}
           </ul>
           {nKo > 0 && (
             <button type="button" className="btn-ressayer" disabled={busy}
                     onClick={() => importer(lignes.filter((l) => faits.find((f) => f.bggId === l.jeu.bggId)?.resultat === 'echec'))}>
-              🔁 Réessayer le jeu en échec
+              {t('import.reessayer')}
             </button>
           )}
-          <Link className="btn-go as-link" href="/library">Voir ma ludothèque</Link>
+          <Link className="btn-go as-link" href="/library">{t('ludotheque.voir')}</Link>
         </div>
       )}
     </div>

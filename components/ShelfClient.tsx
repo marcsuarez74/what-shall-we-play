@@ -1,7 +1,7 @@
 'use client';
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { FORMATS, FORMAT_SCALE, FORMAT_LABEL, coverSrc } from '@/lib/formats';
+import { FORMATS, FORMAT_SCALE, formatLabel, coverSrc } from '@/lib/formats';
 import type { Game, Night, UserLite } from '@/lib/types';
 import type { ShelfVote } from '@/lib/nights';
 import { filterShelf, type ShelfFilters } from '@/lib/filters';
@@ -13,6 +13,7 @@ import ShelfControls from './ShelfControls';
 import OwnerBadge from './OwnerBadge';
 import ShelfPicker from './ShelfPicker';
 import UserMenu from './UserMenu';
+import { useI18n } from './LanguageProvider';
 
 // v3.0.0 — l'étagère EST la sélection : plus d'appui maintenu ni de compteur.
 // Le tirage se fait parmi toutes les boîtes. Chacun VALIDE quand sa sélection
@@ -26,6 +27,7 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
   me: UserLite;
 }) {
   const router = useRouter();
+  const { lang, t } = useI18n();
   const [detail, setDetail] = useState<Game | null>(null);
   const [editingNight, setEditingNight] = useState(false);
   const [addingGames, setAddingGames] = useState(false);
@@ -117,20 +119,20 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
   return (
     <div className="shelf-screen">
       <header className="shelf-header">
-        <h1>L&apos;étagère</h1>
+        <h1>{t('etagere.titre')}</h1>
         <UserMenu me={me} />
       </header>
       <section className={'night-card' + (enJeu ? ' enjeu' : '')}>
         <div className="night-card-head">
           {enJeu
-            ? <span className="badge-etat b-enjeu"><span className="pt" />En jeu</span>
-            : <span className="badge-etat b-prep"><span className="pt" />En préparation</span>}
-          {!enJeu && <button type="button" className="link-btn" onClick={() => setEditingNight(true)}>modifier</button>}
+            ? <span className="badge-etat b-enjeu"><span className="pt" />{t('etagere.enJeu')}</span>
+            : <span className="badge-etat b-prep"><span className="pt" />{t('etagere.enPrep')}</span>}
+          {!enJeu && <button type="button" className="link-btn" onClick={() => setEditingNight(true)}>{t('etagere.modifier')}</button>}
         </div>
         {enJeu && partyGame && (
           <div className="bandeau v">
             <span className="b-cov">{cover ? <img src={cover} alt="" /> : '📦'}</span>
-            <div><b>{partyGame.title} est sortie de l&apos;étagère</b></div>
+            <div><b>{t('etagere.sortie', { j: partyGame.title })}</b></div>
           </div>
         )}
         {!enJeu && (
@@ -142,8 +144,8 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
               {players.map((p) => (
                 <p key={p.id} className={p.validated_at ? 'ok' : ''}>
                   {p.validated_at
-                    ? <>✓ {prenom(p)} a validé sa sélection</>
-                    : <>⏳ {prenom(p)} n&apos;a pas encore validé</>}
+                    ? t('etagere.aValide', { p: prenom(p) })
+                    : t('etagere.pasEncore', { p: prenom(p) })}
                 </p>
               ))}
             </div>
@@ -156,17 +158,17 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
       {games.length === 0 ? (
         <section className="empty-shelf">
           <div className="big" aria-hidden="true">📦</div>
-          <h3>L&apos;étagère est vide</h3>
-          <p>Ce soir, on met sur l&apos;étagère ce dont on a envie — chacun depuis sa ludothèque, sur son téléphone.</p>
+          <h3>{t('etagere.vide')}</h3>
+          <p>{t('etagere.videTexte')}</p>
           <button type="button" className="btn-copper" onClick={() => setAddingGames(true)}>
-            Ajouter des jeux depuis ma ludothèque
+            {t('etagere.ajouterLudo')}
           </button>
-          <p className="hint">Les autres joueurs voient le même bouton de leur côté.</p>
+          <p className="hint">{t('etagere.videHint')}</p>
         </section>
       ) : !enJeu ? (
         <div className="add-more">
           <button type="button" className="link-btn" onClick={() => setAddingGames(true)}>
-            + Ajouter d&apos;autres jeux{jAiValide ? <span className="revalide"> · à re-valider ensuite</span> : null}
+            {t('etagere.ajouterAutres')}{jAiValide ? <span className="revalide"> {t('etagere.revalider')}</span> : null}
           </button>
         </div>
       ) : null}
@@ -186,7 +188,7 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
                   return (
                     <span className={'vote-badge' + (v?.moi ? ' vote-moi' : '')} role="button"
                           aria-pressed={v?.moi ?? false}
-                          aria-label={`${v?.total ?? 0} vote${(v?.total ?? 0) > 1 ? 's' : ''} pour ${g.title}`}
+                          aria-label={t('etagere.votesPour', { n: v?.total ?? 0, j: g.title })}
                           title={v?.votants.length ? v.votants.slice(0, 4).join(' · ') + (v.votants.length > 4 ? ' …' : '') : undefined}
                           onClick={(e) => { e.stopPropagation(); voter(g.id); }}>
                       <span className="emoji" aria-hidden="true">👍</span>{v?.total ?? 0}
@@ -197,7 +199,7 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
             ))}
           </div>
           <div className="rail" />
-          <p className="row-label">{FORMAT_LABEL[f]} — on swipe ›</p>
+          <p className="row-label">{formatLabel(f, lang)} {t('etagere.onSwipe')}</p>
         </section>
       ))}
       <div className="cta-zone">
@@ -205,50 +207,50 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
           <>
             <div className="cta-row">
               {estCreateur
-                ? <a className="btn-copper pret" href={`/nights/${night.id}/scores`}>🏁 Partie terminée</a>
-                : <span className="lance-par">En jeu — la boîte est sortie</span>}
+                ? <a className="btn-copper pret" href={`/nights/${night.id}/scores`}>{t('etagere.finPartie')}</a>
+                : <span className="lance-par">{t('etagere.enJeuSortie')}</span>}
             </div>
-            <p className="cta-statut">{partyGame?.title} · {players.length} joueurs</p>
+            <p className="cta-statut">{partyGame?.title} · {t('etagere.nbJoueurs', { n: players.length })}</p>
           </>
         ) : jAiValide ? (
           <>
             <div className="cta-row">
               {estCreateur && jeuxVotes.length > 0 ? (
-                <div className="choix-pool" role="radiogroup" aria-label="Pool du tirage">
+                <div className="choix-pool" role="radiogroup" aria-label={t('etagere.poolLabel')}>
                   <button type="button" className={poolActif === 'tous' ? 'actif' : ''} onClick={() => setPool('tous')}>
-                    Tous<span className="n">{games.length}</span>
+                    {t('etagere.tous')}<span className="n">{games.length}</span>
                   </button>
                   <button type="button" className={poolActif === 'votes' ? 'actif' : ''} onClick={() => setPool('votes')}>
-                    Votés 👍<span className="n">{jeuxVotes.length}</span>
+                    {t('etagere.votesPool')}<span className="n">{jeuxVotes.length}</span>
                   </button>
                 </div>
               ) : (
-                <span className="pill-ok" aria-label="sélection validée">✓ Validée</span>
+                <span className="pill-ok" aria-label={t('etagere.selectionOk')}>{t('etagere.validee')}</span>
               )}
               {estCreateur && games.length > 0 ? (
                 <button type="button" className={`btn-copper ${tousPrets ? 'pret' : ''}`} onClick={clicLancer}>
-                  {surAffiche ? 'Sûr ? Lancer' : `Lancer · ${poolActif === 'votes' && jeuxVotes.length > 0 ? jeuxVotes.length : games.length}`}
+                  {surAffiche ? t('etagere.surLancer') : t('etagere.lancer', { n: poolActif === 'votes' && jeuxVotes.length > 0 ? jeuxVotes.length : games.length })}
                 </button>
               ) : (
                 !estCreateur && (
-                  <span className="lance-par">Lancement par <b>{prenom(players.find((p) => p.id === night.creator_id) ?? me)}</b></span>
+                  <span className="lance-par">{t('etagere.lancementPar')} <b>{prenom(players.find((p) => p.id === night.creator_id) ?? me)}</b></span>
                 )
               )}
             </div>
             {estCreateur && games.length > 0 && !tousPrets && (
               <p className="cta-statut">
-                {players.length - enAttente.length}/{players.length} prêts — <b>{enAttente.map((p) => prenom(p)).join(', ')}</b> n&apos;a{enAttente.length > 1 ? 'ont' : ''} pas encore validé
+                {t('etagere.prets', { ok: players.length - enAttente.length, total: players.length })} — <b>{enAttente.map((p) => prenom(p)).join(', ')}</b> {t('etagere.pasEncoreValide', { n: enAttente.length })}
               </p>
             )}
           </>
         ) : (
           <div className="cta-row">
             <button type="button" className="btn-copper" disabled={busy} onClick={valider}>
-              {busy ? 'Enregistrement…' : 'Valider ma sélection'}
+              {busy ? t('etagere.enregistrement') : t('etagere.valider')}
             </button>
             {estCreateur && games.length > 0 && (
               <button type="button" className="btn-ghost lancer-sec" onClick={clicLancer}>
-                {surAffiche ? 'Sûr ? Lancer' : `Lancer · ${games.length}`}
+                {surAffiche ? t('etagere.surLancer') : t('etagere.lancer', { n: games.length })}
               </button>
             )}
           </div>
@@ -263,9 +265,9 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
       )}
       {editingNight && (
         <div className="sheet-backdrop" onClick={() => setEditingNight(false)}>
-          <div className="bottom-sheet" role="dialog" aria-modal="true" aria-label="Modifier la partie"
+          <div className="bottom-sheet" role="dialog" aria-modal="true" aria-label={t('etagere.modifierPartie')}
                onClick={(e) => e.stopPropagation()}>
-            <button type="button" className="sheet-close" aria-label="Fermer" onClick={() => setEditingNight(false)}>✕</button>
+            <button type="button" className="sheet-close" aria-label={t('etagere.fermer')} onClick={() => setEditingNight(false)}>✕</button>
             <NightPicker users={users} prechecked={players.map((p) => p.id)} night={night}
                          onClose={() => setEditingNight(false)} />
           </div>

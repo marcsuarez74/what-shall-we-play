@@ -1125,6 +1125,47 @@ input[type='file'] {
   text-align: right;
 }
 
+/* Sélecteur de langue FR/EN (AuthForm + menu utilisateur) — endonymes, rien à traduire */
+.lang-switch {
+  display: inline-flex;
+  align-self: center;
+  margin-top: 2px;
+  border: 1px solid var(--doux);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.lang-switch button {
+  appearance: none;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--doux-clair);
+  padding: 7px 14px;
+}
+
+.lang-switch button[aria-pressed='true'] {
+  background: var(--cuivre);
+  color: var(--noyer);
+}
+
+/* Dans le menu utilisateur : recadre les styles .user-menu button (largeur 100 %, etc.) */
+.user-menu .lang-switch {
+  margin: 6px 6px 2px;
+  justify-content: center;
+}
+
+.user-menu .lang-switch button {
+  width: auto;
+  padding: 7px 14px;
+  text-align: center;
+  font-size: 12px;
+}
+
 /* carte soirée */
 .night-card {
   background: var(--surface);

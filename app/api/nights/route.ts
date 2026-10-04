@@ -2,10 +2,13 @@
 import { NextResponse } from 'next/server';
 import { getSessionUser } from '@/lib/session';
 import { createNight, getActiveNight, getNightPlayers } from '@/lib/nights';
+import { t } from '@/lib/i18n';
+import { getLang } from '@/lib/i18n/server';
 
 export async function GET() {
+  const lang = await getLang();
   const user = await getSessionUser();
-  if (!user) return NextResponse.json({ error: 'Non connecté' }, { status: 401 });
+  if (!user) return NextResponse.json({ error: t(lang, 'erreurs.nonConnecte') }, { status: 401 });
   const night = getActiveNight(user.id);
   return NextResponse.json({ night: night ? { ...night, players: getNightPlayers(night.id) } : null });
 }
@@ -22,18 +25,19 @@ function validTime(s: unknown): s is string {
 }
 
 export async function POST(req: Request) {
+  const lang = await getLang();
   const user = await getSessionUser();
-  if (!user) return NextResponse.json({ error: 'Non connecté' }, { status: 401 });
+  if (!user) return NextResponse.json({ error: t(lang, 'erreurs.nonConnecte') }, { status: 401 });
   const { playerIds, playedAt, startTime } = await req.json();
   // Programmation facultative : date ISO (aujourd hui ou plus), heure HH:MM.
   // Le créateur est toujours ajouté à la nuit par createNight.
   if (playedAt != null) {
-    if (!validIsoDate(playedAt)) return NextResponse.json({ error: 'Date invalide' }, { status: 400 });
+    if (!validIsoDate(playedAt)) return NextResponse.json({ error: t(lang, 'soiree.errDateInvalide') }, { status: 400 });
     const today = new Date().toLocaleDateString('sv-SE');
-    if (playedAt < today) return NextResponse.json({ error: 'La date ne peut pas être dans le passé' }, { status: 400 });
+    if (playedAt < today) return NextResponse.json({ error: t(lang, 'soiree.errDatePassee') }, { status: 400 });
   }
   if (startTime != null && !validTime(startTime)) {
-    return NextResponse.json({ error: 'Heure invalide' }, { status: 400 });
+    return NextResponse.json({ error: t(lang, 'soiree.errHeureInvalide') }, { status: 400 });
   }
   const nightId = createNight(user.id, (playerIds as number[]) ?? [], { playedAt, startTime });
   return NextResponse.json({ nightId });

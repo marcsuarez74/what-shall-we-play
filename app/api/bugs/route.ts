@@ -5,20 +5,23 @@ import { NextResponse } from 'next/server';
 import { getSessionUser } from '@/lib/session';
 import { createBugReport, validerSignalement, type BugType } from '@/lib/bugs';
 import { saveBugCapture, COVER_EXT, type CoverExt } from '@/lib/storage';
+import { t } from '@/lib/i18n';
+import { getLang } from '@/lib/i18n/server';
 
 export async function POST(req: Request) {
+  const lang = await getLang();
   const user = await getSessionUser();
-  if (!user) return NextResponse.json({ error: 'Non connecté' }, { status: 401 });
+  if (!user) return NextResponse.json({ error: t(lang, 'erreurs.nonConnecte') }, { status: 401 });
 
   const form = await req.formData().catch(() => null);
-  if (!form) return NextResponse.json({ error: 'Requête invalide' }, { status: 400 });
+  if (!form) return NextResponse.json({ error: t(lang, 'erreurs.requeteInvalide') }, { status: 400 });
   const champ = (k: string) => { const v = form.get(k); return typeof v === 'string' ? v : ''; };
 
   // Validation AVANT le bloc capture (spec : 1 validation, 2 quota, 3 capture) —
   // une requête invalide ne doit rien écrire sur le VPS : l'uuid d'un fichier
   // orphelin ne serait jamais renvoyé au client en échec. Le double appel avec
   // createBugReport est voulu : la lib reste l'entrée autonome des tests.
-  const invalide = validerSignalement({ title: champ('title'), description: champ('description'), type: champ('type') });
+  const invalide = validerSignalement({ title: champ('title'), description: champ('description'), type: champ('type') }, lang);
   if (invalide) return NextResponse.json({ error: invalide.error }, { status: invalide.status });
 
   let device: Record<string, unknown> = {};
@@ -28,9 +31,9 @@ export async function POST(req: Request) {
   let captureName: string | null = null;
   const file = form.get('capture');
   if (file instanceof File && file.size > 0) {
-    if (file.size > 5 * 1024 * 1024) return NextResponse.json({ error: 'Capture : 5 Mo maximum' }, { status: 400 });
+    if (file.size > 5 * 1024 * 1024) return NextResponse.json({ error: t(lang, 'bugs.errCapturePoids') }, { status: 400 });
     const ext = (file.name.split('.').pop() ?? '').toLowerCase();
-    if (!(COVER_EXT as readonly string[]).includes(ext)) return NextResponse.json({ error: 'Capture : jpg, png ou webp uniquement' }, { status: 400 });
+    if (!(COVER_EXT as readonly string[]).includes(ext)) return NextResponse.json({ error: t(lang, 'bugs.errCaptureExt') }, { status: 400 });
     captureName = saveBugCapture(Buffer.from(await file.arrayBuffer()), ext as CoverExt);
   }
 
@@ -39,7 +42,7 @@ export async function POST(req: Request) {
     title: champ('title'), description: champ('description'), page: champ('page'),
     device: { appareil: d('appareil'), navigateur: d('navigateur'), ecran: d('ecran'), langue: d('langue'), installation: d('installation') },
     uaBrut: req.headers.get('user-agent') ?? 'inconnu', captureName,
-  });
+  }, lang);
   if ('error' in res) return NextResponse.json({ error: res.error }, { status: res.status });
   return NextResponse.json(res);
 }

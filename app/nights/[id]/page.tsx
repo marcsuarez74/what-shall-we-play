@@ -4,6 +4,9 @@ import { getSessionUser } from '@/lib/session';
 import { getNight, userCanAccessNight, getNightGame, getNightScores } from '@/lib/nights';
 import { rankScores } from '@/lib/ranks';
 import { avatarSrc } from '@/lib/formats';
+import { t } from '@/lib/i18n';
+import { formatDate } from '@/lib/i18n/format';
+import { getLang } from '@/lib/i18n/server';
 import BoxImage from '@/components/BoxImage';
 import PartagerResultats from '@/components/PartagerResultats';
 import VerdictBloc from '@/components/VerdictBloc';
@@ -15,6 +18,7 @@ import { verdictsDeNuit, monVerdict } from '@/lib/verdicts';
 // jeu 😍🙂😐 et partage. UserSync : les compteurs des autres rafraîchissent en direct.
 // Visible des joueurs de la soirée seulement (userCanAccessNight — pattern existant).
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {
+  const lang = await getLang();
   const user = await getSessionUser();
   if (!user) redirect('/login');
   const night = getNight(Number((await params).id));
@@ -29,23 +33,23 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   return (
     <main className="page detail-page">
       <UserSync />
-      <Link className="retour-btn" href="/nights">← Parties</Link>
+      <Link className="retour-btn" href="/nights">{t(lang, 'soiree.retour')}</Link>
       <div className="dt-hero">
         {game && <span className="cov dt-cov"><BoxImage game={game} /></span>}
-        <div><h3>{game?.title ?? 'Soirée de jeux'}</h3>
-          <p>{new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' }).format(new Date(`${night.played_at}T12:00:00`))} · {classe.length} joueurs</p></div>
+        <div><h3>{game?.title ?? t(lang, 'soiree.sansJeu')}</h3>
+          <p>{formatDate(lang, `${night.played_at}T12:00:00`, { dateStyle: 'long' })} · {t(lang, 'etagere.nbJoueurs', { n: classe.length })}</p></div>
       </div>
-      <span className="badge-etat b-term"><span className="pt" />Terminée</span>
+      <span className="badge-etat b-term"><span className="pt" />{t(lang, 'etagere.terminee')}</span>
       {classe.length === 0 ? (
-        <p className="sans-score">Pas de scores ce soir — la partie est dans les annales.</p>
+        <p className="sans-score">{t(lang, 'soiree.sansScores')}</p>
       ) : (
         <>
-          <p className="pod-lb">LE PODIUM</p>
-          <div className="pod1"><Av u={un[0]} /><span className="pd"><b>{un.map((x) => x.pseudo).join(' & ')}</b><span>👑 première place</span></span><span className="sc">{un[0].score}</span></div>
+          <p className="pod-lb">{t(lang, 'soiree.podium')}</p>
+          <div className="pod1"><Av u={un[0]} /><span className="pd"><b>{un.map((x) => x.pseudo).join(' & ')}</b><span>{t(lang, 'soiree.premierePlace')}</span></span><span className="sc">{un[0].score}</span></div>
           {(deux.length > 0 || trois.length > 0) && (
             <div className="pod23">
-              {deux.map((x) => <div key={x.user_id} className="p"><Av u={x} /><div><b>{x.pseudo}</b><span>🥈 {x.score} pts</span></div></div>)}
-              {trois.map((x) => <div key={x.user_id} className="p"><Av u={x} /><div><b>{x.pseudo}</b><span>🥉 {x.score} pts</span></div></div>)}
+              {deux.map((x) => <div key={x.user_id} className="p"><Av u={x} /><div><b>{x.pseudo}</b><span>{t(lang, 'soiree.argent', { s: x.score as number })}</span></div></div>)}
+              {trois.map((x) => <div key={x.user_id} className="p"><Av u={x} /><div><b>{x.pseudo}</b><span>{t(lang, 'soiree.bronze', { s: x.score as number })}</span></div></div>)}
             </div>
           )}
           {autres.length > 0 && (
@@ -59,7 +63,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
         <VerdictBloc nightId={night.id} titreJeu={game.title}
           initial={monVerdict(night.id, user.id)} compteurs={verdictsDeNuit(night.id)} />
       )}
-      <PartagerResultats titre={game?.title ?? 'Soirée de jeux'} classement={classe.map((c) => ({ pseudo: c.pseudo, score: c.score as number, rank: c.rank }))} />
+      <PartagerResultats titre={game?.title ?? t(lang, 'soiree.sansJeu')} classement={classe.map((c) => ({ pseudo: c.pseudo, score: c.score as number, rank: c.rank }))} />
     </main>
   );
 }

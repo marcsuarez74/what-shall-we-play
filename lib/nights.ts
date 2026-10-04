@@ -1,5 +1,6 @@
 import { getDb } from './db';
 import { emitToUsers } from './events';
+import { t, type Lang } from './i18n';
 import type { Game, Night, Pick, UserLite } from './types';
 
 export function getActiveNight(userId: number): Night | null {
@@ -61,8 +62,9 @@ export function getNightPlayers(nightId: number): UserLite[] {
 // v3.0.0 — « chacun dit quand il est prêt » : valider sa sélection n'est pas un
 // verrou, c'est un signal. L'ajout ou le retrait d'une boîte par le joueur
 // l'annule (la sélection a changé) ; il re-valide quand il veut.
-export function validateSelection(nightId: number, userId: number): void {
-  if (!isNightParticipant(nightId, userId)) throw new Error('Vous n\'êtes pas dans cette partie');
+// lang : langue du cookie, passée par la route — défaut 'fr' (tests unitaires).
+export function validateSelection(nightId: number, userId: number, lang: Lang = 'fr'): void {
+  if (!isNightParticipant(nightId, userId)) throw new Error(t(lang, 'soiree.errPasDansPartie'));
   getDb().prepare(`UPDATE night_players SET validated_at = datetime('now','localtime') WHERE night_id = ? AND user_id = ?`)
     .run(nightId, userId);
   notifyNight(nightId); // « Léa a validé sa sélection » apparaît chez tous, en direct
@@ -86,42 +88,42 @@ export type NightStateError = { error: string; status: number };
 // La boîte sort : LE vrai début de la partie. N'importe quel joueur de la soirée
 // peut la sortir (c'est physique : celui qui va chercher la boîte). Le jeu est
 // alors verrouillé — plus de relance, plus d'ajout/retrait sur l'étagère.
-export function boxOutNight(nightId: number, userId: number, gameId: number): { ok: true } | NightStateError {
+export function boxOutNight(nightId: number, userId: number, gameId: number, lang: Lang = 'fr'): { ok: true } | NightStateError {
   const night = getNight(nightId);
-  if (!night) return { error: 'Soirée introuvable', status: 404 };
-  if (!userCanAccessNight(userId, nightId)) return { error: 'Seuls les joueurs de la soirée peuvent sortir la boîte', status: 403 };
-  if (night.status === 'en_jeu') return { error: 'La boîte est déjà sortie', status: 409 };
-  if (night.status === 'termine') return { error: 'Cette partie est terminée', status: 409 };
-  if (!getShelfGames(nightId).some((g) => g.id === gameId)) return { error: "Ce jeu n'est pas sur l'étagère", status: 400 };
+  if (!night) return { error: t(lang, 'erreurs.soireeIntrouvable'), status: 404 };
+  if (!userCanAccessNight(userId, nightId)) return { error: t(lang, 'soiree.errSeulsJoueursBoite'), status: 403 };
+  if (night.status === 'en_jeu') return { error: t(lang, 'soiree.errBoiteDejaSortie'), status: 409 };
+  if (night.status === 'termine') return { error: t(lang, 'soiree.errPartieTerminee'), status: 409 };
+  if (!getShelfGames(nightId).some((g) => g.id === gameId)) return { error: t(lang, 'soiree.errJeuPasSurEtagere'), status: 400 };
   getDb().prepare(`UPDATE nights SET game_id = ?, status = 'en_jeu' WHERE id = ?`).run(gameId, nightId);
   notifyNight(nightId);
   return { ok: true };
 }
 
 // Le tirage n'existe qu'avant la sortie de boîte.
-export function drawAllowed(nightId: number): { ok: true } | NightStateError {
+export function drawAllowed(nightId: number, lang: Lang = 'fr'): { ok: true } | NightStateError {
   const night = getNight(nightId);
-  if (!night) return { error: 'Soirée introuvable', status: 404 };
-  if (night.status === 'en_jeu') return { error: 'La boîte est sortie — le jeu est verrouillé', status: 409 };
-  if (night.status === 'termine') return { error: 'Cette partie est terminée', status: 409 };
+  if (!night) return { error: t(lang, 'erreurs.soireeIntrouvable'), status: 404 };
+  if (night.status === 'en_jeu') return { error: t(lang, 'soiree.errBoiteVerrouille'), status: 409 };
+  if (night.status === 'termine') return { error: t(lang, 'soiree.errPartieTerminee'), status: 409 };
   return { ok: true };
 }
 
 // Terminer : créateur seulement. Scores optionnels { [userId]: nombre } — un seul
 // appel atomique (insertion + état) : rien ne se semi-enregistre. Depuis
 // creation = abandon (sans scores). Double end refusé.
-export function endNight(nightId: number, userId: number, scores?: Record<string, number>): { ok: true } | NightStateError {
+export function endNight(nightId: number, userId: number, scores?: Record<string, number>, lang: Lang = 'fr'): { ok: true } | NightStateError {
   const night = getNight(nightId);
-  if (!night) return { error: 'Soirée introuvable', status: 404 };
-  if (night.creator_id !== userId) return { error: 'Seul le créateur peut terminer la soirée', status: 403 };
-  if (night.status === 'termine') return { error: 'La partie est déjà terminée', status: 409 };
+  if (!night) return { error: t(lang, 'erreurs.soireeIntrouvable'), status: 404 };
+  if (night.creator_id !== userId) return { error: t(lang, 'soiree.errSeulCreateur'), status: 403 };
+  if (night.status === 'termine') return { error: t(lang, 'soiree.errDejaTerminee'), status: 409 };
   const db = getDb();
   const joueurs = new Set((db.prepare('SELECT user_id FROM night_players WHERE night_id = ?').all(nightId) as { user_id: number }[]).map((r) => r.user_id));
   const lignes: [number, number][] = [];
   if (scores) {
     for (const [k, v] of Object.entries(scores)) {
       const uid = Number(k);
-      if (!joueurs.has(uid) || !Number.isFinite(v)) return { error: 'Score invalide', status: 400 };
+      if (!joueurs.has(uid) || !Number.isFinite(v)) return { error: t(lang, 'soiree.errScoreInvalide'), status: 400 };
       lignes.push([uid, v]);
     }
   }
@@ -196,15 +198,15 @@ export type NightGameResult = { ok: true } | { error: string; status: number };
 
 // Ajouter un jeu à la partie : réservé aux joueurs présents, et seulement
 // un jeu de SA ludothèque. Un doublon d'ajout est ignoré (premier ajouteur = badge).
-export function addNightGame(nightId: number, gameId: number, userId: number): NightGameResult {
+export function addNightGame(nightId: number, gameId: number, userId: number, lang: Lang = 'fr'): NightGameResult {
   const db = getDb();
-  if (!getNight(nightId)) return { error: 'Partie introuvable', status: 404 };
-  if (!isNightParticipant(nightId, userId)) return { error: 'Seuls les joueurs de la partie peuvent ajouter des jeux', status: 403 };
+  if (!getNight(nightId)) return { error: t(lang, 'soiree.errPartieIntrouvable'), status: 404 };
+  if (!isNightParticipant(nightId, userId)) return { error: t(lang, 'soiree.errSeulsJoueursAjout'), status: 403 };
   const g = db.prepare('SELECT owner_id, foyer_id FROM games WHERE id = ?').get(gameId) as { owner_id: number; foyer_id: number | null } | undefined;
-  if (!g) return { error: 'Jeu introuvable', status: 404 };
+  if (!g) return { error: t(lang, 'soiree.errJeuIntrouvable'), status: 404 };
   const myFoyerId = (db.prepare('SELECT foyer_id FROM users WHERE id = ?').get(userId) as { foyer_id: number | null }).foyer_id;
   const inMyLibrary = g.foyer_id != null ? g.foyer_id === myFoyerId : g.owner_id === userId;
-  if (!inMyLibrary) return { error: "Ce jeu n'est pas dans votre ludothèque", status: 403 };
+  if (!inMyLibrary) return { error: t(lang, 'soiree.errJeuPasDansLudo'), status: 403 };
   db.prepare('INSERT OR IGNORE INTO night_games (night_id, game_id, added_by) VALUES (?, ?, ?)').run(nightId, gameId, userId);
   // la sélection de l'ajouteur a changé : sa validation saute, il re-confirmera
   db.prepare('UPDATE night_players SET validated_at = NULL WHERE night_id = ? AND user_id = ?').run(nightId, userId);
@@ -213,8 +215,8 @@ export function addNightGame(nightId: number, gameId: number, userId: number): N
 }
 
 // Retirer un jeu de la partie : n'importe quel joueur présent peut le faire.
-export function removeNightGame(nightId: number, gameId: number, userId: number): NightGameResult {
-  if (!isNightParticipant(nightId, userId)) return { error: 'Seuls les joueurs de la partie peuvent retirer des jeux', status: 403 };
+export function removeNightGame(nightId: number, gameId: number, userId: number, lang: Lang = 'fr'): NightGameResult {
+  if (!isNightParticipant(nightId, userId)) return { error: t(lang, 'soiree.errSeulsJoueursRetrait'), status: 403 };
   getDb().prepare('DELETE FROM night_games WHERE night_id = ? AND game_id = ?').run(nightId, gameId);
   // une boîte retirée emporte ses votes (v3.5) — pas de vote fantôme dans « Votés 👍 »
   getDb().prepare('DELETE FROM game_votes WHERE night_id = ? AND game_id = ?').run(nightId, gameId);
@@ -226,13 +228,13 @@ export function removeNightGame(nightId: number, gameId: number, userId: number)
 
 // v3.5 — le vote sur l'étagère : bascule révocable, comme poser/retirer une boîte,
 // mais SANS toucher à la validation (le vote n'est pas une boîte).
-export function toggleNightVote(nightId: number, gameId: number, userId: number): NightGameResult {
+export function toggleNightVote(nightId: number, gameId: number, userId: number, lang: Lang = 'fr'): NightGameResult {
   const db = getDb();
   const night = getNight(nightId);
-  if (!night) return { error: 'Partie introuvable', status: 404 };
-  if (!isNightParticipant(nightId, userId)) return { error: 'Seuls les joueurs de la partie peuvent voter', status: 403 };
-  if (night.status !== 'creation') return { error: night.status === 'en_jeu' ? 'La partie a commencé — les votes sont figés' : 'La soirée est terminée — les votes sont figés', status: 409 };
-  if (!isGameOnShelf(nightId, gameId)) return { error: "Ce jeu n'est pas sur l'étagère", status: 403 };
+  if (!night) return { error: t(lang, 'soiree.errPartieIntrouvable'), status: 404 };
+  if (!isNightParticipant(nightId, userId)) return { error: t(lang, 'soiree.errSeulsJoueursVote'), status: 403 };
+  if (night.status !== 'creation') return { error: t(lang, night.status === 'en_jeu' ? 'soiree.errVotesFigesEnJeu' : 'soiree.errVotesFigesTermine'), status: 409 };
+  if (!isGameOnShelf(nightId, gameId)) return { error: t(lang, 'soiree.errJeuPasSurEtagere'), status: 403 };
   if (db.prepare('SELECT 1 FROM game_votes WHERE night_id = ? AND game_id = ? AND user_id = ?').get(nightId, gameId, userId)) {
     db.prepare('DELETE FROM game_votes WHERE night_id = ? AND game_id = ? AND user_id = ?').run(nightId, gameId, userId);
   } else {

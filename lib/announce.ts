@@ -1,47 +1,55 @@
 // Composition pure des messages de partie — pas de bot WhatsApp : l'app compose,
 // l'utilisateur envoie via le partage natif (navigator.share) sinon lien wa.me.
+// v4.0.0 : les textes passent par le dict i18n (domaine annonce.*) — les pseudos,
+// titres de jeux et scores restent des DONNÉES, jamais traduits.
 
 import { medaille } from './ranks';
+import { t, type Lang } from './i18n';
 
-// Énumération française : « A », « A et B », « A, B et C ».
-export function frJoin(names: string[]): string {
+// Énumération : « A », « A et B », « A, B et C » (fr) / « A and B », « A, B and C » (en).
+// Nom historique (fr) conservé — la jointure suit désormais la langue demandée.
+export function frJoin(names: string[], lang: Lang = 'fr'): string {
   if (names.length <= 1) return names.join('');
-  return names.slice(0, -1).join(', ') + ' et ' + names[names.length - 1];
+  const dernier = lang === 'en' ? ' and ' : ' et ';
+  return names.slice(0, -1).join(', ') + dernier + names[names.length - 1];
 }
 
-export function buildInviteMessage({ dateLong, time, pseudos }: {
+export function buildInviteMessage({ dateLong, time, pseudos, lang = 'fr' }: {
   dateLong: string;
   time: string | null;
   pseudos: string[];
+  lang?: Lang;
 }): string {
-  const heure = time ? ` à ${time}` : '';
-  const qui = `${frJoin(pseudos)} ${pseudos.length > 1 ? 'sont' : 'est'} de la partie.`;
-  return `🎲 Partie de jeux le ${dateLong}${heure} !\n👥 ${qui}\nMarquez vos jeux dispo 🔗 etagere.marc-suarez.fr`;
+  const qui = t(lang, 'annonce.quiPartie', { qui: frJoin(pseudos, lang), n: pseudos.length });
+  return t(lang, 'annonce.invite', { dateLong, time: time ?? '', qui });
 }
 
-export function buildResultMessage({ title, ownerPseudo, waiting, time }: {
+export function buildResultMessage({ title, ownerPseudo, waiting, time, lang = 'fr' }: {
   title: string;
   ownerPseudo: string;
   waiting: string[];
   time: string | null;
+  lang?: Lang;
 }): string {
   const attente = waiting.length > 0
-    ? `\n🕗 On attend ${frJoin(waiting)}${time ? ` — ce soir à ${time}` : ''}`
+    ? '\n' + t(lang, 'annonce.attente', { qui: frJoin(waiting, lang), time: time ?? '' })
     : '';
-  return `🎲 ${title} a été tiré au sort !\n👉 ${ownerPseudo} ramène son jeu${attente}\n🔗 etagere.marc-suarez.fr`;
+  return t(lang, 'annonce.resultat', { title, owner: ownerPseudo, attente });
 }
 
 // Podium partagé : 👑 les premiers (ex æquo groupés), puis 🥈/🥉, puis le reste.
 // Les ex æquo s'affichent « A & B » — même idiome que la carte pod1 du détail.
-export function buildPodiumMessage({ title, classement }: { title: string; classement: { pseudo: string; score: number; rank: number }[] }): string {
+export function buildPodiumMessage({ title, classement, lang = 'fr' }: { title: string; classement: { pseudo: string; score: number; rank: number }[]; lang?: Lang }): string {
   const lignes: string[] = [];
   for (let r = 1; r <= Math.max(3, ...classement.map((c) => c.rank)); r++) {
     const duRang = classement.filter((c) => c.rank === r);
     if (duRang.length === 0) continue;
     const med = medaille(r) || '•';
-    lignes.push(`${med} ${duRang.map((c) => c.pseudo).join(' & ')} — ${duRang[0].score} pts`);
+    lignes.push(t(lang, 'annonce.podiumLigne', {
+      med, qui: duRang.map((c) => c.pseudo).join(' & '), score: duRang[0].score,
+    }));
   }
-  return `🎲 ${title} — c'est fini !\n${lignes.join('\n')}`;
+  return t(lang, 'annonce.podium', { title, lignes: lignes.join('\n') });
 }
 
 // Partage : natif si disponible (https + geste utilisateur), sinon ouverture de wa.me.

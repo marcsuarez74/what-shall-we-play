@@ -5,6 +5,7 @@ import { avatarSrc } from '@/lib/formats';
 import { rankScores, MEDAILLES } from '@/lib/ranks';
 import type { Game, UserLite } from '@/lib/types';
 import BoxImage from '@/components/BoxImage';
+import { useI18n } from './LanguageProvider';
 
 type Deja = { user_id: number; score: number | null };
 
@@ -14,6 +15,7 @@ export default function ScoreCarnet({ nightId, game, players, dejaSaisis }: {
   nightId: number; game: Game; players: UserLite[]; dejaSaisis: Deja[];
 }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [scores, setScores] = useState<Record<number, string>>(
     Object.fromEntries(players.map((p) => [p.id, String(dejaSaisis.find((d) => d.user_id === p.id)?.score ?? '')])),
   );
@@ -33,7 +35,7 @@ export default function ScoreCarnet({ nightId, game, players, dejaSaisis }: {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(avecScores ? { scores: clean } : {}),
     });
-    if (!res.ok) { setError((await res.json()).error ?? 'Impossible'); setBusy(false); return; }
+    if (!res.ok) { setError((await res.json()).error ?? t('erreurs.impossible')); setBusy(false); return; }
     router.push(`/nights/${nightId}`);
   }
 
@@ -41,7 +43,7 @@ export default function ScoreCarnet({ nightId, game, players, dejaSaisis }: {
     <div className="carnet-ecran">
       <div className="carnet-head">
         <span className="cov"><BoxImage game={game} /></span>
-        <div><h3>{game.title}</h3><p>Le carnet des scores · {players.length} joueurs</p></div>
+        <div><h3>{game.title}</h3><p>{t('soiree.carnetSousTitre', { n: players.length })}</p></div>
       </div>
       <div className="carnet">
         {players.map((p) => (
@@ -50,17 +52,17 @@ export default function ScoreCarnet({ nightId, game, players, dejaSaisis }: {
             <span className="ps"><b>{p.pseudo}</b></span>
             <input className="score-in" type="number" inputMode="decimal" placeholder="score"
                    value={scores[p.id] ?? ''} onChange={(e) => setScores((s) => ({ ...s, [p.id]: e.target.value }))}
-                   aria-label={`Score de ${p.pseudo}`} />
+                   aria-label={t('soiree.scoreDe', { p: p.pseudo })} />
             <span className={'med' + (ranks.get(p.id) && ranks.get(p.id)! <= 3 ? ' on' : '')}
                   aria-hidden="true">{MEDAILLES[(ranks.get(p.id) ?? 9) - 1] ?? ''}</span>
           </div>
         ))}
       </div>
-      <p className="egalite" id="egalite">Le classement se met à jour en direct — les ex æquo portent la même médaille</p>
+      <p className="egalite" id="egalite">{t('soiree.egalite')}</p>
       {error && <p className="error" role="alert">{error}</p>}
       <div className="carnet-foot">
-        <button type="button" className="btn-copper" disabled={busy} onClick={() => terminer(true)}>✓ Enregistrer et terminer</button>
-        <button type="button" className="btn-ghost" disabled={busy} onClick={() => terminer(false)}>Terminer sans scores</button>
+        <button type="button" className="btn-copper" disabled={busy} onClick={() => terminer(true)}>{t('soiree.enregistrerTerminer')}</button>
+        <button type="button" className="btn-ghost" disabled={busy} onClick={() => terminer(false)}>{t('soiree.terminerSansScores')}</button>
       </div>
     </div>
   );

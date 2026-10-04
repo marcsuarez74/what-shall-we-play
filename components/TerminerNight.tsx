@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useI18n } from './LanguageProvider';
 
 // « Terminer la partie » : premier tap arme la confirmation (4 s), le second termine.
 // Terminer envoie la partie à l'historique sans rien supprimer.
@@ -8,13 +9,14 @@ import { useRouter } from 'next/navigation';
 // le double-appui ne sert plus qu'à l'abandon d'une soirée en préparation.
 export default function TerminerNight({ nightId, status }: { nightId: number; status: 'creation' | 'en_jeu' | 'termine' }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [sure, setSure] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
 
   if (status === 'en_jeu') {
-    return <a className="btn-ghost end-btn" href={`/nights/${nightId}/scores`}>🏁 Partie terminée</a>;
+    return <a className="btn-ghost end-btn" href={`/nights/${nightId}/scores`}>{t('etagere.finPartie')}</a>;
   }
 
   async function end() {
@@ -30,7 +32,7 @@ export default function TerminerNight({ nightId, status }: { nightId: number; st
 
   return (
     <button type="button" className={`btn-ghost end-btn ${sure ? 'armed' : ''}`} onClick={end}>
-      {sure ? 'Sûr ? Terminer' : 'Terminer la partie'}
+      {sure ? t('soiree.surTerminer') : t('soiree.terminerPartie')}
     </button>
   );
 }

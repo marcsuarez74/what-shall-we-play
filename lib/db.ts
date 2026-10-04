@@ -125,6 +125,9 @@ export function runMigrations(db: Database.Database): void {
     'ALTER TABLE night_players ADD COLUMN validated_at TEXT',
     "ALTER TABLE nights ADD COLUMN status TEXT NOT NULL DEFAULT 'creation'",
     'ALTER TABLE nights ADD COLUMN game_id INTEGER REFERENCES games(id)',
+    // v4.0.0 (traduction EN) : langue du compte — lue uniquement par login/register
+    // pour amorcer le cookie wsp_lang (le compte ne force jamais le navigateur).
+    "ALTER TABLE users ADD COLUMN lang TEXT NOT NULL DEFAULT 'fr'",
   ]) {
     try { db.exec(stmt); } catch { /* colonne déjà présente */ }
   }

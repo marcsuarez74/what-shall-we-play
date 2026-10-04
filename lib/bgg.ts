@@ -1,6 +1,7 @@
 import { XMLParser } from 'fast-xml-parser';
 import { getDb } from './db';
 import { saveCover } from './storage';
+import { t, type Lang } from './i18n';
 import type { JeuBgg } from './import-bgg';
 
 const BASE = 'https://api.geekdo.com/xmlapi2';
@@ -152,10 +153,11 @@ export function parseCollectionXml(xml: string): JeuBgg[] {
 
 // 202 = BGG prépare la collection (file d'attente) : réessais dans un budget,
 // Retry-After plafonné à 5 s. Le budget est injectable pour les tests.
-export async function collectionUtilisateur(username: string, budgetMs = 15000):
+// lang : langue du cookie, passée par la route — défaut 'fr' (tests unitaires).
+export async function collectionUtilisateur(username: string, budgetMs = 15000, lang: Lang = 'fr'):
   Promise<{ ok: true; jeux: JeuBgg[] } | { error: string; status: number }> {
   const pseudo = username.trim();
-  if (pseudo.length < 1 || pseudo.length > 60) return { error: 'Pseudo BGG invalide', status: 400 };
+  if (pseudo.length < 1 || pseudo.length > 60) return { error: t(lang, 'bgg.errPseudo'), status: 400 };
   const url = `${BASE}/collection?username=${encodeURIComponent(pseudo)}&own=1`;
   const debut = Date.now();
   for (;;) {
@@ -163,20 +165,20 @@ export async function collectionUtilisateur(username: string, budgetMs = 15000):
     try {
       await bggGate();
       res = await fetch(url, { headers: headers(), signal: AbortSignal.timeout(8000) });
-    } catch { return { error: 'BGG ne répond pas', status: 502 }; }
+    } catch { return { error: t(lang, 'bgg.errPasReponse'), status: 502 }; }
     if (res.status === 202) {
       const attente = Math.min(Number(res.headers.get('retry-after')) || 2, 5);
       if (Date.now() - debut + attente * 1000 > budgetMs)
-        return { error: 'BGG prépare ta collection — réessaie dans un instant', status: 503 };
+        return { error: t(lang, 'bgg.errPreparation'), status: 503 };
       await new Promise((r) => setTimeout(r, attente * 1000));
       continue;
     }
-    if (!res.ok) return { error: 'BGG ne répond pas', status: 502 };
+    if (!res.ok) return { error: t(lang, 'bgg.errPasReponse'), status: 502 };
     let xml: string;
     try {
       xml = await res.text();
-    } catch { return { error: 'BGG ne répond pas', status: 502 }; } // coupure en pleine lecture
-    if (parser.parse(xml)?.errors) return { error: 'Collection BGG introuvable ou privée', status: 404 };
+    } catch { return { error: t(lang, 'bgg.errPasReponse'), status: 502 }; } // coupure en pleine lecture
+    if (parser.parse(xml)?.errors) return { error: t(lang, 'bgg.errCollection'), status: 404 };
     return { ok: true, jeux: parseCollectionXml(xml) };
   }
 }

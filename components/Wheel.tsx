@@ -2,6 +2,7 @@
 import { coverSrc } from '@/lib/formats';
 import type { Game } from '@/lib/types';
 import { segmentAngle } from '@/lib/wheel';
+import { useI18n } from './LanguageProvider';
 
 // Palette dérivée du design system : cuivre, bois, bleu sourd, vert
 const PALETTE = ['#C96F3B', '#5C4230', '#4A6B8A', '#3E9B6E'];
@@ -17,6 +18,7 @@ function wedgePath(start: number, end: number): string {
 }
 
 export default function Wheel({ games, rotation }: { games: Game[]; rotation: number }) {
+  const { t } = useI18n();
   const count = games.length;
   const seg = segmentAngle(count);
   // Pochettes plus petites que la largeur du segment (corde à la hauteur RADIUS)
@@ -25,7 +27,7 @@ export default function Wheel({ games, rotation }: { games: Game[]; rotation: nu
 
   return (
     <div className="wheel" role="img"
-         aria-label={`Roue du tirage — ${count} ${count > 1 ? 'jeux' : 'jeu'} en lice`}>
+         aria-label={t('roue.aria', { n: count })}>
       <div className="wheel-disc"
            style={{ transform: `rotate(${rotation}deg)`, transition: 'transform 3.5s cubic-bezier(.15,.9,.25,1)' }}>
         <svg viewBox="0 0 100 100" aria-hidden="true">

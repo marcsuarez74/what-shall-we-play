@@ -3,6 +3,7 @@
 // les env se lisent DANS createBugReport (pas au module) pour rester testables.
 import { getDb } from './db';
 import pkg from '../package.json';
+import { t, type Lang } from './i18n';
 
 export type BugType = 'bug' | 'amelioration';
 export type BugResult =
@@ -19,12 +20,12 @@ const LABELS: Record<BugType, string> = { bug: 'bug', amelioration: 'améliorati
 const PREFIXES: Record<BugType, string> = { bug: '[Bug] ', amelioration: '[Amélioration] ' };
 const QUOTA_JOUR = 3;
 
-export function validerSignalement(input: { title: string; description: string; type: string }): { error: string; status: number } | null {
+export function validerSignalement(input: { title: string; description: string; type: string }, lang: Lang = 'fr'): { error: string; status: number } | null {
   const titre = input.title.trim();
-  if (titre.length < 3 || titre.length > 120) return { error: 'Titre : entre 3 et 120 caractères', status: 400 };
+  if (titre.length < 3 || titre.length > 120) return { error: t(lang, 'bugs.errTitreBornes'), status: 400 };
   const desc = input.description.trim();
-  if (desc.length < 10 || desc.length > 4000) return { error: 'Description : entre 10 et 4000 caractères', status: 400 };
-  if (input.type !== 'bug' && input.type !== 'amelioration') return { error: 'Type de signalement inconnu', status: 400 };
+  if (desc.length < 10 || desc.length > 4000) return { error: t(lang, 'bugs.errDescBornes'), status: 400 };
+  if (input.type !== 'bug' && input.type !== 'amelioration') return { error: t(lang, 'bugs.errTypeInconnu'), status: 400 };
   return null;
 }
 
@@ -57,17 +58,17 @@ export function corpsIssue(input: CorpsInput): string {
   return lignes.join('\n');
 }
 
-export async function createBugReport(input: BugInput): Promise<BugResult> {
-  const invalide = validerSignalement({ title: input.title, description: input.description, type: input.type });
+export async function createBugReport(input: BugInput, lang: Lang = 'fr'): Promise<BugResult> {
+  const invalide = validerSignalement({ title: input.title, description: input.description, type: input.type }, lang);
   if (invalide) return invalide;
 
   const db = getDb();
   const { total } = db.prepare(`SELECT COUNT(*) AS total FROM bug_reports WHERE user_id = ? AND date(created_at) = date('now','localtime')`)
     .get(input.userId) as { total: number };
-  if (total >= QUOTA_JOUR) return { error: 'Tu as déjà envoyé 3 signalements aujourd\u2019hui — à demain !', status: 429 };
+  if (total >= QUOTA_JOUR) return { error: t(lang, 'bugs.errQuota'), status: 429 };
 
   const token = process.env.GITHUB_BUG_TOKEN;
-  if (!token) return { error: 'Signalement indisponible pour le moment — réessaie plus tard', status: 503 };
+  if (!token) return { error: t(lang, 'bugs.errIndisponible'), status: 503 };
 
   const repo = process.env.GITHUB_REPO || 'marcsuarez74/what-shall-we-play';
   const api = process.env.GITHUB_API || 'https://api.github.com';
@@ -97,12 +98,12 @@ export async function createBugReport(input: BugInput): Promise<BugResult> {
       // Diagnostic VPS : le status suffit (401 = jeton mal scopé, risque prod n°1) —
       // jamais le corps de la réponse, jamais le jeton.
       console.error(`bugs: GitHub status ${res.status}`);
-      return { error: 'GitHub n\u2019a pas répondu — ton signalement n\u2019est pas perdu, réessaie', status: 502 };
+      return { error: t(lang, 'bugs.errGitHub'), status: 502 };
     }
     issue = (await res.json()) as { number: number; html_url: string };
   } catch (error) {
     console.error('bugs: GitHub réseau', error);
-    return { error: 'GitHub n\u2019a pas répondu — ton signalement n\u2019est pas perdu, réessaie', status: 502 };
+    return { error: t(lang, 'bugs.errGitHub'), status: 502 };
   }
   // Le quota ne compte que les signalements qui ont DÉBOUCHÉ sur une issue.
   db.prepare('INSERT INTO bug_reports (user_id, type, titre, issue_url, capture_name) VALUES (?, ?, ?, ?, ?)')

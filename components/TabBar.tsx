@@ -1,12 +1,14 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import type { CléDict } from '@/lib/i18n';
+import { useI18n } from './LanguageProvider';
 
-const TABS = [
-  { href: '/etagere', icon: '🗄️', label: 'Étagère' },
-  { href: '/library', icon: '📚', label: 'Ludothèque' },
-  { href: '/games/add', icon: '➕', label: 'Ajouter' },
-  { href: '/nights', icon: '🎲', label: 'Parties' },
+const TABS: { href: string; icon: string; label: CléDict }[] = [
+  { href: '/etagere', icon: '🗄️', label: 'tabbar.etagere' },
+  { href: '/library', icon: '📚', label: 'tabbar.ludotheque' },
+  { href: '/games/add', icon: '➕', label: 'tabbar.ajouter' },
+  { href: '/nights', icon: '🎲', label: 'tabbar.parties' },
 ];
 
 // La roue et les écrans de connexion restent hors navigation (moment plein écran / pas de session).
@@ -14,15 +16,16 @@ const HIDDEN = ['/login', '/register', '/tirage'];
 
 export default function TabBar() {
   const path = usePathname();
+  const { t } = useI18n();
   if (path === '/' || HIDDEN.includes(path) || path.endsWith('/scores')) return null;
   return (
-    <nav className="tabbar" aria-label="Navigation principale">
-      {TABS.map((t) => {
-        const active = path === t.href;
+    <nav className="tabbar" aria-label={t('tabbar.navigation')}>
+      {TABS.map((tab) => {
+        const active = path === tab.href;
         return (
-          <Link key={t.href} href={t.href} className={active ? 'on' : ''}
+          <Link key={tab.href} href={tab.href} className={active ? 'on' : ''}
                 aria-current={active ? 'page' : undefined}>
-            <span className="ico" aria-hidden>{t.icon}</span>{t.label}
+            <span className="ico" aria-hidden>{tab.icon}</span>{t(tab.label)}
           </Link>
         );
       })}

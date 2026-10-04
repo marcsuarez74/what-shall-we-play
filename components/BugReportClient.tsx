@@ -2,6 +2,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import pkg from '../package.json';
+import { t as traduire, type Lang } from '@/lib/i18n';
+import { useI18n } from './LanguageProvider';
 
 // Rapporter un bug : un formulaire simple, le contexte technique rassemblé
 // automatiquement (bloc « Informations envoyées » = transparence totale avant
@@ -18,14 +20,14 @@ interface NavigatorUAData {
   getHighEntropyValues?: (hints: string[]) => Promise<{ model?: string; platformVersion?: string }>;
 }
 
-async function infosAppareil(): Promise<Infos> {
+async function infosAppareil(lang: Lang): Promise<Infos> {
   const ecran = `${window.screen.width} × ${window.screen.height} @${window.devicePixelRatio}x`;
   const langue = navigator.language || 'fr';
   const installe = window.matchMedia('(display-mode: standalone)').matches
     || (navigator as unknown as { standalone?: boolean }).standalone === true;
   const uad = (navigator as unknown as { userAgentData?: NavigatorUAData }).userAgentData;
-  let appareil = 'inconnu';
-  let navigateur = 'inconnu';
+  let appareil = traduire(lang, 'bugs.inconnu');
+  let navigateur = traduire(lang, 'bugs.inconnu');
   if (uad) {
     try {
       const h = (await uad.getHighEntropyValues?.(['model', 'platformVersion'])) ?? {};
@@ -44,10 +46,11 @@ async function infosAppareil(): Promise<Infos> {
     const saf = ua.match(/Version\/([\d.]+)/);
     if (saf) navigateur = `Safari ${saf[1].split('.')[0]}`;
   }
-  return { appareil, navigateur, ecran, langue, installation: installe ? 'installée' : 'navigateur' };
+  return { appareil, navigateur, ecran, langue, installation: traduire(lang, installe ? 'bugs.installOui' : 'bugs.installNon') };
 }
 
 export default function BugReportClient({ pseudo }: { pseudo: string }) {
+  const { lang, t } = useI18n();
   const router = useRouter();
   const params = useSearchParams();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -61,7 +64,7 @@ export default function BugReportClient({ pseudo }: { pseudo: string }) {
   const [error, setError] = useState<string | null>(null);
   const [succes, setSucces] = useState<{ url: string; numero: number } | null>(null);
 
-  useEffect(() => { infosAppareil().then(setDevice).catch(() => setDevice(null)); }, []);
+  useEffect(() => { infosAppareil(lang).then(setDevice).catch(() => setDevice(null)); }, [lang]);
   useEffect(() => () => { if (apercuUrl) URL.revokeObjectURL(apercuUrl); }, [apercuUrl]);
 
   const titreOk = title.trim().length >= 3 && title.trim().length <= 120;
@@ -88,12 +91,12 @@ export default function BugReportClient({ pseudo }: { pseudo: string }) {
     try {
       const res = await fetch('/api/bugs', { method: 'POST', body: form });
       const data = await res.json();
-      if (!res.ok) { setError(data.error ?? 'Impossible d’envoyer le signalement'); setEnvoi(false); return; }
+      if (!res.ok) { setError(data.error ?? t('bugs.errEnvoi')); setEnvoi(false); return; }
       setSucces({ url: data.issueUrl, numero: data.issueNumber });
       navigator.vibrate?.([50, 30, 50]);
       router.refresh();
     } catch {
-      setError('Réseau indisponible — ton signalement n’est pas perdu, réessaie');
+      setError(t('bugs.errReseau'));
       setEnvoi(false);
     }
   }
@@ -102,71 +105,71 @@ export default function BugReportClient({ pseudo }: { pseudo: string }) {
     return (
       <div className="bug-succes">
         <div className="bug-rond" aria-hidden="true">✓</div>
-        <h3>Merci, c&apos;est signalé !</h3>
-        <p>Ton rapport est parti sur GitHub : <b>issue #{succes.numero} ouverte</b>. Suis son avancement directement là-bas.</p>
+        <h3>{t('bugs.merciTitre')}</h3>
+        <p>{t('bugs.succesAvant')}<b>{t('bugs.succesIssue', { n: succes.numero })}</b>{t('bugs.succesApres')}</p>
         <a className="bug-lien" href={succes.url} target="_blank" rel="noopener noreferrer">{succes.url.replace('https://github.com/', 'github.com/')} →</a>
-        <button type="button" className="bug-annuler" onClick={() => router.push('/etagere')}>Revenir à l&apos;étagère</button>
+        <button type="button" className="bug-annuler" onClick={() => router.push('/etagere')}>{t('bugs.retourEtagere')}</button>
       </div>
     );
   }
 
   return (
     <>
-      <h1>Rapporter un bug</h1>
-      <p className="bug-intro">Dis-nous ce qui s&apos;est passé — on reçoit tout le contexte technique tout seul.</p>
+      <h1>{t('bugs.titre')}</h1>
+      <p className="bug-intro">{t('bugs.intro')}</p>
       <div className="bug-field">
-        <label htmlFor="bug-titre">TITRE</label>
+        <label htmlFor="bug-titre">{t('bugs.labelTitre')}</label>
         <input id="bug-titre" type="text" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={120}
-               placeholder="Ce qui ne va pas, en une phrase" aria-describedby="bug-titre-aide" />
+               placeholder={t('bugs.phTitre')} aria-describedby="bug-titre-aide" />
         <span className="bug-aide" id="bug-titre-aide">{title.trim().length}/120</span>
       </div>
-      <div className="bug-field" role="radiogroup" aria-label="Type de signalement">
-        <label>TYPE</label>
+      <div className="bug-field" role="radiogroup" aria-label={t('bugs.typeAria')}>
+        <label>{t('bugs.labelType')}</label>
         <div className="bug-types">
           <button type="button" className={'bug-type' + (type === 'bug' ? ' on' : '')} aria-pressed={type === 'bug'} onClick={() => setType('bug')}>
-            <span className="t" aria-hidden="true">🐛</span>Bug
+            <span className="t" aria-hidden="true">🐛</span>{t('bugs.typeBug')}
           </button>
           <button type="button" className={'bug-type amelio' + (type === 'amelioration' ? ' on' : '')} aria-pressed={type === 'amelioration'} onClick={() => setType('amelioration')}>
-            <span className="t" aria-hidden="true">✨</span>Amélioration
+            <span className="t" aria-hidden="true">✨</span>{t('bugs.typeAmelioration')}
           </button>
         </div>
       </div>
       <div className="bug-field">
-        <label htmlFor="bug-desc">DESCRIPTION</label>
+        <label htmlFor="bug-desc">{t('bugs.labelDesc')}</label>
         <textarea id="bug-desc" value={description} onChange={(e) => setDescription(e.target.value)} maxLength={4000}
-                  placeholder="Ce que tu as fait, ce qui s&apos;est passé, ce que tu attendais…" />
+                  placeholder={t('bugs.phDesc')} />
         <span className="bug-aide">{description.trim().length}/4000</span>
       </div>
       <div className="bug-field">
-        <label>CAPTURE (OPTIONNELLE)</label>
+        <label>{t('bugs.labelCapture')}</label>
         <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" hidden
                onChange={(e) => choisirCapture(e.target.files?.[0] ?? null)} />
         {!capture ? (
-          <button type="button" className="bug-drop" onClick={() => fileRef.current?.click()}>📷 Joindre une capture depuis ta galerie</button>
+          <button type="button" className="bug-drop" onClick={() => fileRef.current?.click()}>{t('bugs.joindreCapture')}</button>
         ) : (
           <div className="bug-apercu">
             <span className="mini">{apercuUrl ? <img src={apercuUrl} alt="" /> : '🖼️'}</span>
-            <div><b>{capture.name}</b><span>{(capture.size / 1024).toFixed(0)} Ko — servie par ton serveur, URL à jeton</span></div>
-            <button type="button" className="retirer" onClick={() => choisirCapture(null)}>retirer</button>
+            <div><b>{capture.name}</b><span>{t('bugs.captureKo', { ko: (capture.size / 1024).toFixed(0) })}</span></div>
+            <button type="button" className="retirer" onClick={() => choisirCapture(null)}>{t('bugs.retirer')}</button>
           </div>
         )}
       </div>
       <details className="bug-infos" open>
-        <summary>🔍 Informations envoyées avec le rapport</summary>
+        <summary>{t('bugs.infosTitre')}</summary>
         <ul>
-          <li>Version de l&apos;app <b>v{pkg.version}</b></li>
-          <li>Page d&apos;origine <b>{pageOrigine}</b></li>
-          <li>Appareil <b>{device ? `${device.appareil} · ${device.navigateur}` : '…'}</b></li>
-          <li>Écran <b>{device?.ecran ?? '…'}</b></li>
-          <li>Langue · installation <b>{device ? `${device.langue} · ${device.installation}` : '…'}</b></li>
-          <li>Signalé par <b>{pseudo}</b></li>
+          <li>{t('bugs.infoVersion')} <b>v{pkg.version}</b></li>
+          <li>{t('bugs.infoPage')} <b>{pageOrigine}</b></li>
+          <li>{t('bugs.infoAppareil')} <b>{device ? `${device.appareil} · ${device.navigateur}` : '…'}</b></li>
+          <li>{t('bugs.infoEcran')} <b>{device?.ecran ?? '…'}</b></li>
+          <li>{t('bugs.infoLangue')} <b>{device ? `${device.langue} · ${device.installation}` : '…'}</b></li>
+          <li>{t('bugs.infoSignalePar')} <b>{pseudo}</b></li>
         </ul>
       </details>
       {error && <p className="error" role="alert">{error}</p>}
       <button type="button" className="btn-copper" disabled={!pret} onClick={envoyer}>
-        {envoi ? 'Envoi…' : type === 'bug' ? 'Envoyer le signalement' : 'Proposer l’amélioration'}
+        {envoi ? t('bugs.envoi') : type === 'bug' ? t('bugs.envoyerBug') : t('bugs.envoyerAmelioration')}
       </button>
-      <button type="button" className="bug-annuler" onClick={() => router.back()}>Annuler — revenir en arrière</button>
+      <button type="button" className="bug-annuler" onClick={() => router.back()}>{t('bugs.annuler')}</button>
     </>
   );
 }

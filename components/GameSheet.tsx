@@ -1,9 +1,9 @@
 'use client';
 import { useEffect } from 'react';
-import { FORMAT_LABEL, coverSrc } from '@/lib/formats';
+import { formatLabel, coverSrc } from '@/lib/formats';
+import { formatNombre } from '@/lib/i18n/format';
 import type { Game, UserLite } from '@/lib/types';
-
-const fmt = (n: number) => n.toLocaleString('fr-FR', { maximumFractionDigits: 1 });
+import { useI18n } from './LanguageProvider';
 
 export default function GameSheet({ game, players, playsCount, verdicts, onClose, mode = 'shelf', onRemoveShelf }: {
   game: Game;
@@ -14,6 +14,8 @@ export default function GameSheet({ game, players, playsCount, verdicts, onClose
   mode?: 'shelf' | 'library';
   onRemoveShelf?: () => void;
 }) {
+  const { lang, t } = useI18n();
+  const fmt = (n: number) => formatNombre(lang, n, { maximumFractionDigits: 1 });
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Escape') onClose();
@@ -32,7 +34,7 @@ export default function GameSheet({ game, players, playsCount, verdicts, onClose
     <div className="sheet-backdrop" onClick={onClose}>
       <div className="bottom-sheet" role="dialog" aria-modal="true" aria-label={game.title}
            onClick={(e) => e.stopPropagation()}>
-        <button type="button" className="sheet-close" aria-label="Fermer" onClick={onClose}>✕</button>
+        <button type="button" className="sheet-close" aria-label={t('etagere.fermer')} onClick={onClose}>✕</button>
         <div className="sheet-head">
           {cover
             ? <img className="sheet-cover" src={cover} alt={game.title} />
@@ -52,33 +54,33 @@ export default function GameSheet({ game, players, playsCount, verdicts, onClose
         </div>
         <ul className="sheet-facts">
           {game.weight != null && (
-            <li><span>Complexité (BGG)</span><strong>⚖ {fmt(game.weight)} / 5</strong></li>
+            <li><span>{t('fiche.complexite')}</span><strong>⚖ {fmt(game.weight)} / 5</strong></li>
           )}
           {game.best_players != null && (
-            <li><span>Best joueurs (BGG)</span><strong>{game.best_players}</strong></li>
+            <li><span>{t('fiche.bestJoueurs')}</span><strong>{game.best_players}</strong></li>
           )}
-          {game.designer && <li><span>Créateur</span><strong>{game.designer}</strong></li>}
-          {game.artist && <li><span>Illustrateur</span><strong>{game.artist}</strong></li>}
-          <li><span>Parties jouées</span><strong>{playsCount}</strong></li>
+          {game.designer && <li><span>{t('fiche.createur')}</span><strong>{game.designer}</strong></li>}
+          {game.artist && <li><span>{t('fiche.illustrateur')}</span><strong>{game.artist}</strong></li>}
+          <li><span>{t('fiche.partiesJouees')}</span><strong>{playsCount}</strong></li>
           {verdicts && verdicts.adore + verdicts.bien + verdicts.neutre > 0 && (
-            <li><span>Verdict de la table</span><strong>😍 {verdicts.adore} · 🙂 {verdicts.bien} · 😐 {verdicts.neutre}</strong></li>
+            <li><span>{t('fiche.verdictTable')}</span><strong>😍 {verdicts.adore} · 🙂 {verdicts.bien} · 😐 {verdicts.neutre}</strong></li>
           )}
         </ul>
         {mode === 'shelf' && (
           <p className="sheet-owner">
-            Apporté par <strong>{owner ?? 'un joueur'}</strong> · {FORMAT_LABEL[game.box_format]}
+            {t('fiche.apportePar')} <strong>{owner ?? t('fiche.joueurAnonyme')}</strong> · {formatLabel(game.box_format, lang)}
           </p>
         )}
         {game.bgg_id != null && (
           <a className="bgg-link" href={`https://boardgamegeek.com/boardgame/${game.bgg_id}`}
              target="_blank" rel="noreferrer">
             <img className="bgg-logo" src="/logos/powered-by-bgg.svg" alt="Powered by BoardGameGeek" />
-            <span>Voir la fiche ↗</span>
+            <span>{t('fiche.voirBgg')}</span>
           </a>
         )}
         {mode === 'shelf' && onRemoveShelf && (
           <button type="button" className="btn-exclude" onClick={onRemoveShelf}>
-            Retirer de la partie
+            {t('fiche.retirerPartie')}
           </button>
         )}
       </div>
