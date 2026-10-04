@@ -111,7 +111,7 @@ async function setupTirage(page: import('@playwright/test').Page, s: string) {
       await lancer.click();
     }
   }
-  await expect(page.getByText('LA ROUE A PARLÉ')).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByText('UNE SEULE BOÎTE EN LICE')).toBeVisible({ timeout: 20_000 });
 }
 
 test('verdict : « Annoncer sur WhatsApp » partage le bon message (partage natif)', async ({ page }) => {

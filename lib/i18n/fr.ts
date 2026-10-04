@@ -194,6 +194,7 @@ export const fr = {
   // Écran du tirage (TirageClient) + route /api/draw.
   'tirage.roueTourne': 'La roue tourne…',
   'tirage.roueAParle': 'LA ROUE A PARLÉ',
+  'tirage.unSeulJeu': 'UNE SEULE BOÎTE EN LICE', // sélection d'un seul jeu : pas de roue (v4.1.0)
   'tirage.jeuPressenti': 'jeu pressenti — remplaçable',
   'tirage.sortirBoite': 'Sortir la boîte 📦',
   'tirage.annoncerWhatsApp': '💬 Annoncer sur WhatsApp',

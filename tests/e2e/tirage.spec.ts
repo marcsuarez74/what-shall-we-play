@@ -29,14 +29,15 @@ test('tirage : roue plein écran puis verdict sur le jeu tiré', async ({ page }
   await expect(page.locator('.pill-ok')).toContainText('✓ Validée'); // la validation est enregistrée avant de cliquer
   await page.getByRole('button', { name: 'Lancer · 1' }).click();
 
-  // La roue tourne (~3,5 s) puis le verdict tombe
-  await expect(page.getByText('LA ROUE A PARLÉ')).toBeVisible({ timeout: 10_000 });
+  // v4.1.0 : un seul jeu en lice → pas de roue, verdict direct
+  await expect(page.getByText('UNE SEULE BOÎTE EN LICE')).toBeVisible({ timeout: 10_000 });
+  await expect(page.locator('.tirage-stage')).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'Cascadia' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Sortir la boîte 📦' })).toBeVisible();
   await expect(page.locator('.pastille.prov')).toContainText('jeu pressenti');
   // Relancer AVANT la boîte : le verdict se remplace, rien ne s'accumule
   await page.getByRole('button', { name: '↻ Relancer le tirage' }).click();
-  await expect(page.getByText('LA ROUE A PARLÉ')).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByText('UNE SEULE BOÎTE EN LICE')).toBeVisible({ timeout: 10_000 });
   // Sortir la boîte : la partie démarre, tout se verrouille
   await page.getByRole('button', { name: 'Sortir la boîte 📦' }).click();
   await expect(page.locator('.pastille.ok')).toContainText('jeu de la partie');

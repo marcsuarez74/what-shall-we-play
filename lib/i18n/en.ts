@@ -191,6 +191,7 @@ export const en: Record<CléDict, ValeurDict> = {
   // Draw screen (TirageClient) + /api/draw route.
   'tirage.roueTourne': 'The wheel is spinning…',
   'tirage.roueAParle': 'THE WHEEL HAS SPOKEN',
+  'tirage.unSeulJeu': 'ONLY ONE GAME READY',
   'tirage.jeuPressenti': 'provisional pick — replaceable',
   'tirage.sortirBoite': 'Bring out the box 📦',
   'tirage.annoncerWhatsApp': '💬 Announce on WhatsApp',

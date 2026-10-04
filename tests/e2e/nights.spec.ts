@@ -31,7 +31,7 @@ test('soirées : historique avec date, joueurs et tirages', async ({ page }) => 
   await page.getByRole('button', { name: 'Valider ma sélection' }).click();
   await expect(page.locator('.pill-ok')).toContainText('✓ Validée'); // la validation est enregistrée avant de cliquer
   await page.getByRole('button', { name: 'Lancer · 1' }).click();
-  await expect(page.getByText('LA ROUE A PARLÉ')).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByText('UNE SEULE BOÎTE EN LICE')).toBeVisible({ timeout: 10_000 });
 
   // Historique : accessible depuis la barre d'onglets
   await page.goto('/etagere');
