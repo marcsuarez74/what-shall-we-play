@@ -1968,6 +1968,12 @@ input[type='file'] {
 
 /* ---------- Profil : podiums dans les stats + « Mes parties » (v3.3) ---------- */
 .stat .medailles { font-size: 15.5px; letter-spacing: .02em; }
+/* v3.7 (verdict du jeu) : « Tu as adoré X : n fois sur total » sous les stats,
+   et le rappel sur les lignes Mes parties où je n'ai pas encore voté */
+.verdict-stats { margin: -12px 0 20px; display: grid; gap: 4px; }
+.verdict-stats p { font-size: 13.5px; color: var(--doux-clair); }
+.verdict-stats p b { color: var(--cuivre); font-weight: 700; }
+.mp-row .mpd .mp-verdict { display: block; color: var(--cuivre); font-weight: 600; }
 .mes-parties { display: grid; gap: 8px; }
 .mp-row {
   display: flex; align-items: center; gap: 11px; background: var(--surface);

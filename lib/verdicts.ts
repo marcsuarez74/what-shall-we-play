@@ -42,6 +42,36 @@ export function monVerdict(nightId: number, userId: number): Verdict | null {
   return row?.verdict ?? null;
 }
 
+// Top 3 de mes jeux « Tu as adoré X : n fois sur total » — agrégat de MES
+// verdicts personnels, toutes soirées confondues. Tri total desc, adore desc ;
+// la ligne ne s'affiche que si adore ≥ 1 (filtrage UI, pas SQL — KISS).
+export function verdictPersoStats(userId: number) {
+  return getDb().prepare(`
+    SELECT g.title AS jeu, SUM(nv.verdict = 'adore') AS adore, COUNT(*) AS total
+    FROM night_verdicts nv JOIN games g ON g.id = nv.game_id
+    WHERE nv.user_id = ? GROUP BY nv.game_id ORDER BY total DESC, adore DESC LIMIT 3
+  `).all(userId) as { jeu: string; adore: number; total: number }[];
+}
+
+// Compteurs 😍🙂😐 d'un jeu, toutes soirées confondues (fiche jeu).
+export function verdictsJeu(gameId: number): { adore: number; bien: number; neutre: number } {
+  const row = getDb().prepare(`
+    SELECT SUM(verdict = 'adore') AS adore, SUM(verdict = 'bien') AS bien, SUM(verdict = 'neutre') AS neutre
+    FROM night_verdicts WHERE game_id = ?
+  `).get(gameId) as { adore: number | null; bien: number | null; neutre: number | null } | undefined;
+  return { adore: row?.adore ?? 0, bien: row?.bien ?? 0, neutre: row?.neutre ?? 0 };
+}
+
+// Même donnée, groupée pour TOUTE la ludothèque en une requête — le chemin de
+// données de la fiche jeu copie getPickCounts (Record par game_id, pas de N+1).
+export function verdictsParJeu(): Record<number, { adore: number; bien: number; neutre: number }> {
+  const rows = getDb().prepare(`
+    SELECT game_id, SUM(verdict = 'adore') AS adore, SUM(verdict = 'bien') AS bien, SUM(verdict = 'neutre') AS neutre
+    FROM night_verdicts GROUP BY game_id
+  `).all() as { game_id: number; adore: number; bien: number; neutre: number }[];
+  return Object.fromEntries(rows.map((r) => [r.game_id, { adore: r.adore, bien: r.bien, neutre: r.neutre }]));
+}
+
 // Poids doux au tirage : score = (😍 − 😐)/total, amplitude +8 %/−2 % (asymétrie
 // volontaire) lissée par la confiance min(1, n/3). Borne garantée : [×0,98 ; ×1,08]
 // — garde-fou du backlog.

@@ -5,6 +5,7 @@ import { validateCode } from './auth';
 import { saveCover, coverPathOnDisk } from './storage';
 import { ALLOWED_STICKERS } from './stickers';
 import type { UserRow } from './types';
+import type { Verdict } from './verdicts';
 
 export { ALLOWED_STICKERS };
 
@@ -41,15 +42,18 @@ export function getProfileStats(userId: number): {
 // « Mes parties » : mes soirées terminées où j'ai un score, la plus récente d'abord.
 // La médaille n'est PAS stockée : la page (côté serveur) recalcule mon rang via
 // rankScores(getNightScores(id)) — au plus `limit` soirées, pas de N+1 client.
+// mon_verdict (LEFT JOIN nuit+joueur) : null tant que je n'ai pas jugé la boîte —
+// la ligne affiche alors le rappel « Donne ton verdict ».
 export function getMyParties(userId: number, limit = 6) {
   return getDb().prepare(`
-    SELECT n.id, n.played_at, g.title AS game_title, g.cover_path, g.cover_url, ns.score
+    SELECT n.id, n.played_at, g.title AS game_title, g.cover_path, g.cover_url, ns.score, nv.verdict AS mon_verdict
     FROM nights n
     JOIN night_scores ns ON ns.night_id = n.id AND ns.user_id = ?
     LEFT JOIN games g ON g.id = n.game_id
+    LEFT JOIN night_verdicts nv ON nv.night_id = n.id AND nv.user_id = ?
     WHERE n.status = 'termine'
     ORDER BY n.played_at DESC, n.id DESC LIMIT ?`)
-    .all(userId, limit) as { id: number; played_at: string; game_title: string | null; cover_path: string | null; cover_url: string | null; score: number | null }[];
+    .all(userId, userId, limit) as { id: number; played_at: string; game_title: string | null; cover_path: string | null; cover_url: string | null; score: number | null; mon_verdict: Verdict | null }[];
 }
 
 export function setSticker(userId: number, sticker: unknown): { ok: true } | { error: string; status: number } {

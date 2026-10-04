@@ -5,10 +5,11 @@ import type { Game, UserLite } from '@/lib/types';
 
 const fmt = (n: number) => n.toLocaleString('fr-FR', { maximumFractionDigits: 1 });
 
-export default function GameSheet({ game, players, playsCount, onClose, mode = 'shelf', onRemoveShelf }: {
+export default function GameSheet({ game, players, playsCount, verdicts, onClose, mode = 'shelf', onRemoveShelf }: {
   game: Game;
   players: UserLite[];
   playsCount: number;
+  verdicts?: { adore: number; bien: number; neutre: number } | null;
   onClose: () => void;
   mode?: 'shelf' | 'library';
   onRemoveShelf?: () => void;
@@ -59,6 +60,9 @@ export default function GameSheet({ game, players, playsCount, onClose, mode = '
           {game.designer && <li><span>Créateur</span><strong>{game.designer}</strong></li>}
           {game.artist && <li><span>Illustrateur</span><strong>{game.artist}</strong></li>}
           <li><span>Parties jouées</span><strong>{playsCount}</strong></li>
+          {verdicts && verdicts.adore + verdicts.bien + verdicts.neutre > 0 && (
+            <li><span>Verdict de la table</span><strong>😍 {verdicts.adore} · 🙂 {verdicts.bien} · 😐 {verdicts.neutre}</strong></li>
+          )}
         </ul>
         {mode === 'shelf' && (
           <p className="sheet-owner">

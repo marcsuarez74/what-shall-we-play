@@ -13,14 +13,16 @@ import UserMenu from './UserMenu';
 
 type Me = { id: number; pseudo: string; sticker: string | null; avatar_path: string | null };
 type Stats = { plays: number; nights: number; games: number; podiums: { un: number; deux: number; trois: number } };
+type VerdictStat = { jeu: string; adore: number; total: number };
 type Partie = {
   id: number; played_at: string; game_title: string | null;
   cover_path: string | null; cover_url: string | null; score: number | null; med: string;
+  mon_verdict: string | null;
 };
 
 const dateFmt = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' });
 
-export default function ProfileClient({ me, stats, foyer, parties }: { me: Me; stats: Stats; foyer: FoyerData | null; parties: Partie[] }) {
+export default function ProfileClient({ me, stats, verdictStats, foyer, parties }: { me: Me; stats: Stats; verdictStats: VerdictStat[]; foyer: FoyerData | null; parties: Partie[] }) {
   const router = useRouter();
   const [pickerOpen, setPickerOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -165,6 +167,13 @@ export default function ProfileClient({ me, stats, foyer, parties }: { me: Me; s
         <div className="stat"><b>{stats.nights}</b><span>parties</span></div>
         <div className="stat"><b className="medailles">👑 {stats.podiums.un} · 🥈 {stats.podiums.deux} · 🥉 {stats.podiums.trois}</b><span>podiums</span></div>
       </div>
+      {verdictStats.some((v) => v.adore > 0) && (
+        <div className="verdict-stats">
+          {verdictStats.filter((v) => v.adore > 0).map((v) => (
+            <p key={v.jeu}>Tu as adoré <b>{v.jeu}</b> : {v.adore} fois sur {v.total}</p>
+          ))}
+        </div>
+      )}
 
       <FoyerCard foyer={foyer} meId={me.id} />
 
@@ -181,6 +190,7 @@ export default function ProfileClient({ me, stats, foyer, parties }: { me: Me; s
               <span className="mpd">
                 <b>{p.game_title ?? 'Soirée de jeux'}</b>
                 <span>{dateFmt.format(new Date(`${p.played_at}T12:00:00`))}</span>
+                {p.mon_verdict === null && <span className="mp-verdict">🗳️ Donne ton verdict</span>}
               </span>
               <span className="dt"><b>{p.score ?? '—'}</b><span className="med">{p.med}</span></span>
             </Link>
