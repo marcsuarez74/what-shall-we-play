@@ -44,6 +44,11 @@ describe('auth', () => {
     expect(verifyLogin('marc', '1234')).toHaveProperty('id');
     expect(verifyLogin('marc', '0000')).toEqual({ error: 'Identifiants incorrects', status: 401 });
   });
+  it('registerUser : persiste la langue de navigation dans users.lang', () => {
+    const u = (registerUser('p-lang', '1234', undefined, 'en') as { id: number }).id;
+    const row = getDb().prepare('SELECT lang FROM users WHERE id = ?').get(u) as { lang: string };
+    expect(row.lang).toBe('en');
+  });
   it('refuse le doublon à la casse près', () => {
     registerUser('lea', '1234');
     const r = registerUser('LEA', '5678');

@@ -15,5 +15,5 @@ export async function getLang(): Promise<Lang> {
 
 // Cookie langue : 1 an, path / — posé uniquement par les routes API (jamais httpOnly).
 export function setLangCookie(response: NextResponse, lang: Lang): void {
-  response.cookies.set(LANG_COOKIE, lang, { maxAge: 60 * 60 * 24 * 365, path: '/' });
+  response.cookies.set(LANG_COOKIE, lang, { maxAge: 60 * 60 * 24 * 365, path: '/', sameSite: 'lax' });
 }

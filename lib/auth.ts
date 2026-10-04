@@ -7,6 +7,7 @@ import type { UserRow } from './types';
 
 // lang : langue du navigateur (cookie) passée par les routes auth — défaut 'fr',
 // le comportement historique (les tests unitaires restent en français).
+// À la création, elle est persistée dans users.lang (« la langue suit le compte »).
 export type AuthResult = { id: number; lang?: string } | { error: string; status: number };
 
 export function validatePseudo(p: unknown, lang: Lang = 'fr'): string | null {
@@ -28,8 +29,8 @@ export function registerUser(pseudo: unknown, code: unknown, sticker?: unknown, 
   const hash = bcrypt.hashSync(code as string, 10);
   try {
     const info = st != null
-      ? getDb().prepare('INSERT INTO users (pseudo, code_hash, sticker) VALUES (?, ?, ?)').run(pseudo, hash, st)
-      : getDb().prepare('INSERT INTO users (pseudo, code_hash) VALUES (?, ?)').run(pseudo, hash);
+      ? getDb().prepare('INSERT INTO users (pseudo, code_hash, sticker, lang) VALUES (?, ?, ?, ?)').run(pseudo, hash, st, lang)
+      : getDb().prepare('INSERT INTO users (pseudo, code_hash, lang) VALUES (?, ?, ?)').run(pseudo, hash, lang);
     return { id: Number(info.lastInsertRowid) };
   } catch (e: unknown) {
     if (String(e).includes('UNIQUE')) return { error: t(lang, 'auth.errPseudoPris'), status: 409 };

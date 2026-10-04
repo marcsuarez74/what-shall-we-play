@@ -549,7 +549,7 @@ export const en: Record<CléDict, ValeurDict> = {
   'faq.r10g2': "good",
   'faq.r10c': ", or ",
   'faq.r10g3': "neutral",
-  'faq.r10d': ". It feeds your stats (you loved Cascadia 4 games out of 5) and gently weighs on future draws.",
+  'faq.r10d': ". It feeds your stats (you loved Cascadia 4 times out of 5) and gently weighs on future draws.",
   'faq.r11a': "When the game ends, the ",
   'faq.r11g1': "score book",
   'faq.r11b': ": everyone's points, podium, medals. Then the verdict, and the result goes to WhatsApp in one tap.",

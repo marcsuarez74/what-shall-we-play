@@ -64,3 +64,32 @@ test('EN : la FAQ est traduite (12 questions, sous-titre, aria dérivé)', async
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
   await ctx.close();
 });
+
+// Persistance « la langue suit le compte » : le clic EN dans le menu utilisateur
+// (session ouverte) écrit users.lang via /api/lang ; à la reconnexion — cookies
+// purgés pour ne rien devoir au wsp_lang restant — le login ré-amorce le cookie
+// depuis le compte → <html lang="en"> à nouveau.
+test('sélecteur EN du menu : la langue suit le compte après reconnexion', async ({ page, context }) => {
+  const pseudo = `i18n-sw-${Date.now().toString(36)}`;
+  await page.goto('/register');
+  await page.getByLabel('Pseudo').fill(pseudo);
+  await page.getByLabel('Code secret').fill('1234');
+  await page.getByRole('button', { name: 'Créer mon compte' }).click();
+  await page.waitForURL('**/etagere');
+  // Menu utilisateur → bouton EN (aria-pressed pattern du LanguageSwitch)
+  await page.getByLabel('Menu utilisateur').click();
+  await page.getByRole('button', { name: 'English' }).click();
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+  // Déconnexion (menu désormais en EN) puis reconnexion : wsp_lang purgé, seule
+  // users.lang peut ré-amorcer le cookie en EN.
+  await page.goto('/profil');
+  await page.getByLabel('User menu').click();
+  await page.getByRole('button', { name: 'Log out' }).click();
+  await page.waitForURL('/login');
+  await context.clearCookies();
+  await page.getByLabel('Username').fill(pseudo);
+  await page.getByLabel('Secret code').fill('1234');
+  await page.getByRole('button', { name: 'Enter' }).click();
+  await page.waitForURL('**/etagere');
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+});

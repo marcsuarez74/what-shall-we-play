@@ -9,6 +9,7 @@ export async function POST(req: Request) {
   if ('error' in res) return NextResponse.json({ error: res.error }, { status: res.status });
   const response = NextResponse.json({ ok: true });
   response.cookies.set(COOKIE_NAME, createSession(res.id), cookieOpts());
-  // Nouveau compte : users.lang = 'fr' par défaut → le compte n'amorce jamais le cookie ici.
+  // Nouveau compte : users.lang = langue de navigation (persistée à la création) ;
+  // le compte n'amorce jamais le cookie ici.
   return response;
 }
