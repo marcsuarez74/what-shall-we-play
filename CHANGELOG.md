@@ -4,6 +4,19 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [3.7.0] — 2026-10-04
+
+### Ajouté
+- **Le verdict du jeu 😍🙂😐** — après la soirée, chacun juge la boîte ; compteurs en direct,
+  stats de profil, poids doux au tirage (max ×1,10 d'écart).
+- **Le bloc verdict sur la nuit terminée, révocable** : trois pastilles sous la boîte jouée
+  (😍 Adoré · 🙂 Bien · 😐 Neutre) avec les compteurs de la table en direct — re-voter remplace
+  son verdict, et on ne voit jamais qui a voté quoi.
+- **Les stats s'enrichissent** : « Tu as adoré Cascadia : 4 fois sur 5 » sur le profil, compteurs
+  😍🙂😐 cumulés sur la fiche du jeu, et rappel « Donne ton verdict » dans Mes parties.
+- **Poids doux au tirage** : le jeu 😍-dominant pèse ×1,08, le 😐-dominant ×0,98, les autres
+  ×1,00 — bornes garantées [×0,98 ; ×1,08], l'animation de la roue ne change pas.
+
 ## [3.6.2] — 2026-10-04
 
 ### Modifié

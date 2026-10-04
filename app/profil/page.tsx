@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { getSessionUser } from '@/lib/session';
 import { getProfileStats, getMyParties } from '@/lib/users';
+import { verdictPersoStats } from '@/lib/verdicts';
 import { getNightScores } from '@/lib/nights';
 import { rankScores, medaille } from '@/lib/ranks';
 import { getFoyerForUser } from '@/lib/foyers';
@@ -22,6 +23,7 @@ export default async function Page() {
       <ProfileClient
         me={{ id: user.id, pseudo: user.pseudo, sticker: user.sticker ?? null, avatar_path: user.avatar_path ?? null }}
         stats={getProfileStats(user.id)}
+        verdictStats={verdictPersoStats(user.id)}
         foyer={getFoyerForUser(user.id)}
         parties={parties}
       />

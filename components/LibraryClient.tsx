@@ -8,9 +8,10 @@ import GameSheet from './GameSheet';
 import ShelfControls from './ShelfControls';
 import UserMenu from './UserMenu';
 
-export default function LibraryClient({ games: initial, plays, me, foyer = null }: {
+export default function LibraryClient({ games: initial, plays, verdicts, me, foyer = null }: {
   games: Game[];
   plays: Record<number, number>;
+  verdicts: Record<number, { adore: number; bien: number; neutre: number }>;
   me: UserLite;
   foyer?: { name: string; members: number } | null;
 }) {
@@ -103,6 +104,7 @@ export default function LibraryClient({ games: initial, plays, me, foyer = null 
       )}
       {detail && (
         <GameSheet game={detail} players={[]} playsCount={plays[detail.id] ?? 0}
+                   verdicts={verdicts[detail.id]}
                    onClose={() => setDetail(null)}
                    mode="library" />
       )}
