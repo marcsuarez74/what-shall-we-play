@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { getDb, runMigrations } from '@/lib/db';
+import { registerUser } from '@/lib/auth';
+import { createGame } from '@/lib/games';
+import { createNight, addNightGame, boxOutNight, endNight } from '@/lib/nights';
+import { poserVerdict } from '@/lib/verdicts';
 
 describe('db', () => {
   it('crée toutes les tables du schéma', () => {
@@ -72,5 +76,21 @@ describe('db', () => {
     // suppression de la partie → votes emportés (CASCADE)
     db.prepare('DELETE FROM nights WHERE id = ?').run(night.lastInsertRowid);
     expect(db.prepare('SELECT COUNT(*) AS t FROM game_votes').get() as { t: number }).toEqual({ t: 0 });
+  });
+
+  it('night_verdicts : UNIQUE par (nuit, joueur) et CASCADE sur la nuit', () => {
+    const marc = registerUser(`db-v-${Date.now().toString(36)}`, '1234') as { id: number };
+    const nuit = createNight(marc.id, [marc.id]);
+    const jeu = createGame(marc.id, { title: 'Cascadia', box_format: 'moyen' });
+    addNightGame(nuit, jeu, marc.id); // sur l'étagère, pour pouvoir sortir la boîte
+    boxOutNight(nuit, marc.id, jeu);
+    endNight(nuit, marc.id, { [marc.id]: 10 });
+    expect(poserVerdict(nuit, marc.id, 'adore')).toEqual({ ok: true });
+    expect(poserVerdict(nuit, marc.id, 'bien')).toEqual({ ok: true }); // remplace, ne duplique pas
+    const lignes = getDb().prepare('SELECT COUNT(*) AS n FROM night_verdicts WHERE night_id = ?').get(nuit) as { n: number };
+    expect(lignes.n).toBe(1);
+    // CASCADE : supprimer la nuit emporte ses verdicts
+    getDb().prepare('DELETE FROM nights WHERE id = ?').run(nuit);
+    expect(getDb().prepare('SELECT COUNT(*) AS n FROM night_verdicts WHERE night_id = ?').get(nuit)).toEqual({ n: 0 });
   });
 });

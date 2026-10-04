@@ -21,7 +21,7 @@ export function getPlannedNights(userId: number): Night[] {
 }
 
 // Sync live : chaque participant de la partie est prévenu (son /etagere se rafraîchit).
-function notifyNight(nightId: number): void {
+export function notifyNight(nightId: number): void {
   emitToUsers((getDb().prepare('SELECT user_id FROM night_players WHERE night_id = ?')
     .all(nightId) as { user_id: number }[]).map((r) => r.user_id));
 }

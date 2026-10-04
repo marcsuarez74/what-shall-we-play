@@ -76,6 +76,17 @@ CREATE TABLE IF NOT EXISTS game_votes (
   created_at TEXT NOT NULL DEFAULT (datetime('now','localtime')),
   UNIQUE(night_id, game_id, user_id)
 );
+-- v3.7.0 (verdict du jeu) : le ressenti après la soirée — UNIQUE par (nuit, joueur),
+-- révocable (revoter remplace). game_id est copié de nights.game_id au moment du vote
+-- (mis à jour à chaque re-vote) pour que les agrégats évitent les jointures.
+CREATE TABLE IF NOT EXISTS night_verdicts (
+  night_id INTEGER NOT NULL REFERENCES nights(id) ON DELETE CASCADE,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  game_id INTEGER NOT NULL REFERENCES games(id) ON DELETE CASCADE,
+  verdict TEXT NOT NULL CHECK (verdict IN ('adore','bien','neutre')),
+  created_at TEXT NOT NULL DEFAULT (datetime('now','localtime')),
+  UNIQUE(night_id, user_id)
+);
 CREATE TABLE IF NOT EXISTS picks (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   night_id INTEGER NOT NULL REFERENCES nights(id) ON DELETE CASCADE,
