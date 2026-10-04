@@ -6,7 +6,7 @@ import { useI18n } from './LanguageProvider';
 // « Terminer la partie » : premier tap arme la confirmation (4 s), le second termine.
 // Terminer envoie la partie à l'historique sans rien supprimer.
 // Quand la partie est en jeu, le créateur passe par le carnet des scores —
-// le double-appui ne sert plus qu'à l'abandon d'une soirée en préparation.
+// le double-appui ne sert plus qu'à l'abandon d'une partie en préparation.
 export default function TerminerNight({ nightId, status }: { nightId: number; status: 'creation' | 'en_jeu' | 'termine' }) {
   const router = useRouter();
   const { t } = useI18n();

@@ -87,7 +87,7 @@ export const en: Record<CléDict, ValeurDict> = {
   'etagere.aucunAjoute': 'No games added',
   'etagere.nbAjoutes': ({ n }: Record<string, string | number>) => `${n} game${Number(n) > 1 ? 's' : ''} added`,
   'etagere.termine': 'Done',
-  // Finished-night card (TermineeCard).
+  // Finished-game card (TermineeCard).
   'etagere.soireeTermineeAria': 'Game finished',
   'etagere.soireeDuJour': "TODAY'S GAME",
   'etagere.terminee': 'Finished',
@@ -160,7 +160,7 @@ export const en: Record<CléDict, ValeurDict> = {
   'soiree.egalite': 'The ranking updates live — tied players wear the same medal',
   'soiree.enregistrerTerminer': '✓ Save and finish',
   'soiree.terminerSansScores': 'Finish without scores',
-  // Errors returned by the game-night/draw API routes (t() with the language cookie).
+  // Errors returned by the game/draw API routes (t() with the language cookie).
   'erreurs.nonConnecte': 'Not signed in',
   'erreurs.requeteInvalide': 'Invalid request',
   'erreurs.soireeIntrouvable': 'Game not found',
@@ -517,7 +517,7 @@ export const en: Record<CléDict, ValeurDict> = {
   'faq.r1g1': "the shelf",
   'faq.r1b': ", the ",
   'faq.r1g2': "wheel",
-  'faq.r1c': " picks the box of the evening, and everyone logs scores and verdicts. No more “so, what do we play?” dragging on for 40 minutes.",
+  'faq.r1c': " picks the box of the game, and everyone logs scores and verdicts. No more “so, what do we play?” dragging on for 40 minutes.",
   'faq.r2': "Your group's current shortlist: the games ready to come out. Drop a 👍 on what you fancy for the game — everyone sees the votes live.",
   'faq.r3': "Tap to vote, tap again to take it back. Votes sync live: while the game is being planned, everyone already knows what the others feel like playing.",
   'faq.r4a': "No — it spoils them: the best-rated boxes come up ",
