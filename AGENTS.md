@@ -34,6 +34,8 @@ PWA Next.js de tirage au sort du jeu du soir — https://etagere.marc-suarez.fr
   sont une interface : ne pas les casser sans mettre à jour les tests dans le même commit.
 
 ## 4. Garde-fous du projet
-- UI 100 % français, palette noyer/crème/cuivre, Bricolage Grotesque + Space Grotesk.
+- **UI française par défaut, anglais supporté** (sélecteur FR/EN, cookie `wsp_lang`,
+  dictionnaires typés dans `lib/i18n/` — toute nouvelle chaîne passe par les dicts),
+  palette noyer/crème/cuivre, Bricolage Grotesque + Space Grotesk.
 - Suite verte avant toute release : `npx vitest run` + `npx playwright test` + `npx tsc --noEmit`.
 - Une donnée n'est jamais détruite implicitement (suppressions explicites et confirmées).

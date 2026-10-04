@@ -4,6 +4,19 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [4.0.0] — 2026-10-04
+
+### Ajouté
+- **L'application parle anglais** — un sélecteur FR/EN (menu profil et accueil non connecté),
+  un cookie `wsp_lang`, des dictionnaires maison typés (zéro dépendance) ; le français reste
+  la langue par défaut.
+  - Toute l'interface est traduite : étagère, ludothèque, soirées, tirage, verdicts, profil,
+    FAQ, bugs.
+  - La langue suit le compte (`users.lang`), posée au login.
+  - Dates et nombres localisés.
+  - Au passage, quelques accords de pluriel français corrigés (« 1 joueur » et non
+    « 1 joueurs », « n'ont » et non « n'aont »).
+
 ## [3.8.0] — 2026-10-04
 
 ### Ajouté
