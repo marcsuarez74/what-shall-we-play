@@ -54,6 +54,12 @@ describe('corrigerNuit', () => {
     expect(corrigerNuit(n.nightId, n.marc, { scores: { [n.marc]: 82 } })).toEqual({ ok: true });
     expect(getNightScores(n.nightId)[0].score).toBe(82);
   });
+  it('champ vidé (null) → la ligne de score est supprimée ; nombre du même appel upserté ; null d\'un absent → 400', () => {
+    const n = nuitTerminee(); // marc 78, lea 71, tous deux présents
+    expect(corrigerNuit(n.nightId, n.marc, { scores: { [n.marc]: null, [n.lea]: 72 } })).toEqual({ ok: true });
+    expect(getNightScores(n.nightId).map((s) => [s.user_id, s.score])).toEqual([[n.lea, 72]]); // marc supprimé, lea upsertée
+    expect((corrigerNuit(n.nightId, n.marc, { playerIds: [n.marc], scores: { [n.lea]: null } }) as { status: number }).status).toBe(400); // absent
+  });
   it('seule une nuit terminée se corrige (409) ; joueur inconnu (400)', () => {
     const marc = (registerUser(`e-vif-${Math.random().toString(36).slice(2, 8)}`, '1234') as { id: number }).id;
     const nightId = createNight(marc, [marc]); // status 'creation'

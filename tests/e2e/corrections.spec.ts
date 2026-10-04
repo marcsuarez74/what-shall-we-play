@@ -45,6 +45,36 @@ test('corriger un score → le podium et la page se mettent à jour', async ({ p
   await expect(page.locator('.pod1 .sc')).toContainText('82');
 });
 
+test('retrait d\'un participant scoré → enregistré, podium à un seul score, un seul chip', async ({ page, browser }) => {
+  const s = Date.now().toString(36);
+  await register(page, `rt-${s}`);
+  const createurId = await monId(page);
+  // second compte dans un second contexte (idiome du test non-membre)
+  const second = await (await browser.newContext()).newPage();
+  await register(second, `rt2-${s}`);
+  const secondId = await monId(second); // /api/me de SON contexte
+  const gameId = await newGame(page, `Cascadia-rt-${s}`, 'grand');
+  const { nightId } = await (await page.request.post('/api/nights', { data: { playerIds: [] } })).json() as { nightId: number };
+  await page.request.patch(`/api/nights/${nightId}`, { data: { playerIds: [createurId, secondId] } }); // branche v1 : nuit en préparation
+  await putOnShelf(page, gameId, nightId);
+  await page.request.post('/api/draw', { data: { nightId, gameIds: [gameId] } });
+  await page.request.post(`/api/nights/${nightId}/box-out`, { data: { gameId } });
+  // wrapper { scores } obligatoire (cf. partieTerminee) — deux participants scorés
+  await page.request.post(`/api/nights/${nightId}/end`, { data: { scores: { [createurId]: 24, [secondId]: 71 } } });
+  await page.goto(`/nights/${nightId}`);
+  await page.getByRole('button', { name: 'Corriger cette partie' }).click();
+  await page.getByRole('button', { name: `rt2-${s} ✕` }).click(); // décocher le second participant scoré
+  // attendre le PATCH (idiome « pastille ») : l'ancien code répondait 400 « Score invalide »
+  const patch = page.waitForResponse((r) => r.url().endsWith(`/api/nights/${nightId}`) && r.request().method() === 'PATCH');
+  await page.getByRole('button', { name: 'Enregistrer' }).click();
+  expect((await patch).status()).toBe(200);
+  await expect(page.locator('p[role="alert"]')).toHaveCount(0); // aucune erreur affichée
+  await expect(page.locator('.pod1 .sc')).toContainText('24'); // podium : le score du créateur seul
+  await page.getByRole('button', { name: 'Corriger cette partie' }).click();
+  await expect(page.locator('.corriger-chip:not(.hors)')).toHaveCount(1); // un seul participant au retour
+  await expect(page.locator('.corriger-chip:not(.hors)')).toContainText(`rt-${s}`);
+});
+
 test('changer le jeu → alerte, puis verdicts réinitialisés (zéro)', async ({ page }) => {
   const s = Date.now().toString(36);
   const { nightId } = await partieTerminee(page, `ver-${s}`, 20);

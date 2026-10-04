@@ -42,7 +42,9 @@ export default function CorrigerPartie({ nightId, playedAt, gameId, titreJeu, jo
       method: 'PATCH', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         playedAt: date, gameId: jeu, playerIds: presents,
-        scores: Object.fromEntries(Object.entries(valeurs).filter(([, v]) => v !== '').map(([k, v]) => [k, Number(v)])),
+        // Participants présents seulement (le retrait d'un scoré ne renvoie plus son
+        // score → « Score invalide ») ; champ vidé = null = suppression du score.
+        scores: Object.fromEntries(presents.map((id) => [String(id), (valeurs[id] ?? '').trim() === '' ? null : Number(valeurs[id])])),
       }),
     });
     setOccupe(false);
@@ -62,15 +64,17 @@ export default function CorrigerPartie({ nightId, playedAt, gameId, titreJeu, jo
 
   const detailScores = scores.filter((s) => s.score !== null).map((s) => `${s.pseudo} ${s.score}`).join(' · ') || '—';
   const detailVerdicts = `${compteurs.adore} 😍 · ${compteurs.bien} 🙂 · ${compteurs.neutre} 😐`;
-  const presentsLignes = presents.map((id) => {
-    const j = joueurs.find((x) => x.id === id) ?? candidats.find((x) => x.id === id)!;
-    return (
+  const jDe = (id: number) => joueurs.find((x) => x.id === id) ?? candidats.find((x) => x.id === id);
+  const presentsLignes = presents.flatMap((id) => {
+    const j = jDe(id);
+    if (!j) return []; // props rafraîchies entre-temps : id résolu nulle part → sauté, jamais de crash
+    return [(
       <div className="corriger-score" key={id}>
         <span>{j.pseudo}</span>
         <input aria-label={t('corriger.scoreDe', { pseudo: j.pseudo })} inputMode="numeric"
           value={valeurs[id] ?? ''} onChange={(e) => setValeurs((v) => ({ ...v, [id]: e.target.value }))} />
       </div>
-    );
+    )];
   });
   const hors = candidats.filter((c) => !presents.includes(c.id));
 
@@ -98,11 +102,14 @@ export default function CorrigerPartie({ nightId, playedAt, gameId, titreJeu, jo
             <div className="corriger-champ">
               <span>{t('corriger.participants')}</span>
               <div className="corriger-chips">
-                {presents.map((id) => (
-                  <button type="button" key={id} className="corriger-chip" onClick={() => basculer(id)}>
-                    {(joueurs.find((x) => x.id === id) ?? candidats.find((x) => x.id === id))!.pseudo} ✕
-                  </button>
-                ))}
+                {presents.map((id) => {
+                  const j = jDe(id);
+                  return j ? (
+                    <button type="button" key={id} className="corriger-chip" onClick={() => basculer(id)}>
+                      {j.pseudo} ✕
+                    </button>
+                  ) : null; // id stale : sauté
+                })}
                 {hors.map((c) => (
                   <button type="button" key={c.id} className="corriger-chip hors" onClick={() => basculer(c.id)}>
                     {t('corriger.ajouter')} · {c.pseudo}

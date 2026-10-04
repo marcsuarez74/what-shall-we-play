@@ -2251,6 +2251,7 @@ a.btn-go.as-link { display: flex; align-items: center; justify-content: center; 
 .corriger-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .corriger-chip { display: inline-flex; align-items: center; gap: 6px; background: var(--surface-plus); color: var(--creme); border-radius: 999px; padding: 5px 10px; font-size: 12.5px; font-weight: 600; cursor: pointer; border: none; font-family: inherit; }
 .corriger-chip.hors { background: transparent; border: 1px dashed color-mix(in srgb, var(--doux) 55%, transparent); color: var(--doux-clair); }
+.corriger-chip[disabled] { opacity: 0.55; cursor: default; } /* l'auteur (non-décochable) */
 .corriger-score { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; }
 .corriger-score input { width: 84px; text-align: center; font-family: inherit; font-size: 15px; font-weight: 700; color: var(--creme); background: var(--noyer); border: 1px solid color-mix(in srgb, var(--doux) 40%, transparent); border-radius: 10px; padding: 8px 6px; }
 .btn-cuivre { width: 100%; background: var(--cuivre); color: var(--noyer); font-family: inherit; font-size: 14px; font-weight: 700; border: none; border-radius: 12px; padding: 11px 16px; cursor: pointer; }

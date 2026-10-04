@@ -149,7 +149,9 @@ function datePasseeValide(s: string): boolean {
 // Droits : créateur OU participant (choix client). Le changement de jeu
 // réinitialise les verdicts de la nuit — l'UI alerte et confirme avant d'envoyer.
 // Le retrait d'un participant emporte ses scores et ses votes (pas de fantôme).
-export type NuitPatch = { playedAt?: string; gameId?: number; playerIds?: number[]; scores?: Record<string, number> };
+// Un score à null (champ vidé dans l'UI) supprime la ligne du participant présent ;
+// un nombre la met à jour. creerNuitRetro, lui, reste nombres seuls.
+export type NuitPatch = { playedAt?: string; gameId?: number; playerIds?: number[]; scores?: Record<string, number | null> };
 export function corrigerNuit(nightId: number, userId: number, patch: NuitPatch, lang: Lang = 'fr'): { ok: true } | NightStateError {
   const night = getNight(nightId);
   if (!night) return { error: t(lang, 'erreurs.soireeIntrouvable'), status: 404 };
@@ -171,7 +173,8 @@ export function corrigerNuit(nightId: number, userId: number, patch: NuitPatch, 
   const joueursFinaux = new Set(patch.playerIds ?? (db.prepare('SELECT user_id FROM night_players WHERE night_id = ?').all(nightId) as { user_id: number }[]).map((r) => r.user_id));
   if (patch.scores) {
     for (const [k, v] of Object.entries(patch.scores))
-      if (!joueursFinaux.has(Number(k)) || !Number.isFinite(v)) return { error: t(lang, 'soiree.errScoreInvalide'), status: 400 };
+      // null = champ vidé = suppression ; un nombre sinon — tout le reste est un 400
+      if (!joueursFinaux.has(Number(k)) || (v !== null && !Number.isFinite(v))) return { error: t(lang, 'soiree.errScoreInvalide'), status: 400 };
   }
   db.transaction(() => {
     if (patch.playedAt !== undefined) db.prepare('UPDATE nights SET played_at = ? WHERE id = ?').run(patch.playedAt, nightId);
@@ -190,7 +193,11 @@ export function corrigerNuit(nightId: number, userId: number, patch: NuitPatch, 
     }
     if (patch.scores) {
       const ins = db.prepare('INSERT OR REPLACE INTO night_scores (night_id, user_id, score) VALUES (?, ?, ?)');
-      for (const [k, v] of Object.entries(patch.scores)) ins.run(nightId, Number(k), Number(v));
+      const del = db.prepare('DELETE FROM night_scores WHERE night_id = ? AND user_id = ?');
+      for (const [k, v] of Object.entries(patch.scores)) {
+        if (v === null) del.run(nightId, Number(k)); // champ vidé → score supprimé (suppression explicite)
+        else ins.run(nightId, Number(k), Number(v));
+      }
     }
   })();
   notifyNight(nightId); // idiome existant (pas de canal SSE nouveau) — les vues RSC se rafraîchissent

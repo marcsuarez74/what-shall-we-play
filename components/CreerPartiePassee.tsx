@@ -50,11 +50,15 @@ export default function CreerPartiePassee({ jeux, joueurs, moiId }: { jeux: Game
       <div className="corriger-champ">
         <span>{t('corriger.participants')}</span>
         <div className="corriger-chips">
-          {joueurs.map((j) => (
-            <button type="button" key={j.id} className={'corriger-chip' + (presents.includes(j.id) ? '' : ' hors')} onClick={() => basculer(j.id)}>
-              {presents.includes(j.id) ? `${j.pseudo} ✕` : `${t('corriger.ajouter')} · ${j.pseudo}`}
-            </button>
-          ))}
+          {joueurs.map((j) => {
+            const soimeme = j.id === moiId; // l'auteur reste dans la partie : le serveur le ré-ajoute de toute façon (lib/nights.ts)
+            return (
+              <button type="button" key={j.id} disabled={soimeme} className={'corriger-chip' + (presents.includes(j.id) ? '' : ' hors')}
+                onClick={() => basculer(j.id)}>
+                {presents.includes(j.id) ? `${j.pseudo} ✕` : `${t('corriger.ajouter')} · ${j.pseudo}`}
+              </button>
+            );
+          })}
         </div>
       </div>
       <div className="corriger-champ">
