@@ -197,6 +197,17 @@ export function corrigerNuit(nightId: number, userId: number, patch: NuitPatch, 
   return { ok: true };
 }
 
+// v4.2.0 — supprimer une partie : créateur OU participant (choix client). Les tables
+// liées partent en CASCADE (joueurs, jeux d'étagère, scores, picks, verdicts) —
+// l'UI a demandé confirmation en listant ce qui disparaît (garde-fou AGENTS.md).
+export function supprimerNuit(nightId: number, userId: number, lang: Lang = 'fr'): { ok: true } | NightStateError {
+  const night = getNight(nightId);
+  if (!night) return { error: t(lang, 'erreurs.soireeIntrouvable'), status: 404 };
+  if (!userCanAccessNight(userId, nightId)) return { error: t(lang, 'erreurs.soireeIntrouvable'), status: 404 };
+  getDb().prepare('DELETE FROM nights WHERE id = ?').run(nightId);
+  return { ok: true };
+}
+
 // LA boîte de la partie (une seule, jamais la liste des relances).
 export function getNightGame(nightId: number): Game | null {
   const night = getNight(nightId);

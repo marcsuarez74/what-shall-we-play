@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { registerUser } from '@/lib/auth';
 import { createGame } from '@/lib/games';
-// Tasks 2-3 étendront cet import avec supprimerNuit puis creerNuitRetro (et getMyParties en Task 5).
-import { createNight, corrigerNuit, getNight, getNightScores, getNightPlayers } from '@/lib/nights';
+// Task 3 étendra cet import avec creerNuitRetro (et getMyParties en Task 5).
+import { createNight, corrigerNuit, getNight, getNightScores, getNightPlayers, supprimerNuit } from '@/lib/nights';
 import { poserVerdict } from '@/lib/verdicts';
 import { getDb } from '@/lib/db';
 
@@ -61,5 +61,24 @@ describe('corrigerNuit', () => {
     expect((corrigerNuit(nightId, marc, { playedAt: hier }) as { status: number }).status).toBe(409);
     const n = nuitTerminee();
     expect((corrigerNuit(n.nightId, n.marc, { playerIds: [999999] }) as { status: number }).status).toBe(400);
+  });
+});
+
+describe('supprimerNuit', () => {
+  it('créateur OU participant supprime ; un autre reçoit 404', () => {
+    const n = nuitTerminee();
+    expect(supprimerNuit(n.nightId, n.lea)).toEqual({ ok: true });
+    const n2 = nuitTerminee();
+    expect((supprimerNuit(n2.nightId, n2.autre) as { status: number }).status).toBe(404);
+    expect(getNight(n2.nightId)).not.toBeNull();
+  });
+  it('CASCADE : nuit avec picks → joueurs, scores, picks, verdicts tous partis', () => {
+    const n = nuitTerminee();
+    getDb().prepare('INSERT INTO picks (night_id, game_id, spinner_id) VALUES (?, ?, ?)').run(n.nightId, n.game, n.marc);
+    poserVerdict(n.nightId, n.marc, 'bien');
+    expect(supprimerNuit(n.nightId, n.marc)).toEqual({ ok: true });
+    expect(getNight(n.nightId)).toBeNull();
+    for (const table of ['night_players', 'night_scores', 'picks', 'night_verdicts'])
+      expect((getDb().prepare(`SELECT COUNT(*) AS c FROM ${table} WHERE night_id = ?`).get(n.nightId) as { c: number }).c).toBe(0);
   });
 });
