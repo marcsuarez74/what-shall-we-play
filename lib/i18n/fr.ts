@@ -492,5 +492,7 @@ export const fr = {
   'compte.errAucuneImage': 'Aucune image reçue',
   'compte.errImagePoids': 'Image : 5 Mo maximum',
   'compte.errCodeSuppression': 'Code incorrect',
+  // Meta (layout — metadata du document, via generateMetadata + getLang).
+  'meta.description': "L'étagère qui tire le jeu du soir à la roue.",
 } as const;
 export type CléDict = keyof typeof fr;
