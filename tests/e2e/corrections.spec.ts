@@ -97,3 +97,57 @@ test('date future → message d\'erreur affiché, rien n\'enregistré', async ({
   await page.getByRole('button', { name: 'Enregistrer' }).click();
   await expect(page.locator('p[role="alert"]')).toContainText('Date invalide'); // clé existante réutilisée
 });
+
+test('créer une partie passée en un geste → page terminée, Mes parties, stats', async ({ page }) => {
+  const s = Date.now().toString(36);
+  await register(page, `retro-${s}`);
+  const gameId = await newGame(page, `Everdell-${s}`, 'moyen');
+  await page.goto('/profil');
+  await page.getByRole('button', { name: '＋ Créer une partie passée' }).click();
+  await page.getByLabel('Date de la partie').fill(hier);
+  await page.getByLabel('Jeu joué').selectOption(String(gameId));
+  await page.getByLabel(`Score de retro-${s}`).fill('63');
+  await page.getByRole('button', { name: 'Créer la partie' }).click();
+  await page.waitForURL('**/nights/**');
+  await expect(page.locator('.badge-etat.b-term')).toBeVisible(); // badge « Terminée »
+  await expect(page.locator('.pod1')).toContainText('63');
+  await page.goto('/profil');
+  await expect(page.locator('.mes-parties .mp-row').first()).toContainText(`Everdell-${s}`);
+  await expect(page.locator('.mp-pastille')).toHaveCount(0); // les scores sont là
+});
+
+// partieTerminee(page, pseudo) SANS 3e arg : la nuit se termine sans scores
+// (score === undefined → scores = {}). Le `{}` du brief ne passe ni tsc
+// (score?: number) ni endNight (Number.isFinite({}) = false → 400, nuit jamais
+// terminée) — même idiome que les tests df- et nm- ci-dessus.
+test('partie terminée sans scores → pastille « Scores à saisir » dans Mes parties', async ({ page }) => {
+  const s = Date.now().toString(36);
+  const { nightId } = await partieTerminee(page, `ps-${s}`); // terminée SANS scores
+  await page.goto('/profil');
+  const ligne = page.locator('.mes-parties .mp-row', { hasText: `Cascadia-ps-${s}` });
+  await expect(ligne).toContainText('Scores à saisir');
+  // correction depuis la page : la pastille disparaît
+  await page.goto(`/nights/${nightId}`);
+  await page.getByRole('button', { name: 'Corriger cette partie' }).click();
+  await page.getByLabel(`Score de ps-${s}`).fill('30');
+  // attendre le PATCH : click() ne couvre pas le fetch async — une navigation
+  // immédiate l'aborterait (trace : status -1), la correction ne part jamais.
+  const corrige = page.waitForResponse((r) => r.url().endsWith(`/api/nights/${nightId}`) && r.request().method() === 'PATCH');
+  await page.getByRole('button', { name: 'Enregistrer' }).click();
+  await corrige;
+  await page.goto('/profil');
+  await expect(page.locator('.mp-pastille')).toHaveCount(0);
+});
+
+test('date de demain au formulaire rétro → erreur affichée', async ({ page }) => {
+  const s = Date.now().toString(36);
+  await register(page, `rd-${s}`);
+  const gameId = await newGame(page, `Azul-rd-${s}`, 'petit');
+  await page.goto('/profil');
+  await page.getByRole('button', { name: '＋ Créer une partie passée' }).click();
+  await page.getByLabel('Date de la partie').fill(demain);
+  await page.getByLabel('Jeu joué').selectOption(String(gameId));
+  await page.getByRole('button', { name: 'Créer la partie' }).click();
+  // p[role="alert"] : ruling Task 4 — le route announcer de Next fausse getByRole('alert')
+  await expect(page.locator('p[role="alert"]')).toContainText('Date invalide');
+});

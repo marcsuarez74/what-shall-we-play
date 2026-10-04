@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { registerUser } from '@/lib/auth';
 import { createGame } from '@/lib/games';
-// Task 5 étendra cet import avec getMyParties.
 import { createNight, corrigerNuit, getNight, getNightScores, getNightPlayers, supprimerNuit, creerNuitRetro } from '@/lib/nights';
 import { poserVerdict } from '@/lib/verdicts';
 import { getDb } from '@/lib/db';
@@ -104,5 +103,22 @@ describe('creerNuitRetro', () => {
     expect((creerNuitRetro(marc, { playedAt: demain, gameId: game, playerIds: [marc] }) as { status: number }).status).toBe(400);
     const res = creerNuitRetro(marc, { playedAt: hier, gameId: game, playerIds: [marc], scores: { [999999]: 5 } });
     expect((res as { status: number }).status).toBe(400);
+  });
+});
+
+describe('getMyParties (v4.2.0)', () => {
+  it('liste les parties sans scores (pastille) et cache celles des autres', async () => {
+    const { getMyParties } = await import('@/lib/users');
+    const marc = (registerUser(`e-mp-${Math.random().toString(36).slice(2, 8)}`, '1234') as { id: number }).id;
+    const autre = (registerUser(`e-mp2-${Math.random().toString(36).slice(2, 8)}`, '1234') as { id: number }).id;
+    const game = createGame(marc, { title: 'Harmonies', box_format: 'petit' });
+    const sansScores = creerNuitRetro(marc, { playedAt: hier, gameId: game, playerIds: [marc] });
+    const avecScores = creerNuitRetro(marc, { playedAt: hier, gameId: game, playerIds: [marc], scores: { [marc]: 10 } });
+    const dAutre = creerNuitRetro(autre, { playedAt: hier, gameId: game, playerIds: [autre] }); // pas à marc
+    const lignes = getMyParties(marc, 10);
+    const parId = Object.fromEntries(lignes.map((l) => [l.id, l]));
+    expect(parId[(sansScores as { nightId: number }).nightId].a_scores).toBe(0);
+    expect(parId[(avecScores as { nightId: number }).nightId].a_scores).toBe(1);
+    expect(lignes.some((l) => l.id === (dAutre as { nightId: number }).nightId)).toBe(false);
   });
 });

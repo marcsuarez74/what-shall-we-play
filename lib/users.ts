@@ -40,21 +40,25 @@ export function getProfileStats(userId: number): {
   };
 }
 
-// « Mes parties » : mes soirées terminées où j'ai un score, la plus récente d'abord.
-// La médaille n'est PAS stockée : la page (côté serveur) recalcule mon rang via
+// « Mes parties » : mes soirées terminées (créateur ou participant), la plus récente
+// d'abord. La médaille n'est PAS stockée : la page (côté serveur) recalcule mon rang via
 // rankScores(getNightScores(id)) — au plus `limit` soirées, pas de N+1 client.
 // mon_verdict (LEFT JOIN nuit+joueur) : null tant que je n'ai pas jugé la boîte —
 // la ligne affiche alors le rappel « Donne ton verdict ».
 export function getMyParties(userId: number, limit = 6) {
+  // v4.2.0 : les parties terminées SANS scores apparaissent (a_scores=0, pastille
+  // « Scores à saisir »). Le filtre créateur/participant remplace celui qu'imposait
+  // l'ancien INNER JOIN night_scores — sans lui, les nuits d'autrui fuieraient.
   return getDb().prepare(`
-    SELECT n.id, n.played_at, g.title AS game_title, g.cover_path, g.cover_url, ns.score, nv.verdict AS mon_verdict
+    SELECT n.id, n.played_at, g.title AS game_title, g.cover_path, g.cover_url, ns.score, nv.verdict AS mon_verdict,
+      EXISTS(SELECT 1 FROM night_scores x WHERE x.night_id = n.id) AS a_scores
     FROM nights n
-    JOIN night_scores ns ON ns.night_id = n.id AND ns.user_id = ?
+    LEFT JOIN night_scores ns ON ns.night_id = n.id AND ns.user_id = ?
     LEFT JOIN games g ON g.id = n.game_id
     LEFT JOIN night_verdicts nv ON nv.night_id = n.id AND nv.user_id = ?
-    WHERE n.status = 'termine'
+    WHERE n.status = 'termine' AND (n.creator_id = ? OR EXISTS (SELECT 1 FROM night_players np WHERE np.night_id = n.id AND np.user_id = ?))
     ORDER BY n.played_at DESC, n.id DESC LIMIT ?`)
-    .all(userId, userId, limit) as { id: number; played_at: string; game_title: string | null; cover_path: string | null; cover_url: string | null; score: number | null; mon_verdict: Verdict | null }[];
+    .all(userId, userId, userId, userId, limit) as { id: number; played_at: string; game_title: string | null; cover_path: string | null; cover_url: string | null; score: number | null; mon_verdict: Verdict | null; a_scores: number }[];
 }
 
 export function setSticker(userId: number, sticker: unknown, lang: Lang = 'fr'): { ok: true } | { error: string; status: number } {

@@ -210,6 +210,12 @@ export const en: Record<CléDict, ValeurDict> = {
   'corriger.garder': 'Keep it',
   'corriger.confirmerSupprimer': 'Delete',
   'corriger.droits': 'The creator and the players can correct or delete.',
+  // v4.2.0 — add a past game (mockup tab 3) + my games.
+  'parties.creerPassee': '＋ Add a past game',
+  'parties.creerPasseeIntro': 'Played without the app? Log it in one go — it lands in everyone’s stats.',
+  'parties.alerteDate': 'The date must be in the past or today — for an upcoming game, use the planner.',
+  'parties.creerBouton': 'Create the game',
+  'parties.pastilleScores': 'Scores to enter',
   // Draw screen (TirageClient) + /api/draw route.
   'tirage.roueTourne': 'The wheel is spinning…',
   'tirage.roueAParle': 'THE WHEEL HAS SPOKEN',

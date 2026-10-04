@@ -2263,3 +2263,8 @@ a.btn-go.as-link { display: flex; align-items: center; justify-content: center; 
 .corriger-actions { display: flex; gap: 8px; }
 .corriger-actions button { flex: 1; font-family: inherit; font-weight: 700; font-size: 14px; border-radius: 12px; padding: 11px 16px; cursor: pointer; background: transparent; color: var(--doux-clair); border: 1px solid color-mix(in srgb, var(--doux) 45%, transparent); }
 .corriger-actions .btn-rouge { margin-top: 0; width: auto; }
+
+/* v4.2.0 — créer une partie passée + Mes parties */
+.cp-creer { background: none; border: none; color: var(--cuivre); font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; padding: 0; margin-bottom: 10px; }
+.cp-form { background: var(--surface); border: 1px solid color-mix(in srgb, var(--doux) 30%, transparent); border-radius: 16px; padding: 14px; margin: 10px 0 14px; display: flex; flex-direction: column; gap: 12px; }
+.mp-pastille { display: inline-block; width: fit-content; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: color-mix(in srgb, var(--ambre) 18%, transparent); color: #EAD9A8; }

@@ -213,6 +213,12 @@ export const fr = {
   'corriger.garder': 'Garder',
   'corriger.confirmerSupprimer': 'Supprimer',
   'corriger.droits': 'Le créateur et les participants peuvent corriger ou supprimer.',
+  // v4.2.0 — créer une partie passée (maquette onglet 3) + Mes parties.
+  'parties.creerPassee': '＋ Créer une partie passée',
+  'parties.creerPasseeIntro': 'On a joué sans l’app ? Note tout d’un coup — la partie arrivera dans les stats de tout le monde.', // apostrophes typographiques
+  'parties.alerteDate': 'La date doit être passée ou aujourd’hui — pour une partie à venir, passe par « Planifier ».', // apostrophe typographique
+  'parties.creerBouton': 'Créer la partie',
+  'parties.pastilleScores': 'Scores à saisir',
   // Écran du tirage (TirageClient) + route /api/draw.
   'tirage.roueTourne': 'La roue tourne…',
   'tirage.roueAParle': 'LA ROUE A PARLÉ',
