@@ -12,7 +12,7 @@
 | 1 | Vote sur l'étagère 👍 — ✓ v3.5.0 | 🟡 M | Indépendant, petit, très « What Shall We Play ? » |
 | 2 | Joueurs invités (sans compte) | 🟡 M | LE débloqueur des soirées réelles ; se combine avec le vote |
 | 3 | Import de collection BGG — ✓ v3.6.0 | 🟢 S | Supprime le plus gros frottement : saisir ses jeux |
-| 4 | Le verdict du jeu 😍🙂😐 | 🟢 S | Une ligne d'état, un gros effet sur les stats et les tirages |
+| 4 | Le verdict du jeu 😍🙂😐 — ✓ v3.7.0 | 🟢 S | Une ligne d'état, un gros effet sur les stats et les tirages |
 | 5 | Ajout au calendrier | 🟢 S | Minuscule, collé au flow WhatsApp existant |
 | 6 | Suggestions intelligentes | 🟡 M | La roue garde le dernier mot, mais informée (données BGG déjà là) |
 | 7 | Mon cercle d'amis | 🔴 L | Le socle social : qui voit qui — le prêt s'appuiera dessus |
