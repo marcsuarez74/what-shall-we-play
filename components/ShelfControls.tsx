@@ -24,7 +24,7 @@ export default function ShelfControls({ filters, setFilters, visible, total, wit
   total: number;
   /** Familles Boîte : pour la ludothèque (l'étagère groupe déjà ses blocs par format). */
   withFormat?: boolean;
-  /** Complément du compteur ; absent → « disponibles ce soir », chaîne vide → rien. */
+  /** Complément du compteur ; absent → « disponibles pour la partie », chaîne vide → rien. */
   countHint?: string;
 }) {
   const { lang, t } = useI18n();

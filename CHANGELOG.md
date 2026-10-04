@@ -4,6 +4,19 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [4.1.0] — 2026-10-04
+
+### Ajouté
+- Tirage : un seul jeu dans la sélection → verdict direct, sans animation de roue
+  (kicker « Une seule boîte en lice »).
+
+### Modifié
+- Le vocabulaire passe de « soirée » à « partie » partout (FR et EN « game ») :
+  une partie peut se jouer à tout moment de la journée — libellés, erreurs,
+  messages de partage WhatsApp, meta description et FAQ (« la partie du jour »
+  remplace « le jeu du soir »).
+- La section du jour du QG s'appelle « Aujourd'hui » (et plus « Ce soir »).
+
 ## [4.0.0] — 2026-10-04
 
 ### Ajouté

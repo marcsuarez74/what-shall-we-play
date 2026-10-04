@@ -31,6 +31,7 @@ export default function TirageClient({ nightId, games, waitingPseudos, startTime
   const [error, setError] = useState<string | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const started = useRef(false); // un seul POST au montage (double-render strict/dev)
+  const roueInutile = games.length === 1; // un seul jeu : rien à départager, verdict direct
   const router = useRouter();
 
   // Un tirage = POST /api/draw (le hasard et l'enregistrement sont côté serveur),
@@ -48,10 +49,17 @@ export default function TirageClient({ nightId, games, waitingPseudos, startTime
       if (!res.ok) { setError(data.error ?? t('tirage.errGen')); setPhase('error'); return; }
       const idx = games.findIndex((g) => g.id === Number(data.gameId));
       if (idx === -1) { setError(t('tirage.errJeuHorsSelection')); setPhase('error'); return; }
+      setPicked(games[idx]);
+      if (games.length === 1) {
+        // v4.1.0 : un seul jeu en lice — pas d'animation, verdict direct.
+        // Le POST /api/draw reste la source (hasard + état partagé côté serveur).
+        setPhase('verdict');
+        navigator.vibrate?.(80);
+        return;
+      }
       const count = games.length;
       const jitter = jitterFor(count); // échantillonné UNE fois par tirage (pas par rendu)
       const target = finalRotation(idx, count, jitter);
-      setPicked(games[idx]);
       // Même point d'arrivée que target (mod 360), toujours ≥ 5 tours en avant
       setRotation((cur) => cur + ((((target - cur) % 360) + 360) % 360) + 5 * 360);
       const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -104,14 +112,16 @@ export default function TirageClient({ nightId, games, waitingPseudos, startTime
 
   return (
     <main className="tirage-screen">
-      <div className={'tirage-stage' + (phase === 'enjeu' ? ' voilee' : '')}>
-        <Wheel games={games} rotation={rotation} />
-        {phase === 'spin' && <p className="tirage-hint">{t('tirage.roueTourne')}</p>}
-      </div>
+      {!roueInutile && (
+        <div className={'tirage-stage' + (phase === 'enjeu' ? ' voilee' : '')}>
+          <Wheel games={games} rotation={rotation} />
+          {phase === 'spin' && <p className="tirage-hint">{t('tirage.roueTourne')}</p>}
+        </div>
+      )}
 
       {phase === 'verdict' && picked && (
         <section className="verdict" aria-live="polite">
-          <p className="verdict-kicker">{t('tirage.roueAParle')}</p>
+          <p className="verdict-kicker">{roueInutile ? t('tirage.unSeulJeu') : t('tirage.roueAParle')}</p>
           <div className="verdict-spot">
             {cover
               ? <img src={cover} alt={picked.title} />

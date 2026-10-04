@@ -19,7 +19,7 @@ import { useI18n } from './LanguageProvider';
 // Le tirage se fait parmi toutes les boîtes. Chacun VALIDE quand sa sélection
 // est complète (signal partagé, pas verrou) ; le créateur lance, il voit qui
 // est prêt — un appui si tout le monde a validé, double-appui « Sûr ? » sinon.
-// v3.3 — la carte porte l'ÉTAT de la soirée (badge), et une fois la boîte
+// v3.3 — la carte porte l'ÉTAT de la partie (badge), et une fois la boîte
 // sortie (en_jeu) l'étagère gèle : bandeau vert, plus d'ajout ni de validation.
 export default function ShelfClient({ night, partyGame, players, games, myLibrary, users, plays, votes, me }: {
   night: Night; partyGame: Game | null; players: UserLite[]; games: Game[]; myLibrary: Game[]; users: UserLite[]; plays: Record<number, number>;
@@ -43,7 +43,7 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
   // En jeu : LA boîte de la partie a quitté l'étagère — elle ne revient pas dans les rangées.
   const byFormat = useMemo(() => FORMATS.map((f) => ({ f, list: filtered.filter((g) => g.id !== partyGame?.id && g.box_format === f) })), [filtered, partyGame]);
 
-  // v3.5 — votes de la soirée, vus par boîte : total, c'est MON vote, prénoms.
+  // v3.5 — votes de la partie, vus par boîte : total, c'est MON vote, prénoms.
   const votesParJeu = useMemo(() => {
     const m = new Map<number, { total: number; votants: string[]; moi: boolean }>();
     for (const v of votes) {

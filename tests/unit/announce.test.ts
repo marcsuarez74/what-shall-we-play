@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { buildInviteMessage, buildResultMessage, buildPodiumMessage, frJoin } from '@/lib/announce';
 
-describe('messages de soirée', () => {
+describe('messages de partie', () => {
   it('frJoin : énumération française', () => {
     expect(frJoin(['a'])).toBe('a');
     expect(frJoin(['a', 'b'])).toBe('a et b');
@@ -31,7 +31,7 @@ describe('messages de soirée', () => {
     expect(buildResultMessage({ title: 'Azul', ownerPseudo: 'marc', waiting: ['léa', 'thibault'], time: '20:30' })).toBe(
       '🎲 Azul a été tiré au sort !\n'
       + '👉 marc ramène son jeu\n'
-      + '🕗 On attend léa et thibault — ce soir à 20:30\n'
+      + '🕗 On attend léa et thibault — à 20:30\n'
       + '🔗 etagere.marc-suarez.fr');
   });
 

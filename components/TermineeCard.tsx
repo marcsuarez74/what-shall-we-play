@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { t, type Lang } from '@/lib/i18n';
 
-// v3.3 — la soirée du jour est terminée : l'étagère repart vide, les scores
+// v3.3 — la partie du jour est terminée : l'étagère repart vide, les scores
 // vivent dans l'onglet Parties. (Le serveur ne passe que ce qui existe.)
 // Composant serveur : la langue arrive en prop depuis la page (getLang).
 export default function TermineeCard({ nightId, gameTitle, lang }: { nightId: number; gameTitle: string | null; lang: Lang }) {

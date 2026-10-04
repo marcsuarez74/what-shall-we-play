@@ -111,7 +111,7 @@ async function setupTirage(page: import('@playwright/test').Page, s: string) {
       await lancer.click();
     }
   }
-  await expect(page.getByText('LA ROUE A PARLÉ')).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByText('UNE SEULE BOÎTE EN LICE')).toBeVisible({ timeout: 20_000 });
 }
 
 test('verdict : « Annoncer sur WhatsApp » partage le bon message (partage natif)', async ({ page }) => {
@@ -200,7 +200,7 @@ test('terminer la soirée : étagère vidée, nuit conservée en historique', as
   await endPost;
 
   // « Ce soir » est vide, la nuit est dans l'historique
-  await expect(page.locator('[aria-label="Ce soir"] .empty')).toBeVisible();
+  await expect(page.locator('[aria-label="Aujourd\'hui"] .empty')).toBeVisible();
   await expect(page.locator('[aria-label="Historique"] .hist-card')).toHaveCount(1);
 
   // L'étagère revient à l'état vierge

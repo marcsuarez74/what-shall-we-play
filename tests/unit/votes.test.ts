@@ -45,7 +45,7 @@ describe('toggleNightVote', () => {
 
     getDb().prepare(`UPDATE nights SET status = 'termine' WHERE id = ?`).run(n);
     const rt = toggleNightVote(n, g, marc);
-    expect('error' in rt && rt.error).toBe('La soirée est terminée — les votes sont figés');
+    expect('error' in rt && rt.error).toBe('La partie est terminée — les votes sont figés');
     expect('error' in rt && rt.status).toBe(409);
   });
 

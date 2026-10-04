@@ -60,7 +60,7 @@ test('EN : la FAQ est traduite (12 questions, sous-titre, aria dérivé)', async
   await expect(page.locator('details.faq')).toHaveCount(12);
   await expect(page.getByText('Everything you need to know before you spin the wheel — and after.')).toBeVisible();
   await expect(page.getByLabel('FAQ: What is What Shall We Play?')).toBeVisible();
-  await expect(page.getByText('Game night', { exact: true })).toBeVisible();
+  await expect(page.getByText("Today's game", { exact: true })).toBeVisible();
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
   await ctx.close();
 });

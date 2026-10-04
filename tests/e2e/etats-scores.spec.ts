@@ -123,7 +123,7 @@ test('historique : une carte par partie, détail avec podium et partage', async 
 
   // « Ce soir » : badge d'état + jeu de la partie — les picks cumulés ont disparu
   await page.goto('/nights');
-  await expect(page.locator('[aria-label="Ce soir"] .badge-etat')).toContainText('En jeu');
+  await expect(page.locator('[aria-label="Aujourd\'hui"] .badge-etat')).toContainText('En jeu');
   await expect(page.locator('.jeu-partie')).toContainText('Cascadia');
   await expect(page.locator('.night-picks')).toHaveCount(0);
 
@@ -176,7 +176,7 @@ test('soirée terminée sans scores : détail sobre, aucune erreur', async ({ pa
   await page.waitForURL('**/nights/*');
   // détail sobre : ni podium ni partage, le message des annales
   await expect(page.locator('.sans-score')).toBeVisible();
-  await expect(page.locator('.sans-score')).toContainText('Pas de scores ce soir');
+  await expect(page.locator('.sans-score')).toContainText('Pas de scores');
   await expect(page.locator('.pod1')).toHaveCount(0);
   await expect(page.getByRole('button', { name: '💬 Partager les résultats' })).toHaveCount(0);
 });
