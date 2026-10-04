@@ -227,13 +227,16 @@ export function creerNuitRetro(userId: number, entree: { playedAt: string; gameI
       lignes.push([uid, v]);
     }
   }
-  const info = db.prepare(`INSERT INTO nights (creator_id, played_at, game_id, status, ended_at) VALUES (?, ?, ?, 'termine', datetime('now','localtime'))`)
-    .run(userId, entree.playedAt, entree.gameId);
-  const nightId = Number(info.lastInsertRowid);
-  const insP = db.prepare('INSERT OR IGNORE INTO night_players (night_id, user_id) VALUES (?, ?)');
-  for (const id of joueurs) insP.run(nightId, id);
-  const insS = db.prepare('INSERT OR REPLACE INTO night_scores (night_id, user_id, score) VALUES (?, ?, ?)');
-  for (const [uid, v] of lignes) insS.run(nightId, uid, v);
+  const nightId = db.transaction(() => {
+    const info = db.prepare(`INSERT INTO nights (creator_id, played_at, game_id, status, ended_at) VALUES (?, ?, ?, 'termine', datetime('now','localtime'))`)
+      .run(userId, entree.playedAt, entree.gameId);
+    const id = Number(info.lastInsertRowid);
+    const insP = db.prepare('INSERT OR IGNORE INTO night_players (night_id, user_id) VALUES (?, ?)');
+    for (const pid of joueurs) insP.run(id, pid);
+    const insS = db.prepare('INSERT OR REPLACE INTO night_scores (night_id, user_id, score) VALUES (?, ?, ?)');
+    for (const [uid, v] of lignes) insS.run(id, uid, v);
+    return id;
+  })();
   return { ok: true, nightId }; // pas de notifyNight : une partie du passé n'a personne en live
 }
 
