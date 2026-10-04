@@ -11,7 +11,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const nightId = Number((await params).id);
   if (!Number.isInteger(nightId) || !getNight(nightId) || !userCanAccessNight(user.id, nightId))
     return NextResponse.json({ error: 'Soirée introuvable' }, { status: 404 });
-  const { verdict } = await req.json();
+  // Corps absent ou avorté (requête coupée en plein vol) → 400 propre, pas de 500 bruyant.
+  let body: { verdict?: unknown };
+  try { body = await req.json(); } catch { return NextResponse.json({ error: 'Requête invalide' }, { status: 400 }); }
+  const { verdict } = body;
   const res = poserVerdict(nightId, user.id, verdict as Verdict);
   if ('error' in res) return NextResponse.json({ error: res.error }, { status: res.status });
   return NextResponse.json({ ok: true });

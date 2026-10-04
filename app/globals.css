@@ -2143,3 +2143,35 @@ input[type='file'] {
 a.btn-go.as-link { display: flex; align-items: center; justify-content: center; text-decoration: none; margin-top: 10px; }
 .link-import { display: block; text-align: center; margin-top: 12px; color: var(--cuivre);
   font-size: 13.5px; font-weight: 700; text-decoration: none; }
+
+/* ---------- Verdict du jeu (v3.7 — 😍🙂😐 sur la nuit terminée) ---------- */
+.verdict-bloc { margin-top: 14px; background: var(--surface);
+  border: 1px solid color-mix(in srgb, var(--cuivre) 35%, transparent); border-radius: 20px; padding: 16px; }
+.verdict-bloc .kicker { font-size: 11px; font-weight: 700; letter-spacing: .14em;
+  color: var(--cuivre); text-transform: uppercase; margin-bottom: 8px; }
+.verdict-q { font-family: var(--font-display), var(--font-ui), sans-serif; font-size: 16px; font-weight: 700; margin-bottom: 12px; }
+.verdict-q b { color: var(--cuivre); }
+.pastilles { display: flex; gap: 10px; }
+.pastille-verdict { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  background: var(--surface-plus); border: 1px solid color-mix(in srgb, var(--doux) 40%, transparent);
+  border-radius: 16px; padding: 14px 6px 10px; cursor: pointer; transition: transform .12s, border-color .12s;
+  color: var(--creme); font-family: var(--font-ui), system-ui, sans-serif; }
+.pastille-verdict:active { transform: scale(.96); }
+.pastille-verdict .emo { font-size: 30px; line-height: 1; }
+.pastille-verdict .lbl { font-size: 11px; font-weight: 600; color: var(--doux-clair); }
+.pastille-verdict[aria-pressed="true"] { border-color: var(--vert);
+  background: color-mix(in srgb, var(--vert) 18%, var(--surface-plus)); }
+.pastille-verdict[aria-pressed="true"] .lbl { color: var(--creme); }
+.verdict-note { font-size: 12px; color: var(--doux); line-height: 1.5; margin-top: 12px; }
+.verdict-note b { color: var(--doux-clair); }
+.verdict-fait { display: flex; align-items: center; gap: 8px; margin-top: 12px;
+  background: color-mix(in srgb, var(--vert) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--vert) 40%, transparent);
+  border-radius: 12px; padding: 9px 12px; font-size: 12.5px; color: var(--creme); }
+.verdict-compteurs { display: flex; align-items: center; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.verdict-compteurs .lbl-groupe { font-size: 11px; font-weight: 700; letter-spacing: .1em;
+  color: var(--doux); text-transform: uppercase; margin-right: 2px; }
+.verdict-compteurs .compteur { font-size: 12px; font-weight: 600; background: var(--surface-plus);
+  border-radius: 999px; padding: 4px 10px; color: var(--doux-clair); }
+.verdict-compteurs .compteur b { color: var(--creme); }
+.verdict-compteurs .compteur.zero { opacity: .45; }

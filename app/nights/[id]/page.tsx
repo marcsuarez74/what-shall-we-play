@@ -6,9 +6,13 @@ import { rankScores } from '@/lib/ranks';
 import { avatarSrc } from '@/lib/formats';
 import BoxImage from '@/components/BoxImage';
 import PartagerResultats from '@/components/PartagerResultats';
+import VerdictBloc from '@/components/VerdictBloc';
+import UserSync from '@/components/UserSync';
+import { verdictsDeNuit, monVerdict } from '@/lib/verdicts';
 
 // Le détail d'une soirée terminée : héros (cover + titre + date), badge « Terminée »,
-// podium (1ʳᵉ carte bordée cuivre, rangs 2/3 en duo, autres en lignes) et partage.
+// podium (1ʳᵉ carte bordée cuivre, rangs 2/3 en duo, autres en lignes), verdict du
+// jeu 😍🙂😐 et partage. UserSync : les compteurs des autres rafraîchissent en direct.
 // Visible des joueurs de la soirée seulement (userCanAccessNight — pattern existant).
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {
   const user = await getSessionUser();
@@ -24,6 +28,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
     avatarSrc(u) ? <img className="avs" src={avatarSrc(u)!} alt="" /> : <span className="avs">{u.sticker ?? '🎲'}</span>;
   return (
     <main className="page detail-page">
+      <UserSync />
       <Link className="retour-btn" href="/nights">← Parties</Link>
       <div className="dt-hero">
         {game && <span className="cov dt-cov"><BoxImage game={game} /></span>}
@@ -49,6 +54,10 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
             </div>
           )}
         </>
+      )}
+      {night.status === 'termine' && game && (
+        <VerdictBloc nightId={night.id} titreJeu={game.title}
+          initial={monVerdict(night.id, user.id)} compteurs={verdictsDeNuit(night.id)} />
       )}
       <PartagerResultats titre={game?.title ?? 'Soirée de jeux'} classement={classe.map((c) => ({ pseudo: c.pseudo, score: c.score as number, rank: c.rank }))} />
     </main>
