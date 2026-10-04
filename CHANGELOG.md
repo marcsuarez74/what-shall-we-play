@@ -4,6 +4,20 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [3.6.2] — 2026-10-04
+
+### Modifié
+- **CI plus rapide** : la suite ne tourne plus qu'une fois par itération de PR (le
+  déclenchement `push` sur les branches de feature est supprimé — la PR suffit),
+  un mini-job détecte les modifications purement documentation (`.md`, `docs/`,
+  `captures-maquette/`) et saute alors build, tests et déploiement tout en gardant
+  les checks verts, et le navigateur Playwright est mis en cache entre les runs.
+
+### Corrigé
+- **Release GitHub idempotente** : si la release existe déjà quand le workflow
+  tourne (créée en parallèle du push du tag, ou relance après échec), l'étape est
+  ignorée au lieu d'échouer en HTTP 422 « Release.tag_name already exists ».
+
 ## [3.6.1] — 2026-10-04
 
 ### Corrigé

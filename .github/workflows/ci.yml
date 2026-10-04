@@ -2,39 +2,105 @@ name: CI
 
 on:
   push:
-    branches: [main, feat/**]
+    branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+  pull-requests: read
+
 jobs:
-  build:
-    name: Build (Next.js + image Docker)
+  changes:
+    name: Détection des changements
     runs-on: ubuntu-latest
+    outputs:
+      docs: ${{ steps.filtre.outputs.docs }}
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 2
+      - name: Détecter une modification purement docs
+        id: filtre
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
+            FICHIERS=$(gh pr diff --name-only "$PR_NUMBER" 2>/dev/null || true)
+          else
+            # push sur main = commit de fusion : diff contre le parent (les fichiers de la PR)
+            FICHIERS=$(git diff --name-only HEAD^ HEAD 2>/dev/null || true)
+          fi
+          # Détection impossible → par sécurité, CI complète (docs=false)
+          if [ -z "$FICHIERS" ]; then
+            echo "docs=false" >> "$GITHUB_OUTPUT"
+            echo "Détection impossible — CI complète par sécurité."
+            exit 0
+          fi
+          echo "Fichiers modifiés :"
+          echo "$FICHIERS"
+          # docs-only ⇐ tous les fichiers sont .md, sous docs/ ou captures-maquette/
+          if echo "$FICHIERS" | grep -qvE '(^|/)[^/]+\.md$|^docs/|^captures-maquette/'; then
+            echo "docs=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "docs=true" >> "$GITHUB_OUTPUT"
+            echo "→ Modification purement docs : build, tests et déploiement sautés."
+          fi
+
+  build:
+    name: Build (Next.js + image Docker)
+    needs: changes
+    runs-on: ubuntu-latest
+    steps:
+      - name: Docs uniquement — build sauté (check maintenu vert)
+        if: needs.changes.outputs.docs == 'true'
+        run: echo "Modification purement docs — rien à construire."
+      - uses: actions/checkout@v5
+        if: needs.changes.outputs.docs != 'true'
       - uses: actions/setup-node@v5
+        if: needs.changes.outputs.docs != 'true'
         with:
           node-version: 22
           cache: npm
       - run: npm ci
+        if: needs.changes.outputs.docs != 'true'
       - run: npm run build
+        if: needs.changes.outputs.docs != 'true'
       - name: Build de l'image Docker (valide le Dockerfile + better-sqlite3 natif)
+        if: needs.changes.outputs.docs != 'true'
         run: docker build -t what-shall-we-play:ci .
 
   test:
     name: Tests (unitaires + E2E)
+    needs: changes
     runs-on: ubuntu-latest
     steps:
+      - name: Docs uniquement — tests sautés (check maintenu vert)
+        if: needs.changes.outputs.docs == 'true'
+        run: echo "Modification purement docs — rien à tester."
       - uses: actions/checkout@v5
+        if: needs.changes.outputs.docs != 'true'
       - uses: actions/setup-node@v5
+        if: needs.changes.outputs.docs != 'true'
         with:
           node-version: 22
           cache: npm
       - run: npm ci
+        if: needs.changes.outputs.docs != 'true'
       - name: Tests unitaires (Vitest)
+        if: needs.changes.outputs.docs != 'true'
         run: npm test
+      - name: Cache Playwright (Chromium)
+        if: needs.changes.outputs.docs != 'true'
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
       - name: Installer Chromium (Playwright)
+        if: needs.changes.outputs.docs != 'true'
         run: npx playwright install --with-deps chromium
       - name: Tests E2E (Playwright, dev server auto)
+        if: needs.changes.outputs.docs != 'true'
         run: npm run test:e2e
       - name: Artefacts d'échec (snapshots, traces)
         if: failure()
@@ -46,8 +112,8 @@ jobs:
 
   deploy:
     name: Déploiement VPS
-    needs: [build, test]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: [build, test, changes]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && needs.changes.outputs.docs != 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Déployer sur le VPS (pull + rebuild + restart)
