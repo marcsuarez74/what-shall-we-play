@@ -55,7 +55,7 @@ export const fr = {
   'etagere.lancer': ({ n }: Record<string, string | number>) => `Lancer · ${n}`,
   'etagere.lancementPar': 'Lancement par',
   'etagere.prets': ({ ok, total }: Record<string, string | number>) => `${ok}/${total} prêts`,
-  'etagere.pasEncoreValide': ({ n }: Record<string, string | number>) => `n'a${Number(n) > 1 ? 'ont' : ''} pas encore validé`,
+  'etagere.pasEncoreValide': ({ n }: Record<string, string | number>) => `n'${Number(n) > 1 ? 'ont' : 'a'} pas encore validé`,
   'etagere.enregistrement': 'Enregistrement…',
   'etagere.valider': 'Valider ma sélection',
   'etagere.modifierPartie': 'Modifier la partie',
