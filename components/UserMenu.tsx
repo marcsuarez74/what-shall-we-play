@@ -39,6 +39,7 @@ export default function UserMenu({ me }: { me: UserLite }) {
       <div className="user-menu">
         <Link href="/profil">Mon profil</Link>
         <button type="button" onClick={logout}>Se déconnecter</button>
+        <Link href="/faq">❓ FAQ</Link>
         <Link href={{ pathname: '/bugs', query: { depuis: pathname } }}>🐞 Rapporter un bug</Link>
         <span className="user-version">v{pkg.version}</span>
       </div>
