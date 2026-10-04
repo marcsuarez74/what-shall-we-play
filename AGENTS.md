@@ -1,7 +1,7 @@
 # AGENTS.md — What Shall We Play?
 
 Principes de travail pour tout agent (ou humain) intervenant sur ce dépôt.
-PWA Next.js de tirage au sort du jeu du soir — https://etagere.marc-suarez.fr
+PWA Next.js de tirage au sort de la partie du jour — https://etagere.marc-suarez.fr
 
 ## 1. Principe KISS (fondamental)
 - La solution la plus simple qui fait le travail, toujours.
