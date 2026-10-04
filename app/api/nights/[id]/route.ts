@@ -1,5 +1,5 @@
-// app/api/nights/[id]/route.ts — PATCH : nuit en préparation { playerIds } (v1, QG) ;
-// nuit terminée : correction partielle { playedAt?, gameId?, playerIds?, scores? } (v4.2.0).
+// app/api/nights/[id]/route.ts — PATCH { playerIds } (nuit en préparation) /
+// correction partielle { playedAt?, gameId?, playerIds?, scores? } (terminée, v4.2.0) · DELETE (supprimer).
 import { NextResponse } from 'next/server';
 import { getSessionUser } from '@/lib/session';
 import { getNight, corrigerNuit, supprimerNuit, setNightPlayers, userCanAccessNight, type NuitPatch } from '@/lib/nights';

@@ -4,6 +4,18 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [4.2.0] — 2026-10-04
+
+### Ajouté
+- **Corriger une partie** — sur la page d'une partie terminée, le créateur et les
+  participants peuvent changer le jeu (les verdicts 😍🙂😐 sont réinitialisés, avec
+  alerte), la date, les participants et les scores ; les stats de profils suivent.
+- **Supprimer une partie** — confirmation qui liste exactement ce qui disparaît
+  (scores, verdicts, historique de tirage) ; les tables liées partent en cascade.
+- **Créer une partie passée** — depuis Mes parties, un seul geste : date passée,
+  jeu, participants, scores optionnels. Pour les parties jouées sans l'app.
+- Pastille « Scores à saisir » dans Mes parties pour les parties terminées sans scores.
+
 ## [4.1.0] — 2026-10-04
 
 ### Ajouté
