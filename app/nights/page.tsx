@@ -3,6 +3,9 @@ import { getSessionUser } from '@/lib/session';
 import { getActiveNight, getPlannedNights, getHistoryCards, getNightPlayers, getNightGame } from '@/lib/nights';
 import { coverSrc } from '@/lib/formats';
 import { getDb } from '@/lib/db';
+import { t, type Lang } from '@/lib/i18n';
+import { formatDate } from '@/lib/i18n/format';
+import { getLang } from '@/lib/i18n/server';
 import type { UserLite } from '@/lib/types';
 import PlayerChip from '@/components/PlayerChip';
 import NightPlanner from '@/components/NightPlanner';
@@ -10,19 +13,16 @@ import InviteButton from '@/components/InviteButton';
 import TerminerNight from '@/components/TerminerNight';
 import UserMenu from '@/components/UserMenu';
 
-const dateFormat = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' });
-const timeFormat = new Intl.DateTimeFormat('fr-FR', { timeStyle: 'short' });
-const monthFormat = new Intl.DateTimeFormat('fr-FR', { month: 'short' });
-
 // « 2026-10-02 » → jour « 2 » + mois « oct. » — la date est le héros d'une carte programmée.
-function dayMonth(playedAt: string): { day: string; month: string } {
+function dayMonth(playedAt: string, lang: Lang): { day: string; month: string } {
   return {
     day: String(Number(playedAt.split('-')[2])),
-    month: monthFormat.format(new Date(`${playedAt}T12:00:00`)).replace('.', ''),
+    month: formatDate(lang, `${playedAt}T12:00:00`, { month: 'short' }).replace('.', ''),
   };
 }
 
 export default async function Page() {
+  const lang = await getLang();
   const user = await getSessionUser();
   if (!user) redirect('/login');
   const active = getActiveNight(user.id);
@@ -32,48 +32,52 @@ export default async function Page() {
   // Le jeu de la partie (boîte sortie) — les picks cumulés ne s'affichent plus (v3.3.0).
   const activeGame = active?.game_id ? getNightGame(active.id) : null;
   const users = getDb().prepare('SELECT id, pseudo, sticker, avatar_path FROM users ORDER BY pseudo COLLATE NOCASE').all() as UserLite[];
+  // Dates longues / heures des cartes programmées, dans la langue du cookie.
+  const dateLongue = (playedAt: string) => formatDate(lang, `${playedAt}T12:00:00`, { dateStyle: 'long' });
+  const heureCourte = (playedAt: string, start: string | null | undefined) =>
+    start ? formatDate(lang, `${playedAt}T${start}`, { timeStyle: 'short' }) : null;
 
   return (
     <main className="page">
       <div className="page-head">
-        <h1>Mes parties</h1>
+        <h1>{t(lang, 'soiree.titre')}</h1>
         <UserMenu me={user} />
       </div>
 
-      <section className="qg-section" aria-label="Ce soir">
-        <h2>Ce soir</h2>
+      <section className="qg-section" aria-label={t(lang, 'soiree.ceSoir')}>
+        <h2>{t(lang, 'soiree.ceSoir')}</h2>
         {active ? (
           <ul className="nights-list">
             <li className="night-card live">
               <div className="night-card-head">
                 {active.status === 'en_jeu'
-                  ? <span className="badge-etat b-enjeu"><span className="pt" />En jeu</span>
-                  : <span className="badge-etat b-prep"><span className="pt" />En préparation</span>}
+                  ? <span className="badge-etat b-enjeu"><span className="pt" />{t(lang, 'etagere.enJeu')}</span>
+                  : <span className="badge-etat b-prep"><span className="pt" />{t(lang, 'etagere.enPrep')}</span>}
                 {active.creator_id === user.id && <TerminerNight nightId={active.id} status={active.status} />}
               </div>
               <div className="chips">
                 {getNightPlayers(active.id).map((p) => <PlayerChip key={p.id} u={p} />)}
               </div>
-              {activeGame && <p className="jeu-partie">🎯 {activeGame.title} — jeu de la partie</p>}
+              {activeGame && <p className="jeu-partie">{t(lang, 'soiree.jeuPartie', { j: activeGame.title })}</p>}
             </li>
           </ul>
         ) : (
-          <p className="empty">Pas de partie aujourd&apos;hui — programmez-la ou lancez-la <a href="/etagere">depuis l&apos;étagère</a>.</p>
+          <p className="empty">{t(lang, 'soiree.videAvant')}<a href="/etagere">{t(lang, 'soiree.videLien')}</a>{t(lang, 'soiree.videApres')}</p>
         )}
       </section>
 
-      <section className="qg-section" aria-label="Programmées">
+      <section className="qg-section" aria-label={t(lang, 'soiree.programmees')}>
         <div className="qg-head">
-          <h2>Programmées</h2>
+          <h2>{t(lang, 'soiree.programmees')}</h2>
           <NightPlanner users={users} meId={user.id} />
         </div>
         {planned.length === 0 ? (
-          <p className="empty">Aucune partie programmée — la prochaine commence ici.</p>
+          <p className="empty">{t(lang, 'soiree.aucuneProgrammee')}</p>
         ) : (
           <ul className="nights-list">
             {planned.map((n) => {
               const players = getNightPlayers(n.id);
-              const { day, month } = dayMonth(n.played_at);
+              const { day, month } = dayMonth(n.played_at, lang);
               return (
                 <li key={n.id} className="night-card planned-card">
                   <div className="plan-date" aria-hidden="true">
@@ -82,17 +86,17 @@ export default async function Page() {
                   </div>
                   <div className="plan-body">
                     <div className="plan-when">
-                      <span className="plan-long">{dateFormat.format(new Date(`${n.played_at}T12:00:00`))}</span>
+                      <span className="plan-long">{dateLongue(n.played_at)}</span>
                       {n.start_time && (
-                        <span className="plan-time">{timeFormat.format(new Date(`${n.played_at}T${n.start_time}`))}</span>
+                        <span className="plan-time">{heureCourte(n.played_at, n.start_time)}</span>
                       )}
                     </div>
                     <div className="chips">
                       {players.map((p) => <PlayerChip key={p.id} u={p} />)}
                     </div>
                     <InviteButton
-                      dateLong={dateFormat.format(new Date(`${n.played_at}T12:00:00`))}
-                      time={n.start_time ? timeFormat.format(new Date(`${n.played_at}T${n.start_time}`)) : null}
+                      dateLong={dateLongue(n.played_at)}
+                      time={heureCourte(n.played_at, n.start_time)}
                       pseudos={players.map((p) => p.pseudo)}
                     />
                   </div>
@@ -103,8 +107,8 @@ export default async function Page() {
         )}
       </section>
 
-      <section className="qg-section" aria-label="Historique">
-        <h2>Historique</h2>
+      <section className="qg-section" aria-label={t(lang, 'soiree.historique')}>
+        <h2>{t(lang, 'soiree.historique')}</h2>
         <div className="hist-liste">
           {cartes.map((n) => {
             const cover = coverSrc({ cover_path: n.game_cover_path, cover_url: n.game_cover_url });
@@ -113,13 +117,13 @@ export default async function Page() {
                 {cover
                   ? <span className="cov hist-cov"><img src={cover} alt="" loading="lazy" /></span>
                   : <span className="cov hist-cov">🎲</span>}
-                <span className="hc"><b>{n.game_title ?? 'Soirée de jeux'}</b>
-                  <span className="gagnant">{n.gagnant_pseudo ? `👑 ${n.gagnant_pseudo} · ${n.gagnant_score} pts` : 'pas de scores'}</span></span>
-                <span className="dt"><span>{dateFormat.format(new Date(`${n.played_at}T12:00:00`))}</span></span>
+                <span className="hc"><b>{n.game_title ?? t(lang, 'soiree.sansJeu')}</b>
+                  <span className="gagnant">{n.gagnant_pseudo ? t(lang, 'soiree.gagnant', { p: n.gagnant_pseudo, s: n.gagnant_score as number }) : t(lang, 'soiree.pasDeScores')}</span></span>
+                <span className="dt"><span>{dateLongue(n.played_at)}</span></span>
               </a>
             );
           })}
-          {cartes.length === 0 && <p className="hint">Aucune partie terminée — tout est devant vous.</p>}
+          {cartes.length === 0 && <p className="hint">{t(lang, 'soiree.aucuneTerminee')}</p>}
         </div>
       </section>
     </main>

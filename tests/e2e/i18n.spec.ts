@@ -29,3 +29,23 @@ test('sans cookie : tout reste en français', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Créer mon compte' })).toBeVisible();
   await expect(page.locator('html')).toHaveAttribute('lang', 'fr');
 });
+
+// Review Focus n°4 : la route lit le cookie et renvoie l'erreur dans la langue du
+// navigateur — le client l'affiche telle quelle (TirageClient, NightPicker…).
+test('EN : les erreurs API suivent le cookie (tirage sur une sélection vide)', async ({ browser }) => {
+  const ctx = await browser.newContext();
+  await ctx.addCookies([{ name: 'wsp_lang', value: 'en', url: 'http://localhost:3000' }]);
+  const page = await ctx.newPage();
+  await page.goto('/register');
+  await page.getByLabel('Username').fill(`i18n-${Date.now().toString(36)}`);
+  await page.getByLabel('Secret code').fill('1234');
+  await page.getByRole('button', { name: 'Create my account' }).click();
+  await page.waitForURL('**/etagere');
+  // Soirée du jour créée via l'API (étagère vide) : le tirage est refusé
+  // et le message d'erreur arrive en anglais.
+  const night = await (await page.request.post('/api/nights', { data: { playerIds: [] } })).json();
+  const draw = await page.request.post('/api/draw', { data: { nightId: night.nightId, gameIds: [] } });
+  expect(draw.status()).toBe(400);
+  expect(((await draw.json()) as { error: string }).error).toBe('Empty selection');
+  await ctx.close();
+});

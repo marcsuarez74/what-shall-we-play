@@ -3,18 +3,21 @@
 import { NextResponse } from 'next/server';
 import { getSessionUser } from '@/lib/session';
 import { getNight, endNight } from '@/lib/nights';
+import { t } from '@/lib/i18n';
+import { getLang } from '@/lib/i18n/server';
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const lang = await getLang();
   const user = await getSessionUser();
-  if (!user) return NextResponse.json({ error: 'Non connecté' }, { status: 401 });
+  if (!user) return NextResponse.json({ error: t(lang, 'erreurs.nonConnecte') }, { status: 401 });
   const night = getNight(Number((await params).id));
-  if (!night) return NextResponse.json({ error: 'Soirée introuvable' }, { status: 404 });
+  if (!night) return NextResponse.json({ error: t(lang, 'erreurs.soireeIntrouvable') }, { status: 404 });
   let scores: Record<string, number> | undefined;
   try {
     const body = await req.json();
     if (body && typeof body === 'object' && body.scores && typeof body.scores === 'object') scores = body.scores;
   } catch { /* sans corps : abandon d'une soirée en préparation */ }
-  const res = endNight(night.id, user.id, scores);
+  const res = endNight(night.id, user.id, scores, lang);
   if ('error' in res) return NextResponse.json({ error: res.error }, { status: res.status });
   return NextResponse.json({ ok: true });
 }

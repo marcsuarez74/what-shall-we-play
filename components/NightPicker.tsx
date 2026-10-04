@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Night, UserLite } from '@/lib/types';
 import PlayerChip from './PlayerChip';
+import { useI18n } from './LanguageProvider';
 
 export default function NightPicker({ users, prechecked, night, withDate = false, onClose }: {
   users: UserLite[];
@@ -13,6 +14,7 @@ export default function NightPicker({ users, prechecked, night, withDate = false
   onClose?: () => void;
 }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [checked, setChecked] = useState<Set<number>>(() => new Set(prechecked));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,7 +36,7 @@ export default function NightPicker({ users, prechecked, night, withDate = false
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (withDate && !date) { setError('Choisissez une date'); return; }
+    if (withDate && !date) { setError(t('soiree.choisirDate')); return; }
     setBusy(true); setError(null);
     const res = await fetch(night ? `/api/nights/${night.id}` : '/api/nights', {
       method: night ? 'PATCH' : 'POST',
@@ -52,20 +54,20 @@ export default function NightPicker({ users, prechecked, night, withDate = false
 
   return (
     <form className="night-picker" onSubmit={submit}>
-      <h2>{night ? 'Modifier la partie' : withDate ? 'Programmer une partie' : 'Nouvelle partie'}</h2>
+      <h2>{night ? t('etagere.modifierPartie') : withDate ? t('soiree.programmer') : t('soiree.nouvellePartie')}</h2>
       {withDate && (
         <div className="plan-fields">
           <label>
-            Date
+            {t('soiree.date')}
             <input type="date" min={demain} value={date} onChange={(e) => setDate(e.target.value)} required />
           </label>
           <label>
-            Heure <span className="opt">(facultatif)</span>
+            {t('soiree.heure')} <span className="opt">{t('soiree.facultatif')}</span>
             <input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
           </label>
         </div>
       )}
-      <p className="hint">Qui joue ce soir&nbsp;? Cochez les joueurs présents.</p>
+      <p className="hint">{t('soiree.quiJoue')}</p>
       <ul className="player-list">
         {users.map((u) => (
           <li key={u.id}>
@@ -78,9 +80,9 @@ export default function NightPicker({ users, prechecked, night, withDate = false
       </ul>
       {error && <p className="error" role="alert">{error}</p>}
       <div className="night-actions">
-        {onClose && <button type="button" className="btn-ghost" onClick={onClose}>Annuler</button>}
+        {onClose && <button type="button" className="btn-ghost" onClick={onClose}>{t('soiree.annuler')}</button>}
         <button className="btn-copper" disabled={busy}>
-          {busy ? 'Enregistrement…' : night ? 'Enregistrer' : withDate ? 'Programmer' : 'Créer la partie'}
+          {busy ? t('etagere.enregistrement') : night ? t('soiree.enregistrer') : withDate ? t('soiree.programmerSubmit') : t('soiree.creerPartie')}
         </button>
       </div>
     </form>
