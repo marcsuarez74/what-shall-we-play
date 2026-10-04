@@ -1,85 +1,78 @@
-export const metadata = { title: 'FAQ — What Shall We Play?' };
+import type { Metadata } from 'next';
+import { t } from '@/lib/i18n';
+import { getLang } from '@/lib/i18n/server';
 
-export default function FaqPage() {
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: t(await getLang(), 'faq.metaTitre') };
+}
+
+// Page publique statique : les 12 Q/R viennent du dict (fr = maquette validée,
+// byte-identique). Les gras <b> sont composés en fragments (rNa/rNgN/rNb) autour
+// des mots en gras — même pattern que foyer.videAvant/mot/videApres.
+export default async function FaqPage() {
+  const lang = await getLang();
   return (
     <main className="page faq-page">
       <h1>FAQ</h1>
-      <p className="sous-titre">Tout ce qu&apos;il faut savoir avant de lancer la roue — et après.</p>
+      <p className="sous-titre">{t(lang, 'faq.sousTitre')}</p>
 
-      <p className="kicker">Le jeu du soir</p>
+      <p className="kicker">{t(lang, 'faq.kJeu')}</p>
       <details className="faq" open>
-        <summary aria-label="FAQ : C'est quoi What Shall We Play ?">C&apos;est quoi What Shall We Play ?<span className="caret" aria-hidden="true">›</span></summary>
-        <div className="rep">L&apos;app du jeu du soir : tu marques tes envies sur <b>l&apos;étagère</b>,
-          la <b>roue</b> choisit la boîte de la soirée, et chacun note scores et verdicts.
-          Fini le « alors on joue à quoi ? » qui dure 40 minutes.</div>
+        <summary aria-label={`${t(lang, 'faq.prefixe')} ${t(lang, 'faq.q1')}`}>{t(lang, 'faq.q1')}<span className="caret" aria-hidden="true">›</span></summary>
+        <div className="rep">{t(lang, 'faq.r1a')}<b>{t(lang, 'faq.r1g1')}</b>{t(lang, 'faq.r1b')}<b>{t(lang, 'faq.r1g2')}</b>{t(lang, 'faq.r1c')}</div>
       </details>
       <details className="faq">
-        <summary aria-label="FAQ : C'est quoi l'étagère ?">C&apos;est quoi l&apos;étagère ?<span className="caret" aria-hidden="true">›</span></summary>
-        <div className="rep">La sélection du moment de ton groupe : les jeux prêts à sortir.
-          Tu y votes 👍 pour tes envies du soir, et tout le monde voit les votes en direct.</div>
+        <summary aria-label={`${t(lang, 'faq.prefixe')} ${t(lang, 'faq.q2')}`}>{t(lang, 'faq.q2')}<span className="caret" aria-hidden="true">›</span></summary>
+        <div className="rep">{t(lang, 'faq.r2')}</div>
       </details>
       <details className="faq">
-        <summary aria-label="FAQ : Comment marche le vote 👍 ?">Comment marche le vote 👍 ?<span className="caret" aria-hidden="true">›</span></summary>
-        <div className="rep">Un clic pour voter, re-clic pour retirer. Les votes se partagent en direct :
-          quand la soirée se prépare, chacun sait déjà ce que les autres ont envie de sortir.</div>
+        <summary aria-label={`${t(lang, 'faq.prefixe')} ${t(lang, 'faq.q3')}`}>{t(lang, 'faq.q3')}<span className="caret" aria-hidden="true">›</span></summary>
+        <div className="rep">{t(lang, 'faq.r3')}</div>
       </details>
       <details className="faq">
-        <summary aria-label="FAQ : La roue peut-elle refuser nos favoris ?">La roue peut-elle refuser nos favoris ?<span className="caret" aria-hidden="true">›</span></summary>
-        <div className="rep">Non — elle les chouchoute : les boîtes les mieux notées passent{" "}
-          <b>un peu</b> plus souvent (au plus ~10 % d&apos;écart). La surprise reste reine :
-          un jeu jamais joué garde toutes ses chances.</div>
+        <summary aria-label={`${t(lang, 'faq.prefixe')} ${t(lang, 'faq.q4')}`}>{t(lang, 'faq.q4')}<span className="caret" aria-hidden="true">›</span></summary>
+        <div className="rep">{t(lang, 'faq.r4a')}<b>{t(lang, 'faq.r4g1')}</b>{t(lang, 'faq.r4b')}</div>
       </details>
 
-      <p className="kicker">Ton compte</p>
+      <p className="kicker">{t(lang, 'faq.kCompte')}</p>
       <details className="faq">
-        <summary aria-label="FAQ : Comment se créer un compte ?">Comment se créer un compte ?<span className="caret" aria-hidden="true">›</span></summary>
-        <div className="rep">Juste un <b>pseudo</b> et un <b>code secret à 4 chiffres</b>.
-          Pas d&apos;adresse e-mail, pas de mot de passe à retenir par cœur — tu entres, tu joues.</div>
+        <summary aria-label={`${t(lang, 'faq.prefixe')} ${t(lang, 'faq.q5')}`}>{t(lang, 'faq.q5')}<span className="caret" aria-hidden="true">›</span></summary>
+        <div className="rep">{t(lang, 'faq.r5a')}<b>{t(lang, 'faq.r5g1')}</b>{t(lang, 'faq.r5b')}<b>{t(lang, 'faq.r5g2')}</b>{t(lang, 'faq.r5c')}</div>
       </details>
 
-      <p className="kicker">Ta ludothèque</p>
+      <p className="kicker">{t(lang, 'faq.kLudo')}</p>
       <details className="faq">
-        <summary aria-label="FAQ : Comment ajouter ses jeux ?">Comment ajouter ses jeux ?<span className="caret" aria-hidden="true">›</span></summary>
-        <div className="rep">Deux façons : à la main (titre, format, joueurs…), ou en important
-          ta <b>collection BoardGameGeek</b> — l&apos;app récupère pochette et détails en un clin d&apos;œil.</div>
+        <summary aria-label={`${t(lang, 'faq.prefixe')} ${t(lang, 'faq.q6')}`}>{t(lang, 'faq.q6')}<span className="caret" aria-hidden="true">›</span></summary>
+        <div className="rep">{t(lang, 'faq.r6a')}<b>{t(lang, 'faq.r6g1')}</b>{t(lang, 'faq.r6b')}</div>
       </details>
       <details className="faq">
-        <summary aria-label="FAQ : Qui peut modifier ou supprimer quoi ?">Qui peut modifier ou supprimer quoi ?<span className="caret" aria-hidden="true">›</span></summary>
-        <div className="rep">Ton foyer garde la main sur sa ludothèque. Les suppressions sont toujours{" "}
-          <b>explicites et confirmées</b> : rien ne disparaît tout seul, jamais.</div>
+        <summary aria-label={`${t(lang, 'faq.prefixe')} ${t(lang, 'faq.q7')}`}>{t(lang, 'faq.q7')}<span className="caret" aria-hidden="true">›</span></summary>
+        <div className="rep">{t(lang, 'faq.r7a')}<b>{t(lang, 'faq.r7g1')}</b>{t(lang, 'faq.r7b')}</div>
       </details>
 
-      <p className="kicker">Les boîtes &amp; la taille</p>
+      <p className="kicker">{t(lang, 'faq.kBoites')}</p>
       <details className="faq">
-        <summary aria-label="FAQ : C'est quoi les formats de boîte ?">C&apos;est quoi les formats de boîte ?<span className="caret" aria-hidden="true">›</span></summary>
-        <div className="rep">Chaque jeu a une taille : <b>Mini</b>, <b>Petit</b>, <b>Moyen</b>{" "}
-          ou <b>Grand</b> (le repère : 30×30 cm). L&apos;étagère regroupe les jeux par format,
-          et les filtres laissent n&apos;afficher qu&apos;une taille — pratique pour une soirée
-          à table restreinte ou un pique-nique.</div>
+        <summary aria-label={`${t(lang, 'faq.prefixe')} ${t(lang, 'faq.q8')}`}>{t(lang, 'faq.q8')}<span className="caret" aria-hidden="true">›</span></summary>
+        {/* Gras = libellés de format réutilisés (formats.*) : une seule source. */}
+        <div className="rep">{t(lang, 'faq.r8a')}<b>{t(lang, 'formats.mini')}</b>{t(lang, 'faq.r8b')}<b>{t(lang, 'formats.petit')}</b>{t(lang, 'faq.r8c')}<b>{t(lang, 'formats.moyen')}</b>{t(lang, 'faq.r8d')}<b>{t(lang, 'formats.grand')}</b>{t(lang, 'faq.r8e')}</div>
       </details>
       <details className="faq">
-        <summary aria-label="FAQ : Je peux corriger la taille d'un jeu ?">Je peux corriger la taille d&apos;un jeu ?<span className="caret" aria-hidden="true">›</span></summary>
-        <div className="rep">Oui : depuis la <b>ludothèque</b>, le format se change d&apos;un clic
-          sur chaque jeu. À l&apos;<b>import BGG</b>, tu choisis un format par défaut pour
-          toutes les boîtes, puis tu ajustes chacune en un tapotement si besoin.</div>
+        <summary aria-label={`${t(lang, 'faq.prefixe')} ${t(lang, 'faq.q9')}`}>{t(lang, 'faq.q9')}<span className="caret" aria-hidden="true">›</span></summary>
+        <div className="rep">{t(lang, 'faq.r9a')}<b>{t(lang, 'faq.r9g1')}</b>{t(lang, 'faq.r9b')}<b>{t(lang, 'faq.r9g2')}</b>{t(lang, 'faq.r9c')}</div>
       </details>
 
-      <p className="kicker">La roue &amp; les verdicts</p>
+      <p className="kicker">{t(lang, 'faq.kRoue')}</p>
       <details className="faq" open>
-        <summary aria-label="FAQ : C'est quoi le verdict 😍🙂😐 ?">C&apos;est quoi le verdict 😍🙂😐 ?<span className="caret" aria-hidden="true">›</span></summary>
-        <div className="rep">Après la soirée, chacun dit si la boîte était <b>adorée</b>, <b>bien</b>{" "}
-          ou <b>neutre</b>. Ça alimente tes stats (« tu as adoré Cascadia 4 fois sur 5 »)
-          et pèse doucement sur les futurs tirages.</div>
+        <summary aria-label={`${t(lang, 'faq.prefixe')} ${t(lang, 'faq.q10')}`}>{t(lang, 'faq.q10')}<span className="caret" aria-hidden="true">›</span></summary>
+        <div className="rep">{t(lang, 'faq.r10a')}<b>{t(lang, 'faq.r10g1')}</b>{t(lang, 'faq.r10b')}<b>{t(lang, 'faq.r10g2')}</b>{t(lang, 'faq.r10c')}<b>{t(lang, 'faq.r10g3')}</b>{t(lang, 'faq.r10d')}</div>
       </details>
       <details className="faq">
-        <summary aria-label="FAQ : Comment on note la soirée ?">Comment on note la soirée ?<span className="caret" aria-hidden="true">›</span></summary>
-        <div className="rep">À la fin de la partie, le <b>carnet de scores</b> : points de chacun,
-          podium, médailles. Puis le verdict, et le résultat part sur WhatsApp en un clic.</div>
+        <summary aria-label={`${t(lang, 'faq.prefixe')} ${t(lang, 'faq.q11')}`}>{t(lang, 'faq.q11')}<span className="caret" aria-hidden="true">›</span></summary>
+        <div className="rep">{t(lang, 'faq.r11a')}<b>{t(lang, 'faq.r11g1')}</b>{t(lang, 'faq.r11b')}</div>
       </details>
       <details className="faq">
-        <summary aria-label="FAQ : Et les amis sans compte ?">Et les amis sans compte ?<span className="caret" aria-hidden="true">›</span></summary>
-        <div className="rep">Ça arrive — les <b>joueurs invités</b> (sans compte, ajoutés à la soirée)
-          sont en préparation. Ils pourront jouer et être notés comme les autres.</div>
+        <summary aria-label={`${t(lang, 'faq.prefixe')} ${t(lang, 'faq.q12')}`}>{t(lang, 'faq.q12')}<span className="caret" aria-hidden="true">›</span></summary>
+        <div className="rep">{t(lang, 'faq.r12a')}<b>{t(lang, 'faq.r12g1')}</b>{t(lang, 'faq.r12b')}</div>
       </details>
     </main>
   );

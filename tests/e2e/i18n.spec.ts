@@ -49,3 +49,18 @@ test('EN : les erreurs API suivent le cookie (tirage sur une sélection vide)', 
   expect(((await draw.json()) as { error: string }).error).toBe('Empty selection');
   await ctx.close();
 });
+
+// T6 complément : la FAQ publique suit aussi le cookie (12 Q/R traduites,
+// aria « FAQ: … » dérivé de la question, <html lang="en">).
+test('EN : la FAQ est traduite (12 questions, sous-titre, aria dérivé)', async ({ browser }) => {
+  const ctx = await browser.newContext();
+  await ctx.addCookies([{ name: 'wsp_lang', value: 'en', url: 'http://localhost:3000' }]);
+  const page = await ctx.newPage();
+  await page.goto('/faq');
+  await expect(page.locator('details.faq')).toHaveCount(12);
+  await expect(page.getByText('Everything you need to know before you spin the wheel — and after.')).toBeVisible();
+  await expect(page.getByLabel('FAQ: What is What Shall We Play?')).toBeVisible();
+  await expect(page.getByText('Game night', { exact: true })).toBeVisible();
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+  await ctx.close();
+});
