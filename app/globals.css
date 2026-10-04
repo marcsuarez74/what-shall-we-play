@@ -2181,3 +2181,19 @@ a.btn-go.as-link { display: flex; align-items: center; justify-content: center; 
   border-radius: 999px; padding: 4px 10px; color: var(--doux-clair); }
 .verdict-compteurs .compteur b { color: var(--creme); }
 .verdict-compteurs .compteur.zero { opacity: .45; }
+
+/* ---------- FAQ (v3.8.0 — page publique /faq) ---------- */
+.faq-page { display: flex; flex-direction: column; gap: 10px; }
+.faq-page .sous-titre { font-size: 13px; color: var(--doux-clair); line-height: 1.5; margin-bottom: 4px; }
+.faq-page .kicker { font-size: 11px; font-weight: 700; letter-spacing: .14em;
+  color: var(--cuivre); text-transform: uppercase; margin-top: 8px; }
+.faq-page details.faq { background: var(--surface); border-radius: 14px; overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--doux) 25%, transparent); }
+.faq-page details.faq summary { list-style: none; cursor: pointer; display: flex; align-items: center;
+  justify-content: space-between; gap: 10px; padding: 13px 14px; font-size: 13.5px; font-weight: 600; }
+.faq-page details.faq summary::-webkit-details-marker { display: none; }
+.faq-page details.faq summary .caret { color: var(--cuivre); font-size: 14px; transition: transform .15s; flex: none; }
+.faq-page details.faq[open] summary { border-bottom: 1px solid color-mix(in srgb, var(--doux) 25%, transparent); }
+.faq-page details.faq[open] summary .caret { transform: rotate(90deg); }
+.faq-page details.faq .rep { padding: 12px 14px; font-size: 13px; color: var(--doux-clair); line-height: 1.6; }
+.faq-page details.faq .rep b { color: var(--creme); }

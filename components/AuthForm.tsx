@@ -46,6 +46,7 @@ export default function AuthForm({ mode }: { mode: 'login' | 'register' }) {
       )}
       {error && <p className="error" role="alert">{error}</p>}
       <button disabled={busy || code.length !== 4}>{mode === 'login' ? 'Entrer' : 'Créer mon compte'}</button>
+      <a href="/faq">❓ Questions fréquentes</a>
       <a href={mode === 'login' ? '/register' : '/login'}>
         {mode === 'login' ? 'Pas de compte ? Le créer' : 'Déjà un compte ? Entrer'}
       </a>

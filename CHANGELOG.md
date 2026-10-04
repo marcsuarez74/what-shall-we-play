@@ -4,6 +4,16 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [3.8.0] — 2026-10-04
+
+### Ajouté
+- **FAQ** — une page publique qui répond aux 12 questions qu'on nous pose (compte, étagère,
+  formats de boîte, verdicts…) ; liens depuis le menu et l'accueil.
+  - Page publique `/faq` : 12 questions en 5 sections, dépliage en accordéon natif
+    (`<details>`/`<summary>`), sans compte requis.
+  - Liens d'accès : entrée « ❓ FAQ » du menu profil et bouton « ❓ Questions fréquentes » de
+    l'accueil non connecté.
+
 ## [3.7.0] — 2026-10-04
 
 ### Ajouté
