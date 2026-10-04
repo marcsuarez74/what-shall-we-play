@@ -13,7 +13,7 @@ import LanguageSwitch from './LanguageSwitch';
 export default function UserMenu({ me }: { me: UserLite }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { lang } = useI18n();
+  const { lang, t } = useI18n();
   const ref = useRef<HTMLDetailsElement>(null);
 
   useEffect(() => {
@@ -35,15 +35,15 @@ export default function UserMenu({ me }: { me: UserLite }) {
 
   return (
     <details className="user-chip" ref={ref}>
-      <summary aria-label="Menu utilisateur">
+      <summary aria-label={t('menu.utilisateur')}>
         {myAvatar ? <img className="chip-avatar" src={myAvatar} alt="" /> : <span aria-hidden="true">{me.sticker ?? '🎲'}</span>}
         {' '}{initial} ▾
       </summary>
       <div className="user-menu">
-        <Link href="/profil">Mon profil</Link>
-        <button type="button" onClick={logout}>Se déconnecter</button>
-        <Link href="/faq">❓ FAQ</Link>
-        <Link href={{ pathname: '/bugs', query: { depuis: pathname } }}>🐞 Rapporter un bug</Link>
+        <Link href="/profil">{t('menu.profil')}</Link>
+        <button type="button" onClick={logout}>{t('menu.deconnexion')}</button>
+        <Link href="/faq">{t('menu.faq')}</Link>
+        <Link href={{ pathname: '/bugs', query: { depuis: pathname } }}>{t('menu.bug')}</Link>
         <LanguageSwitch lang={lang} />
         <span className="user-version">v{pkg.version}</span>
       </div>

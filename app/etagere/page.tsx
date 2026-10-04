@@ -8,9 +8,12 @@ import TermineeCard from '@/components/TermineeCard';
 import UserMenu from '@/components/UserMenu';
 import UserSync from '@/components/UserSync';
 import { getDb } from '@/lib/db';
+import { t } from '@/lib/i18n';
+import { getLang } from '@/lib/i18n/server';
 import type { UserLite } from '@/lib/types';
 
 export default async function Page() {
+  const lang = await getLang();
   const user = await getSessionUser();
   if (!user) redirect('/login');
   const users = getDb().prepare('SELECT id, pseudo, sticker, avatar_path FROM users ORDER BY pseudo COLLATE NOCASE').all() as UserLite[];
@@ -22,10 +25,10 @@ export default async function Page() {
     return <main className="page">
       <UserSync />
       <div className="page-head">
-        <h1>L&apos;étagère</h1>
+        <h1>{t(lang, 'etagere.titre')}</h1>
         <UserMenu me={user} />
       </div>
-      {terminee && <TermineeCard nightId={terminee.id} gameTitle={terminee.game_title} />}
+      {terminee && <TermineeCard nightId={terminee.id} gameTitle={terminee.game_title} lang={lang} />}
       <NightPicker users={users} prechecked={[user.id]} />
     </main>;
   }
