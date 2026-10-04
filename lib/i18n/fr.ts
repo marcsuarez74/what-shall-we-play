@@ -186,6 +186,8 @@ export const fr = {
   'soiree.errVotesFigesEnJeu': 'La partie a commencé — les votes sont figés',
   'soiree.errVotesFigesTermine': 'La partie est terminée — les votes sont figés',
   'soiree.errDoitEtreDansSoiree': 'Vous devez être dans la partie',
+  'soiree.errCorrigerNonTerminee': 'Seule une partie terminée peut être corrigée',
+  'soiree.errJoueurIntrouvable': 'Joueur introuvable',
   'soiree.errDateInvalide': 'Date invalide',
   'soiree.errDatePassee': 'La date ne peut pas être dans le passé',
   'soiree.errHeureInvalide': 'Heure invalide',

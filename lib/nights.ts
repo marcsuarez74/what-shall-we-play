@@ -136,6 +136,67 @@ export function endNight(nightId: number, userId: number, scores?: Record<string
   return { ok: true };
 }
 
+// Date ISO réelle (format + calendaire) et passée ou aujourd'hui — même rigueur
+// que validIsoDate de POST /api/nights : '2026-02-31' est rejeté, pas seulement
+// le mauvais format. Partagée par corrigerNuit et creerNuitRetro.
+function datePasseeValide(s: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+  const d = new Date(`${s}T12:00:00`); // midi : immune aux pièges de minuit
+  return !Number.isNaN(d.getTime()) && d.toLocaleDateString('sv-SE') === s && s <= new Date().toLocaleDateString('sv-SE');
+}
+
+// v4.2.0 — corriger une partie terminée : date, jeu, participants, scores.
+// Droits : créateur OU participant (choix client). Le changement de jeu
+// réinitialise les verdicts de la nuit — l'UI alerte et confirme avant d'envoyer.
+// Le retrait d'un participant emporte ses scores et ses votes (pas de fantôme).
+export type NuitPatch = { playedAt?: string; gameId?: number; playerIds?: number[]; scores?: Record<string, number> };
+export function corrigerNuit(nightId: number, userId: number, patch: NuitPatch, lang: Lang = 'fr'): { ok: true } | NightStateError {
+  const night = getNight(nightId);
+  if (!night) return { error: t(lang, 'erreurs.soireeIntrouvable'), status: 404 };
+  if (!userCanAccessNight(userId, nightId)) return { error: t(lang, 'erreurs.soireeIntrouvable'), status: 404 };
+  if (night.status !== 'termine') return { error: t(lang, 'soiree.errCorrigerNonTerminee'), status: 409 };
+  const db = getDb();
+  if (patch.playedAt !== undefined && !datePasseeValide(patch.playedAt))
+    return { error: t(lang, 'soiree.errDateInvalide'), status: 400 }; // clé existante (Planifier) réutilisée
+  let jeuChange = false;
+  if (patch.gameId !== undefined) {
+    if (!db.prepare('SELECT 1 FROM games WHERE id = ?').get(patch.gameId)) return { error: t(lang, 'soiree.errJeuIntrouvable'), status: 400 };
+    jeuChange = patch.gameId !== night.game_id;
+  }
+  if (patch.playerIds !== undefined) {
+    if (!patch.playerIds.includes(userId)) return { error: t(lang, 'soiree.errDoitEtreDansSoiree'), status: 400 };
+    for (const pid of patch.playerIds)
+      if (!db.prepare('SELECT 1 FROM users WHERE id = ?').get(pid)) return { error: t(lang, 'soiree.errJoueurIntrouvable'), status: 400 };
+  }
+  const joueursFinaux = new Set(patch.playerIds ?? (db.prepare('SELECT user_id FROM night_players WHERE night_id = ?').all(nightId) as { user_id: number }[]).map((r) => r.user_id));
+  if (patch.scores) {
+    for (const [k, v] of Object.entries(patch.scores))
+      if (!joueursFinaux.has(Number(k)) || !Number.isFinite(v)) return { error: t(lang, 'soiree.errScoreInvalide'), status: 400 };
+  }
+  db.transaction(() => {
+    if (patch.playedAt !== undefined) db.prepare('UPDATE nights SET played_at = ? WHERE id = ?').run(patch.playedAt, nightId);
+    if (patch.gameId !== undefined) {
+      db.prepare('UPDATE nights SET game_id = ? WHERE id = ?').run(patch.gameId, nightId);
+      if (jeuChange) db.prepare('DELETE FROM night_verdicts WHERE night_id = ?').run(nightId); // l'UI a confirmé avant d'envoyer
+    }
+    if (patch.playerIds !== undefined) {
+      const avant = (db.prepare('SELECT user_id FROM night_players WHERE night_id = ?').all(nightId) as { user_id: number }[]).map((r) => r.user_id);
+      db.prepare('DELETE FROM night_players WHERE night_id = ?').run(nightId);
+      const ins = db.prepare('INSERT OR IGNORE INTO night_players (night_id, user_id) VALUES (?, ?)');
+      for (const id of new Set(patch.playerIds)) ins.run(nightId, id);
+      for (const id of avant) if (!patch.playerIds.includes(id))
+        db.prepare('DELETE FROM night_scores WHERE night_id = ? AND user_id = ?').run(nightId, id);
+      db.prepare('DELETE FROM game_votes WHERE night_id = ? AND user_id NOT IN (SELECT user_id FROM night_players WHERE night_id = ?)').run(nightId, nightId);
+    }
+    if (patch.scores) {
+      const ins = db.prepare('INSERT OR REPLACE INTO night_scores (night_id, user_id, score) VALUES (?, ?, ?)');
+      for (const [k, v] of Object.entries(patch.scores)) ins.run(nightId, Number(k), Number(v));
+    }
+  })();
+  notifyNight(nightId); // idiome existant (pas de canal SSE nouveau) — les vues RSC se rafraîchissent
+  return { ok: true };
+}
+
 // LA boîte de la partie (une seule, jamais la liste des relances).
 export function getNightGame(nightId: number): Game | null {
   const night = getNight(nightId);

@@ -183,6 +183,8 @@ export const en: Record<CléDict, ValeurDict> = {
   'soiree.errVotesFigesEnJeu': 'The game has started — votes are locked',
   'soiree.errVotesFigesTermine': 'The game is over — votes are locked',
   'soiree.errDoitEtreDansSoiree': 'You must be part of the game',
+  'soiree.errCorrigerNonTerminee': 'Only a finished game can be corrected',
+  'soiree.errJoueurIntrouvable': 'Player not found',
   'soiree.errDateInvalide': 'Invalid date',
   'soiree.errDatePassee': "The date can't be in the past",
   'soiree.errHeureInvalide': 'Invalid time',
