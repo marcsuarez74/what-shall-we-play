@@ -22,6 +22,12 @@ describe('i18n', () => {
   it('langue invalide → fr', () => {
     expect(estLangValide('xx')).toBe(false);
   });
+  it('les espaces particulières survivent au balayage « partie » (concaténations JSX)', () => {
+    expect(t('fr', 'faq.r10a').endsWith(' ')).toBe(true);
+    expect(t('fr', 'faq.r1a').endsWith(' ')).toBe(true);
+    expect(DICTS.fr['soiree.quiJoue']).toContain('\u00A0?');
+    expect(t('en', 'soiree.videAvant').endsWith(' ')).toBe(true);
+  });
 });
 
 describe('format', () => {

@@ -59,6 +59,6 @@ test('parcours complet : deux joueurs, sélection, tirage, historique', async ({
   // Historique : la soirée du jour vit dans « Ce soir » (badge d'état) — les picks
   // cumulés ne s'affichent plus (v3.3.0), le jeu de la partie attend la boîte sortie
   await a.goto('/nights');
-  await expect(a.locator('[aria-label="Ce soir"] .badge-etat')).toContainText('En préparation');
-  await expect(a.locator('[aria-label="Ce soir"] .chips')).toContainText(`parc-marc-${stamp}`);
+  await expect(a.locator('[aria-label="Aujourd\'hui"] .badge-etat')).toContainText('En préparation');
+  await expect(a.locator('[aria-label="Aujourd\'hui"] .chips')).toContainText(`parc-marc-${stamp}`);
 });

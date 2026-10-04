@@ -42,8 +42,8 @@ test('soirées : historique avec date, joueurs et tirages', async ({ page }) => 
   await expect(page.locator('.night-card')).toHaveCount(1); // Ce soir seulement
   // v3.3.0 : la carte « Ce soir » porte un badge d'état ; les picks cumulés ne
   // s'affichent plus (le jeu de la partie vit sur la boîte sortie, nights.game_id)
-  await expect(page.locator('[aria-label="Ce soir"] .badge-etat')).toContainText('En préparation');
-  await expect(page.locator('[aria-label="Ce soir"] .chips')).toContainText(pseudo);
+  await expect(page.locator('[aria-label="Aujourd\'hui"] .badge-etat')).toContainText('En préparation');
+  await expect(page.locator('[aria-label="Aujourd\'hui"] .chips')).toContainText(pseudo);
   await expect(page.locator('.night-picks')).toHaveCount(0);
   await expect(page.locator('[aria-label="Historique"] .hint')).toContainText('Aucune partie terminée');
 });
@@ -60,8 +60,8 @@ test('soirées : écran vide pour un nouveau compte', async ({ page }) => {
   // QG à trois sections, chacune avec son état vide ; lien vers l'étagère
   await page.goto('/nights');
   await expect(page.getByRole('heading', { name: 'Mes parties' })).toBeVisible();
-  await expect(page.locator('[aria-label="Ce soir"] .empty')).toContainText('Pas de partie aujourd');
+  await expect(page.locator('[aria-label="Aujourd\'hui"] .empty')).toContainText('Pas de partie aujourd');
   await expect(page.locator('[aria-label="Programmées"] .empty')).toContainText('Aucune partie programmée');
   await expect(page.locator('[aria-label="Historique"] .hint')).toContainText('Aucune partie terminée');
-  await expect(page.locator('[aria-label="Ce soir"] .empty a')).toHaveAttribute('href', '/etagere');
+  await expect(page.locator('[aria-label="Aujourd\'hui"] .empty a')).toHaveAttribute('href', '/etagere');
 });

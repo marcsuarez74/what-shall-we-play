@@ -83,7 +83,7 @@ describe('poserVerdict', () => {
     // création : la soirée n'a pas encore commencé
     const vierge = uid('vd-vierge');
     const pasCommencee = createNight(vierge, [vierge]);
-    expect(poserVerdict(pasCommencee, vierge, 'bien')).toEqual({ error: 'La soirée n’a pas encore commencé', status: 409 });
+    expect(poserVerdict(pasCommencee, vierge, 'bien')).toEqual({ error: 'La partie n’a pas encore commencé', status: 409 });
 
     // terminée sans boîte (abandon depuis création) : rien à juger
     const abandonneur = uid('vd-abandon');

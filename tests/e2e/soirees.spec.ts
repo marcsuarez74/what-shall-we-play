@@ -200,7 +200,7 @@ test('terminer la soirée : étagère vidée, nuit conservée en historique', as
   await endPost;
 
   // « Ce soir » est vide, la nuit est dans l'historique
-  await expect(page.locator('[aria-label="Ce soir"] .empty')).toBeVisible();
+  await expect(page.locator('[aria-label="Aujourd\'hui"] .empty')).toBeVisible();
   await expect(page.locator('[aria-label="Historique"] .hist-card')).toHaveCount(1);
 
   // L'étagère revient à l'état vierge
