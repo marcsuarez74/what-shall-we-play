@@ -3,7 +3,7 @@
 > **Fichier vivant** : les idées se déposent ici en vrac, chaque feature partira d'ici vers un vrai
 > brainstorming (maquette → spec → plan) au moment de la lancer.
 > Tailles indicatives : 🟢 S · 🟡 M · 🔴 L · 🔴+ XL
-> Dernière mise à jour : 2026-10-03
+> Dernière mise à jour : 2026-10-04
 
 ## Ordre suggéré
 
@@ -19,6 +19,7 @@
 | 8 | Monétisation premium | 🟡 M | Infra paiement ; ouvre la voie au financement de la ludothèque |
 | 9 | Ludothèque virtuelle | 🔴+ XL | Dépend des cercles ; le prêt communautaire pourrait être la feature premium |
 | 10 | Notifications push | 🔴 L | Le plus d'infra ; prend tout son sens une fois les cercles en place |
+| 11 | FAQ | 🟢 S | Petite, sans dépendance — à glisser au fil de l'eau, quand le contenu existe |
 
 ---
 
@@ -68,7 +69,10 @@ Après la partie, un micro-sondage dans le verdict : 😍 / 🙂 / 😐. Ça ali
 - **Taille** : 🟢 S (une colonne d'humeur sur la partie + agrégation dans les stats)
 - **Dépendances** : aucune
 - **Note** : l'effet sur les tirages doit rester doux (léger bonus de poids) — la roue doit garder
-  sa surprise.
+  sa surprise. **Garde-fou chiffré (arbitré le 2026-10-04)** : ×1,08 pour le jeu le plus aimé (😍),
+  ×1,00 pour un jeu 🙂 ou sans verdict, ×0,98 pour le moins aimé (😐) — soit un écart relatif
+  maximal d'environ ×1,10 entre le plus et le moins aimé. Le reste (confiance progressive selon le
+  nombre de parties, fenêtre glissante) reste à arbitrer au brainstorming.
 
 ## 5. Ajout au calendrier
 
@@ -144,6 +148,22 @@ cercle. L'app devient vivante sans être ouverte.
   programmées en place
 - **Note** : commencer par 2-3 notifications essentielles, pas un feed. Sur iOS, exige l'app
   installée — le public PWA installée est déjà celui-là.
+
+## 11. FAQ
+
+Une page « FAQ » pour les questions qui reviennent : c'est quoi l'app, comment on rejoint une
+soirée, comment marche le tirage, que deviennent mes données, est-ce payant… Utile aux nouveaux
+comme aux curieux qui hésitent avant d'installer la PWA.
+
+- **Taille** : 🟢 S
+- **Dépendances** : aucune
+- **Sujets déjà identifiés** (2026-10-04) :
+  - **La taille des boîtes** — donner une idée concrète de ce qu'est une « grande boîte » (et les
+    autres formats) : dimensions physiques, exemples de jeux connus pour chaque format.
+  - **Le verdict et ses implications sur la roue** — le verdict pèse-t-il sur le tirage, et
+    comment l'expliquer simplement (lien avec le garde-fou de §4 : ×1,08 / ×1,00 / ×0,98).
+- **Note** : idée en vrac — collecter les vraies questions posées par les joueurs (2 sujets
+  ci-dessus, la collecte est lancée). Page accessible sans compte, une route statique de plus.
 
 ---
 
