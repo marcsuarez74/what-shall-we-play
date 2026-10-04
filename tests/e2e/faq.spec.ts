@@ -6,11 +6,13 @@ test('la FAQ est publique, avec accordéons fonctionnels', async ({ page }) => {
   // 2 accordéons ouverts par défaut, 10 fermés
   await expect(page.locator('details.faq[open]')).toHaveCount(2);
   await expect(page.locator('details.faq')).toHaveCount(12);
-  // ouverture/fermeture
-  const q = page.locator('details.faq summary').first();
+  // ouverture d'un accordéon FERMÉ via le hook aria, puis refermeture
+  // (Chromium ne donne pas le rôle button aux summary en display:flex — on cible l'aria-label)
+  const q = page.getByLabel("FAQ : C'est quoi l'étagère ?");
   await q.click();
-  // un clic sur le 1er (ouvert) le ferme → 1 ouvert restant
-  await expect(page.locator('details.faq[open]')).toHaveCount(1);
+  await expect(page.locator('details.faq[open]')).toHaveCount(3);
+  await q.click();
+  await expect(page.locator('details.faq[open]')).toHaveCount(2);
 });
 
 test('le visiteur non connecté voit la FAQ sans redirect', async ({ browser }) => {

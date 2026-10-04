@@ -2182,7 +2182,7 @@ a.btn-go.as-link { display: flex; align-items: center; justify-content: center; 
 .verdict-compteurs .compteur b { color: var(--creme); }
 .verdict-compteurs .compteur.zero { opacity: .45; }
 
-/* ---------- FAQ (v3.7.1 — page publique /faq) ---------- */
+/* ---------- FAQ (v3.8.0 — page publique /faq) ---------- */
 .faq-page { display: flex; flex-direction: column; gap: 10px; }
 .faq-page .sous-titre { font-size: 13px; color: var(--doux-clair); line-height: 1.5; margin-bottom: 4px; }
 .faq-page .kicker { font-size: 11px; font-weight: 700; letter-spacing: .14em;
