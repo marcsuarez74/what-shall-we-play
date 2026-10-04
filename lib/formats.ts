@@ -4,16 +4,8 @@ export const FORMATS = ['grand', 'moyen', 'petit', 'mini'] as const;
 export const FORMAT_SCALE: Record<BoxFormat, number> = { grand: 1, moyen: 0.78, petit: 0.62, mini: 0.45 };
 // v4.0.0 : les libellés de format dépendent de la langue via formatLabel/formatShort
 // (dict i18n, clés formats.*). Les VALEURS SQL ('mini'|'petit'|'moyen'|'grand') restent
-// des données — jamais traduites. Ces deux constantes FR : repli consommé par les zones
-// pas encore migrées (ludothèque, import BGG) — à supprimer quand la dernière zone passe.
-export const FORMAT_LABEL: Record<BoxFormat, string> = {
-  grand: 'Grand · 30×30', moyen: 'Moyen', petit: 'Petit', mini: 'Mini-boîte',
-};
-
-// Étiquettes courtes (puces de traits, familles de filtres).
-export const FORMAT_SHORT: Record<BoxFormat, string> = {
-  grand: 'Grand', moyen: 'Moyen', petit: 'Petit', mini: 'Mini',
-};
+// des données — jamais traduites. (Les constantes FR FORMAT_LABEL/FORMAT_SHORT ont
+// disparu : tous les consommateurs sont passés au helper en T4.)
 
 // Clé du dict i18n par format — cartographie explicite, contrôlée par tsc.
 const CLÉ_COURT: Record<BoxFormat, CléDict> = {

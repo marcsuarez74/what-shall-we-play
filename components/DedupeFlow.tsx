@@ -1,7 +1,8 @@
 'use client';
 import { useState } from 'react';
-import { coverSrc, FORMAT_SHORT } from '@/lib/formats';
+import { coverSrc, formatShort } from '@/lib/formats';
 import type { Game } from '@/lib/types';
+import { useI18n } from './LanguageProvider';
 
 type GP = Game & { picks?: number };
 
@@ -16,17 +17,18 @@ export default function DedupeFlow({ pairs, foyerName, onDone }: {
   const [i, setI] = useState(0);
   const [absorbed, setAbsorbed] = useState(0);
   const [busy, setBusy] = useState(false);
+  const { lang, t } = useI18n();
 
   if (i >= pairs.length) {
     const kept = pairs.length - absorbed;
     return (
-      <div className="dedup" role="dialog" aria-modal="true" aria-label="Fusion terminée">
+      <div className="dedup" role="dialog" aria-modal="true" aria-label={t('foyer.fusionFinAria')}>
         <div className="done-card">
           <div className="big">🎉</div>
-          <h2>Bibliothèques fusionnées</h2>
-          <p>{kept} fiche{kept > 1 ? 's' : ''} conservée{kept > 1 ? 's' : ''} · {absorbed} doublon{absorbed > 1 ? 's' : ''} retiré{absorbed > 1 ? 's' : ''}<br />
-            <b>{foyerName}</b> — la collection commune est prête.</p>
-          <button type="button" className="btn-copper foyer-btn" onClick={onDone}>Voir ma ludothèque</button>
+          <h2>{t('foyer.fusionFait')}</h2>
+          <p>{t('foyer.fusionBilan', { kept, absorbed })}<br />
+            <b>{foyerName}</b>{t('foyer.fusionPrete')}</p>
+          <button type="button" className="btn-copper foyer-btn" onClick={onDone}>{t('ludotheque.voir')}</button>
         </div>
       </div>
     );
@@ -54,14 +56,14 @@ export default function DedupeFlow({ pairs, foyerName, onDone }: {
 
   const meta = (g: GP) => {
     const p = g.picks ?? 0;
-    return `${p} partie${p > 1 ? 's' : ''} jouée${p > 1 ? 's' : ''} · ${FORMAT_SHORT[g.box_format]}`;
+    return t('foyer.doublonMeta', { p, f: formatShort(g.box_format, lang) });
   };
 
   return (
-    <div className="dedup" role="dialog" aria-modal="true" aria-label="Trier les doublons">
+    <div className="dedup" role="dialog" aria-modal="true" aria-label={t('foyer.doublonAria')}>
       <div className="dedup-head">
-        <h2>{pairs.length} doublon{pairs.length > 1 ? 's' : ''} à trier</h2>
-        <p>On fusionne les fiches en une collection — gardez celle que vous préférez, ou les deux.</p>
+        <h2>{t('foyer.doublonTitre', { n: pairs.length })}</h2>
+        <p>{t('foyer.doublonTexte')}</p>
       </div>
       <div className="steps" aria-hidden="true">{pairs.map((_, j) => <i key={j} className={j <= i ? 'on' : ''} />)}</div>
       <div className="duel">
@@ -71,7 +73,7 @@ export default function DedupeFlow({ pairs, foyerName, onDone }: {
               {coverSrc(g)
                 ? <img src={coverSrc(g) as string} alt="" />
                 : <span className="cover-placeholder" aria-hidden>♟</span>}
-              {g.owner_pseudo && <span className="tag">à {g.owner_pseudo}{g.owner_sticker ? ` · ${g.owner_sticker}` : ''}</span>}
+              {g.owner_pseudo && <span className="tag">{t('foyer.doublonChez', { p: g.owner_pseudo, s: g.owner_sticker ?? '' })}</span>}
             </div>
             <b>{g.title}</b>
             <p className="meta">{meta(g)}</p>
@@ -79,9 +81,9 @@ export default function DedupeFlow({ pairs, foyerName, onDone }: {
         ))}
       </div>
       <div className="duel-choices">
-        {a.owner_pseudo && <button type="button" className="choice-a" disabled={busy} onClick={() => pick('a')}>Garder celle de {a.owner_pseudo}</button>}
-        {b.owner_pseudo && <button type="button" className="choice-b" disabled={busy} onClick={() => pick('b')}>Garder celle de {b.owner_pseudo}</button>}
-        <button type="button" className="choice-both" disabled={busy} onClick={() => pick('both')}>Garder les deux fiches</button>
+        {a.owner_pseudo && <button type="button" className="choice-a" disabled={busy} onClick={() => pick('a')}>{t('foyer.garderDe', { p: a.owner_pseudo })}</button>}
+        {b.owner_pseudo && <button type="button" className="choice-b" disabled={busy} onClick={() => pick('b')}>{t('foyer.garderDe', { p: b.owner_pseudo })}</button>}
+        <button type="button" className="choice-both" disabled={busy} onClick={() => pick('both')}>{t('foyer.garderDeux')}</button>
       </div>
     </div>
   );

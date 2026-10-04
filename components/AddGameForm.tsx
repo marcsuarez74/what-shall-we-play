@@ -2,8 +2,10 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { FORMATS, FORMAT_SCALE } from '@/lib/formats';
+import { FORMATS, FORMAT_SCALE, formatShort } from '@/lib/formats';
+import { formatNombre } from '@/lib/i18n/format';
 import type { UserLite } from '@/lib/types';
+import { useI18n } from './LanguageProvider';
 import UserMenu from './UserMenu';
 
 interface Suggestion { bggId: number; name: string; }
@@ -21,6 +23,7 @@ const BOX_PX = 76;
 
 export default function AddGameForm({ me }: { me: UserLite }) {
   const router = useRouter();
+  const { lang, t } = useI18n();
   const [title, setTitle] = useState('');
   const [format, setFormat] = useState('grand');
   const [stage, setStage] = useState<Stage>('etiquette');
@@ -40,14 +43,14 @@ export default function AddGameForm({ me }: { me: UserLite }) {
       if (!res.ok) throw new Error();
       const results: Suggestion[] = (await res.json()).results;
       if (results.length === 0) {
-        setError(`Aucun jeu trouvé pour « ${q} » — essaie le titre anglais, ou saisis à la main.`);
+        setError(t('ajout.errAucunJeu', { q }));
         return;
       }
       if (results.length === 1) { await pick(results[0]); return; }
       setSuggestions(results.slice(0, 8));
       setStage('choix');
     } catch {
-      setError('BGG ne répond pas encore (token en attente) — tu peux saisir à la main.');
+      setError(t('ajout.errBggToken'));
     } finally { setBusy(false); }
   }
 
@@ -62,7 +65,7 @@ export default function AddGameForm({ me }: { me: UserLite }) {
       setMode('bgg');
       setStage('fiche');
     } catch {
-      setError('Impossible de récupérer la fiche BGG — réessaie ou saisis à la main.');
+      setError(t('ajout.errFicheBgg'));
     } finally { setBusy(false); }
   }
 
@@ -100,17 +103,17 @@ export default function AddGameForm({ me }: { me: UserLite }) {
     if (photo) fd.append('cover', photo);
     const res = await fetch('/api/games', { method: 'POST', body: fd });
     setBusy(false);
-    if (!res.ok) { setError((await res.json().catch(() => ({}))).error ?? 'Erreur à l’enregistrement'); return; }
+    if (!res.ok) { setError((await res.json().catch(() => ({}))).error ?? t('ajout.errEnregistrement')); return; }
     router.push('/etagere'); router.refresh();
   }
 
   const FormatPicker = ({ mini = false }: { mini?: boolean }) => (
-    <div role="group" aria-label="Format de boîte" className={`formats${mini ? ' mini' : ''}`}>
+    <div role="group" aria-label={t('ajout.fmtBoite')} className={`formats${mini ? ' mini' : ''}`}>
       {FORMATS.map((f) => (
         <button key={f} type="button" className="format-btn" aria-pressed={format === f}
                 onClick={() => setFormat(f)}>
           <span className="box" style={{ width: BOX_PX * FORMAT_SCALE[f], height: BOX_PX * FORMAT_SCALE[f] }} />
-          <span className="name">{f[0].toUpperCase() + f.slice(1)}</span>
+          <span className="name">{formatShort(f, lang)}</span>
         </button>
       ))}
     </div>
@@ -128,33 +131,33 @@ export default function AddGameForm({ me }: { me: UserLite }) {
       else if (stage === 'fiche') submit();
     }}>
       <div className="page-head">
-        <h1>Ajouter un jeu</h1>
+        <h1>{t('ajout.titre')}</h1>
         <UserMenu me={me} />
       </div>
       {stage === 'etiquette' && (
         <>
-          <label htmlFor="add-titre">Titre du jeu</label>
+          <label htmlFor="add-titre">{t('ajout.titreLabel')}</label>
           <input id="add-titre" className="add-title" value={title} autoComplete="off"
                  onChange={(e) => setTitle(e.target.value)} placeholder="Through the Desert…" />
-          <p className="help">Le titre BGG, souvent en anglais — ex. « Through the Desert ».</p>
+          <p className="help">{t('ajout.titreAide')}</p>
 
-          <p className="field-label">Format de boîte</p>
+          <p className="field-label">{t('ajout.fmtBoite')}</p>
           <FormatPicker />
 
           <button type="button" className="btn-bgg" disabled={busy || title.trim().length < 2} onClick={fetchInfos}>
             <img src="/logos/powered-by-bgg.svg" alt="" />
             <span className="sep" aria-hidden />
-            {busy ? 'Récupération…' : 'Récupérer les infos'}
+            {busy ? t('ajout.recuperation') : t('ajout.recuperer')}
           </button>
-          <p className="btn-note">Année, éditeur, joueurs, durée, créateur, pochette…</p>
-          <Link className="link-import" href="/games/import">Importer toute une collection (BGG) ›</Link>
-          <button type="button" className="link-manual" onClick={goManual}>Saisir à la main</button>
+          <p className="btn-note">{t('ajout.recapChamps')}</p>
+          <Link className="link-import" href="/games/import">{t('ajout.lienImport')}</Link>
+          <button type="button" className="link-manual" onClick={goManual}>{t('ajout.saisieManuelle')}</button>
         </>
       )}
 
       {stage === 'choix' && (
         <>
-          <p className="field-label">Plusieurs jeux correspondent — lequel ?</p>
+          <p className="field-label">{t('ajout.plusieursCorrespondances')}</p>
           <ul className="suggestions">
             {suggestions.map((s) => (
               <li key={s.bggId}>
@@ -162,7 +165,7 @@ export default function AddGameForm({ me }: { me: UserLite }) {
               </li>
             ))}
           </ul>
-          <button type="button" className="link-manual" onClick={backToSearch}>‹ Modifier la recherche</button>
+          <button type="button" className="link-manual" onClick={backToSearch}>{t('ajout.modifierRecherche')}</button>
         </>
       )}
 
@@ -175,25 +178,25 @@ export default function AddGameForm({ me }: { me: UserLite }) {
                   ? <img className="fiche-cover" src={cover} alt="" />
                   : <div className="fiche-cover is-ph" aria-hidden>♟</div>}
                 <div className="fiche-id">
-                  <input className="fiche-title" aria-label="Titre du jeu" value={title}
+                  <input className="fiche-title" aria-label={t('ajout.titreLabel')} value={title}
                          onChange={(e) => setTitle(e.target.value)} />
                   <p className="fiche-meta">{thing.year ?? '—'} · {thing.publisher ?? '—'}</p>
                 </div>
               </div>
               <ul className="sheet-facts">
-                {joueurs && <li><span>Joueurs</span><strong>{joueurs}</strong></li>}
-                {thing.playtimeMin != null && <li><span>Durée</span><strong>{thing.playtimeMin} min</strong></li>}
-                {thing.weight != null && <li><span>Complexité (BGG)</span><strong>⚖ {thing.weight.toLocaleString('fr-FR')} / 5</strong></li>}
-                {thing.rating != null && <li><span>Note (BGG)</span><strong>⭐ {thing.rating.toLocaleString('fr-FR')} / 10</strong></li>}
-                {thing.designer && <li><span>Créateur</span><strong>{thing.designer}</strong></li>}
-                {thing.artist && <li><span>Illustrateur</span><strong>{thing.artist}</strong></li>}
+                {joueurs && <li><span>{t('etagere.joueurs')}</span><strong>{joueurs}</strong></li>}
+                {thing.playtimeMin != null && <li><span>{t('etagere.duree')}</span><strong>{thing.playtimeMin} min</strong></li>}
+                {thing.weight != null && <li><span>{t('fiche.complexite')}</span><strong>⚖ {formatNombre(lang, thing.weight)} / 5</strong></li>}
+                {thing.rating != null && <li><span>{t('fiche.note')}</span><strong>⭐ {formatNombre(lang, thing.rating)} / 10</strong></li>}
+                {thing.designer && <li><span>{t('fiche.createur')}</span><strong>{thing.designer}</strong></li>}
+                {thing.artist && <li><span>{t('fiche.illustrateur')}</span><strong>{thing.artist}</strong></li>}
               </ul>
               <div className="cover-row">
                 <span className={thing.coverName ? 'cover-ok' : 'cover-miss'}>
-                  {thing.coverName ? '✓ Pochette récupérée depuis BGG' : 'Pochette BGG indisponible'}
+                  {thing.coverName ? t('ajout.pochetteOk') : t('ajout.pochetteKo')}
                 </span>
                 <label className="cover-replace">
-                  {photo ? 'Photo choisie ✓' : 'Remplacer par une photo'}
+                  {photo ? t('ajout.photoChoisie') : t('ajout.photoRemplacer')}
                   <input type="file" accept=".jpg,.jpeg,.png,.webp" hidden
                          onChange={(e) => setPhoto(e.target.files?.[0] ?? null)} />
                 </label>
@@ -201,48 +204,48 @@ export default function AddGameForm({ me }: { me: UserLite }) {
             </>
           ) : (
             <>
-              <label>Titre
+              <label>{t('ajout.titreCourt')}
                 <input value={title} onChange={(e) => setTitle(e.target.value)} />
               </label>
               <div className="manual-pair">
-                <label>Année
+                <label>{t('ajout.annee')}
                   <input inputMode="numeric" value={manual.year}
                          onChange={(e) => setManual((m) => ({ ...m, year: e.target.value }))} />
                 </label>
-                <label>Éditeur
+                <label>{t('ajout.editeur')}
                   <input value={manual.publisher}
                          onChange={(e) => setManual((m) => ({ ...m, publisher: e.target.value }))} />
                 </label>
               </div>
               <div className="manual-row">
-                <label>Joueurs min
+                <label>{t('ajout.joueursMin')}
                   <input inputMode="numeric" value={manual.min_players}
                          onChange={(e) => setManual((m) => ({ ...m, min_players: e.target.value }))} />
                 </label>
-                <label>Joueurs max
+                <label>{t('ajout.joueursMax')}
                   <input inputMode="numeric" value={manual.max_players}
                          onChange={(e) => setManual((m) => ({ ...m, max_players: e.target.value }))} />
                 </label>
-                <label>Durée (min)
+                <label>{t('ajout.dureeMin')}
                   <input inputMode="numeric" value={manual.playtime_min}
                          onChange={(e) => setManual((m) => ({ ...m, playtime_min: e.target.value }))} />
                 </label>
               </div>
               <label className="cover-replace as-block">
-                {photo ? `Photo choisie ✓ (${photo.name})` : 'Ajouter une photo (optionnel)'}
+                {photo ? t('ajout.photoChoisieNom', { name: photo.name }) : t('ajout.photoAjouter')}
                 <input type="file" accept=".jpg,.jpeg,.png,.webp" hidden
                        onChange={(e) => setPhoto(e.target.files?.[0] ?? null)} />
               </label>
             </>
           )}
 
-          <p className="field-label">Format de boîte</p>
+          <p className="field-label">{t('ajout.fmtBoite')}</p>
           <FormatPicker mini />
 
           <button type="button" className="btn-go" disabled={busy || !title.trim()} onClick={submit}>
-            {busy ? 'Enregistrement…' : 'Ajouter à la ludothèque'}
+            {busy ? t('etagere.enregistrement') : t('ajout.ajouterLudo')}
           </button>
-          <button type="button" className="cancel" onClick={reset}>Annuler</button>
+          <button type="button" className="cancel" onClick={reset}>{t('soiree.annuler')}</button>
         </div>
       )}
 

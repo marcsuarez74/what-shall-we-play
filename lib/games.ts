@@ -1,5 +1,6 @@
 import { getDb } from './db';
 import { isSafeCoverName } from './storage';
+import { t, type Lang } from './i18n';
 import type { Game, BoxFormat } from './types';
 
 const FORMATS: BoxFormat[] = ['mini', 'petit', 'moyen', 'grand'];
@@ -9,12 +10,13 @@ export interface NewGame {
   playtime_min?: number | null; weight?: number | null; bgg_rating?: number | null;
   designer?: string | null; artist?: string | null; best_players?: number | null;
 }
-export function validateGameInput(body: unknown): { ok: true; value: NewGame } | { ok: false; error: string } {
+// lang : langue du cookie, passée par la route — défaut 'fr' (tests unitaires).
+export function validateGameInput(body: unknown, lang: Lang = 'fr'): { ok: true; value: NewGame } | { ok: false; error: string } {
   const b = (body ?? {}) as Record<string, unknown>;
   if (typeof b.title !== 'string' || b.title.trim().length < 1 || b.title.length > 120)
-    return { ok: false, error: 'Titre requis (120 caractères max)' };
+    return { ok: false, error: t(lang, 'jeu.errTitre') };
   if (!FORMATS.includes(b.box_format as BoxFormat))
-    return { ok: false, error: 'Choisissez un format de boîte' };
+    return { ok: false, error: t(lang, 'jeu.errFormat') };
   const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : null);
   return {
     ok: true,
@@ -74,11 +76,11 @@ export function canManageGame(userId: number, g: Game): boolean {
   return g.owner_id === userId;
 }
 
-export function deleteGame(userId: number, id: number): { ok: true } | { error: string; status: number } {
+export function deleteGame(userId: number, id: number, lang: Lang = 'fr'): { ok: true } | { error: string; status: number } {
   const g = getGame(id);
-  if (!g || !canManageGame(userId, g)) return { error: 'Jeu introuvable', status: 404 };
+  if (!g || !canManageGame(userId, g)) return { error: t(lang, 'jeu.errIntrouvable'), status: 404 };
   const picked = getDb().prepare('SELECT 1 FROM picks WHERE game_id = ? LIMIT 1').get(id);
-  if (picked) return { error: 'Ce jeu a déjà été tiré lors d\'une partie', status: 409 };
+  if (picked) return { error: t(lang, 'jeu.errDejaTire'), status: 409 };
   getDb().prepare('DELETE FROM games WHERE id = ?').run(id);
   return { ok: true };
 }
@@ -92,9 +94,9 @@ export interface BggEnrich {
   weight: number | null; bgg_rating: number | null; designer: string | null; artist: string | null;
   best_players: number | null; cover_name: string | null;
 }
-export function enrichirJeu(userId: number, id: number, e: BggEnrich): { ok: true } | { error: string; status: number } {
+export function enrichirJeu(userId: number, id: number, e: BggEnrich, lang: Lang = 'fr'): { ok: true } | { error: string; status: number } {
   const g = getGame(id);
-  if (!g || !canManageGame(userId, g)) return { error: 'Jeu introuvable', status: 404 };
+  if (!g || !canManageGame(userId, g)) return { error: t(lang, 'jeu.errIntrouvable'), status: 404 };
   const cover = e.cover_name && isSafeCoverName(e.cover_name) ? e.cover_name : null;
   getDb().prepare(`UPDATE games SET bgg_id=?, year=?, publisher=?, min_players=?, max_players=?,
                    playtime_min=?, weight=?, bgg_rating=?, designer=?, artist=?, best_players=?,

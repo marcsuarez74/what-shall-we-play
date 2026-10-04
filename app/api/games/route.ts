@@ -1,19 +1,23 @@
 // app/api/games/route.ts
 import { NextResponse } from 'next/server';
 import { getSessionUser } from '@/lib/session';
+import { t } from '@/lib/i18n';
+import { getLang } from '@/lib/i18n/server';
 import { validateGameInput, createGame, listUserLibrary } from '@/lib/games';
 import { getUserFoyerId } from '@/lib/foyers';
 import { saveCover, isSafeCoverName, COVER_EXT } from '@/lib/storage';
 
 export async function GET() {
+  const lang = await getLang();
   const user = await getSessionUser();
-  if (!user) return NextResponse.json({ error: 'Non connecté' }, { status: 401 });
+  if (!user) return NextResponse.json({ error: t(lang, 'erreurs.nonConnecte') }, { status: 401 });
   return NextResponse.json({ games: listUserLibrary(user.id) });
 }
 
 export async function POST(req: Request) {
+  const lang = await getLang();
   const user = await getSessionUser();
-  if (!user) return NextResponse.json({ error: 'Non connecté' }, { status: 401 });
+  if (!user) return NextResponse.json({ error: t(lang, 'erreurs.nonConnecte') }, { status: 401 });
   const form = await req.formData();
   const raw: Record<string, unknown> = {};
   for (const k of ['title', 'box_format', 'bgg_id', 'year', 'publisher', 'min_players', 'max_players', 'playtime_min', 'weight', 'bgg_rating', 'designer', 'artist', 'best_players']) {
@@ -22,16 +26,16 @@ export async function POST(req: Request) {
   }
   // designer/artist restent des chaînes même si elles sont purement numériques
   for (const k of ['designer', 'artist']) if (raw[k] != null) raw[k] = String(raw[k]);
-  const v = validateGameInput(raw);
+  const v = validateGameInput(raw, lang);
   if (!v.ok) return NextResponse.json({ error: v.error }, { status: 400 });
   let coverPath: string | null = null;
   const coverName = form.get('cover_name'); // pochette déjà rapatriée depuis BGG (Task 5)
   if (typeof coverName === 'string' && isSafeCoverName(coverName)) coverPath = coverName;
   const file = form.get('cover');
   if (file && file instanceof File && file.size > 0) {
-    if (file.size > 5 * 1024 * 1024) return NextResponse.json({ error: 'Pochette : 5 Mo maximum' }, { status: 400 });
+    if (file.size > 5 * 1024 * 1024) return NextResponse.json({ error: t(lang, 'jeu.errPochettePoids') }, { status: 400 });
     const ext = file.name.split('.').pop()?.toLowerCase() as (typeof COVER_EXT)[number] | undefined;
-    if (!ext || !COVER_EXT.includes(ext)) return NextResponse.json({ error: 'Pochette : jpg, png ou webp' }, { status: 400 });
+    if (!ext || !COVER_EXT.includes(ext)) return NextResponse.json({ error: t(lang, 'jeu.errPochetteExt') }, { status: 400 });
     coverPath = saveCover(Buffer.from(await file.arrayBuffer()), ext);
   }
   const id = createGame(user.id, v.value, coverPath, getUserFoyerId(user.id));
