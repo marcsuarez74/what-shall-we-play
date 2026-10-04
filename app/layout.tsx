@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, Space_Grotesk } from "next/font/google";
 import RegisterSW from "@/components/RegisterSW";
 import TabBar from "@/components/TabBar";
+import { LanguageProvider } from "@/components/LanguageProvider";
+import { getLang } from "@/lib/i18n/server";
 import "./globals.css";
 
 const bricolage = Bricolage_Grotesque({
@@ -29,17 +31,20 @@ export const viewport: Viewport = {
   themeColor: "#2A1F17",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const lang = await getLang();
   return (
-    <html lang="fr" className={`${bricolage.variable} ${spaceGrotesk.variable}`}>
+    <html lang={lang} className={`${bricolage.variable} ${spaceGrotesk.variable}`}>
       <body>
-        {children}
-        <TabBar />
-        <RegisterSW />
+        <LanguageProvider lang={lang}>
+          {children}
+          <TabBar />
+          <RegisterSW />
+        </LanguageProvider>
       </body>
     </html>
   );

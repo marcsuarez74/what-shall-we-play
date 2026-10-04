@@ -5,12 +5,15 @@ import { usePathname, useRouter } from 'next/navigation';
 import pkg from '../package.json';
 import { avatarSrc } from '@/lib/formats';
 import type { UserLite } from '@/lib/types';
+import { useI18n } from './LanguageProvider';
+import LanguageSwitch from './LanguageSwitch';
 
 // Pastille utilisateur partagée : en haut à droite de chaque page (maquette v2.1.0).
 // La roue et les écrans de connexion restent plein écran, sans menu.
 export default function UserMenu({ me }: { me: UserLite }) {
   const router = useRouter();
   const pathname = usePathname();
+  const { lang } = useI18n();
   const ref = useRef<HTMLDetailsElement>(null);
 
   useEffect(() => {
@@ -41,6 +44,7 @@ export default function UserMenu({ me }: { me: UserLite }) {
         <button type="button" onClick={logout}>Se déconnecter</button>
         <Link href="/faq">❓ FAQ</Link>
         <Link href={{ pathname: '/bugs', query: { depuis: pathname } }}>🐞 Rapporter un bug</Link>
+        <LanguageSwitch lang={lang} />
         <span className="user-version">v{pkg.version}</span>
       </div>
     </details>
