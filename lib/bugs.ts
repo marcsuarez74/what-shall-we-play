@@ -72,7 +72,7 @@ export async function createBugReport(input: BugInput, lang: Lang = 'fr'): Promi
 
   const repo = process.env.GITHUB_REPO || 'marcsuarez74/what-shall-we-play';
   const api = process.env.GITHUB_API || 'https://api.github.com';
-  const host = process.env.PUBLIC_URL || 'https://etagere.marc-suarez.fr';
+  const host = process.env.PUBLIC_URL || 'https://what-shall-we-play.marco-studio.fr';
   const body = corpsIssue({
     type: input.type, description: input.description, page: input.page, version: pkg.version,
     appareil: input.device.appareil || 'inconnu', navigateur: input.device.navigateur || 'inconnu',

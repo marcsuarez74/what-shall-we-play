@@ -254,10 +254,10 @@ export const en: Record<CléDict, ValeurDict> = {
   'verdict.errInvalide': 'Invalid verdict',
   // Party messages composed for WhatsApp sharing (lib/announce).
   'annonce.invite': ({ dateLong, time, qui }: Record<string, string | number>) =>
-    `🎲 Game on ${dateLong}${time ? ` at ${time}` : ''}!\n👥 ${qui}\nMark your available games 🔗 etagere.marc-suarez.fr`,
+    `🎲 Game on ${dateLong}${time ? ` at ${time}` : ''}!\n👥 ${qui}\nMark your available games 🔗 what-shall-we-play.marco-studio.fr`,
   'annonce.quiPartie': ({ qui, n }: Record<string, string | number>) => `${qui} ${Number(n) > 1 ? 'are' : 'is'} in.`,
   'annonce.resultat': ({ title, owner, attente }: Record<string, string | number>) =>
-    `🎲 ${title} was drawn!\n👉 ${owner} is bringing it${attente}\n🔗 etagere.marc-suarez.fr`,
+    `🎲 ${title} was drawn!\n👉 ${owner} is bringing it${attente}\n🔗 what-shall-we-play.marco-studio.fr`,
   'annonce.attente': ({ qui, time }: Record<string, string | number>) => `🕗 Waiting for ${qui}${time ? ` — at ${time}` : ''}`,
   'annonce.podium': ({ title, lignes }: Record<string, string | number>) => `🎲 ${title} — that's a wrap!\n${lignes}`,
   'annonce.podiumLigne': ({ med, qui, score }: Record<string, string | number>) => `${med} ${qui} — ${score} pts`,

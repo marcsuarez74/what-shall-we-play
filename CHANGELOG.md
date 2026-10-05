@@ -4,6 +4,15 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [4.2.2] — 2026-10-05
+
+### Modifié
+- **Nouveau domaine** — l'app déménage de `etagere.marc-suarez.fr` vers
+  `what-shall-we-play.marco-studio.fr` : les partages WhatsApp (invitation, résultat)
+  et les URLs des captures de bugs pointent vers le nouveau domaine. Côté VPS,
+  l'ancien domaine redirige (301) vers le nouveau. `PUBLIC_URL` reste la variable
+  de référence, le domaine en dur n'en est que le filet de sécurité.
+
 ## [4.2.1] — 2026-10-05
 
 ### Corrigé
