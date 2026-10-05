@@ -4,6 +4,18 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [4.3.0] — 2026-10-05
+
+### Ajouté
+- **Aperçus de partage (og:)** — les liens partagés (WhatsApp, Slack…) affichent enfin une
+  carte : titre, description localisée et image. `og:image` est absolue grâce à `metadataBase`
+  (`PUBLIC_URL`, fallback sur le domaine courant).
+
+### Modifié
+- **Nouvelles icônes** — nouveau logo partout : favicon (`.ico` + `.svg`), icônes PWA
+  192/512, **icône maskable 512** (les fonds arrondis Android ne rognent plus le logo) et
+  apple-touch-icon. Le manifest les déclare toutes.
+
 ## [4.2.2] — 2026-10-05
 
 ### Modifié

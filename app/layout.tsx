@@ -18,14 +18,29 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 // Metadata dynamique : la description suit la langue du cookie (défaut fr).
+// metadataBase rend les og: absolus (les scrapers WhatsApp/Slack n'aiment pas le relatif) ;
+// PUBLIC_URL est posée sur le VPS, le fallback suit le domaine courant.
 export async function generateMetadata(): Promise<Metadata> {
+  const description = t(await getLang(), 'meta.description');
   return {
-    title: "What Shall We Play?",
-    description: t(await getLang(), "meta.description"),
+    metadataBase: new URL(process.env.PUBLIC_URL ?? 'https://what-shall-we-play.marco-studio.fr'),
+    title: 'What Shall We Play?',
+    description,
     icons: {
-      icon: "/icons/icon-192.png",
-      apple: "/icons/apple-touch-icon.png",
+      icon: [
+        { url: '/icons/icon.svg', type: 'image/svg+xml' },
+        { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+      ],
+      apple: '/icons/apple-touch-icon.png',
     },
+    openGraph: {
+      title: 'What Shall We Play?',
+      description,
+      siteName: 'What Shall We Play?',
+      type: 'website',
+      images: [{ url: '/icons/icon-512.png', width: 512, height: 512, alt: 'What Shall We Play?' }],
+    },
+    twitter: { card: 'summary' },
   };
 }
 
