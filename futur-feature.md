@@ -3,7 +3,7 @@
 > **Fichier vivant** : les idées se déposent ici en vrac, chaque feature partira d'ici vers un vrai
 > brainstorming (maquette → spec → plan) au moment de la lancer.
 > Tailles indicatives : 🟢 S · 🟡 M · 🔴 L · 🔴+ XL
-> Dernière mise à jour : 2026-10-04
+> Dernière mise à jour : 2026-10-05
 
 ## Ordre suggéré
 
@@ -20,6 +20,12 @@
 | 9 | Ludothèque virtuelle | 🔴+ XL | Dépend des cercles ; le prêt communautaire pourrait être la feature premium |
 | 10 | Notifications push | 🔴 L | Le plus d'infra ; prend tout son sens une fois les cercles en place |
 | 11 | FAQ — ✓ v3.8.0 | 🟢 S | Petite, sans dépendance — à glisser au fil de l'eau, quand le contenu existe |
+| 12 | Paramétrage de la sélection des jeux | 🟡 M | Petit, colle au flow de création ; rend la sélection plus juste |
+| 13 | Le veto ❌ (et le ❤️) | 🟡 M | Sur l'existant (vote v3.5.0), gros effet social pour peu |
+| 14 | Parties récurrentes & rendez-vous | 🔴 L | Le rendez-vous du groupe ; ouvre inscriptions et conflits d'horaire |
+| 15 | Événements (marathon, KijouKan…) | 🔴 L | La vue « au-dessus des soirées » ; s'appuie sur #14 |
+| 16 | Assistant de règles 🤖 | 🔴+ XL | Le plus lourd (IA + coûts) ; candidat premium, à maqueter |
+| 17 | À emprunter à SPielatus | — | Menu d'inspiration : items à fondre dans #7/#14/#15 |
 
 ---
 
@@ -164,6 +170,104 @@ comme aux curieux qui hésitent avant d'installer la PWA.
     comment l'expliquer simplement (lien avec le garde-fou de §4 : ×1,08 / ×1,00 / ×0,98).
 - **Note** : idée en vrac — collecter les vraies questions posées par les joueurs (2 sujets
   ci-dessus, la collecte est lancée). Page accessible sans compte, une route statique de plus.
+
+## 12. Paramétrage de la sélection des jeux (création de partie)
+
+À la création d'une partie, choisir **qui peut mettre des jeux en lice** :
+
+- **Créateur seul** — le créateur fixe la sélection, les joueurs suivent le tirage.
+- **Créateur + joueurs, depuis la collection du créateur** — chacun pioche, mais dans la
+  ludothèque du créateur (ce qui est réellement sur la table).
+- **Chacun depuis sa propre collection** — le mode actuel.
+
+- **Taille** : 🟡 M (option à la création + périmètre du pool au lancement)
+- **Dépendances** : les ludothèques sont déjà en base ; #7 (cercles) réglera qui voit la
+  collection de qui
+- **Note** : le mode actuel reste le défaut, les autres sont optionnels. Croisement avec #6 :
+  la sélection ne fait que borner le pool de la roue — elle garde le dernier mot.
+
+## 13. Le veto ❌ (et le ❤️)
+
+Le vote 👍 devient ❤️ (« j'ai envie d'y jouer »). En face, un **veto ❌** (« pas ce soir »).
+Les deux peuvent coexister, avec une règle simple : **un veto annule tous les ❤️ d'un jeu** —
+le jeu sort du pool, quel que soit le nombre de votes.
+
+- **Taille** : 🟡 M (nouveau type de vote + règle d'agrégation + UI étagère)
+- **Dépendances** : s'appuie sur le vote existant (v3.5.0) et sur l'infra invités (#2 — le veto
+  d'un invité doit compter aussi)
+- **Note** : à arbitrer au brainstorming — le veto est-il révocable ? un veto bloque pour la
+  soirée ou pour toujours ? Le ❤️ remplace le 👍 partout (étagère, pool, partage WhatsApp) :
+  migration des données à prévoir.
+
+## 14. Parties récurrentes & rendez-vous
+
+Planifier des parties qui reviennent (le jeudi, tous les quinze jours). Les joueurs **voient les
+prochaines dates et rejoignent** celles qu'ils veulent. Deux gardes-fou :
+
+- **Conflit d'horaire** — deux parties le même créneau : alerter, laisser l'humain trancher.
+- **Limite de joueurs max (optionnelle)** — au-delà, liste d'attente à arbitrer.
+
+- **Taille** : 🔴 L (récurrence + participations/inscriptions + détection de conflits)
+- **Dépendances** : soirées programmées (en place) ; #10 pour les notifications (« ta partie de
+  jeudi approche », « une place s'est libérée »)
+- **Note** : la limite max doit rester optionnelle — certaines soirées sont ouvertes. Le conflit
+  d'horaire alerte sans empêcher : c'est le groupe qui décide.
+
+## 15. Événements (marathon, KijouKan…)
+
+Une section « Événements » au-dessus des soirées :
+
+- **Marathon du jeu** — une date (ou plusieurs), un nombre de joueurs, une sélection de jeux —
+  avec les **règles disponibles pour les joueurs** (lien avec #16). Ex. : une journée « on finit
+  les campagnes ».
+- **Événement custom + sondage de disponibilité** — « qui est dispo ces week-ends-là ? » :
+  plusieurs propositions de dates, les participants votent.
+- **Sondage KijouKan** (« Qui joue quand ? ») — la disponibilité permanente du groupe, sans
+  événement précis.
+
+- **Taille** : 🔴 L (entité événement + sondages de dates + rattachement des soirées)
+- **Dépendances** : soirées programmées ; #14 (une récurrence peut être vue comme un événement
+  qui englobe des parties) ; #7 pour l'audience
+- **Note** : inspiré de SPielatus (« Events : la parenthèse au-dessus de plusieurs rondes », voir
+  #17). Le périmètre exact (marathon vs sondage vs custom) se tranchera au brainstorming avec
+  maquette.
+
+## 16. Assistant de règles 🤖
+
+Un outil pour sortir du doute sans casser la partie (inspiration : boardpal.app) : on récupère les
+règles du jeu (PDF/sources officielles), et un petit formulaire permet de poser la question du
+moment : **« est-ce qu'on peut placer ce pion ici, que dit la règle ? »** — réponse courte,
+sourcée, liée au jeu de la partie en cours.
+
+- **Taille** : 🔴+ XL (catalogue de règles + recherche dans les règles + coûts IA à chaque
+  question)
+- **Dépendances** : ludothèque (le jeu en cours) ; candidat naturel pour #8 premium — le coût IA
+  doit vivre quelque part
+- **Note** : la leçon de BoardPal : « choisis le jeu, choisis la source que ta table croit, pose
+  la question » — toujours citer la règle source. Démarrer minuscule : les jeux de la ludothèque,
+  2-3 questions types (mise en place, fin de partie, cas litigieux). Les questions « placement de
+  pion » supposent des règles bien structurées : à maqueter avant d'engager.
+
+## 17. À emprunter à SPielatus
+
+Référence : spielatus.ch/features.html — ce qui pourrait compléter l'app (ce qui existe déjà chez
+nous n'est pas répété) :
+
+- **Sondage multi-dates** — une soirée avec plusieurs propositions de dates, les participants
+  choisissent (à fondre dans #14/#15)
+- **Groupes** — organiser ses rondes en groupes (chevauche #7 : un seul brainstorming)
+- **Chat** — discuter avec les participants (le partage WhatsApp couvre déjà une part du besoin —
+  à arbitrer)
+- **Partage par lien** — faire circuler ses soirées au-delà du foyer
+- **Intégration BGStats** — consigner les résultats aussi dans BG Stats (nos stats restent la
+  source, on exporte)
+- **Events englobant plusieurs rondes** — voir #15
+- (Notifications : déjà prévues #10 · BGG : déjà en place)
+
+- **Taille** : 🟢 S à 🔴 L selon l'item — un menu d'inspiration, pas des engagements
+- **Dépendances** : chaque item renvoie à sa section ci-dessus
+- **Note** : SPielatus est gratuit et privacy-first — le garde-fou à garder : le cœur ne se
+  dégrade jamais (cf. #8).
 
 ---
 
