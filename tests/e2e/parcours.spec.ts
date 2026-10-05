@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { gameIdByTitle, putOnShelf } from './helpers/shelf';
+import { gameIdByTitle, lancerTirage, putOnShelf } from './helpers/shelf';
 
 // Stamp base 36 : « parc-marc- » + 8 caractères ≤ limite d'inscription (20)
 const stamp = Date.now().toString(36);
@@ -51,10 +51,7 @@ test('parcours complet : deux joueurs, sélection, tirage, historique', async ({
   await a.keyboard.press('Escape'); // fermer la fiche avant le CTA
   // v3.0.0 : Marc valide puis lance — Léa n'a pas validé : double-appui « Sûr ? »
   await a.getByRole('button', { name: 'Valider ma sélection' }).click();
-  await a.getByRole('button', { name: /Lancer · 2/ }).click(); // 1/2 prêts → demande de confirmation
-  // Le 2ᵉ clic attend le libellé de confirmation : re-cliquer le même locuteur
-  // regex peut retomber sur l'ancien bouton avant le re-render (race CI, lent).
-  await a.getByRole('button', { name: 'Sûr ? Lancer' }).click(); // confirmation → lancer
+  await lancerTirage(a); // double-appui avec reprise (flake v3.3.1 : clic avalé par le sync live)
   await expect(a.getByText('LA ROUE A PARLÉ')).toBeVisible({ timeout: 10_000 });
 
   // Historique : la soirée du jour vit dans « Ce soir » (badge d'état) — les picks

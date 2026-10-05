@@ -1,5 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
-import { newGame, putOnShelf } from './helpers/shelf';
+import { lancerTirage, newGame, putOnShelf } from './helpers/shelf';
 
 // v3.5 — le vote s'incruste sur l'étagère : badge 👍 haut-droite de chaque boîte,
 // cuivré quand c'est mon vote, révocable, partagé en direct. Le rituel ne change pas.
@@ -123,9 +123,8 @@ test('pool : segmenté seulement avec des votes, Votés → Lancer · M, tirage 
   await a.locator('.choix-pool button', { hasText: 'Votés' }).click();
   await expect(a.getByRole('button', { name: 'Lancer · 2' })).toBeVisible();
   const tirage = a.waitForURL(new RegExp(`/tirage/${nightId}\\?games=${g1},${g2}$`));
-  // B n'a pas validé : idiome v3.0.0 du double-appui « Sûr ? » (cf. parcours.spec.ts)
-  await a.getByRole('button', { name: 'Lancer · 2' }).click(); // 1/2 prêts → demande de confirmation
-  await a.getByRole('button', { name: 'Sûr ? Lancer' }).click(); // confirmation → la roue
+  // B n'a pas validé : idiome v3.0.0 du double-appui « Sûr ? » (avec reprise, cf. helpers/shelf)
+  await lancerTirage(a);
   await tirage;
 });
 
