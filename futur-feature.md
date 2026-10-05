@@ -25,7 +25,7 @@
 | 14 | Parties récurrentes & rendez-vous | 🔴 L | Le rendez-vous du groupe ; ouvre inscriptions et conflits d'horaire |
 | 15 | Événements (marathon, KijouKan…) | 🔴 L | La vue « au-dessus des soirées » ; s'appuie sur #14 |
 | 16 | Assistant de règles 🤖 | 🔴+ XL | Le plus lourd (IA + coûts) ; candidat premium, à maqueter |
-| 17 | À emprunter à SPielatus | — | Menu d'inspiration : items à fondre dans #7/#14/#15 |
+| 17 | Idées repérées ailleurs | — | Menu d'inspiration : items à fondre dans #7/#14/#15 |
 
 ---
 
@@ -228,30 +228,31 @@ Une section « Événements » au-dessus des soirées :
 - **Taille** : 🔴 L (entité événement + sondages de dates + rattachement des soirées)
 - **Dépendances** : soirées programmées ; #14 (une récurrence peut être vue comme un événement
   qui englobe des parties) ; #7 pour l'audience
-- **Note** : inspiré de SPielatus (« Events : la parenthèse au-dessus de plusieurs rondes », voir
-  #17). Le périmètre exact (marathon vs sondage vs custom) se tranchera au brainstorming avec
-  maquette.
+- **Note** : le périmètre exact (marathon vs sondage vs custom) se tranchera au brainstorming
+  avec maquette — d'autres apps du genre ont déjà une vue « événements au-dessus des soirées »
+  (voir #17 pour le détail).
 
 ## 16. Assistant de règles 🤖
 
-Un outil pour sortir du doute sans casser la partie (inspiration : boardpal.app) : on récupère les
-règles du jeu (PDF/sources officielles), et un petit formulaire permet de poser la question du
-moment : **« est-ce qu'on peut placer ce pion ici, que dit la règle ? »** — réponse courte,
-sourcée, liée au jeu de la partie en cours.
+Un outil pour sortir du doute sans casser la partie (le genre existe déjà : des assistants de
+règles par IA qui répondent depuis une source de règles choisie — référence au ledger) : on
+récupère les règles du jeu (PDF/sources officielles), et un petit formulaire permet de poser la
+question du moment : **« est-ce qu'on peut placer ce pion ici, que dit la règle ? »** — réponse
+courte, sourcée, liée au jeu de la partie en cours.
 
 - **Taille** : 🔴+ XL (catalogue de règles + recherche dans les règles + coûts IA à chaque
   question)
 - **Dépendances** : ludothèque (le jeu en cours) ; candidat naturel pour #8 premium — le coût IA
   doit vivre quelque part
-- **Note** : la leçon de BoardPal : « choisis le jeu, choisis la source que ta table croit, pose
-  la question » — toujours citer la règle source. Démarrer minuscule : les jeux de la ludothèque,
-  2-3 questions types (mise en place, fin de partie, cas litigieux). Les questions « placement de
-  pion » supposent des règles bien structurées : à maqueter avant d'engager.
+- **Note** : la leçon des assistants du genre : « choisis le jeu, choisis la source que ta table
+  croit, pose la question » — toujours citer la règle source. Démarrer minuscule : les jeux de la
+  ludothèque, 2-3 questions types (mise en place, fin de partie, cas litigieux). Les questions
+  « placement de pion » supposent des règles bien structurées : à maqueter avant d'engager.
 
-## 17. À emprunter à SPielatus
+## 17. Idées repérées ailleurs
 
-Référence : spielatus.ch/features.html — ce qui pourrait compléter l'app (ce qui existe déjà chez
-nous n'est pas répété) :
+Piochées dans les apps du genre (jeux de société, organisation de soirées) — ce qui existe déjà
+chez nous n'est pas répété :
 
 - **Sondage multi-dates** — une soirée avec plusieurs propositions de dates, les participants
   choisissent (à fondre dans #14/#15)
@@ -266,8 +267,8 @@ nous n'est pas répété) :
 
 - **Taille** : 🟢 S à 🔴 L selon l'item — un menu d'inspiration, pas des engagements
 - **Dépendances** : chaque item renvoie à sa section ci-dessus
-- **Note** : SPielatus est gratuit et privacy-first — le garde-fou à garder : le cœur ne se
-  dégrade jamais (cf. #8).
+- **Note** : ces apps sont souvent gratuites et privacy-first — le garde-fou à garder : le cœur
+  ne se dégrade jamais (cf. #8).
 
 ---
 
