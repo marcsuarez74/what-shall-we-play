@@ -4,6 +4,17 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [4.3.1] — 2026-10-05
+
+### Corrigé
+- **Import BGG : « Aucun jeu possédé » malgré une collection remplie** — `parseCollectionXml`
+  cherchait les valeurs en attributs (`<name value="…"/>`, forme de l'API *thing*) alors que
+  l'endpoint `/collection` réel les renvoie en **contenu texte** (`<name sortindex="1">7 Wonders
+  Duel</name>`). Toutes les lignes étaient écartées → liste vide. Le fixture de test de la v3.6.0
+  décrivait une forme XML inexistante chez BGG : l'import n'avait jamais tourné contre de vraies
+  données, faute d'auth. Éprouvé sur une vraie collection (72 jeux) ; le parseur accepte désormais
+  les deux formes (texte d'abord, `@value`/`@_src` en repli).
+
 ## [4.3.0] — 2026-10-05
 
 ### Ajouté

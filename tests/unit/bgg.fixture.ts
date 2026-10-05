@@ -38,24 +38,26 @@ export const THING_XML = `<?xml version="1.0" encoding="utf-8"?>
   </item>
 </items>`;
 
-// Forme XMLAPI2 /collection : @objectid (attribut), name/yearpublished/thumbnail en @value.
-// (thing, lui, met l'image dans @src — le parseur accepte les deux.)
+// Forme XMLAPI2 /collection RÉELLE (épinglée sur une vraie réponse BGG, 2026-10-05) :
+// name/yearpublished/image/thumbnail/numplays sont du CONTENU TEXTE — pas des
+// attributs @value. (Le fixture v3.6.0 supposait des @value : l'import n'avait
+// jamais tourné avec de vraies données faute d'auth — d'où l'import vide v4.3.1.)
 export const COLLECTION_XML = `<?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<items total="2" termsofuse="https://boardgamegeek.com/xmlapi/termsofuse">
-  <item objectid="174430" collid="9001" subtype="boardgame">
-    <name sortindex="1" value="Gloomhaven"/>
-    <yearpublished value="2017"/>
-    <image value="https://cf.geekdo-images.com/f-gh.jpg"/>
-    <thumbnail value="https://cf.geekdo-images.com/t-gh.jpg"/>
-    <status own="1" prevowned="0" fortrade="0" want="0" wanttoplay="0" wanttobuy="0" wishlist="0"/>
-    <numplays value="7"/>
+<items totalitems="2" termsofuse="https://boardgamegeek.com/xmlapi/termsofuse" pubdate="Mon, 05 Oct 2026 20:50:29 +0000">
+  <item objecttype="thing" objectid="174430" subtype="boardgame" collid="9001">
+    <name sortindex="1">Gloomhaven</name>
+    <yearpublished>2017</yearpublished>
+    <image>https://cf.geekdo-images.com/f-gh.jpg</image>
+    <thumbnail>https://cf.geekdo-images.com/t-gh.jpg</thumbnail>
+    <status own="1" prevowned="0" fortrade="0" want="0" wanttoplay="0" wanttobuy="0" wishlist="0" preordered="0" lastmodified="2026-10-05 15:49:01"/>
+    <numplays>7</numplays>
   </item>
-  <item objectid="266192" collid="9002" subtype="boardgame">
-    <name sortindex="1" value="Wingspan"/>
-    <yearpublished value="2019"/>
-    <thumbnail src="https://cf.geekdo-images.com/t-ws.jpg"/>
-    <status own="1" prevowned="0" fortrade="0" want="0" wanttoplay="0" wanttobuy="0" wishlist="0"/>
-    <numplays value="0"/>
+  <item objecttype="thing" objectid="266192" subtype="boardgame" collid="9002">
+    <name sortindex="1">Wingspan</name>
+    <yearpublished>2019</yearpublished>
+    <thumbnail>https://cf.geekdo-images.com/t-ws.jpg</thumbnail>
+    <status own="1" prevowned="0" fortrade="0" want="0" wanttoplay="0" wanttobuy="0" wishlist="0" preordered="0" lastmodified="2026-10-05 15:49:01"/>
+    <numplays>0</numplays>
   </item>
 </items>`;
 
