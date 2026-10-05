@@ -36,3 +36,21 @@ export async function putOnShelf(page: Page, gameId: number, nightId?: number): 
   const res = await page.request.post(`/api/nights/${nid}/games`, { data: { gameId, added: true } });
   if (!res.ok()) throw new Error(`pose sur étagère ${gameId}: ${res.status()} ${await res.text()}`);
 }
+
+/**
+ * Lance le tirage depuis l'étagère, avec reprise — flake CI v3.3.1 (cf. soirees.spec.ts) :
+ * un refresh du sync live qui tombe entre mousedown et mouseup peut échanger le nœud,
+ * le clic part, la navigation non. On (re)clique « Lancer » (quel que soit son libellé,
+ * « Lancer · N » ou « Sûr ? Lancer ») tant que l'écran tirage n'est pas atteint, 3 essais max.
+ */
+export async function lancerTirage(page: Page): Promise<void> {
+  const cible = page.getByRole('button', { name: /Lancer · \d+|Sûr \? Lancer/ });
+  for (let essai = 0; essai < 3; essai++) {
+    await cible.click();
+    try {
+      await page.waitForURL('**/tirage/**', { timeout: 8_000 });
+      return;
+    } catch { /* clic avalé ou navigation annulée par le sync live : on (re)clique */ }
+  }
+  throw new Error('navigation vers /tirage jamais atteinte après 3 essais');
+}
