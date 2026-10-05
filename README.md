@@ -54,6 +54,10 @@ fichier `.env` à côté du compose (il est transmis au conteneur) :
 echo 'BGG_TOKEN=votre-token' > .env
 ```
 
+En attendant le token, l'API BGG (verrouillée) accepte aussi un cookie de session :
+`echo 'BGG_COOKIE="bggusername=…; bggpassword=…"' >> .env` (copier l'en-tête `Cookie`
+d'une requête connectée dans les devtools). `BGG_TOKEN`, dès obtention, reprend la main.
+
 Le « jour » d'une soirée suit l'heure locale **Europe/Paris** (`TZ` est fixé dans l'image et le
 compose) : une soirée reste « la soirée du jour » jusqu'au changement de jour parisien, pas UTC.
 

@@ -4,6 +4,16 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [4.2.1] — 2026-10-05
+
+### Corrigé
+- **Import BGG et recherche cassés** — BoardGameGeek verrouille désormais son API XML
+  (401 sans authentification) : l'import de collection et la recherche répondaient
+  « BGG ne répond pas ». Les appels repartent vers `boardgamegeek.com/xmlapi2` et un
+  mode d'authentification de secours envoie un cookie de session BGG (`BGG_COOKIE` dans
+  `.env`, git-ignoré) tant que le token développeur (`BGG_TOKEN`, inscription toujours
+  en attente d'approbation) n'est pas disponible — le token reprendra la main dès obtention.
+
 ## [4.2.0] — 2026-10-04
 
 ### Ajouté
