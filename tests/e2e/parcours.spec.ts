@@ -5,6 +5,11 @@ import { gameIdByTitle, lancerTirage, putOnShelf } from './helpers/shelf';
 const stamp = Date.now().toString(36);
 
 test('parcours complet : deux joueurs, sélection, tirage, historique', async ({ browser }) => {
+  // Trajet complet (2 inscriptions, 2 jeux, soirée, tirage animé, historique) :
+  // sur un runner CI chargé, ~35 s en incluant la reprise du double-appui
+  // (3 clics × attente 8 s — cf. lancerTirage). Le défaut Playwright (30 s)
+  // tuait le test après la navigation vers /tirage, avant le verdict (CI 2026-10-05).
+  test.setTimeout(90_000);
   const ctxA = await browser.newContext(); const a = await ctxA.newPage();
   await a.goto('/register');
   await a.getByLabel('Pseudo').fill(`parc-marc-${stamp}`);
