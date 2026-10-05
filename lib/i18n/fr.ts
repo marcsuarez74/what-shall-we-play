@@ -257,10 +257,10 @@ export const fr = {
   'verdict.errInvalide': 'Verdict invalide',
   // Messages de partie composés pour le partage WhatsApp (lib/announce).
   'annonce.invite': ({ dateLong, time, qui }: Record<string, string | number>) =>
-    `🎲 Partie de jeux le ${dateLong}${time ? ` à ${time}` : ''} !\n👥 ${qui}\nMarquez vos jeux dispo 🔗 etagere.marc-suarez.fr`,
+    `🎲 Partie de jeux le ${dateLong}${time ? ` à ${time}` : ''} !\n👥 ${qui}\nMarquez vos jeux dispo 🔗 what-shall-we-play.marco-studio.fr`,
   'annonce.quiPartie': ({ qui, n }: Record<string, string | number>) => `${qui} ${Number(n) > 1 ? 'sont' : 'est'} de la partie.`,
   'annonce.resultat': ({ title, owner, attente }: Record<string, string | number>) =>
-    `🎲 ${title} a été tiré au sort !\n👉 ${owner} ramène son jeu${attente}\n🔗 etagere.marc-suarez.fr`,
+    `🎲 ${title} a été tiré au sort !\n👉 ${owner} ramène son jeu${attente}\n🔗 what-shall-we-play.marco-studio.fr`,
   'annonce.attente': ({ qui, time }: Record<string, string | number>) => `🕗 On attend ${qui}${time ? ` — à ${time}` : ''}`,
   'annonce.podium': ({ title, lignes }: Record<string, string | number>) => `🎲 ${title} — c'est fini !\n${lignes}`,
   'annonce.podiumLigne': ({ med, qui, score }: Record<string, string | number>) => `${med} ${qui} — ${score} pts`,

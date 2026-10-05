@@ -12,7 +12,7 @@ describe('messages de partie', () => {
     expect(buildInviteMessage({ dateLong: 'vendredi 2 octobre', time: '20:00', pseudos: ['marc', 'léa'] })).toBe(
       '🎲 Partie de jeux le vendredi 2 octobre à 20:00 !\n'
       + '👥 marc et léa sont de la partie.\n'
-      + 'Marquez vos jeux dispo 🔗 etagere.marc-suarez.fr');
+      + 'Marquez vos jeux dispo 🔗 what-shall-we-play.marco-studio.fr');
   });
 
   it('invitation : 1 seul → « est », 3+ → « A, B et C »', () => {
@@ -24,7 +24,7 @@ describe('messages de partie', () => {
     expect(buildInviteMessage({ dateLong: 'samedi 3 octobre', time: null, pseudos: ['marc'] })).toBe(
       '🎲 Partie de jeux le samedi 3 octobre !\n'
       + '👥 marc est de la partie.\n'
-      + 'Marquez vos jeux dispo 🔗 etagere.marc-suarez.fr');
+      + 'Marquez vos jeux dispo 🔗 what-shall-we-play.marco-studio.fr');
   });
 
   it('résultat : titre, propriétaire, attente, heure', () => {
@@ -32,7 +32,7 @@ describe('messages de partie', () => {
       '🎲 Azul a été tiré au sort !\n'
       + '👉 marc ramène son jeu\n'
       + '🕗 On attend léa et thibault — à 20:30\n'
-      + '🔗 etagere.marc-suarez.fr');
+      + '🔗 what-shall-we-play.marco-studio.fr');
   });
 
   it('résultat : sans heure, attente solo, jointure 3+', () => {
@@ -40,7 +40,7 @@ describe('messages de partie', () => {
       '🎲 Dune a été tiré au sort !\n'
       + '👉 léa ramène son jeu\n'
       + '🕗 On attend marc\n'
-      + '🔗 etagere.marc-suarez.fr');
+      + '🔗 what-shall-we-play.marco-studio.fr');
     expect(buildResultMessage({ title: 'Dune', ownerPseudo: 'léa', waiting: ['a', 'b', 'c'], time: null }))
       .toContain('On attend a, b et c');
   });
@@ -49,7 +49,7 @@ describe('messages de partie', () => {
     expect(buildResultMessage({ title: 'Solo', ownerPseudo: 'marc', waiting: [], time: '21:00' })).toBe(
       '🎲 Solo a été tiré au sort !\n'
       + '👉 marc ramène son jeu\n'
-      + '🔗 etagere.marc-suarez.fr');
+      + '🔗 what-shall-we-play.marco-studio.fr');
   });
 
   it('construit le message de podium WhatsApp', () => {

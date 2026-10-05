@@ -1,7 +1,7 @@
 # AGENTS.md — What Shall We Play?
 
 Principes de travail pour tout agent (ou humain) intervenant sur ce dépôt.
-PWA Next.js de tirage au sort de la partie du jour — https://etagere.marc-suarez.fr
+PWA Next.js de tirage au sort de la partie du jour — https://what-shall-we-play.marco-studio.fr
 
 ## 1. Principe KISS (fondamental)
 - La solution la plus simple qui fait le travail, toujours.
@@ -17,7 +17,7 @@ PWA Next.js de tirage au sort de la partie du jour — https://etagere.marc-suar
 - Chaîne obligatoire : branche → PR → CI verte (4 jobs, dont la détection docs-only) →
   fusion → déploiement → tag annoté (le workflow Release crée la release GitHub — ne pas
   la créer à la main) → vérifier la prod
-  (`curl -s https://etagere.marc-suarez.fr/sw.js | grep -o "wsp-v[0-9.]*"`).
+  (`curl -s https://what-shall-we-play.marco-studio.fr/sw.js | grep -o "wsp-v[0-9.]*"`).
 - **Toujours passer par une Pull Request — sans exception**, y compris pour les
   changements de docs (le fait d'être admin qui bypass les required checks ne
   dispense pas de la PR : c'est elle qui porte l'historique et la relecture).
