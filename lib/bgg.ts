@@ -95,12 +95,18 @@ export function parseThingXml(xml: string): ThingParsed | null {
   };
 }
 
-export async function searchBoardgames(q: string): Promise<{ bggId: number; name: string }[]> {
+export async function searchBoardgames(q: string): Promise<{ bggId: number; name: string; annee: number | null }[]> {
   const xml = await bggFetch(`${BASE}/search?query=${encodeURIComponent(q)}&type=boardgame`);
   if (!xml) throw new Error('BGG_UNAVAILABLE');
   const root = parser.parse(xml)?.items;
   const items = root?.item ? (Array.isArray(root.item) ? root.item : [root.item]) : [];
-  return items.map((i: Record<string, unknown>) => ({ bggId: Number(i['@_id']), name: String((i.name as Record<string, unknown> | undefined)?.['@_value'] ?? '') }));
+  // Forme réelle /search (épinglée 2026-10-05) : année en @value, comme /thing.
+  // Aucune image dans les réponses — les pochettes viennent de /thing, côté UI.
+  return items.map((i: Record<string, unknown>) => ({
+    bggId: Number(i['@_id']),
+    name: String((i.name as Record<string, unknown> | undefined)?.['@_value'] ?? ''),
+    annee: n((i.yearpublished as Record<string, unknown> | undefined)?.['@_value']),
+  }));
 }
 
 export async function getThing(bggId: number): Promise<ThingResult | null> {

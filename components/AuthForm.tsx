@@ -54,6 +54,9 @@ export default function AuthForm({ mode }: { mode: 'login' | 'register' }) {
         {t(mode === 'login' ? 'auth.lienLogin' : 'auth.lienRegister')}
       </a>
       <LanguageSwitch lang={lang} />
+      {mode === 'login' && (
+        <img className="auth-bgg" src="/logos/powered-by-bgg.svg" alt="Powered by BoardGameGeek" />
+      )}
     </form>
   );
 }

@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FORMATS, FORMAT_SCALE, formatShort } from '@/lib/formats';
@@ -8,18 +8,20 @@ import type { UserLite } from '@/lib/types';
 import { useI18n } from './LanguageProvider';
 import UserMenu from './UserMenu';
 
-interface Suggestion { bggId: number; name: string; }
+interface Suggestion { bggId: number; name: string; annee: number | null; }
 interface Thing {
   bggId: number; title: string; year: number | null; publisher: string | null;
   minPlayers: number | null; maxPlayers: number | null; playtimeMin: number | null;
   weight: number | null; rating: number | null; designer: string | null;
   artist: string | null; bestPlayers: number | null; coverName: string | null;
 }
-type Stage = 'etiquette' | 'choix' | 'fiche';
+type Stage = 'etiquette' | 'fiche';
 type Mode = 'bgg' | 'manuel';
 
 // Taille du plus grand carré (grand = 30×30) ; les autres suivent FORMAT_SCALE.
 const BOX_PX = 76;
+const DEBOUNCE_MS = 500;   // l'autocomplete attend la fin de frappe
+const MAX_SUGGESTIONS = 8; // et précharge au plus 8 fiches (garde 1 req/s côté serveur)
 
 export default function AddGameForm({ me }: { me: UserLite }) {
   const router = useRouter();
@@ -29,32 +31,58 @@ export default function AddGameForm({ me }: { me: UserLite }) {
   const [stage, setStage] = useState<Stage>('etiquette');
   const [mode, setMode] = useState<Mode>('bgg');
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [covers, setCovers] = useState<Record<number, string | null>>({});
   const [thing, setThing] = useState<Thing | null>(null);
   const [photo, setPhoto] = useState<File | null>(null);
   const [manual, setManual] = useState({ year: '', publisher: '', min_players: '', max_players: '', playtime_min: '' });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const debounce = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const coversDemandes = useRef<Set<number>>(new Set());
 
-  async function fetchInfos() {
-    const q = title.trim();
-    setBusy(true); setError(null); setSuggestions([]);
+  function clearDebounce() {
+    if (debounce.current) { clearTimeout(debounce.current); debounce.current = null; }
+  }
+
+  // Autocomplete (v4.4.0) : la liste live remplace l'ancien écran « choix ».
+  // /search ne renvoie aucune image — les pochettes sont préchargées en fond via
+  // /thing (sérialisées par la garde 1 req/s, cache 30 jours) et remplacent le ♟.
+  // La requête est un paramètre explicite : le debounce capture la valeur de la
+  // frappe, pas le state du rendu (closure stale sinon).
+  async function chercher(q: string) {
+    if (q.length < 2) return;
+    setBusy(true); setError(null);
     try {
       const res = await fetch(`/api/bgg/search?q=${encodeURIComponent(q)}`);
       if (!res.ok) throw new Error();
       const results: Suggestion[] = (await res.json()).results;
-      if (results.length === 0) {
-        setError(t('ajout.errAucunJeu', { q }));
-        return;
+      if (results.length === 0) { setSuggestions([]); setError(t('ajout.errAucunJeu', { q })); return; }
+      const liste = results.slice(0, MAX_SUGGESTIONS);
+      setSuggestions(liste);
+      for (const s of liste) {
+        if (coversDemandes.current.has(s.bggId)) continue;
+        coversDemandes.current.add(s.bggId);
+        fetch(`/api/bgg/thing?id=${s.bggId}`)
+          .then((r) => (r.ok ? r.json() : null))
+          .then((t2: Thing | null) => { if (t2) setCovers((prev) => ({ ...prev, [s.bggId]: t2.coverName ?? null })); })
+          .catch(() => {}); // pochette optionnelle : le ♟ reste
       }
-      if (results.length === 1) { await pick(results[0]); return; }
-      setSuggestions(results.slice(0, 8));
-      setStage('choix');
     } catch {
-      setError(t('ajout.errBggToken'));
+      setSuggestions([]); setError(t('ajout.errBggToken'));
     } finally { setBusy(false); }
   }
 
+  function onTitre(v: string) {
+    setTitle(v);
+    clearDebounce();
+    setSuggestions([]); setError(null); // nouvelle frappe : la liste repart de zéro
+    if (stage === 'etiquette' && v.trim().length >= 2) {
+      debounce.current = setTimeout(() => { void chercher(v.trim()); }, DEBOUNCE_MS);
+    }
+  }
+
   async function pick(s: Suggestion) {
+    clearDebounce();
     setBusy(true); setError(null);
     try {
       const res = await fetch(`/api/bgg/thing?id=${s.bggId}`);
@@ -70,6 +98,7 @@ export default function AddGameForm({ me }: { me: UserLite }) {
   }
 
   function goManual() {
+    clearDebounce();
     setMode('manuel'); setThing(null); setSuggestions([]);
     setError(null); setStage('fiche');
   }
@@ -77,6 +106,7 @@ export default function AddGameForm({ me }: { me: UserLite }) {
   function backToSearch() { setStage('etiquette'); setSuggestions([]); setError(null); }
 
   function reset() {
+    clearDebounce();
     setStage('etiquette'); setMode('bgg'); setThing(null); setSuggestions([]);
     setPhoto(null); setError(null);
     setManual({ year: '', publisher: '', min_players: '', max_players: '', playtime_min: '' });
@@ -127,7 +157,7 @@ export default function AddGameForm({ me }: { me: UserLite }) {
   return (
     <form className="add-form" onSubmit={(e) => {
       e.preventDefault();
-      if (stage === 'etiquette') fetchInfos();
+      if (stage === 'etiquette') void chercher(title.trim());
       else if (stage === 'fiche') submit();
     }}>
       <div className="page-head">
@@ -138,13 +168,29 @@ export default function AddGameForm({ me }: { me: UserLite }) {
         <>
           <label htmlFor="add-titre">{t('ajout.titreLabel')}</label>
           <input id="add-titre" className="add-title" value={title} autoComplete="off"
-                 onChange={(e) => setTitle(e.target.value)} placeholder="Through the Desert…" />
+                 onChange={(e) => onTitre(e.target.value)} placeholder="Through the Desert…" />
           <p className="help">{t('ajout.titreAide')}</p>
+
+          {suggestions.length > 0 && (
+            <ul className="suggestions" aria-label={t('ajout.plusieursCorrespondances')}>
+              {suggestions.map((s) => (
+                <li key={s.bggId}>
+                  <button type="button" onClick={() => pick(s)}>
+                    {covers[s.bggId]
+                      ? <img className="sugg-cover" src={`/api/cover/${covers[s.bggId]}`} alt="" />
+                      : <span className="sugg-cover is-ph" aria-hidden>♟</span>}
+                    <span className="sugg-nom">{s.name}</span>
+                    {s.annee != null && <span className="sugg-annee">({s.annee})</span>}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
 
           <p className="field-label">{t('ajout.fmtBoite')}</p>
           <FormatPicker />
 
-          <button type="button" className="btn-bgg" disabled={busy || title.trim().length < 2} onClick={fetchInfos}>
+          <button type="button" className="btn-bgg" disabled={busy || title.trim().length < 2} onClick={() => void chercher(title.trim())}>
             <img src="/logos/powered-by-bgg.svg" alt="" />
             <span className="sep" aria-hidden />
             {busy ? t('ajout.recuperation') : t('ajout.recuperer')}
@@ -152,20 +198,6 @@ export default function AddGameForm({ me }: { me: UserLite }) {
           <p className="btn-note">{t('ajout.recapChamps')}</p>
           <Link className="link-import" href="/games/import">{t('ajout.lienImport')}</Link>
           <button type="button" className="link-manual" onClick={goManual}>{t('ajout.saisieManuelle')}</button>
-        </>
-      )}
-
-      {stage === 'choix' && (
-        <>
-          <p className="field-label">{t('ajout.plusieursCorrespondances')}</p>
-          <ul className="suggestions">
-            {suggestions.map((s) => (
-              <li key={s.bggId}>
-                <button type="button" onClick={() => pick(s)}>{s.name}</button>
-              </li>
-            ))}
-          </ul>
-          <button type="button" className="link-manual" onClick={backToSearch}>{t('ajout.modifierRecherche')}</button>
         </>
       )}
 

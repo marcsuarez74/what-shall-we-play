@@ -30,6 +30,8 @@ test('ajout : un seul résultat BGG -> fiche remplie -> ludothèque', async ({ p
   await page.getByLabel('Titre du jeu').fill('Through the Desert');
   await page.getByRole('button', { name: 'Grand', exact: true }).click();
   await page.getByRole('button', { name: /Récupérer les infos/ }).click();
+  // v4.4.0 : plus d'auto-navigation sur résultat unique — on choisit dans la liste live
+  await page.getByRole('button', { name: 'Through the Desert' }).click();
 
   // Les champs apparaissent, pré-remplis depuis BGG
   await expect(page.locator('.sheet-facts')).toContainText('Reiner Knizia');
@@ -70,6 +72,38 @@ test('ajout : plusieurs résultats -> liste de choix', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'The Search for Planet X' })).toBeVisible();
   await page.getByRole('button', { name: 'Through the Desert' }).click();
   await expect(page.locator('.sheet-facts')).toContainText('Reiner Knizia');
+});
+
+test('ajout : autocomplete live — [pochette|♟] nom (année)', async ({ page }) => {
+  await page.route('**/api/bgg/search*', (r) => r.fulfill({
+    json: { results: [
+      { bggId: 266192, name: 'Wingspan', annee: 2019 },
+      { bggId: 366161, name: 'Wingspan Asia', annee: 2022 },
+    ] },
+  }));
+  await page.route('**/api/bgg/thing*', (r) => r.fulfill({
+    json: { ...THING, bggId: 266192, title: 'Wingspan', year: 2019, coverName: 'c-ws.jpg' },
+  }));
+  // jpeg 1×1 valide : l'élément <img> doit charger pour être visible
+  await page.route('**/api/cover/*', (r) => r.fulfill({
+    contentType: 'image/jpeg',
+    body: Buffer.from('/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/wAALCAABAAEBAREA/8QAFAABAAAAAAAAAAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAD8AVN//2Q==', 'base64'),
+  }));
+  await register(page, `ajout5-${stamp}`);
+
+  await page.goto('/games/add');
+  // Live : la liste apparaît SANS cliquer sur « Récupérer » (debounce 500 ms),
+  // nom + année immédiats (donnés par /search)
+  await page.getByLabel('Titre du jeu').fill('wingspan');
+  const ws = page.getByRole('button', { name: 'Wingspan (2019)' });
+  await expect(ws).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Wingspan Asia (2022)' })).toBeVisible();
+  // La pochette remplace le ♟ (préchargement /thing en fond)
+  await expect(page.locator('.suggestions img.sugg-cover').first()).toBeVisible();
+  // Choix -> fiche : l'année y figure
+  await ws.click();
+  await expect(page.locator('.fiche-meta')).toContainText('2019');
+  await expect(page.locator('.fiche-cover')).toBeVisible();
 });
 
 test('ajout : aucun résultat -> message orientant', async ({ page }) => {
