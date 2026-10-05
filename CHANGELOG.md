@@ -4,6 +4,22 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [4.4.0] — 2026-10-05
+
+### Ajouté
+- **Autocomplete sur la recherche BGG** — la liste des correspondances apparaît sous le champ
+  pendant la frappe (débounce 500 ms, dès 2 caractères) : `[pochette|♟] nom (année)`. L'année
+  est donnée par `/search` (désormais parsée) ; les pochettes sont préchargées en fond via
+  `/thing` (garde 1 req/s, cache 30 jours) et remplacent le ♟ au fil de l'eau — `/search` ne
+  renvoie aucune image (contrainte API, épinglée sur les réponses réelles). Le bouton
+  « Récupérer les infos » reste pour forcer.
+- **« Powered by BoardGameGeek » sur la page de connexion** — attribution demandée par le
+  client (le logo figure déjà sur la fiche jeu et le bouton BGG).
+
+### Modifié
+- L'écran « plusieurs correspondances » disparaît : la liste live le remplace et le choix est
+  explicite — plus d'auto-navigation vers la fiche sur résultat unique.
+
 ## [4.3.1] — 2026-10-05
 
 ### Corrigé
