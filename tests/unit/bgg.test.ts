@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { parseThingXml, getThing, attachCover, collectionUtilisateur, parseCollectionXml } from '@/lib/bgg';
+import { parseThingXml, getThing, attachCover, collectionUtilisateur, parseCollectionXml, searchBoardgames } from '@/lib/bgg';
 import { isSafeCoverName } from '@/lib/storage';
-import { THING_XML, COLLECTION_XML, COLLECTION_ERRORS_XML } from './bgg.fixture';
+import { THING_XML, COLLECTION_XML, COLLECTION_ERRORS_XML, SEARCH_XML } from './bgg.fixture';
 
 describe('bgg', () => {
   it('parse la fiche d\'un jeu', () => {
@@ -66,6 +66,14 @@ describe('collection BGG (import)', () => {
   it('XML vide ou sans items -> []', () => {
     expect(parseCollectionXml('<items total="0"></items>')).toEqual([]);
     expect(parseCollectionXml('')).toEqual([]);
+  });
+  it('recherche : bggId, nom et année (forme réelle /search, année en @value)', async () => {
+    global.fetch = vi.fn().mockResolvedValue(new Response(SEARCH_XML, { status: 200 }));
+    expect(await searchBoardgames('wingspan')).toEqual([
+      { bggId: 266192, name: 'Wingspan', annee: 2019 },
+      { bggId: 366161, name: 'Wingspan Asia', annee: 2022 },
+      { bggId: 473508, name: 'Wingspan Pocket', annee: null }, // sans année publiée
+    ]);
   });
   it('épingles Review Focus n°2 : <errors> BGG -> 404 (pas une collection vide)', async () => {
     global.fetch = vi.fn().mockResolvedValue(new Response(COLLECTION_ERRORS_XML, { status: 200 }));

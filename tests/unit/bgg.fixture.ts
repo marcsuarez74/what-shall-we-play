@@ -67,3 +67,21 @@ export const COLLECTION_ERRORS_XML = `<?xml version="1.0" encoding="utf-8" stand
     <message>Invalid username specified</message>
   </error>
 </errors>`;
+
+// Forme XMLAPI2 /search RÉELLE (épinglée 2026-10-05, requête avec token) :
+// année en attribut @value (comme /thing) ; AUCUNE image dans les résultats —
+// les pochettes ne peuvent venir que de /thing (une fiche par appel, garde 1 req/s).
+export const SEARCH_XML = `<?xml version="1.0" encoding="utf-8"?>
+<items total="3" termsofuse="https://boardgamegeek.com/xmlapi/termsofuse">
+  <item type="boardgame" id="266192">
+    <name type="primary" value="Wingspan"/>
+    <yearpublished value="2019"/>
+  </item>
+  <item type="boardgame" id="366161">
+    <name type="primary" value="Wingspan Asia"/>
+    <yearpublished value="2022"/>
+  </item>
+  <item type="boardgame" id="473508">
+    <name type="primary" value="Wingspan Pocket"/>
+  </item>
+</items>`;

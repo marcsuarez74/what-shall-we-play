@@ -90,6 +90,14 @@ a {
   cursor: not-allowed;
 }
 
+/* Attribution BGG (v4.4.0) : discrète, en pied du formulaire de connexion. */
+.auth-form .auth-bgg {
+  display: block;
+  height: 16px;
+  margin: 14px auto 0;
+  opacity: 0.55;
+}
+
 .btn-ghost {
   appearance: none;
   border: 1px solid var(--doux);
@@ -881,15 +889,50 @@ input[type='file'] {
   color: var(--creme);
   font: inherit;
   font-size: 15px;
-  padding: 10px 12px;
+  padding: 8px 12px;
   cursor: pointer;
   text-align: left;
   width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .suggestions button:hover {
   background: rgba(201, 111, 59, 0.14);
   border-color: var(--cuivre);
+}
+
+/* Ligne de suggestion v4.4.0 : [pochette|♟] nom (année) */
+.sugg-cover {
+  width: 34px;
+  height: 46px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex: none;
+}
+
+.sugg-cover.is-ph {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(201, 111, 59, 0.10);
+  border: 1px solid var(--doux);
+  font-size: 15px;
+}
+
+.sugg-nom {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sugg-annee {
+  color: var(--doux);
+  font-size: 13px;
+  flex: none;
 }
 
 /* ---------- Bibliothèque ---------- */
