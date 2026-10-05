@@ -145,16 +145,30 @@ export function parseCollectionXml(xml: string): JeuBgg[] {
   const root = parser.parse(xml)?.items;
   const items = root?.item ? (Array.isArray(root.item) ? root.item : [root.item]) : [];
   const out: JeuBgg[] = [];
+  // XMLAPI2 /collection réel (épinglé 2026-10-05, cf. fixture) : name/yearpublished/
+  // thumbnail sont du CONTENU TEXTE — pas des attributs @value. Un élément avec
+  // attribut + texte est parsé en objet { '@_sortindex', '#text' }. On accepte les
+  // deux formes (texte d'abord, @value/@_src en repli).
+  const champ = (v: unknown): string | undefined => {
+    if (typeof v === 'string') return v;
+    // parseTagValue (défaut fast-xml-parser) : « 2017 » arrive en nombre
+    if (typeof v === 'number') return String(v);
+    if (v && typeof v === 'object') {
+      const o = v as Record<string, unknown>;
+      const t = o['#text'] ?? o['@_value'] ?? o['@_src'];
+      return typeof t === 'number' ? String(t) : t as string | undefined;
+    }
+    return undefined;
+  };
   for (const i of items as Record<string, unknown>[]) {
     if (i['@_subtype'] && i['@_subtype'] !== 'boardgame') continue;
     const bggId = Number(i['@_objectid']);
-    const titre = (i.name as Record<string, unknown> | undefined)?.['@_value'] as string | undefined;
+    const titre = champ(i.name);
     if (!Number.isFinite(bggId) || bggId <= 0 || !titre) continue;
-    const th = i.thumbnail as Record<string, unknown> | undefined;
     out.push({
       bggId, titre,
-      annee: n((i.yearpublished as Record<string, unknown> | undefined)?.['@_value']),
-      thumb: (th?.['@_value'] ?? th?.['@_src'] ?? null) as string | null,
+      annee: n(champ(i.yearpublished)),
+      thumb: champ(i.thumbnail) ?? null,
     });
   }
   return out;
