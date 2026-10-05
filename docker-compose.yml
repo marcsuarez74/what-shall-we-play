@@ -4,6 +4,7 @@ services:
     ports: ["3000:3000"]
     environment:
       - BGG_TOKEN=${BGG_TOKEN:-}
+      - BGG_COOKIE=${BGG_COOKIE:-}
       - GITHUB_BUG_TOKEN=${GITHUB_BUG_TOKEN:-}
       - GITHUB_REPO=${GITHUB_REPO:-}
       - PUBLIC_URL=${PUBLIC_URL:-}

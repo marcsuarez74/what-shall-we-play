@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { parseThingXml, getThing, attachCover, collectionUtilisateur, parseCollectionXml } from '@/lib/bgg';
 import { isSafeCoverName } from '@/lib/storage';
 import { THING_XML, COLLECTION_XML, COLLECTION_ERRORS_XML } from './bgg.fixture';
@@ -104,5 +104,37 @@ describe('collection BGG (import)', () => {
       text: () => Promise.reject(new Error('body cut')),
     });
     expect(await collectionUtilisateur('quelquun')).toEqual({ error: 'BGG ne répond pas', status: 502 });
+  });
+});
+
+describe('auth API BGG (cookie de session en attendant le token)', () => {
+  // verrouillage BGG (401 + WWW-Authenticate: Bearer) : sans auth, tout l'XMLAPI2 répond 401.
+  const envAvant = { ...process.env };
+  afterEach(() => { process.env = { ...envAvant }; });
+
+  it('les appels XMLAPI2 partent vers boardgamegeek.com (BASE partagé : collection, things, search)', async () => {
+    global.fetch = vi.fn().mockResolvedValue(new Response(COLLECTION_XML, { status: 200 }));
+    await collectionUtilisateur('quelquun');
+    expect(String(vi.mocked(global.fetch).mock.calls[0]?.[0])).toMatch(/^https:\/\/boardgamegeek\.com\/xmlapi2\//);
+  });
+
+  it('BGG_COOKIE défini sans token -> en-tête Cookie envoyé, pas d\'Authorization', async () => {
+    process.env.BGG_COOKIE = 'bggusername=marc; bggpassword=xyz';
+    global.fetch = vi.fn().mockResolvedValue(new Response(COLLECTION_XML, { status: 200 }));
+    await collectionUtilisateur('quelquun');
+    const h = (vi.mocked(global.fetch).mock.calls[0]?.[1] as RequestInit).headers as Record<string, string>;
+    expect(h['Cookie']).toBe('bggusername=marc; bggpassword=xyz');
+    expect(h['Authorization']).toBeUndefined();
+  });
+
+  // Garde : le contrat existant (token prioritaire) doit survivre au fallback cookie.
+  it('BGG_TOKEN défini -> Authorization Bearer prioritaire, pas de Cookie', async () => {
+    process.env.BGG_TOKEN = 'jeton';
+    process.env.BGG_COOKIE = 'bggusername=marc';
+    global.fetch = vi.fn().mockResolvedValue(new Response(COLLECTION_XML, { status: 200 }));
+    await collectionUtilisateur('quelquun');
+    const h = (vi.mocked(global.fetch).mock.calls[0]?.[1] as RequestInit).headers as Record<string, string>;
+    expect(h['Authorization']).toBe('Bearer jeton');
+    expect(h['Cookie']).toBeUndefined();
   });
 });

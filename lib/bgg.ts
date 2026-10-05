@@ -4,12 +4,21 @@ import { saveCover } from './storage';
 import { t, type Lang } from './i18n';
 import type { JeuBgg } from './import-bgg';
 
-const BASE = 'https://api.geekdo.com/xmlapi2';
+// BASE : boardgamegeek.com (et plus api.geekdo.com). Verrouillage BGG (401 +
+// WWW-Authenticate: Bearer) : le cookie de session est posé sur .boardgamegeek.com,
+// c'est donc ce domaine qui accepte l'auth par cookie. Même backend derrière.
+const BASE = 'https://boardgamegeek.com/xmlapi2';
 const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: '@_' });
 
 function headers(): Record<string, string> {
   const h: Record<string, string> = { 'User-Agent': 'what-shall-we-play (personnel)' };
-  if (process.env.BGG_TOKEN) h['Authorization'] = `Bearer ${process.env.BGG_TOKEN}`;
+  if (process.env.BGG_TOKEN) {
+    h['Authorization'] = `Bearer ${process.env.BGG_TOKEN}`;
+  } else if (process.env.BGG_COOKIE) {
+    // En attendant l'approbation du token développeur : cookie de session
+    // (BGG_COOKIE dans .env — jamais commité, à révoquer après usage).
+    h['Cookie'] = process.env.BGG_COOKIE;
+  }
   return h;
 }
 
