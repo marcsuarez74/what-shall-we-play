@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server';
 import { getSessionUser } from '@/lib/session';
 import { createNight, getActiveNight, getNightPlayers } from '@/lib/nights';
+import { refuserInvite } from '@/lib/auth';
 import { t } from '@/lib/i18n';
 import { getLang } from '@/lib/i18n/server';
 
@@ -39,6 +40,8 @@ export async function POST(req: Request) {
   if (startTime != null && !validTime(startTime)) {
     return NextResponse.json({ error: t(lang, 'soiree.errHeureInvalide') }, { status: 400 });
   }
+  const garde = refuserInvite(user, lang);
+  if (garde) return NextResponse.json({ error: garde.error }, { status: garde.status }); // un invité ne crée pas de soirée
   const nightId = createNight(user.id, (playerIds as number[]) ?? [], { playedAt, startTime });
   return NextResponse.json({ nightId });
 }

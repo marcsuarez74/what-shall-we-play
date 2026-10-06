@@ -62,8 +62,8 @@ export function rejoindreParLien(
   nightId: number, token: unknown, nom: unknown, sessionUser: { id: number } | null, lang: Lang = 'fr',
 ): { ok: true; mode: 'compte' | 'invite'; inviteId?: number } | { ok: false; error: string; status: number } {
   const night = getNight(nightId);
-  if (!night || typeof token !== 'string' || token.length < 16 || night.lien_token !== token)
-    return { ok: false, error: t(lang, 'soiree.lienInvalide'), status: 403 };
+  if (!night || night.status === 'termine' || typeof token !== 'string' || token.length < 16 || night.lien_token !== token)
+    return { ok: false, error: t(lang, 'soiree.lienInvalide'), status: 403 }; // le lien d'une archive ne rouvre pas la partie
   const joueurs = getNightPlayers(nightId);
   if (sessionUser) {
     if (joueurs.some((j) => j.id === sessionUser.id)) return { ok: true, mode: 'compte' };
@@ -76,17 +76,27 @@ export function rejoindreParLien(
   return { ok: true, mode: 'invite', inviteId: invite.id };
 }
 
-// v4.6.0 : retrait d'un invité par son hôte — geste explicite. La ligne users
-// disparaît et les FK ON DELETE CASCADE emportent players/votes/scores/verdicts
-// (idiome « pas de vote fantôme ») ainsi que sessions et jetons d'appareil.
+// v4.6.0 : retrait d'un invité — geste explicite du créateur de la soirée ou de
+// l'hôte qui l'a nommé. Transaction : ses picks (ses actions) disparaissent, les
+// jeux qu'il avait posés sur l'étagère passent sous le créateur (contenu de la
+// soirée conservé), la ligne users disparaît et les FK CASCADE emportent
+// players/votes/scores/verdicts/sessions/jetons (idiome « pas de vote fantôme »).
 export function retirerInvite(nightId: number, inviteId: number, userId: number, lang: Lang = 'fr'): { ok: true } | { ok: false; error: string; status: number } {
   const db = getDb();
+  const night = getNight(nightId);
   const inv = db.prepare('SELECT id, host_id, est_invite FROM users WHERE id = ?').get(inviteId) as { id: number; host_id: number | null; est_invite: number } | undefined;
-  if (!inv || !inv.est_invite) return { ok: false, error: t(lang, 'soiree.lienInvalide'), status: 404 };
-  if (inv.host_id !== userId) return { ok: false, error: t(lang, 'erreurs.impossible'), status: 403 };
+  if (!night || !inv || !inv.est_invite) return { ok: false, error: t(lang, 'soiree.lienInvalide'), status: 404 };
+  const autorise = inv.host_id === userId || night.creator_id === userId;
+  if (!autorise) return { ok: false, error: t(lang, 'erreurs.impossible'), status: 403 };
   const dansLaSoiree = db.prepare('SELECT 1 FROM night_players WHERE night_id = ? AND user_id = ?').get(nightId, inviteId);
   if (!dansLaSoiree) return { ok: false, error: t(lang, 'soiree.lienInvalide'), status: 404 };
-  db.prepare('DELETE FROM users WHERE id = ?').run(inviteId);
+  db.transaction(() => {
+    // l'étagère de la soirée n'est pas la propriété de l'invité : le créateur l'adopte
+    db.prepare('UPDATE night_games SET added_by = ? WHERE night_id = ? AND added_by = ?').run(night.creator_id, nightId, inviteId);
+    // ses tirages (picks) sont ses actions : ils partent avec lui
+    db.prepare('DELETE FROM picks WHERE spinner_id = ?').run(inviteId);
+    db.prepare('DELETE FROM users WHERE id = ?').run(inviteId);
+  })();
   notifyNight(nightId);
   return { ok: true };
 }

@@ -21,6 +21,7 @@ export default async function Page() {
   if (!night) {
     // Pas de partie en cours : on choisit les joueurs présents (créateur pré-coché).
     // Si la soirée du jour est terminée, on l'affiche au-dessus du picker.
+    // Un invité ne crée pas de soirée : ni picker, ni liste d'invités à cocher.
     const terminee = getTodayTermineeNight(user.id);
     return <main className="page">
       <UserSync />
@@ -29,7 +30,7 @@ export default async function Page() {
         <UserMenu me={user} />
       </div>
       {terminee && <TermineeCard nightId={terminee.id} gameTitle={terminee.game_title} lang={lang} />}
-      <NightPicker users={users} prechecked={[user.id]} />
+      {!user.est_invite && <NightPicker users={users} prechecked={[user.id]} />}
     </main>;
   }
   return <main className="page">

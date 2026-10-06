@@ -57,6 +57,13 @@ export function creerInvite(nom: unknown, hostId: number, lang: Lang = 'fr'): Au
   return { id: Number(info.lastInsertRowid) };
 }
 
+// v4.6.0 : un invité reste mécanique de soirée — il ne crée pas de ressources
+// (soirée, foyer). Une seule garde, appelée par les routes de création.
+export function refuserInvite(user: Pick<UserRow, 'est_invite'> | null | undefined, lang: Lang = 'fr'): { error: string; status: number } | null {
+  if (user?.est_invite) return { error: t(lang, 'auth.errInviteCreation'), status: 403 };
+  return null;
+}
+
 export function verifyLogin(pseudo: unknown, code: unknown, lang: Lang = 'fr'): AuthResult {
   // trim : un espace copié-collé ne doit pas faire échouer la connexion
   const p = typeof pseudo === 'string' ? pseudo.trim() : pseudo;

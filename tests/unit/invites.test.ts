@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { getDb, runMigrations } from '@/lib/db';
-import { registerUser, creerInvite, verifyLogin, getUserByToken, createSession, createDeviceToken, consommerDeviceToken } from '@/lib/auth';
-import { createNight, getNight, getNightPlayers, rejoindreParLien, retirerInvite } from '@/lib/nights';
+import { registerUser, creerInvite, verifyLogin, getUserByToken, createSession, createDeviceToken, consommerDeviceToken, refuserInvite } from '@/lib/auth';
+import { createNight, getNight, getNightPlayers, rejoindreParLien, retirerInvite, setNightPlayers } from '@/lib/nights';
 
 describe('schéma invités (v4.6.0)', () => {
   test('colonnes est_invite / host_id / lien_token présentes et idempotentes', () => {
@@ -104,6 +104,52 @@ describe('rejoindreParLien', () => {
     const joueurs = getNightPlayers(nightId);
     expect(joueurs.find((j) => j.pseudo === `Sophie ${stamp}`)?.est_invite).toBe(1);
     expect(joueurs.find((j) => j.id === hote)?.est_invite).toBe(0);
+  });
+
+  test('un invité qui a fait tourner la roue peut être retiré (picks purgés, étagère réattribuée)', () => {
+    const stamp = Date.now().toString(36);
+    const hote = (registerUser(`cinv9_${stamp}`, '1234') as { id: number }).id;
+    const nightId = createNight(hote, [hote]);
+    const inv = rejoindreParLien(nightId, getNight(nightId)!.lien_token, `Sophie ${stamp}`, null) as { ok: true; inviteId: number };
+    const db = getDb();
+    const g = db.prepare('INSERT INTO games (owner_id, title, box_format) VALUES (?, ?, ?)').run(hote, 'Test9', 'moyen');
+    // l'invité a ajouté un jeu à l'étagère ET fait tourner la roue
+    db.prepare('INSERT INTO night_games (night_id, game_id, added_by) VALUES (?, ?, ?)').run(nightId, Number(g.lastInsertRowid), inv.inviteId);
+    db.prepare('INSERT INTO picks (night_id, game_id, spinner_id) VALUES (?, ?, ?)').run(nightId, Number(g.lastInsertRowid), inv.inviteId);
+    expect(retirerInvite(nightId, inv.inviteId, hote)).toMatchObject({ ok: true });
+    expect(db.prepare('SELECT 1 FROM picks WHERE spinner_id = ?').get(inv.inviteId)).toBeUndefined();
+    // le jeu reste sur l'étagère de la soirée (adopté par le créateur)
+    const ng = db.prepare('SELECT added_by FROM night_games WHERE night_id = ? AND game_id = ?').get(nightId, Number(g.lastInsertRowid)) as { added_by: number };
+    expect(ng.added_by).toBe(hote);
+  });
+
+  test('l’hôte de la soirée peut retirer un invité joint par un autre lien', () => {
+    const stamp = Date.now().toString(36);
+    const hoteA = (registerUser(`cinvA_${stamp}`, '1234') as { id: number }).id;
+    const hoteB = (registerUser(`cinvB_${stamp}`, '1234') as { id: number }).id;
+    // l'invité est créé par l'hôte A mais rejoint la soirée de l'hôte B
+    const inv = creerInvite(`Sophie ${stamp}`, hoteA) as { id: number };
+    const nightId = createNight(hoteB, [hoteB]);
+    setNightPlayers(nightId, [hoteB, inv.id]);
+    expect(retirerInvite(nightId, inv.id, hoteB)).toMatchObject({ ok: true });
+  });
+
+  test('on ne peut pas rejoindre une soirée terminée par le lien', () => {
+    const stamp = Date.now().toString(36);
+    const hote = (registerUser(`cinvT_${stamp}`, '1234') as { id: number }).id;
+    const nightId = createNight(hote, [hote]);
+    getDb().prepare("UPDATE nights SET status = 'termine', ended_at = datetime('now') WHERE id = ?").run(nightId);
+    expect(rejoindreParLien(nightId, getNight(nightId)!.lien_token, `X ${stamp}`, null)).toMatchObject({ ok: false, status: 403 });
+  });
+
+  test('un invité ne crée ni soirée ni foyer (garde écrite une fois)', () => {
+    const stamp = Date.now().toString(36);
+    const hote = (registerUser(`cinvG_${stamp}`, '1234') as { id: number }).id;
+    const inv = creerInvite(`Sophie ${stamp}`, hote) as { id: number };
+    const invite = getDb().prepare('SELECT * FROM users WHERE id = ?').get(inv.id) as { est_invite?: number };
+    expect(refuserInvite(invite)).toMatchObject({ status: 403 });
+    const normal = getDb().prepare('SELECT * FROM users WHERE id = ?').get(hote) as { est_invite?: number };
+    expect(refuserInvite(normal)).toBeNull();
   });
 });
 

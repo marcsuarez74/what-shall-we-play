@@ -18,7 +18,8 @@ export default function RejoindreSoiree({ nightId, token, dejaConnecte }: { nigh
     if (!dt) return;
     fetch('/api/auth/restore', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: dt }) })
       .then(async (r) => {
-        if (!r.ok) { localStorage.removeItem(cle); return; }
+        if (r.status === 401) { localStorage.removeItem(cle); return; } // jeton inconnu seulement — une panne passagère ne déconnecte pas
+        if (!r.ok) return;
         const data = await r.json();
         localStorage.setItem(cle, data.device_token); // rotation à chaque restauration
         router.replace('/etagere'); // l'écran vivant de la soirée (l'archive est /nights/<id>)
@@ -48,7 +49,7 @@ export default function RejoindreSoiree({ nightId, token, dejaConnecte }: { nigh
              onChange={(e) => setNom(e.target.value)}
              onKeyDown={(e) => { if (e.key === 'Enter' && nom.trim() && !busy) rejoindre(); }} />
       {erreur && <p role="alert" className="join-erreur">{erreur}</p>}
-      <button type="button" className="btn-copper" disabled={busy || nom.trim().length === 0} onClick={rejoindre}>
+      <button type="button" className="btn-copper" disabled={busy || (!dejaConnecte && nom.trim().length === 0)} onClick={rejoindre}>
         {t('soiree.joinCta')}
       </button>
       <p className="join-note">{t('soiree.joinSansCompte')}</p>

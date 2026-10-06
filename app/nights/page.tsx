@@ -99,7 +99,7 @@ export default async function Page() {
                       time={heureCourte(n.played_at, n.start_time)}
                       pseudos={players.map((p) => p.pseudo)}
                       lien={n.creator_id === user.id && n.lien_token
-                        ? `https://what-shall-we-play.marco-studio.fr/nights/${n.id}/rejoindre?k=${n.lien_token}`
+                        ? `${process.env.PUBLIC_URL ?? 'https://what-shall-we-play.marco-studio.fr'}/nights/${n.id}/rejoindre?k=${n.lien_token}`
                         : undefined}
                     />
                   </div>
