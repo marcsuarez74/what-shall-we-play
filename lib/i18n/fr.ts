@@ -25,6 +25,8 @@ export const fr = {
   'auth.errCode': 'Code secret : 4 chiffres',
   'auth.errEmoji': 'Emoji invalide',
   'auth.errPseudoPris': 'Pseudo déjà pris',
+  'auth.errNomInvite': 'Donne un prénom (ou surnom) de 1 à 20 caractères.',
+  'auth.errInvite': 'Ce profil est un invité de soirée : il n’a pas de connexion.',
   'auth.errIdentifiants': 'Identifiants incorrects',
   // Pluriel exemplaire (consommé par les zones T2-T6).
   'ludotheque.nbJeux': ({ n }: Record<string, string | number>) => `${n} jeu${Number(n) > 1 ? 'x' : ''}`,

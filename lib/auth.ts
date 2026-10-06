@@ -41,10 +41,27 @@ export function registerUser(pseudo: unknown, code: unknown, sticker?: unknown, 
   }
 }
 
+// v4.6.0 (invités par lien) : l'invité est une ligne users non connectable —
+// code_hash = bcrypt d'un aléatoire (jamais deviné), pseudo = nom choisi par
+// l'hôte (exempt du charset d'inscription), suffixé si collision.
+export function creerInvite(nom: unknown, hostId: number, lang: Lang = 'fr'): AuthResult {
+  const n = typeof nom === 'string' ? nom.trim().replace(/\s+/g, ' ') : '';
+  if (n.length < 1 || n.length > 20) return { error: t(lang, 'auth.errNomInvite'), status: 400 };
+  const base = n;
+  let pseudo = base;
+  for (let i = 2; getDb().prepare('SELECT 1 FROM users WHERE pseudo = ?').get(pseudo); i++) pseudo = `${base} ${i}`;
+  const codeHash = bcrypt.hashSync(crypto.randomBytes(18).toString('hex'), 10);
+  const info = getDb()
+    .prepare('INSERT INTO users (pseudo, code_hash, lang, est_invite, host_id) VALUES (?, ?, ?, 1, ?)')
+    .run(pseudo, codeHash, 'fr', hostId);
+  return { id: Number(info.lastInsertRowid) };
+}
+
 export function verifyLogin(pseudo: unknown, code: unknown, lang: Lang = 'fr'): AuthResult {
   // trim : un espace copié-collé ne doit pas faire échouer la connexion
   const p = typeof pseudo === 'string' ? pseudo.trim() : pseudo;
   const row = getDb().prepare('SELECT * FROM users WHERE pseudo = ?').get(p) as UserRow | undefined;
+  if (row?.est_invite) return { error: t(lang, 'auth.errInvite'), status: 401 }; // un invité ne se connecte pas
   if (!row || !bcrypt.compareSync(String(code ?? ''), row.code_hash))
     return { error: t(lang, 'auth.errIdentifiants'), status: 401 };
   return { id: row.id, lang: row.lang };
