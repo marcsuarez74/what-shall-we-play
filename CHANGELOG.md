@@ -4,6 +4,29 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [4.7.2] — 2026-10-06
+
+### Sécurité
+Corrections issues de l'audit du dépôt (lot A).
+- **Limite de tentatives de connexion** : 5 échecs par pseudo (et 20 par IP quand le proxy
+  la transmet) sur 15 min, puis « Trop de tentatives : réessaie dans N min. ». La vérification
+  du code ne bloque plus le serveur (bcrypt asynchrone).
+- **Port 3000 lié à `127.0.0.1`** dans `docker-compose.yml` : l'app n'est plus joignable en
+  HTTP direct, seulement via le proxy HTTPS (Docker passait outre le pare-feu).
+- **Cookie de session `Secure`** en production.
+- **Jetons de session et d'appareil hachés** (sha256) en base ; les sessions en cours restent
+  valides (migration unique).
+- **Purge au démarrage** : sessions expirées, jetons d'appareil inutilisés depuis un an,
+  invités sans soirée. Aucune donnée de jeu n'est touchée.
+- **Images vérifiées par leur contenu** (jpeg, png, webp) et non plus par l'extension du
+  fichier : pochettes, photo de profil, captures de bug.
+- **En-têtes de sécurité** : `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`,
+  CSP minimale ; `X-Powered-By` retiré.
+
+### Corrigé
+- Un invité ne bloque plus un pseudo : si un compte s'inscrit avec le prénom d'un invité,
+  l'invité est renommé « Thib 2 ».
+
 ## [4.7.1] — 2026-10-06
 
 ### Corrigé

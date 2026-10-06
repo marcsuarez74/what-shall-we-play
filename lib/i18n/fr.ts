@@ -94,6 +94,7 @@ export const fr = {
   'invite.retireTitre': ({ hote }: Record<string, string | number>) => `Tu ne fais plus partie de la soirée de ${hote}.`,
   'invite.retireTexte': 'Pour revenir, demande-lui un nouveau lien.',
   'annonce.titreLigne': ({ titre }: Record<string, string | number>) => `📌 ${titre}`,
+  'auth.errTropDeTentatives': ({ min }: Record<string, string | number>) => `Trop de tentatives : réessaie dans ${min} min.`,
   'auth.errIdentifiants': 'Identifiants incorrects',
   // Pluriel exemplaire (consommé par les zones T2-T6).
   'ludotheque.nbJeux': ({ n }: Record<string, string | number>) => `${n} jeu${Number(n) > 1 ? 'x' : ''}`,

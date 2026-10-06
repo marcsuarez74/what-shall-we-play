@@ -165,7 +165,7 @@ export async function getThing(bggId: number): Promise<ThingResult | null> {
   return result;
 }
 
-// Télécharge la pochette en local (saveCover, 'jpg') et la persiste dans le cache.
+// Télécharge la pochette en local (saveCover, format lu dans les octets) et la persiste dans le cache.
 // Hors de getThing : le cache ne doit pas déclencher un 2e fetch (contrainte test 30 jours).
 export async function attachCover(thing: ThingResult): Promise<ThingResult> {
   if (thing.coverName || !thing.imageUrl) return thing;
@@ -173,7 +173,7 @@ export async function attachCover(thing: ThingResult): Promise<ThingResult> {
     const img = await fetch(thing.imageUrl, { signal: AbortSignal.timeout(8000) });
     // content-type image/ requis : évite de sauvegarder une page d'erreur en .jpg
     if (img.ok && img.headers.get('content-type')?.startsWith('image/')) {
-      thing.coverName = saveCover(Buffer.from(await img.arrayBuffer()), 'jpg');
+      thing.coverName = saveCover(Buffer.from(await img.arrayBuffer())); // format lu dans les octets ; inconnu → catch, pas de pochette
       getDb().prepare('UPDATE bgg_cache SET payload_json = ? WHERE bgg_id = ?')
         .run(JSON.stringify(thing), thing.bggId);
     }

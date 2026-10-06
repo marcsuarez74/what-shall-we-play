@@ -42,3 +42,19 @@ test('login : la session survit à la perte du cookie (jeton d\'appareil)', asyn
   // le jeton a tourné (rotation à chaque restauration)
   expect(await page.evaluate(() => localStorage.getItem('wsp_device_token'))).not.toBe(token);
 });
+
+// v4.7.2 (audit) : 5 échecs sur un pseudo → « Trop de tentatives », même avec le
+// bon code ensuite (le blocage dure la fenêtre de 15 min).
+test('login : trop de tentatives → blocage temporaire du pseudo', async ({ page }) => {
+  const p = `brute_${Date.now().toString(36)}`;
+  await page.request.post('/api/auth/register', { data: { pseudo: p, code: '1234' } });
+  for (let i = 0; i < 5; i++) {
+    const r = await page.request.post('/api/auth/login', { data: { pseudo: p, code: '0000' } });
+    expect(r.status()).toBe(401);
+  }
+  await page.goto('/login');
+  await page.getByLabel('Pseudo').fill(p);
+  await page.getByLabel('Code secret').fill('1234');
+  await page.getByRole('button', { name: 'Entrer' }).click();
+  await expect(page.getByText(/Trop de tentatives : réessaie dans \d+ min\./)).toBeVisible();
+});

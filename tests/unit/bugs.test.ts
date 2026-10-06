@@ -106,7 +106,7 @@ describe('createBugReport', () => {
 
 describe('GET /api/bugs/capture/[name]', () => {
   it('sert le fichier (200, Content-Type image) et 404 pour un nom inconnu/mauvais', async () => {
-    const name = saveBugCapture(Buffer.from('png-fake'), 'png');
+    const name = saveBugCapture(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00]));
     const ok = await GET(new Request('https://x/y'), { params: Promise.resolve({ name }) });
     expect(ok.status).toBe(200);
     expect(ok.headers.get('Content-Type')).toBe('image/png');

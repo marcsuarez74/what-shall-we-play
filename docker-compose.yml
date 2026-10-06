@@ -1,7 +1,7 @@
 services:
   app:
     build: .
-    ports: ["3000:3000"]
+    ports: ["127.0.0.1:3000:3000"] # v4.7.2 (audit) : joignable seulement via le proxy HTTPS de l'hôte (Docker passe outre UFW)
     environment:
       - BGG_TOKEN=${BGG_TOKEN:-}
       - BGG_COOKIE=${BGG_COOKIE:-}

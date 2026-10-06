@@ -92,6 +92,7 @@ export const en: Record<CléDict, ValeurDict> = {
   'invite.retireTitre': ({ hote }: Record<string, string | number>) => `You are no longer part of ${hote}’s game.`,
   'invite.retireTexte': 'To come back, ask them for a new link.',
   'annonce.titreLigne': ({ titre }: Record<string, string | number>) => `📌 ${titre}`,
+  'auth.errTropDeTentatives': ({ min }: Record<string, string | number>) => `Too many attempts: try again in ${min} min.`,
   'auth.errIdentifiants': 'Incorrect credentials',
   'ludotheque.nbJeux': ({ n }: Record<string, string | number>) => `${n} game${Number(n) > 1 ? 's' : ''}`,
   // Shelf zone (ShelfClient, ShelfControls, ShelfPicker, TermineeCard, /etagere page).

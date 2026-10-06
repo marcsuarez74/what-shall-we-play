@@ -5,7 +5,7 @@ import { t } from '@/lib/i18n';
 import { getLang } from '@/lib/i18n/server';
 import { validateGameInput, createGame, listUserLibrary } from '@/lib/games';
 import { getUserFoyerId } from '@/lib/foyers';
-import { saveCover, isSafeCoverName, COVER_EXT } from '@/lib/storage';
+import { saveCover, isSafeCoverName, formatImage } from '@/lib/storage';
 
 export async function GET() {
   const lang = await getLang();
@@ -34,9 +34,9 @@ export async function POST(req: Request) {
   const file = form.get('cover');
   if (file && file instanceof File && file.size > 0) {
     if (file.size > 5 * 1024 * 1024) return NextResponse.json({ error: t(lang, 'jeu.errPochettePoids') }, { status: 400 });
-    const ext = file.name.split('.').pop()?.toLowerCase() as (typeof COVER_EXT)[number] | undefined;
-    if (!ext || !COVER_EXT.includes(ext)) return NextResponse.json({ error: t(lang, 'jeu.errPochetteExt') }, { status: 400 });
-    coverPath = saveCover(Buffer.from(await file.arrayBuffer()), ext);
+    const buf = Buffer.from(await file.arrayBuffer());
+    if (!formatImage(buf)) return NextResponse.json({ error: t(lang, 'jeu.errPochetteExt') }, { status: 400 });
+    coverPath = saveCover(buf);
   }
   const id = createGame(user.id, v.value, coverPath, getUserFoyerId(user.id));
   return NextResponse.json({ id });

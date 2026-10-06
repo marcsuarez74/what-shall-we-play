@@ -8,6 +8,24 @@ import type { UserRow } from './types';
 // lang : langue du navigateur (cookie) passée par les routes auth — défaut 'fr',
 // le comportement historique (les tests unitaires restent en français).
 // À la création, elle est persistée dans users.lang (« la langue suit le compte »).
+// v4.7.2 (audit, point 6) — les jetons (session, appareil) ne sont stockés qu'en
+// empreinte sha256 : une sauvegarde de la base ne contient aucune session utilisable.
+export function hacherJeton(token: string): string {
+  return crypto.createHash('sha256').update(token).digest('hex');
+}
+
+// v4.7.2 (audit, point 4) — un invité ne bloque jamais un pseudo : si un compte
+// (inscription ou conversion) veut le pseudo d'un invité, l'invité est renommé
+// « Thib 2 » (même règle de suffixe qu'à sa création).
+function libererPseudo(pseudo: string, saufId?: number): void {
+  const db = getDb();
+  const inv = db.prepare('SELECT id FROM users WHERE pseudo = ? AND est_invite = 1 AND id IS NOT ?').get(pseudo, saufId ?? null) as { id: number } | undefined;
+  if (!inv) return;
+  let nouveau = pseudo;
+  for (let i = 2; db.prepare('SELECT 1 FROM users WHERE pseudo = ?').get(nouveau); i++) nouveau = `${pseudo} ${i}`;
+  db.prepare('UPDATE users SET pseudo = ? WHERE id = ?').run(nouveau, inv.id);
+}
+
 export type AuthResult = { id: number; lang?: string } | { error: string; status: number };
 
 export function validatePseudo(p: unknown, lang: Lang = 'fr'): string | null {
@@ -30,6 +48,7 @@ export function registerUser(pseudo: unknown, code: unknown, sticker?: unknown, 
   if (st != null && !(ALLOWED_STICKERS as readonly string[]).includes(st as string))
     return { error: t(lang, 'auth.errEmoji'), status: 400 };
   const hash = bcrypt.hashSync(code as string, 10);
+  libererPseudo(p as string);
   try {
     const info = st != null
       ? getDb().prepare('INSERT INTO users (pseudo, code_hash, sticker, lang) VALUES (?, ?, ?, ?)').run(p, hash, st, lang)
@@ -72,6 +91,7 @@ export function convertirInvite(userId: number, pseudo: unknown, code: unknown, 
   const p = typeof pseudo === 'string' ? pseudo.trim() : pseudo;
   const pe = validatePseudo(p, lang); if (pe) return { error: pe, status: 400 };
   const ce = validateCode(code, lang); if (ce) return { error: ce, status: 400 };
+  libererPseudo(p as string, userId);
   try {
     getDb().prepare('UPDATE users SET pseudo = ?, code_hash = ?, est_invite = 0, host_id = NULL, lang = ? WHERE id = ?')
       .run(p, bcrypt.hashSync(code as string, 10), lang, userId);
@@ -82,19 +102,21 @@ export function convertirInvite(userId: number, pseudo: unknown, code: unknown, 
   }
 }
 
-export function verifyLogin(pseudo: unknown, code: unknown, lang: Lang = 'fr'): AuthResult {
+// v4.7.2 (audit, point 1) : bcrypt.compare (asynchrone) — compareSync figeait le
+// serveur Node pendant chaque essai. La limite de tentatives vit dans la route.
+export async function verifyLogin(pseudo: unknown, code: unknown, lang: Lang = 'fr'): Promise<AuthResult> {
   // trim : un espace copié-collé ne doit pas faire échouer la connexion
   const p = typeof pseudo === 'string' ? pseudo.trim() : pseudo;
   const row = getDb().prepare('SELECT * FROM users WHERE pseudo = ?').get(p) as UserRow | undefined;
   if (row?.est_invite) return { error: t(lang, 'auth.errInvite'), status: 401 }; // un invité ne se connecte pas
-  if (!row || !bcrypt.compareSync(String(code ?? ''), row.code_hash))
+  if (!row || !(await bcrypt.compare(String(code ?? ''), row.code_hash)))
     return { error: t(lang, 'auth.errIdentifiants'), status: 401 };
   return { id: row.id, lang: row.lang };
 }
 
 export function createSession(userId: number, jours = 30): string {
   const token = crypto.randomBytes(32).toString('hex');
-  getDb().prepare(`INSERT INTO sessions (token, user_id, expires_at) VALUES (?, ?, datetime('now','+${jours} days'))`).run(token, userId);
+  getDb().prepare(`INSERT INTO sessions (token, user_id, expires_at) VALUES (?, ?, datetime('now','+${jours} days'))`).run(hacherJeton(token), userId);
   return token;
 }
 
@@ -103,25 +125,28 @@ export function createSession(userId: number, jours = 30): string {
 // le localStorage survit. Rotation à chaque restauration (un jeton usagé meurt).
 export function createDeviceToken(userId: number): string {
   const token = crypto.randomBytes(32).toString('hex');
-  getDb().prepare('INSERT INTO device_tokens (token, user_id) VALUES (?, ?)').run(token, userId);
+  getDb().prepare('INSERT INTO device_tokens (token, user_id) VALUES (?, ?)').run(hacherJeton(token), userId);
   return token;
 }
 
 export function consommerDeviceToken(token: string): { userId: number; deviceToken: string } | null {
-  const row = getDb().prepare('SELECT user_id FROM device_tokens WHERE token = ?').get(token) as
+  const row = getDb().prepare('SELECT user_id FROM device_tokens WHERE token = ?').get(hacherJeton(token)) as
     { user_id: number } | undefined;
   if (!row) return null;
-  getDb().prepare('DELETE FROM device_tokens WHERE token = ?').run(token);
+  getDb().prepare('DELETE FROM device_tokens WHERE token = ?').run(hacherJeton(token));
   return { userId: row.user_id, deviceToken: createDeviceToken(row.user_id) };
 }
 
 export function supprimerDeviceToken(token: string): void {
-  getDb().prepare('DELETE FROM device_tokens WHERE token = ?').run(token);
+  getDb().prepare('DELETE FROM device_tokens WHERE token = ?').run(hacherJeton(token));
+}
+export function supprimerSession(token: string): void {
+  getDb().prepare('DELETE FROM sessions WHERE token = ?').run(hacherJeton(token));
 }
 
 export function getUserByToken(token: string): UserRow | null {
   const row = getDb().prepare(`
     SELECT u.* FROM sessions s JOIN users u ON u.id = s.user_id
-    WHERE s.token = ? AND s.expires_at > datetime('now')`).get(token) as UserRow | undefined;
+    WHERE s.token = ? AND s.expires_at > datetime('now')`).get(hacherJeton(token)) as UserRow | undefined;
   return row ?? null;
 }

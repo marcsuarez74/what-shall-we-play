@@ -68,18 +68,20 @@ describe('profil', () => {
 
   it('setAvatar enregistre le fichier et remplace l ancien', () => {
     const u = uid('p_av');
-    const fake = Buffer.from('fakejpg1');
-    const r1 = setAvatar(u, fake, 'jpg');
+    const jpg = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10]);
+    const png = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00]);
+    const r1 = setAvatar(u, jpg);
     if (!('ok' in r1)) throw new Error('upload 1 refusé : ' + (('error' in r1) && r1.error));
     expect((getDb().prepare('SELECT avatar_path FROM users WHERE id = ?').get(u) as { avatar_path: string }).avatar_path).toBe(r1.path);
     expect(fs.existsSync(path.join(process.env.DATA_DIR!, 'covers', r1.path))).toBe(true);
-    const r2 = setAvatar(u, fake, 'png');
+    const r2 = setAvatar(u, png);
     if (!('ok' in r2)) throw new Error('upload 2 refusé');
+    expect(r2.path).toMatch(/\.png$/); // extension = format réel
     expect(fs.existsSync(path.join(process.env.DATA_DIR!, 'covers', r1.path))).toBe(false); // ancien effacé
     expect((getDb().prepare('SELECT sticker FROM users WHERE id = ?').get(u) as { sticker: string | null }).sticker).toBeNull();
     expect(avatarSrc({ avatar_path: r2.path, sticker: '🦊' })).toBe(`/api/cover/${r2.path}`);
     expect(avatarSrc({ avatar_path: null, sticker: '🦊' })).toBeNull();
-    expect(setAvatar(u, fake, 'exe')).toEqual({ error: 'Format : jpg, png ou webp', status: 400 });
+    expect(setAvatar(u, Buffer.from('MZ pas une image'))).toEqual({ error: 'Format : jpg, png ou webp', status: 400 });
   });
 
   it('compte les podiums et liste mes parties avec ma médaille', () => {
@@ -107,7 +109,7 @@ describe('profil', () => {
 
   it('revenir au sticker efface la photo de disque', () => {
     const u = uid('p_av2');
-    const r = setAvatar(u, Buffer.from('xx'), 'jpg');
+    const r = setAvatar(u, Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10]));
     if (!('ok' in r)) throw new Error('upload refusé');
     const p = r.path;
     expect(setSticker(u, '🦊')).toEqual({ ok: true });
