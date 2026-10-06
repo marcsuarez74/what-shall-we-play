@@ -39,8 +39,8 @@ jobs:
           fi
           echo "Fichiers modifiés :"
           echo "$FICHIERS"
-          # docs-only ⇐ tous les fichiers sont .md, sous docs/ ou captures-maquette/
-          if echo "$FICHIERS" | grep -qvE '(^|/)[^/]+\.md$|^docs/|^captures-maquette/'; then
+          # docs-only ⇐ tous les fichiers sont .md, sous docs/, captures-maquette/ ou mockup/
+          if echo "$FICHIERS" | grep -qvE '(^|/)[^/]+\.md$|^docs/|^captures-maquette/|^mockup/'; then
             echo "docs=false" >> "$GITHUB_OUTPUT"
           else
             echo "docs=true" >> "$GITHUB_OUTPUT"

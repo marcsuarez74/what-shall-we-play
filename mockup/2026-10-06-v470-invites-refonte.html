@@ -1,0 +1,670 @@
+<!doctype html>
+<html lang="fr">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Invités — refonte v4.7</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Space+Grotesk:wght@400;500;600;700&display=swap">
+<style>
+/* Layout : planche de maquettes — en-tête de spec, puis téléphones en grille (hôte / invité),
+   chaque téléphone est interactif. Palette et typo = design system de l'app (noyer/crème/cuivre). */
+:root {
+  --noyer: #2A1F17;
+  --surface: #3A2B1F;
+  --surface-plus: #46352a;
+  --creme: #F3E9DC;
+  --cuivre: #C96F3B;
+  --vert: #3E9B6E;
+  --rouge: #C4553B;
+  --ambre: #C9A23B;
+  --doux: #8A7660;
+  --doux-clair: #B9A58C;
+  --planche: #1f1711;
+  --display: 'Bricolage Grotesque', 'Space Grotesk', system-ui, sans-serif;
+  --ui: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+[hidden] { display: none !important; }
+body { background: var(--planche); color: var(--creme); font-family: var(--ui); font-size: 15px; line-height: 1.45; padding: 28px 16px 60px; }
+h1, h2, h3 { font-family: var(--display); line-height: 1.1; letter-spacing: -0.01em; text-wrap: balance; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--cuivre); outline-offset: 2px; }
+
+.wrap { max-width: 1240px; margin: 0 auto; display: flex; flex-direction: column; gap: 34px; }
+
+/* ---------- En-tête spec ---------- */
+.intro { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 22px; }
+@media (max-width: 860px) { .intro { grid-template-columns: 1fr; } }
+.intro h1 { font-size: clamp(28px, 4vw, 40px); font-weight: 800; }
+.eyebrow { font-size: 11.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--cuivre); margin-bottom: 8px; }
+.lead { color: var(--doux-clair); margin-top: 10px; max-width: 62ch; }
+.bloc { background: var(--noyer); border: 1px solid color-mix(in srgb, var(--doux) 35%, transparent); border-radius: 16px; padding: 16px 18px; min-width: 0; }
+.bloc h2 { font-size: 17px; font-weight: 800; margin-bottom: 10px; }
+.bloc ul { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.bloc li { font-size: 13.5px; color: var(--doux-clair); padding-left: 16px; position: relative; }
+.bloc li::before { content: ''; position: absolute; left: 2px; top: 8px; width: 6px; height: 6px; border-radius: 50%; background: var(--doux); }
+.bloc li.bug::before { background: var(--rouge); }
+.bloc li b { color: var(--creme); font-weight: 600; }
+.bloc code { font-size: 12px; background: var(--surface); padding: 1px 5px; border-radius: 5px; color: var(--creme); }
+.regles { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.regles table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.regles td { padding: 6px 0; border-top: 1px solid color-mix(in srgb, var(--doux) 25%, transparent); color: var(--doux-clair); vertical-align: top; }
+.regles td:first-child { color: var(--creme); width: 52%; padding-right: 10px; }
+.oui { color: var(--vert); font-weight: 700; }
+.non { color: var(--rouge); font-weight: 700; }
+
+/* ---------- Groupes de téléphones ---------- */
+.groupe-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.groupe-head h2 { font-size: 24px; font-weight: 800; }
+.groupe-head p { color: var(--doux-clair); font-size: 13.5px; }
+.phones { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 22px; align-items: start; }
+.ecran { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.ecran-titre { display: flex; gap: 10px; align-items: baseline; }
+.ecran-titre .id { font-family: var(--display); font-weight: 800; color: var(--cuivre); font-size: 15px; }
+.ecran-titre h3 { font-size: 15px; font-weight: 600; font-family: var(--ui); }
+.note { font-size: 12.5px; color: var(--doux-clair); border-left: 2px solid var(--cuivre); padding: 2px 0 2px 10px; }
+.note.fix { border-color: var(--vert); }
+
+.phone { background: var(--noyer); border: 1px solid color-mix(in srgb, var(--doux) 45%, transparent); border-radius: 30px; overflow: hidden; display: flex; flex-direction: column; height: 640px; max-width: 100%; position: relative; box-shadow: 0 14px 40px rgba(0,0,0,.35); }
+.status { height: 26px; flex: 0 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 0 22px; font-size: 11px; color: var(--doux-clair); }
+.scroll { flex: 1 1 auto; overflow-y: auto; padding: 6px 16px 20px; display: flex; flex-direction: column; gap: 12px; scrollbar-width: thin; }
+.tabbar { flex: 0 0 auto; height: 58px; display: flex; border-top: 1px solid color-mix(in srgb, var(--doux) 35%, transparent); background: var(--surface); }
+.tabbar span { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10.5px; color: var(--doux-clair); gap: 1px; }
+.tabbar span.on { color: var(--cuivre); font-weight: 700; }
+.tabbar i { font-style: normal; font-size: 17px; }
+
+/* ---------- Composants app ---------- */
+.page-head { display: flex; justify-content: space-between; align-items: center; }
+.page-head h1 { font-size: 26px; font-weight: 800; }
+.user-chip { background: var(--surface); border: 1px solid var(--doux); border-radius: 999px; padding: 4px 10px; font-size: 13px; }
+.sec-h { font-family: var(--display); font-size: 17px; font-weight: 800; }
+.qg-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.btn-copper { appearance: none; border: 0; border-radius: 14px; background: var(--cuivre); color: var(--noyer); font-weight: 700; font-size: 15px; min-height: 46px; padding: 10px 18px; }
+.btn-copper.sm { min-height: 36px; font-size: 13px; padding: 6px 12px; border-radius: 11px; }
+.btn-copper:disabled { background: var(--surface); color: var(--doux-clair); border: 1px solid var(--doux); cursor: not-allowed; }
+.btn-ghost { appearance: none; background: transparent; border: 1px solid var(--doux); border-radius: 14px; font-size: 14px; min-height: 42px; padding: 8px 14px; }
+.btn-ghost.sm { min-height: 34px; font-size: 13px; padding: 5px 11px; border-radius: 11px; }
+.btn-ghost.armed { color: #E08A76; border-color: color-mix(in srgb, #b5533c 70%, transparent); }
+.link-btn { background: none; border: 0; color: var(--cuivre); font-size: 13.5px; font-weight: 600; padding: 0; }
+.row-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+.row-btns > * { flex: 1 1 auto; }
+
+.card { background: var(--surface); border: 1px solid rgba(185,165,140,.25); border-radius: 16px; padding: 13px 14px; display: flex; flex-direction: column; gap: 10px; }
+.card.live { border-color: var(--cuivre); }
+.card-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.badge { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 4px 10px; font-size: 11.5px; font-weight: 600; }
+.badge .pt { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.b-prep { background: color-mix(in srgb, var(--ambre) 18%, transparent); color: #EAD9A8; }
+.b-prog { background: color-mix(in srgb, var(--doux) 25%, transparent); color: var(--doux-clair); }
+.b-jeu { background: color-mix(in srgb, var(--vert) 20%, transparent); color: #9BD8B7; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { display: inline-flex; align-items: center; gap: 5px; background: var(--noyer); border: 1px solid var(--doux); border-radius: 999px; font-size: 12.5px; padding: 4px 10px; }
+.chip.invite { border-style: dashed; border-color: var(--cuivre); }
+.tag-invite { font-size: 9px; font-weight: 800; color: var(--cuivre); letter-spacing: .05em; }
+.retirer { background: none; border: 0; color: var(--doux); font-size: 12px; padding: 0 0 0 2px; }
+.retirer.armed { color: #E08A76; font-weight: 700; }
+.sous-label { font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--doux-clair); font-weight: 700; }
+.meta { font-size: 12.5px; color: var(--doux-clair); }
+
+.plan { display: flex; gap: 12px; }
+.plan-date { flex: 0 0 52px; height: 58px; border-radius: 12px; background: var(--noyer); border: 1px solid var(--doux); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.plan-date b { font-family: var(--display); font-size: 22px; line-height: 1; }
+.plan-date span { font-size: 11px; color: var(--doux-clair); }
+.plan-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.plan-when { font-weight: 600; font-size: 14px; }
+.plan-titre { font-family: var(--display); font-weight: 800; font-size: 16px; line-height: 1.1; }
+.titre-soiree { font-family: var(--display); font-weight: 800; font-size: 15px; color: var(--cuivre); }
+.plan-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.suppr-btn { flex: none; background: none; border: 1px solid color-mix(in srgb, var(--doux) 60%, transparent); border-radius: 999px; color: var(--doux-clair); font-size: 11px; padding: 3px 9px; }
+.confirm-suppr { border: 1px solid color-mix(in srgb, #b5533c 70%, transparent); background: color-mix(in srgb, var(--rouge) 10%, transparent); border-radius: 12px; padding: 10px 11px; display: flex; flex-direction: column; gap: 8px; font-size: 12.5px; }
+.confirm-suppr ul { margin: 0; padding-left: 16px; color: var(--doux-clair); display: flex; flex-direction: column; gap: 2px; }
+.btn-danger { appearance: none; border: 0; border-radius: 11px; background: var(--rouge); color: #fff; font-weight: 700; font-size: 13px; min-height: 36px; padding: 6px 12px; }
+.supprimee { font-size: 13px; color: var(--doux-clair); text-align: center; padding: 6px 0; }
+.plan-when small { color: var(--cuivre); font-weight: 700; margin-left: 6px; font-size: 13px; }
+.liste { display: flex; flex-direction: column; gap: 10px; }
+.fix-mt { margin-top: 14px; outline: 1px dashed var(--vert); outline-offset: 4px; border-radius: 16px; }
+
+.lien-card { background: color-mix(in srgb, var(--cuivre) 10%, var(--surface)); border: 1px solid color-mix(in srgb, var(--cuivre) 45%, transparent); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.lien-url { font-size: 11.5px; background: var(--noyer); border-radius: 8px; padding: 7px 9px; color: var(--doux-clair); overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.toast { font-size: 12px; color: #9BD8B7; min-height: 16px; }
+
+.pool { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; }
+.jeu { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.cov { aspect-ratio: 3/4; max-width: 100%; border-radius: 9px; display: grid; place-items: end start; padding: 6px; font-family: var(--display); font-weight: 800; font-size: 12px; line-height: 1.05; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.5); position: relative; }
+.cov .qui { position: absolute; top: 5px; right: 5px; font-family: var(--ui); font-size: 9px; font-weight: 700; background: rgba(0,0,0,.45); border-radius: 999px; padding: 1px 6px; }
+.vote { display: flex; align-items: center; justify-content: center; gap: 4px; border: 1px solid var(--doux); background: transparent; border-radius: 999px; font-size: 12px; padding: 3px 0; font-variant-numeric: tabular-nums; }
+.vote[aria-pressed="true"] { background: var(--cuivre); border-color: var(--cuivre); color: var(--noyer); font-weight: 700; }
+.vote.ro { cursor: default; }
+.ajout { border: 1px dashed var(--doux); border-radius: 9px; aspect-ratio: 3/4; display: grid; place-items: center; color: var(--doux-clair); font-size: 12px; text-align: center; padding: 6px; background: none; }
+.info { font-size: 12px; color: var(--doux-clair); background: var(--surface); border-radius: 10px; padding: 9px 11px; }
+
+.bandeau { border-radius: 12px; padding: 10px 12px; background: color-mix(in srgb, var(--cuivre) 10%, transparent); border: 1px solid color-mix(in srgb, var(--cuivre) 40%, transparent); font-size: 12.5px; color: var(--doux-clair); }
+.bandeau b { color: var(--creme); }
+.top-invite { display: flex; justify-content: space-between; align-items: center; padding-top: 4px; }
+.marque { font-family: var(--display); font-weight: 800; font-size: 14px; color: var(--doux-clair); }
+.hote { display: flex; align-items: center; gap: 10px; }
+.avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--cuivre); color: var(--noyer); display: grid; place-items: center; font-weight: 800; font-family: var(--display); }
+.hero-date { font-family: var(--display); font-size: 26px; font-weight: 800; line-height: 1.05; }
+.hero-date small { display: block; font-family: var(--ui); font-size: 14px; color: var(--cuivre); font-weight: 700; margin-top: 4px; }
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field label { font-size: 12.5px; font-weight: 600; color: var(--doux-clair); }
+.field input { background: var(--surface); border: 1px solid color-mix(in srgb, var(--doux) 50%, transparent); border-radius: 12px; color: var(--creme); font: inherit; font-size: 16px; padding: 11px 13px; outline: none; width: 100%; }
+.field small { font-size: 11.5px; color: var(--doux-clair); }
+.code { display: flex; gap: 8px; }
+.code input { text-align: center; font-size: 20px; padding: 10px 0; }
+.sep { display: flex; align-items: center; gap: 10px; color: var(--doux-clair); font-size: 12px; }
+.sep::before, .sep::after { content: ''; flex: 1; height: 1px; background: color-mix(in srgb, var(--doux) 35%, transparent); }
+.cta-compte { border: 1px solid color-mix(in srgb, var(--vert) 50%, transparent); background: color-mix(in srgb, var(--vert) 10%, transparent); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.cta-compte p { font-size: 12.5px; color: var(--doux-clair); }
+.cta-compte b { color: var(--creme); }
+.btn-vert { appearance: none; border: 0; border-radius: 12px; background: var(--vert); color: #fff; font-weight: 700; font-size: 14px; min-height: 40px; }
+.seg { display: flex; background: var(--surface); border-radius: 12px; padding: 3px; gap: 3px; }
+.seg button { flex: 1; border: 0; background: none; border-radius: 9px; font-size: 12px; padding: 6px 0; color: var(--doux-clair); }
+.seg button[aria-pressed="true"] { background: var(--surface-plus); color: var(--creme); font-weight: 700; }
+.picker-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: var(--surface); border-radius: 12px; font-size: 14px; }
+.picker-row input { accent-color: var(--cuivre); width: 17px; height: 17px; }
+.barre { text-decoration: line-through; color: var(--doux); }
+.centre { text-align: center; }
+.grand-emoji { font-size: 40px; text-align: center; }
+
+/* ---------- Étagère réelle de l'app : un rayon par format de boîte ---------- */
+.etagere { display: flex; flex-direction: column; gap: 4px; margin: 0 -4px; }
+.shelf-count { color: var(--doux-clair); font-size: 12px; padding: 0 4px; }
+.shelf-block { display: flex; flex-direction: column; gap: 4px; }
+.shelf-row { display: flex; gap: 14px; align-items: flex-end; overflow-x: auto; overflow-y: clip; scroll-snap-type: x mandatory; scrollbar-width: none; padding: 12px 6px 4px; }
+.shelf-row::-webkit-scrollbar { display: none; }
+.rail { height: 7px; border-radius: 999px; background: var(--doux); opacity: .55; margin: -2px 4px 0; }
+.row-label { color: var(--doux-clair); font-size: 13px; padding: 0 4px 8px; }
+.box { position: relative; flex: 0 0 auto; scroll-snap-align: start; border: 2px solid var(--doux); border-radius: 10px; box-shadow: 0 6px 14px rgba(0,0,0,.35); padding: 0; cursor: pointer; }
+.box .art { position: absolute; inset: 0; border-radius: 8px; display: grid; place-items: end start; padding: 5px; font-family: var(--display); font-weight: 800; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.6); line-height: 1.02; text-align: left; overflow: hidden; }
+.owner-badge { position: absolute; right: 4px; bottom: 4px; z-index: 2; width: 16px; height: 16px; border-radius: 50%; display: grid; place-items: center; font-size: 9px; line-height: 1; background: var(--noyer); border: 1px solid var(--doux); }
+.vote-badge { position: absolute; top: -7px; right: -5px; z-index: 3; display: flex; align-items: center; gap: 2px; border: 1.5px solid var(--doux); border-radius: 999px; background: var(--noyer); color: var(--doux-clair); font-size: 10.5px; font-weight: 800; padding: 3px 7px; cursor: pointer; box-shadow: 0 3px 8px rgba(0,0,0,.55); user-select: none; font-variant-numeric: tabular-nums; }
+.vote-badge.vote-moi { border-color: var(--cuivre); background: var(--cuivre); color: #fff; }
+.vote-badge .emoji { font-size: 9.5px; }
+.add-more { padding: 2px 4px 0; }
+
+.questions { counter-reset: q; }
+.questions li { counter-increment: q; padding-left: 26px; }
+.questions li::before { content: counter(q); width: 18px; height: 18px; top: 1px; left: 0; background: var(--cuivre); color: var(--noyer); font-size: 11px; font-weight: 800; display: grid; place-items: center; }
+@media (prefers-reduced-motion: no-preference) { .vote, .btn-ghost, .retirer { transition: background .12s, color .12s, border-color .12s; } }
+</style>
+
+<div class="wrap">
+
+  <header class="intro">
+    <div>
+      <p class="eyebrow">Maquette fonctionnelle · à valider avant code</p>
+      <h1>Invités par lien : refonte du parcours</h1>
+      <p class="lead">Correctifs et nouvelles règles suite aux retours sur la v4.6.0. L'invité n'est plus un « joueur sans compte » qui accède à toute l'app : il voit <b>une seule soirée</b>, il vote, et il peut se retirer. L'organisateur prépare l'étagère à l'avance, quel que soit l'état de la soirée, et distingue ses invités.</p>
+    </div>
+    <div class="bloc">
+      <h2>Diagnostic v4.6.0</h2>
+      <ul>
+        <li class="bug"><b>L'invité atterrit sur une page vide.</b> Après « Rejoindre », il est envoyé sur <code>/etagere</code>, qui n'affiche que la soirée <i>du jour</i>. Pour une soirée programmée, il ne voit rien, mais a accès au menu profil.</li>
+        <li class="bug"><b>Les joueurs ayant rejoint n'apparaissent pas en direct.</b> La page Parties n'a pas de synchro live (pas de <code>UserSync</code>) : il faut recharger. Et si l'hôte teste le lien sur son propre navigateur, il rejoint avec son compte (déjà joueur), donc rien ne change. Je confirmerai par un test de reproduction au moment du code.</li>
+        <li class="bug"><b>Le lien n'existe que sur les cartes programmées</b>, pas sur la soirée du jour en préparation.</li>
+        <li class="bug"><b>L'étagère n'existe que le jour J.</b> Impossible de poser des jeux sur une soirée programmée.</li>
+        <li class="bug"><b>Les invités sont proposés</b> dans le sélecteur de joueurs des nouvelles parties (la requête prend tous les <code>users</code>).</li>
+        <li class="bug"><b>La liste des parties programmées colle au bouton</b> « + Programmer ».</li>
+      </ul>
+    </div>
+  </header>
+
+  <section class="regles">
+    <div class="bloc">
+      <h2>Ce que voit et fait un invité</h2>
+      <table>
+        <tr><td>Date, heure, organisateur, joueurs</td><td class="oui">oui</td></tr>
+        <tr><td>Pool de jeux de la soirée</td><td class="oui">oui</td></tr>
+        <tr><td>Voter pour un jeu</td><td class="oui">oui</td></tr>
+        <tr><td>Se retirer de la soirée</td><td class="oui">oui</td></tr>
+        <tr><td>Créer un compte (garde ses votes)</td><td class="oui">oui</td></tr>
+        <tr><td>Ajouter un jeu, ludothèque, profil, onglets</td><td class="non">non</td></tr>
+        <tr><td>Autres soirées, historique</td><td class="non">non</td></tr>
+        <tr><td>Proposé dans les nouvelles parties</td><td class="non">non</td></tr>
+      </table>
+    </div>
+    <div class="bloc">
+      <h2>Côté organisateur</h2>
+      <ul>
+        <li><b>Lien d'invitation sur toute soirée non terminée</b>, en préparation comme programmée.</li>
+        <li><b>Étagère accessible à l'avance</b> : « Préparer l'étagère » sur chaque carte programmée. Ajout et retrait de jeux, votes. Le tirage reste réservé au jour J.</li>
+        <li><b>Joueurs et invités séparés</b> : chips en pointillé cuivre, badge INVITÉ(E), ✕ pour retirer (confirmation « Sûr ? »).</li>
+        <li><b>Supprimer une partie programmée</b> (organisateur seulement), après une confirmation qui liste ce qui part : la partie, ses votes, ses invités. Les jeux restent dans les ludothèques.</li>
+        <li><b>Titre facultatif</b> à la programmation (repli sur la date), modifiable ensuite.</li>
+        <li><b>Synchro live</b> sur Parties : un invité qui rejoint apparaît sans recharger.</li>
+      </ul>
+    </div>
+    <div class="bloc">
+      <h2>Points à trancher</h2>
+      <ul class="questions">
+        <li><b>Soirée en jeu ou terminée</b> : je propose que l'invité voie le jeu sorti, puis le résultat final, en lecture seule (écran I4). L'hôte saisit toujours ses scores.</li>
+        <li><b>Plusieurs soirées</b> : un invité est lié à une seule soirée. Un second lien recrée un invité. Pour suivre plusieurs soirées, il crée un compte.</li>
+        <li><b>Version</b> : le comportement de l'invité change (plus de scores ni de verdict de sa part). Je propose une <b>v4.7.0</b> ; les cercles passent en v4.8.0.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ================= ORGANISATEUR ================= -->
+  <section>
+    <div class="groupe-head">
+      <h2>Organisateur</h2>
+      <p>Marc crée et prépare ses soirées. Tous les boutons sont cliquables.</p>
+    </div>
+    <div class="phones">
+
+      <!-- H1 -->
+      <div class="ecran" id="h1">
+        <div class="ecran-titre"><span class="id">H1</span><h3>Parties : lien partout, marge corrigée</h3></div>
+        <div class="phone">
+          <div class="status"><span>20:12</span><span>●●● 5G</span></div>
+          <div class="scroll">
+            <div class="page-head"><h1>Parties</h1><span class="user-chip">🎲 M ▾</span></div>
+            <h2 class="sec-h">Ce soir</h2>
+            <div class="card live">
+              <div class="card-head">
+                <span class="badge b-prep"><span class="pt"></span>En préparation</span>
+                <button class="btn-ghost sm" type="button">Terminer</button>
+              </div>
+              <div class="chips">
+                <span class="chip">🎲 Marc</span><span class="chip">🦊 Julie</span>
+                <span class="chip invite">Sophie <span class="tag-invite">INVITÉE</span></span>
+              </div>
+              <div class="row-btns">
+                <button class="btn-copper sm" type="button" data-goto="h2">Ouvrir l'étagère</button>
+                <button class="btn-ghost sm" type="button" data-copier>🔗 Inviter</button>
+              </div>
+              <p class="toast" aria-live="polite"></p>
+            </div>
+            <div class="qg-head">
+              <h2 class="sec-h">Programmées</h2>
+              <button class="btn-copper sm" type="button" data-goto="h3">＋ Programmer</button>
+            </div>
+            <div class="liste fix-mt">
+              <div class="card">
+                <div class="plan">
+                  <div class="plan-date"><b>9</b><span>oct</span></div>
+                  <div class="plan-body">
+                    <div class="plan-top"><div class="plan-titre">Soirée Azul &amp; co</div><button class="suppr-btn" type="button" data-armer-suppr aria-label="Supprimer la partie du 9 octobre">Supprimer</button></div>
+                    <div class="plan-when meta">vendredi 9 octobre<small>20:30</small></div>
+                    <div class="confirm-suppr" hidden data-confirm>
+                      <b>Supprimer cette partie ?</b>
+                      <ul>
+                        <li>Tom : elle disparaît de leurs parties</li>
+                        <li>Léa (invitée) et ses votes sont supprimés, son lien ne marche plus</li>
+                        <li>8 jeux retirés de l’étagère (ils restent dans vos ludothèques)</li>
+                      </ul>
+                      <div class="row-btns">
+                        <button class="btn-ghost sm" type="button" data-annuler>Garder</button>
+                        <button class="btn-danger" type="button" data-supprimer>Supprimer la partie</button>
+                      </div>
+                    </div>
+                    <div class="chips">
+                      <span class="chip">🎲 Marc</span><span class="chip">🐻 Tom</span>
+                      <span class="chip invite" id="h1-lea">Léa <span class="tag-invite">INVITÉE</span></span>
+                    </div>
+                    <p class="meta">8 jeux sur l'étagère · 1 invitée</p>
+                    <div class="row-btns">
+                      <button class="btn-copper sm" type="button" data-goto="h2">Préparer l'étagère</button>
+                      <button class="btn-ghost sm" type="button" data-copier>🔗 Inviter</button>
+                    </div>
+                    <p class="toast" aria-live="polite"></p>
+                  </div>
+                </div>
+              </div>
+              <div class="card">
+                <div class="plan">
+                  <div class="plan-date"><b>17</b><span>oct</span></div>
+                  <div class="plan-body">
+                    <div class="plan-top"><div class="plan-titre">Partie du samedi 17 octobre</div><button class="suppr-btn" type="button" data-armer-suppr aria-label="Supprimer la partie du 17 octobre">Supprimer</button></div>
+                    <div class="confirm-suppr" hidden data-confirm>
+                      <b>Supprimer cette partie ?</b>
+                      <ul>
+                        <li>Personne d’autre que toi : elle disparaît de leurs parties</li>
+                        
+                        <li>Étagère vide : rien d’autre à supprimer</li>
+                      </ul>
+                      <div class="row-btns">
+                        <button class="btn-ghost sm" type="button" data-annuler>Garder</button>
+                        <button class="btn-danger" type="button" data-supprimer>Supprimer la partie</button>
+                      </div>
+                    </div>
+                    <div class="chips"><span class="chip">🎲 Marc</span></div>
+                    <p class="meta">Étagère vide</p>
+                    <div class="row-btns">
+                      <button class="btn-copper sm" type="button" data-goto="h2">Préparer l'étagère</button>
+                      <button class="btn-ghost sm" type="button" data-copier>🔗 Inviter</button>
+                    </div>
+                    <p class="toast" aria-live="polite"></p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="tabbar"><span><i>🏠</i>Étagère</span><span><i>📚</i>Ludo</span><span class="on"><i>🎲</i>Parties</span></div>
+        </div>
+        <p class="note">Carte du 9 : titre saisi. Carte du 17 : sans titre, repli « Partie du … ».</p>
+        <p class="note">« Supprimer » (organisateur seulement) ouvre une confirmation qui liste ce qui disparaît. Les joueurs avec compte voient la partie disparaître en direct.</p>
+        <p class="note fix">Marge haute ajoutée entre « Programmées » et la liste (pointillé vert).</p>
+        <p class="note">« 🔗 Inviter » ouvre le partage natif (WhatsApp…) avec le message et le lien. Ici : copie simulée.</p>
+      </div>
+
+      <!-- H2 -->
+      <div class="ecran" id="h2">
+        <div class="ecran-titre"><span class="id">H2</span><h3>Étagère d'une soirée programmée</h3></div>
+        <div class="phone">
+          <div class="status"><span>20:12</span><span>●●● 5G</span></div>
+          <div class="scroll">
+            <button class="link-btn" type="button" style="align-self:flex-start">← Parties</button>
+            <div class="card-head">
+              <div><div class="titre-soiree">Soirée Azul &amp; co</div><div class="hero-date">Ven. 9 octobre<small>20:30 · chez Marc</small></div></div>
+              <span class="badge b-prog"><span class="pt"></span>Programmée</span>
+            </div>
+
+            <div class="card">
+              <span class="sous-label">Joueurs · 2</span>
+              <div class="chips"><span class="chip">🎲 Marc</span><span class="chip">🐻 Tom</span></div>
+              <span class="sous-label">Invités · <span id="h2-nbinv">2</span></span>
+              <div class="chips" id="h2-invites">
+                <span class="chip invite">Léa <span class="tag-invite">INVITÉE</span>
+                  <button class="retirer" type="button" aria-label="Retirer Léa de la soirée" data-retirer>✕</button></span>
+                <span class="chip invite">Karim <span class="tag-invite">INVITÉ</span>
+                  <button class="retirer" type="button" aria-label="Retirer Karim de la soirée" data-retirer>✕</button></span>
+              </div>
+              <button class="btn-ghost sm" type="button">Modifier (titre, date, joueurs)</button>
+            </div>
+
+            <div class="lien-card">
+              <span class="sous-label">Lien d'invitation</span>
+              <span class="lien-url">what-shall-we-play.marco-studio.fr/nights/42/rejoindre?k=9f3c…</span>
+              <div class="row-btns">
+                <button class="btn-copper sm" type="button" data-copier>Copier le lien</button>
+                <button class="btn-ghost sm" type="button" data-copier>WhatsApp</button>
+              </div>
+              <p class="toast" aria-live="polite"></p>
+            </div>
+
+            <div class="qg-head"><h2 class="sec-h">Étagère</h2></div>
+            <div class="etagere" data-mode="hote"></div>
+            <p class="info">🎡 Le tirage s'ouvre le jour de la soirée. D'ici là, chacun ajoute ses jeux et vote.</p>
+            <button class="btn-ghost sm" type="button" style="color:#E08A76;border-color:color-mix(in srgb,#b5533c 60%,transparent)" data-goto="h1">Supprimer la partie…</button>
+          </div>
+          <div class="tabbar"><span><i>🏠</i>Étagère</span><span><i>📚</i>Ludo</span><span class="on"><i>🎲</i>Parties</span></div>
+        </div>
+        <p class="note">L'étagère de l'app telle quelle : un rayon par format (Grand · 30×30, Moyen, Petit, Mini-boîte), boîtes à l'échelle, 👍 de vote, rond du propriétaire, filtres et fiche jeu. Elle s'ouvre simplement sur une soirée précise. Les jeux posés par un joueur avec compte restent à lui ; un invité n'en pose pas.</p>
+        <p class="note">✕ puis « Sûr ? » : retire l'invité et ses votes (suppression explicite).</p>
+      </div>
+
+      <!-- H3 -->
+      <div class="ecran" id="h3">
+        <div class="ecran-titre"><span class="id">H3</span><h3>Nouvelle partie : invités exclus</h3></div>
+        <div class="phone">
+          <div class="status"><span>20:12</span><span>●●● 5G</span></div>
+          <div class="scroll">
+            <h2 class="sec-h">Programmer une partie</h2>
+            <div class="field">
+              <label for="h3-titre">Titre <span style="font-weight:400">(facultatif)</span></label>
+              <input id="h3-titre" placeholder="Soirée jeux 🎲" maxlength="40" data-titre>
+              <small data-apercu>Sans titre : « Partie du samedi 17 octobre »</small>
+            </div>
+            <div class="row-btns">
+              <div class="field"><label for="h3-date">Date</label><input id="h3-date" value="17/10/2026"></div>
+              <div class="field"><label for="h3-heure">Heure</label><input id="h3-heure" value="20:30"></div>
+            </div>
+            <span class="sous-label">Qui joue ?</span>
+            <label class="picker-row"><input type="checkbox" checked disabled> 🎲 Marc (toi)</label>
+            <label class="picker-row"><input type="checkbox"> 🦊 Julie</label>
+            <label class="picker-row"><input type="checkbox"> 🐻 Tom</label>
+            <label class="picker-row"><input type="checkbox"> 🐙 Yanis</label>
+            <p class="meta">Sophie, Léa et Karim (invités) ne sont pas proposés. Pour les ré-inviter, partage le lien de la nouvelle soirée.</p>
+            <button class="btn-copper" type="button">Programmer</button>
+          </div>
+          <div class="tabbar"><span><i>🏠</i>Étagère</span><span><i>📚</i>Ludo</span><span class="on"><i>🎲</i>Parties</span></div>
+        </div>
+        <p class="note">Titre facultatif (40 caractères max). Il s'affiche sur la carte, dans l'étagère, dans l'invitation et en tête du message WhatsApp : « Soirée Azul &amp; co — vendredi 9 octobre à 20:30… ». Sans titre, on retombe sur la date.</p>
+        <p class="note">Même règle partout où l'on choisit des joueurs : sélecteur de soirée, modifier les joueurs, foyer, saisie rétro.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= INVITÉ ================= -->
+  <section>
+    <div class="groupe-head">
+      <h2>Invité</h2>
+      <p>Sophie ouvre le lien sur son téléphone, sans compte. Pas d'onglets, pas de menu profil.</p>
+    </div>
+    <div class="phones">
+
+      <!-- I1 -->
+      <div class="ecran">
+        <div class="ecran-titre"><span class="id">I1</span><h3>Le lien s'ouvre sur l'invitation</h3></div>
+        <div class="phone">
+          <div class="status"><span>18:40</span><span>●●● 4G</span></div>
+          <div class="scroll">
+            <div class="top-invite"><span class="marque">What Shall We Play?</span><span class="meta">FR · EN</span></div>
+            <div class="grand-emoji" aria-hidden="true">🎲</div>
+            <div class="hote"><span class="avatar">M</span><div><b>Marc</b> t'invite<br><span class="meta">à une soirée jeux</span></div></div>
+            <div><div class="titre-soiree">Soirée Azul &amp; co</div><div class="hero-date">Vendredi 9 octobre<small>20:30</small></div></div>
+            <p class="meta">4 joueurs · 8 jeux déjà sur l'étagère</p>
+            <div class="field">
+              <label for="i1-nom">Ton prénom (ou ton surnom de table)</label>
+              <input id="i1-nom" value="Sophie" maxlength="20">
+            </div>
+            <button class="btn-copper" type="button" data-goto="i2">Rejoindre la soirée</button>
+            <p class="meta">Pas besoin de compte : ton prénom ne sert qu'à cette soirée.</p>
+            <div class="sep">déjà un compte ?</div>
+            <button class="btn-ghost" type="button">Me connecter et rejoindre</button>
+          </div>
+        </div>
+        <p class="note">Le lien affiche l'invitation avant toute saisie (avant : un champ seul, sans contexte). Un lien invalide ou une soirée terminée affiche un message clair.</p>
+      </div>
+
+      <!-- I2 -->
+      <div class="ecran" id="i2">
+        <div class="ecran-titre"><span class="id">I2</span><h3>La soirée de l'invitée</h3></div>
+        <div class="phone">
+          <div class="status"><span>18:41</span><span>●●● 4G</span></div>
+          <div class="scroll">
+            <div class="top-invite"><span class="marque">What Shall We Play?</span><span class="meta">FR · EN</span></div>
+            <div class="card-head">
+              <div><div class="titre-soiree">Soirée Azul &amp; co</div><div class="hero-date">Ven. 9 octobre<small>20:30</small></div></div>
+              <span class="badge b-prog"><span class="pt"></span>Programmée</span>
+            </div>
+            <div class="hote"><span class="avatar">M</span><div><span class="meta">Organisée par</span><br><b>Marc</b></div></div>
+            <div class="chips">
+              <span class="chip">🎲 Marc</span><span class="chip">🐻 Tom</span>
+              <span class="chip invite">Léa <span class="tag-invite">INVITÉE</span></span>
+              <span class="chip invite">Sophie (toi)</span>
+            </div>
+            <div class="qg-head"><h2 class="sec-h">Les jeux proposés</h2><span class="meta">👍 pour voter</span></div>
+            <div class="etagere" data-mode="invite"></div>
+            <div class="cta-compte">
+              <p><b>Envie d'apporter tes jeux ?</b> Crée ton compte : tu gardes tes votes et tu pourras ajouter ta ludothèque.</p>
+              <button class="btn-vert" type="button" data-goto="i3">Créer mon compte</button>
+            </div>
+            <button class="btn-ghost" type="button" data-armer="Confirmer : je me retire">Se retirer de la soirée</button>
+          </div>
+        </div>
+        <p class="note">Aucune barre d'onglets, aucun menu : seulement le sélecteur de langue. Toute autre URL de l'app renvoie l'invité ici.</p>
+        <p class="note">« Se retirer » demande une confirmation, puis supprime l'invité et ses votes. Écran final : « Tu t'es retiré(e) de la soirée de Marc. »</p>
+      </div>
+
+      <!-- I3 -->
+      <div class="ecran" id="i3">
+        <div class="ecran-titre"><span class="id">I3</span><h3>Convertir l'invitation en compte</h3></div>
+        <div class="phone">
+          <div class="status"><span>18:43</span><span>●●● 4G</span></div>
+          <div class="scroll">
+            <button class="link-btn" type="button" style="align-self:flex-start" data-goto="i2">← Retour à la soirée</button>
+            <h2 class="sec-h" style="font-size:22px">Crée ton compte</h2>
+            <p class="meta">Tu restes dans la soirée de Marc du 9 octobre, avec tes votes.</p>
+            <div class="field">
+              <label for="i3-pseudo">Pseudo</label>
+              <input id="i3-pseudo" value="Sophie_B">
+              <small>3 à 20 caractères : lettres, chiffres, @ ! _</small>
+            </div>
+            <div class="field">
+              <label for="i3-c1">Code secret (4 chiffres)</label>
+              <div class="code"><input id="i3-c1" value="•"><input aria-label="chiffre 2" value="•"><input aria-label="chiffre 3" value="•"><input aria-label="chiffre 4" value=""></div>
+            </div>
+            <button class="btn-copper" type="button">Créer mon compte</button>
+            <p class="meta">Ensuite, tu as accès à toute l'app : ta ludothèque, tes parties, ton profil.</p>
+          </div>
+        </div>
+        <p class="note">Le profil invité devient un compte (même identité) : votes conservés, badge INVITÉ(E) retiré. Le pseudo est pré-rempli à partir du prénom, ajusté au format.</p>
+      </div>
+
+      <!-- I4 -->
+      <div class="ecran">
+        <div class="ecran-titre"><span class="id">I4</span><h3>États de la soirée vus par l'invité</h3></div>
+        <div class="phone">
+          <div class="status"><span>21:05</span><span>●●● 4G</span></div>
+          <div class="scroll">
+            <div class="seg" role="group" aria-label="État de la soirée">
+              <button type="button" aria-pressed="true" data-etat="jeu">En jeu</button>
+              <button type="button" aria-pressed="false" data-etat="fin">Terminée</button>
+              <button type="button" aria-pressed="false" data-etat="retire">Retiré(e)</button>
+              <button type="button" aria-pressed="false" data-etat="annulee">Annulée</button>
+            </div>
+            <div data-panneau="jeu" class="liste">
+              <div class="card-head"><div class="hero-date">Ven. 9 octobre<small>20:30</small></div><span class="badge b-jeu"><span class="pt"></span>En jeu</span></div>
+              <div class="card"><span class="sous-label">On joue à</span>
+                <div class="plan"><span class="box" style="width:75px;height:75px;cursor:default"><span class="art" style="background:linear-gradient(160deg,#2f6f8f,#1b3a52);font-size:12px">Azul</span><span class="owner-badge">🎲</span></span><div class="plan-body"><b>Azul</b><span class="meta">Boîte de Marc · 2 à 4 joueurs</span></div></div>
+              </div>
+              <p class="info">Les votes sont clos. Bonne partie !</p>
+            </div>
+            <div data-panneau="fin" class="liste" hidden>
+              <div class="card-head"><div class="hero-date">Ven. 9 octobre</div><span class="badge b-prog"><span class="pt"></span>Terminée</span></div>
+              <div class="card"><span class="sous-label">Résultat · Azul</span>
+                <p>👑 <b>Tom</b> · 78</p><p class="meta">2. Sophie · 71 · 3. Marc · 64 · 4. Léa · 52</p>
+              </div>
+              <div class="cta-compte"><p><b>Tu veux garder ce résultat ?</b> Crée ton compte, la soirée rejoint ton historique.</p><button class="btn-vert" type="button" data-goto="i3">Créer mon compte</button></div>
+            </div>
+            <div data-panneau="retire" class="liste" hidden>
+              <div class="grand-emoji" aria-hidden="true">👋</div>
+              <p class="centre"><b>Tu ne fais plus partie de la soirée de Marc.</b></p>
+              <p class="meta centre">Pour revenir, demande-lui un nouveau lien.</p>
+            </div>
+            <div data-panneau="annulee" class="liste" hidden>
+              <div class="grand-emoji" aria-hidden="true">📅</div>
+              <p class="centre"><b>Marc a annulé la soirée du 9 octobre.</b></p>
+              <p class="meta centre">Ce lien d'invitation ne fonctionne plus.</p>
+            </div>
+          </div>
+        </div>
+        <p class="note">Point à trancher n°1 : lecture seule pendant et après la partie. L'invité ne saisit ni scores, ni verdict, ni corrections.</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+  // Étagère : mêmes rayons par format que l'app (FORMAT_SCALE × 96 px)
+  const ECHELLE = { grand: 1, moyen: 0.78, petit: 0.62, mini: 0.45 };
+  const LIBELLE = { grand: 'Grand · 30×30', moyen: 'Moyen', petit: 'Petit', mini: 'Mini-boîte' };
+  const JEUX = [
+    { t: '7 Wonders', f: 'grand', o: '🐻', c: '#8f6a2f,#4f3815', v: 1 },
+    { t: 'Les Aventuriers du Rail', f: 'grand', o: '🎲', c: '#3a6f9f,#1c3550', v: 2 },
+    { t: 'Azul', f: 'moyen', o: '🎲', c: '#2f6f8f,#1b3a52', v: 2 },
+    { t: 'Cascadia', f: 'moyen', o: '🎲', c: '#6a8f3a,#34481c', v: 1 },
+    { t: 'Codenames', f: 'petit', o: '🐻', c: '#a03a3a,#521c1c', v: 0 },
+    { t: 'Skull', f: 'petit', o: '🎲', c: '#3a3a3a,#161616', v: 1 },
+    { t: 'The Mind', f: 'mini', o: '🐻', c: '#6b4a8f,#36224f', v: 0 },
+    { t: 'Love Letter', f: 'mini', o: '🎲', c: '#9f3a6a,#4f1c35', v: 0 },
+  ];
+  document.querySelectorAll('.etagere').forEach((el) => {
+    const hote = el.dataset.mode === 'hote';
+    let html = `<p class="shelf-count">${JEUX.length} jeux sur l'étagère</p>`;
+    for (const f of ['grand', 'moyen', 'petit', 'mini']) {
+      const liste = JEUX.filter((j) => j.f === f);
+      if (!liste.length) continue;
+      const taille = Math.round(96 * ECHELLE[f]);
+      const police = Math.max(8, Math.round(13 * ECHELLE[f]));
+      html += `<section class="shelf-block"><div class="shelf-row" role="list">` + liste.map((j) => {
+        const moi = hote && j.t === 'Les Aventuriers du Rail';
+        return `<span class="box" role="listitem" style="width:${taille}px;height:${taille}px">`
+          + `<span class="art" style="background:linear-gradient(160deg,${j.c});font-size:${police}px">${f === 'mini' ? '' : j.t}</span>`
+          + `<span class="owner-badge" title="Apporté par">${j.o}</span>`
+          + `<span class="vote-badge${moi ? ' vote-moi' : ''}" role="button" tabindex="0" aria-pressed="${moi}" aria-label="Voter pour ${j.t}"><span class="emoji" aria-hidden="true">👍</span><span class="n">${j.v}</span></span>`
+          + `</span>`;
+      }).join('') + `</div><div class="rail"></div><p class="row-label">${LIBELLE[f]} — on swipe ›</p></section>`;
+    }
+    if (hote) html += `<div class="add-more"><button type="button" class="link-btn">+ Ajouter d'autres jeux</button></div>`;
+    el.innerHTML = html;
+  });
+  document.querySelectorAll('.vote-badge').forEach((b) => {
+    const basculer = () => {
+      const on = !b.classList.contains('vote-moi');
+      b.classList.toggle('vote-moi', on); b.setAttribute('aria-pressed', String(on));
+      const n = b.querySelector('.n'); n.textContent = String(Number(n.textContent) + (on ? 1 : -1));
+    };
+    b.addEventListener('click', basculer);
+    b.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); basculer(); } });
+  });
+
+  // Titre facultatif : aperçu du repli
+  document.querySelectorAll('[data-titre]').forEach((i) => i.addEventListener('input', () => {
+    const a = i.parentElement.querySelector('[data-apercu]');
+    a.textContent = i.value.trim() ? `Affiché : « ${i.value.trim()} » · samedi 17 octobre` : 'Sans titre : « Partie du samedi 17 octobre »';
+  }));
+  // Supprimer une partie programmée : confirmation explicite
+  document.querySelectorAll('[data-armer-suppr]').forEach((b) => {
+    const body = b.closest('.plan-body');
+    const box = body.querySelector('[data-confirm]');
+    b.addEventListener('click', () => { box.hidden = false; b.hidden = true; });
+    box.querySelector('[data-annuler]').addEventListener('click', () => { box.hidden = true; b.hidden = false; });
+    box.querySelector('[data-supprimer]').addEventListener('click', () => {
+      b.closest('.card').outerHTML = '<p class="supprimee" role="status">Partie supprimée.</p>';
+    });
+  });
+  // Copier / partager : simulé dans la maquette
+  document.querySelectorAll('[data-copier]').forEach((b) => b.addEventListener('click', () => {
+    const toast = b.closest('.card, .lien-card, .plan-body')?.querySelector('.toast');
+    if (toast) { toast.textContent = '✓ Lien copié — prêt à coller dans WhatsApp'; setTimeout(() => (toast.textContent = ''), 2200); }
+  }));
+
+  // Votes : bascule + compteur
+  document.querySelectorAll('[data-vote]').forEach((b) => b.addEventListener('click', () => {
+    const on = b.getAttribute('aria-pressed') !== 'true';
+    b.setAttribute('aria-pressed', String(on));
+    const n = b.querySelector('span'); n.textContent = String(Number(n.textContent) + (on ? 1 : -1));
+  }));
+
+  // Retirer un invité : deux temps
+  document.querySelectorAll('[data-retirer]').forEach((b) => b.addEventListener('click', () => {
+    if (!b.classList.contains('armed')) { b.classList.add('armed'); b.textContent = 'Sûr ?'; return; }
+    b.closest('.chip').remove();
+    const n = document.getElementById('h2-nbinv'); n.textContent = String(document.querySelectorAll('#h2-invites .chip').length);
+  }));
+
+  // Se retirer : deux temps
+  document.querySelectorAll('[data-armer]').forEach((b) => {
+    const initial = b.textContent;
+    b.addEventListener('click', () => {
+      if (!b.classList.contains('armed')) { b.classList.add('armed'); b.textContent = b.dataset.armer; return; }
+      b.textContent = '✓ Retiré(e) — voir I4 « Retiré(e) »';
+      setTimeout(() => { b.classList.remove('armed'); b.textContent = initial; }, 2000);
+    });
+  });
+
+  // Navigation entre écrans
+  document.querySelectorAll('[data-goto]').forEach((b) => b.addEventListener('click', () => {
+    const cible = document.getElementById(b.dataset.goto);
+    if (!cible) return;
+    cible.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' });
+    const ph = cible.querySelector('.phone');
+    ph.style.outline = '2px solid var(--cuivre)'; setTimeout(() => (ph.style.outline = ''), 1200);
+  }));
+
+  // États I4
+  document.querySelectorAll('[data-etat]').forEach((b) => b.addEventListener('click', () => {
+    document.querySelectorAll('[data-etat]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    document.querySelectorAll('[data-panneau]').forEach((p) => (p.hidden = p.dataset.panneau !== b.dataset.etat));
+  }));
+})();
+</script>
+</html>
