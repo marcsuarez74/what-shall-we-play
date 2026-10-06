@@ -14,7 +14,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: t(lang, 'compte.errAucuneImage') }, { status: 400 });
   if (file.size > 5 * 1024 * 1024)
     return NextResponse.json({ error: t(lang, 'compte.errImagePoids') }, { status: 400 });
-  const r = setAvatar(user.id, Buffer.from(await file.arrayBuffer()), lang);
+  const r = await setAvatar(user.id, Buffer.from(await file.arrayBuffer()), lang);
   if (!('ok' in r)) return NextResponse.json({ error: r.error }, { status: r.status });
   return NextResponse.json({ ok: true, path: r.path });
 }

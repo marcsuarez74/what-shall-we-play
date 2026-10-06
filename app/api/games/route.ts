@@ -36,7 +36,7 @@ export async function POST(req: Request) {
     if (file.size > 5 * 1024 * 1024) return NextResponse.json({ error: t(lang, 'jeu.errPochettePoids') }, { status: 400 });
     const buf = Buffer.from(await file.arrayBuffer());
     if (!formatImage(buf)) return NextResponse.json({ error: t(lang, 'jeu.errPochetteExt') }, { status: 400 });
-    coverPath = saveCover(buf);
+    coverPath = await saveCover(buf);
   }
   const id = createGame(user.id, v.value, coverPath, getUserFoyerId(user.id));
   return NextResponse.json({ id });

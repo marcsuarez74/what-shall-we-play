@@ -157,7 +157,7 @@ export default function ImportBggClient({ me }: { me: UserLite }) {
                             onClick={() => setInclus((p) => ({ ...p, [l.jeu.bggId]: !p[l.jeu.bggId] }))}>✓</button>
                   )}
                   {l.jeu.thumb
-                    ? <img className="cover" src={l.jeu.thumb} alt="" />
+                    ? <img className="cover" src={l.jeu.thumb} alt="" loading="lazy" decoding="async" />
                     : <span className="cover is-ph" aria-hidden>♟</span>}
                   <span className="mid">
                     <b className="titre">{l.jeu.titre}</b>

@@ -127,10 +127,10 @@ export function deleteAccount(userId: number): { ok: true; removedGames: number 
 }
 
 // v4.7.2 (audit, point 8) : le format est lu dans les octets, pas dans le nom de fichier.
-export function setAvatar(userId: number, buf: Buffer, lang: Lang = 'fr'): { ok: true; path: string } | { error: string; status: number } {
+export async function setAvatar(userId: number, buf: Buffer, lang: Lang = 'fr'): Promise<{ ok: true; path: string } | { error: string; status: number }> {
   if (!formatImage(buf)) return { error: t(lang, 'compte.errFormat'), status: 400 };
   const prev = (getDb().prepare('SELECT avatar_path FROM users WHERE id = ?').get(userId) as { avatar_path: string | null }).avatar_path;
-  const name = saveCover(buf);
+  const name = await saveCover(buf);
   getDb().prepare('UPDATE users SET avatar_path = ?, sticker = NULL WHERE id = ?').run(name, userId);
   if (prev) { try { fs.unlinkSync(coverPathOnDisk(prev)); } catch { /* absent */ } }
   return { ok: true, path: name };

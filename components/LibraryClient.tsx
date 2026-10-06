@@ -90,7 +90,7 @@ export default function LibraryClient({ games: initial, plays, verdicts, me, foy
                       aria-label={t('ludotheque.voirFicheAria', { j: g.title })}>
                 <span className="lib-cover">
                   {coverSrc(g)
-                    ? <img src={coverSrc(g) as string} alt="" />
+                    ? <img src={coverSrc(g) as string} alt="" loading="lazy" decoding="async" />
                     : <span className="cover-placeholder" aria-hidden>♟</span>}
                   {g.owner_pseudo && (
                     <span className="who" title={t('ludotheque.ajoutePar', { p: g.owner_pseudo })}>

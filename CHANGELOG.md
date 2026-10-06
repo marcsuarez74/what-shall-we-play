@@ -4,6 +4,19 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [4.7.3] — 2026-10-06
+
+### Performance
+Corrections issues de l'audit du dépôt (lot B, images).
+- **Pochettes réduites à l'enregistrement** : 400 px maximum, au format webp (souvent
+  300 Ko–2 Mo avant, pour un affichage d'environ 100 px). Les pochettes déjà stockées sont
+  réduites une fois, en arrière-plan, au démarrage du serveur (même nom, même format).
+  Photos de profil comprises. Dépendance ajoutée : `sharp`.
+- **Chargement différé des images** (`loading="lazy"`, `decoding="async"`) : rayons de
+  l'étagère, ludothèque, historique, fusion de doublons, import BGG.
+- **Les pochettes ne sont plus re-téléchargées à chaque version** : le service worker les
+  range dans un cache à part, qui survit aux mises à jour.
+
 ## [4.7.2] — 2026-10-06
 
 ### Sécurité
