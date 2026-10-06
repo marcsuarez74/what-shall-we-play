@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { getDb, runMigrations } from '@/lib/db';
 import { registerUser, creerInvite, verifyLogin, getUserByToken, createSession } from '@/lib/auth';
+import { createNight, getNight } from '@/lib/nights';
 
 describe('schéma invités (v4.6.0)', () => {
   test('colonnes est_invite / host_id / lien_token présentes et idempotentes', () => {
@@ -47,5 +48,16 @@ describe('creerInvite', () => {
     if (!('error' in r)) throw new Error('un invité ne doit jamais se connecter');
     expect(r.status).toBe(401);
     expect(getUserByToken(createSession(inv.id, 1))).toBeTruthy(); // sa session marche, lui
+  });
+});
+
+describe('lien de soirée', () => {
+  test('createNight pose un lien_token unique par soirée', () => {
+    const hote = (registerUser(`cinv4_${Date.now().toString(36)}`, '1234') as { id: number }).id;
+    const n1 = getNight(createNight(hote, [hote]))!;
+    const n2 = getNight(createNight(hote, [hote]))!;
+    expect(n1.lien_token).toMatch(/^[0-9a-f]{32}$/);
+    expect(n2.lien_token).toMatch(/^[0-9a-f]{32}$/);
+    expect(n1.lien_token).not.toBe(n2.lien_token);
   });
 });

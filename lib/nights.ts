@@ -1,6 +1,7 @@
 import { getDb } from './db';
 import { emitToUsers } from './events';
 import { t, type Lang } from './i18n';
+import crypto from 'node:crypto';
 import type { Game, Night, Pick, UserLite } from './types';
 
 export function getActiveNight(userId: number): Night | null {
@@ -29,8 +30,8 @@ export function notifyNight(nightId: number): void {
 
 export function createNight(creatorId: number, playerIds: number[], opts?: { playedAt?: string; startTime?: string | null }): number {
   const info = getDb()
-    .prepare(`INSERT INTO nights (creator_id, played_at, start_time) VALUES (?, COALESCE(?, date('now','localtime')), ?)`)
-    .run(creatorId, opts?.playedAt ?? null, opts?.startTime ?? null);
+    .prepare("INSERT INTO nights (creator_id, played_at, start_time, lien_token) VALUES (?, COALESCE(?, date('now','localtime')), ?, ?)")
+    .run(creatorId, opts?.playedAt ?? null, opts?.startTime ?? null, crypto.randomBytes(16).toString('hex'));
   const nightId = Number(info.lastInsertRowid);
   setNightPlayers(nightId, playerIds.includes(creatorId) ? playerIds : [...playerIds, creatorId]);
   return nightId;
