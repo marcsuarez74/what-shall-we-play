@@ -135,3 +135,41 @@ jobs:
             git pull --ff-only origin main
             docker compose up -d --build
             docker image prune -f
+
+  # Tag annoté de la version de package.json, posé après un déploiement réussi
+  # (s'il n'existe pas déjà), puis Release GitHub via release.yml.
+  tag:
+    name: Tag de version
+    needs: deploy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Poser le tag v<version> s'il manque
+        id: tag
+        run: |
+          TAG="v$(node -p "require('./package.json').version")"
+          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            echo "::notice::$TAG existe déjà (version non incrémentée) — rien à publier."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$TAG" -m "$TAG"
+          git push origin "$TAG"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+  release:
+    name: Release GitHub
+    needs: tag
+    if: needs.tag.outputs.tag != ''
+    permissions:
+      contents: write
+    uses: ./.github/workflows/release.yml
+    with:
+      tag: ${{ needs.tag.outputs.tag }}

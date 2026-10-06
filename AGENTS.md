@@ -16,8 +16,9 @@ PWA Next.js de tirage au sort de la partie du jour — https://what-shall-we-pla
   - **PATCH** : correction ou retouche cosmétique
 - Chaîne obligatoire : branche → PR → CI verte (4 jobs, dont la détection docs-only ;
   build et tests ne tournent que sur la PR, branche à jour avec main exigée) →
-  fusion → déploiement (seul job de la CI sur main) → tag annoté (le workflow Release crée la release GitHub — ne pas
-  la créer à la main) → vérifier la prod
+  fusion → déploiement (seul job de la CI sur main) → tag annoté `v<version de package.json>`
+  et release GitHub, **automatiques** après le déploiement (ne pas les créer à la main ;
+  oublier d'incrémenter la version = pas de release) → vérifier la prod
   (`curl -s https://what-shall-we-play.marco-studio.fr/sw.js | grep -o "wsp-v[0-9.]*"`).
 - **Toujours passer par une Pull Request — sans exception**, y compris pour les
   changements de docs (le fait d'être admin qui bypass les required checks ne

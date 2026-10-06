@@ -15,6 +15,9 @@ versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 - **CI** : build et tests (unitaires + E2E) ne tournent plus que sur la PR ; sur `main`,
   la CI déploie directement (environ 1 min au lieu de 15). La PR teste déjà le résultat
   de la fusion, et `main` exige une branche à jour avant fusion.
+- **Release automatique** : après le déploiement sur `main`, la CI pose le tag annoté de
+  la version de `package.json` (s'il n'existe pas) et publie la release GitHub à partir
+  du CHANGELOG. Plus de tag à pousser à la main.
 
 ## [4.7.0] — 2026-10-06
 
