@@ -41,16 +41,24 @@ export async function putOnShelf(page: Page, gameId: number, nightId?: number): 
  * Lance le tirage depuis l'étagère, avec reprise — flake CI v3.3.1 (cf. soirees.spec.ts) :
  * un refresh du sync live qui tombe entre mousedown et mouseup peut échanger le nœud,
  * le clic part, la navigation non. On (re)clique « Lancer » (quel que soit son libellé,
- * « Lancer · N » ou « Sûr ? Lancer ») tant que l'écran tirage n'est pas atteint, 3 essais max.
+ * « Lancer · N » ou « Sûr ? Lancer ») tant que l'écran tirage n'est pas atteint, 4 essais max
+ * (l'appui qui arme le « Sûr ? » compte pour un).
  */
 export async function lancerTirage(page: Page): Promise<void> {
   const cible = page.getByRole('button', { name: /Lancer · \d+|Sûr \? Lancer/ });
-  for (let essai = 0; essai < 3; essai++) {
+  const arme = page.getByRole('button', { name: 'Sûr ? Lancer' });
+  for (let essai = 0; essai < 4; essai++) {
+    const etaitArme = await arme.isVisible();
     await cible.click();
     try {
-      await page.waitForURL('**/tirage/**', { timeout: 8_000 });
-      return;
+      // Un appui qui ARME le « Sûr ? » (joueurs pas tous prêts) ne navigue pas : on
+      // n'attend pas 8 s pour rien (le test dépassait ses 30 s en CI), on réappuie.
+      await Promise.race([
+        page.waitForURL('**/tirage/**', { timeout: 8_000 }),
+        ...(etaitArme ? [] : [arme.waitFor({ timeout: 8_000 })]),
+      ]);
+      if (/\/tirage\//.test(page.url())) return;
     } catch { /* clic avalé ou navigation annulée par le sync live : on (re)clique */ }
   }
-  throw new Error('navigation vers /tirage jamais atteinte après 3 essais');
+  throw new Error('navigation vers /tirage jamais atteinte après 4 essais');
 }
