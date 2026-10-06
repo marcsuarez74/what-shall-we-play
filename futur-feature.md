@@ -3,14 +3,14 @@
 > **Fichier vivant** : les idées se déposent ici en vrac, chaque feature partira d'ici vers un vrai
 > brainstorming (maquette → spec → plan) au moment de la lancer.
 > Tailles indicatives : 🟢 S · 🟡 M · 🔴 L · 🔴+ XL
-> Dernière mise à jour : 2026-10-05
+> Dernière mise à jour : 2026-10-06
 
 ## Ordre suggéré
 
 | # | Feature | Taille | Pourquoi dans cet ordre |
 |---|---------|--------|--------------------------|
 | 1 | Vote sur l'étagère 👍 — ✓ v3.5.0 | 🟡 M | Indépendant, petit, très « What Shall We Play ? » |
-| 2 | Joueurs invités (sans compte) | 🟡 M | LE débloqueur des soirées réelles ; se combine avec le vote |
+| 2 | Joueurs invités (sans compte) — ✓ v4.6.0 + v4.7.0 | 🟡 M | LE débloqueur des soirées réelles ; se combine avec le vote |
 | 3 | Import de collection BGG — ✓ v3.6.0 | 🟢 S | Supprime le plus gros frottement : saisir ses jeux |
 | 4 | Le verdict du jeu 😍🙂😐 — ✓ v3.7.0 | 🟢 S | Une ligne d'état, un gros effet sur les stats et les tirages |
 | 5 | Ajout au calendrier | 🟢 S | Minuscule, collé au flow WhatsApp existant |
@@ -42,7 +42,15 @@ Au moment du lancement, un choix de pool : **tous les jeux** ou **seulement ceux
   le lancement (le pool « tous » reste le défaut). Concevoir l'API de vote **invité-compatible**
   dès le départ (le vote devra s'attribuer à un joueur éphémère — voir #2).
 
-## 2. Joueurs invités (sans compte)
+## 2. Joueurs invités (sans compte) — ✓ v4.6.0 + v4.7.0
+
+> **Livré (2026-10-06)** — le lien d'invitation par soirée, l'invité sans compte qui fait tout
+> ce qu'un joueur fait (v4.6.0), puis l'invité **restreint à sa soirée** (étagère préparée à
+> l'avance, titre de partie, suppression de partie programmée, v4.7.0). Une évolution par
+> rapport à la note d'origine : l'invité **peut** créer un compte depuis sa soirée (même
+> identité, ses votes sont gardés) — le « ne crée jamais de compte » est tombé. Ajustements
+> en v4.7.1/v4.7.2 (fiche jeu de l'étagère pour l'invité, renommage « Thib 2 » si un compte
+> reprend son prénom).
 
 Les vraies soirées ont des visiteurs : un cousin, la copine de Léa. Aujourd'hui il faut un compte
 pour chacun. On ajoute des **joueurs éphémères** à la soirée et au tirage — sans installation ni
@@ -259,7 +267,8 @@ chez nous n'est pas répété :
 - **Groupes** — organiser ses rondes en groupes (chevauche #7 : un seul brainstorming)
 - **Chat** — discuter avec les participants (le partage WhatsApp couvre déjà une part du besoin —
   à arbitrer)
-- **Partage par lien** — faire circuler ses soirées au-delà du foyer
+- **Partage par lien** — ✓ livré avec les invités (#2) : chaque soirée porte son lien
+  d'invitation, qui circule par WhatsApp (v4.6.0)
 - **Intégration BGStats** — consigner les résultats aussi dans BG Stats (nos stats restent la
   source, on exporte)
 - **Events englobant plusieurs rondes** — voir #15
@@ -281,6 +290,7 @@ Les petits chantiers reportés, à prendre au fil des releases (rien d'urgent) :
   dédiée au refactoring.
 - **Nettoyer les captures orphelines** — une capture jointe peut rester sur disque si le
   signalement échoue après sauvegarde (quota/GitHub). GC ou purge à l'envoi, à arbitrer.
-- **Petits tests/hardening** : assertion de confinement `bugCapturePath` (préfixe `BUGS_DIR`),
-  plafond de longueur sur le champ `page`, message 429 à templéter avec `QUOTA_JOUR`,
+- **Petits tests/hardening** : plafond de longueur sur le champ `page`, message 429 à
+  templéter avec `QUOTA_JOUR` (le « 3 » reste en dur dans le dictionnaire),
   `?depuis=` asserté en E2E, titre d'it E2E à jour.
+  (Assertion de confinement `bugCapturePath` : ✓ faite — `tests/unit/storage.test.ts`.)
