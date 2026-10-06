@@ -142,6 +142,8 @@ export function runMigrations(db: Database.Database): void {
     'ALTER TABLE users ADD COLUMN est_invite INTEGER NOT NULL DEFAULT 0',
     'ALTER TABLE users ADD COLUMN host_id INTEGER REFERENCES users(id)',
     'ALTER TABLE nights ADD COLUMN lien_token TEXT',
+    // v4.7.0 : titre facultatif d'une partie (repli d'affichage sur la date).
+    'ALTER TABLE nights ADD COLUMN titre TEXT',
   ]) {
     try { db.exec(stmt); } catch { /* colonne déjà présente */ }
   }

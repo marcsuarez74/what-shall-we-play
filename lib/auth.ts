@@ -64,6 +64,24 @@ export function refuserInvite(user: Pick<UserRow, 'est_invite'> | null | undefin
   return null;
 }
 
+// v4.7.0 : l'invité devient un compte — même ligne users (votes, scores et
+// soirée conservés), pseudo et code validés comme à l'inscription.
+export function convertirInvite(userId: number, pseudo: unknown, code: unknown, lang: Lang = 'fr'): AuthResult {
+  const row = getDb().prepare('SELECT est_invite FROM users WHERE id = ?').get(userId) as { est_invite: number } | undefined;
+  if (!row?.est_invite) return { error: t(lang, 'erreurs.impossible'), status: 403 };
+  const p = typeof pseudo === 'string' ? pseudo.trim() : pseudo;
+  const pe = validatePseudo(p, lang); if (pe) return { error: pe, status: 400 };
+  const ce = validateCode(code, lang); if (ce) return { error: ce, status: 400 };
+  try {
+    getDb().prepare('UPDATE users SET pseudo = ?, code_hash = ?, est_invite = 0, host_id = NULL, lang = ? WHERE id = ?')
+      .run(p, bcrypt.hashSync(code as string, 10), lang, userId);
+    return { id: userId, lang };
+  } catch (e: unknown) {
+    if (String(e).includes('UNIQUE')) return { error: t(lang, 'auth.errPseudoPris'), status: 409 };
+    throw e;
+  }
+}
+
 export function verifyLogin(pseudo: unknown, code: unknown, lang: Lang = 'fr'): AuthResult {
   // trim : un espace copié-collé ne doit pas faire échouer la connexion
   const p = typeof pseudo === 'string' ? pseudo.trim() : pseudo;

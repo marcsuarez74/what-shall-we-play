@@ -14,13 +14,15 @@ export function frJoin(names: string[], lang: Lang = 'fr'): string {
   return names.slice(0, -1).join(', ') + dernier + names[names.length - 1];
 }
 
-export function buildInviteMessage({ dateLong, time, pseudos, lien, lang = 'fr' }: {
-  dateLong: string; time: string | null; pseudos: string[]; lien?: string; lang?: Lang;
+export function buildInviteMessage({ dateLong, time, pseudos, lien, titre, lang = 'fr' }: {
+  dateLong: string; time: string | null; pseudos: string[]; lien?: string; titre?: string | null; lang?: Lang;
 }): string {
   const qui = t(lang, 'annonce.quiPartie', { qui: frJoin(pseudos, lang), n: pseudos.length });
   // v4.6.0 : le lien d'invitation clôt le message — l'invité rejoint sans compte.
   const fin = lien ? '\n' + t(lang, 'annonce.lienSoiree', { lien }) : '';
-  return t(lang, 'annonce.invite', { dateLong, time: time ?? '', qui }) + fin;
+  // v4.7.0 : le titre de la partie ouvre le message
+  const debut = titre ? t(lang, 'annonce.titreLigne', { titre }) + '\n' : '';
+  return debut + t(lang, 'annonce.invite', { dateLong, time: time ?? '', qui }) + fin;
 }
 
 export function buildResultMessage({ title, ownerPseudo, waiting, time, lang = 'fr' }: {

@@ -5,13 +5,13 @@
 // Terminaisons CRLF obligatoires : certains parseurs EventSource (Chromium)
 // ignorent les blocs terminés par un simple LF — le flux semble ouvert mais
 // aucun événement n'est jamais délivré.
-import { getSessionUser } from '@/lib/session';
+import { getSessionAny } from '@/lib/session';
 import { subscribeUser } from '@/lib/events';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: Request) {
-  const user = await getSessionUser();
+  const user = await getSessionAny(); // v4.7.0 : l'invité aussi suit sa soirée en direct
   if (!user) return new Response('Non connecté', { status: 401 });
 
   const encoder = new TextEncoder();

@@ -1,7 +1,12 @@
 # Conception — Invités par lien & Cercles d'amis
 
 **Date** : 2026-10-06 · **Statut** : proposé (sections 1 et 2 validées en conversation)
-**Lots** : v4.6.0 (invités) puis v4.7.0 (cercles + RSVP + fil minimal)
+**Lots** : v4.6.0 (invités) puis v4.8.0 (cercles + RSVP + fil minimal)
+
+> **Mise à jour v4.7.0** : le parcours invité (§4.1) est remplacé par
+> `2026-10-06-invites-v470-design.md` (invité restreint à sa soirée). Le nom facultatif de
+> partie (§3, `nights.nom`) est livré en v4.7.0 sous le nom `nights.titre`. Les cercles
+> passent en v4.8.0.
 
 ## 1. Intention
 

@@ -5,10 +5,16 @@ import { validateCode } from './auth';
 import { saveCover, coverPathOnDisk } from './storage';
 import { ALLOWED_STICKERS } from './stickers';
 import { t, type Lang } from './i18n';
-import type { UserRow } from './types';
+import type { UserRow, UserLite } from './types';
 import type { Verdict } from './verdicts';
 
 export { ALLOWED_STICKERS };
+
+// v4.7.0 : les joueurs proposables (sélecteurs de partie) — jamais les invités,
+// qui n'existent que pour la soirée de leur lien.
+export function listComptes(): UserLite[] {
+  return getDb().prepare('SELECT id, pseudo, sticker, avatar_path FROM users WHERE est_invite = 0 ORDER BY pseudo COLLATE NOCASE').all() as UserLite[];
+}
 
 export function getProfileStats(userId: number): {
   plays: number; nights: number; games: number;

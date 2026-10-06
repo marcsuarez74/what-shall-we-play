@@ -151,7 +151,7 @@ test('verdict : fallback wa.me quand le partage natif est absent', async ({ page
   expect(decodeURIComponent(popup.url()).replace(/\+/g, ' ')).toContain('Cascadia a été tiré au sort');
 });
 
-test('programmée : « Inviter sur WhatsApp » avec date longue, heure et joueurs', async ({ page }) => {
+test('programmée : « 🔗 Inviter » (créateur) avec date longue, heure, joueurs et lien', async ({ page }) => {
   await page.addInitScript(() => {
     const calls: unknown[] = [];
     (window as unknown as { __share: unknown[] }).__share = calls;
@@ -176,7 +176,7 @@ test('programmée : « Inviter sur WhatsApp » avec date longue, heure et joueur
   await page.getByRole('button', { name: 'Programmer', exact: true }).click();
   await post;
 
-  await page.locator('.planned-card').first().getByRole('button', { name: /Inviter sur WhatsApp/ }).click();
+  await page.locator('.planned-card').first().getByRole('button', { name: '🔗 Inviter' }).click();
   const text = await page.evaluate(() => {
     const calls = (window as unknown as { __share: { text?: string }[] }).__share;
     return calls[0]?.text ?? '';
@@ -184,6 +184,7 @@ test('programmée : « Inviter sur WhatsApp » avec date longue, heure et joueur
   expect(text).toContain(`🎲 Partie de jeux le ${dateLong} à 20:00 !`);
   expect(text).toContain(`inv_btn_${s}`); // créateur listé
   expect(text).toContain(`thib_${s}`);    // invité listé
+  expect(text).toMatch(/Rejoins-nous : .*\/nights\/\d+\/rejoindre\?k=[0-9a-f]{32}/); // v4.7.0 : le lien clôt le message
 });
 
 test('terminer la soirée : étagère vidée, nuit conservée en historique', async ({ page }) => {

@@ -2330,3 +2330,62 @@ a.btn-go.as-link { display: flex; align-items: center; justify-content: center; 
 .chip-groupe { display: inline-flex; align-items: center; gap: 2px; }
 .retirer-invite { background: none; border: 0; color: var(--doux); font-size: 14px; cursor: pointer; padding: 4px 5px; }
 .retirer-invite:hover { color: var(--rouge); }
+
+/* v4.7.0 — parties programmées : marge sous « Programmées » (la liste touchait le bouton) */
+.qg-head + .nights-list, .qg-head + .empty { margin-top: 12px; }
+.plan-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.plan-titre { font-family: var(--font-display, 'Bricolage Grotesque'), sans-serif; font-size: 16px; font-weight: 800; line-height: 1.15; color: var(--creme); min-width: 0; overflow-wrap: anywhere; }
+.plan-meta { font-size: 12.5px; color: var(--doux-clair); }
+.lien-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.lien-actions > * { flex: 1 1 auto; }
+.lien-actions .btn-copper, .lien-actions .btn-ghost { min-height: 40px; font-size: 13.5px; padding: 8px 14px; }
+.btn-copper.as-link, .btn-ghost.as-link { display: flex; align-items: center; justify-content: center; text-decoration: none; }
+.night-card.live .lien-actions { margin-top: 4px; }
+.lien-actions .invite-btn { align-self: auto; }
+.plan-titre-field { display: grid; gap: 4px; font-size: 12.5px; font-weight: 600; color: var(--doux-clair); margin-bottom: 10px; }
+.plan-titre-field .opt { font-weight: 400; }
+.plan-titre-field input { padding: 10px 12px; border-radius: 10px; font: inherit; font-size: 14px; background: var(--surface); border: 1.5px solid var(--doux); color: var(--creme); }
+
+/* Suppression d'une partie programmée : discrète, puis confirmation qui liste les pertes */
+.suppr-btn { flex: none; background: none; border: 1px solid color-mix(in srgb, var(--doux) 60%, transparent); border-radius: 999px; color: var(--doux-clair); font: inherit; font-size: 11px; padding: 3px 9px; cursor: pointer; }
+.suppr-btn:hover { color: #E08A76; border-color: color-mix(in srgb, #b5533c 60%, transparent); }
+.confirm-suppr { flex-basis: 100%; border: 1px solid color-mix(in srgb, #b5533c 70%, transparent); background: color-mix(in srgb, var(--rouge) 10%, transparent); border-radius: 12px; padding: 10px 11px; display: flex; flex-direction: column; gap: 8px; font-size: 12.5px; }
+.confirm-suppr ul { margin: 0; padding-left: 16px; color: var(--doux-clair); display: flex; flex-direction: column; gap: 2px; }
+.btn-danger { appearance: none; border: 0; border-radius: 14px; background: var(--rouge); color: #fff; font: inherit; font-weight: 700; font-size: 13.5px; min-height: 40px; padding: 8px 14px; cursor: pointer; }
+.btn-danger:disabled { opacity: .6; cursor: not-allowed; }
+
+/* Étagère d'une partie : titre, badge « Programmée », joueurs / invités, lien */
+.nc-titre { font-family: var(--font-display, 'Bricolage Grotesque'), sans-serif; font-size: 18px; font-weight: 800; line-height: 1.15; color: var(--creme); margin-top: 2px; }
+.b-prog { background: color-mix(in srgb, var(--doux) 25%, transparent); color: var(--doux-clair); }
+.retour-parties { align-self: flex-start; }
+.sous-label { font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--doux-clair); font-weight: 700; }
+.chip.invite { border-style: dashed; border-color: var(--cuivre); }
+.lien-card { margin-top: 4px; background: color-mix(in srgb, var(--cuivre) 10%, var(--surface)); border: 1px solid color-mix(in srgb, var(--cuivre) 45%, transparent); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.lien-url { font-size: 11.5px; background: var(--noyer); border-radius: 8px; padding: 7px 9px; color: var(--doux-clair); overflow-wrap: anywhere; user-select: all; }
+.cta-jourj { font-size: 12.5px; color: var(--doux-clair); background: var(--surface); border-radius: 12px; padding: 10px 12px; line-height: 1.45; }
+
+/* v4.7.0 — la soirée de l'invité (/invite) : pas d'onglets, seulement sa partie */
+.invite-page { padding-bottom: 40px; }
+.invite-vue { display: flex; flex-direction: column; gap: 14px; }
+.invite-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.invite-marque { font-family: var(--font-display, 'Bricolage Grotesque'), sans-serif; font-weight: 800; font-size: 14px; color: var(--doux-clair); }
+.invite-h1 { font-size: 26px; font-weight: 800; line-height: 1.1; overflow-wrap: anywhere; }
+.invite-date { font-size: 14px; font-weight: 700; color: var(--cuivre); }
+.invite-hote { display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--doux-clair); }
+.invite-hote b { color: var(--creme); }
+.invite-hote .chip-avatar { width: 26px; height: 26px; }
+.invite-retour { align-self: flex-start; }
+.invite-champ { display: grid; gap: 5px; font-size: 13px; font-weight: 600; color: var(--doux-clair); }
+.invite-champ input { background: var(--surface); border: 1px solid color-mix(in srgb, var(--doux) 40%, transparent); border-radius: 12px; color: var(--creme); font: inherit; font-size: 16px; padding: 12px 14px; outline: none; }
+.invite-champ small { font-size: 11.5px; font-weight: 400; }
+.invite-fin { text-align: center; }
+.invite-boite { width: 60px; height: 60px; flex: none; cursor: default; }
+.invite-classement { margin: 6px 0 0; padding-left: 0; list-style: none; display: grid; gap: 4px; font-size: 14px; }
+.cta-compte { border: 1px solid color-mix(in srgb, var(--vert) 50%, transparent); background: color-mix(in srgb, var(--vert) 10%, transparent); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.cta-compte p { font-size: 13px; color: var(--doux-clair); line-height: 1.5; }
+.cta-compte b { color: var(--creme); }
+.join-invite { text-align: center; font-size: 15px; color: var(--doux-clair); }
+.join-invite b { color: var(--creme); }
+.join-page .invite-h1, .join-page .invite-date { text-align: center; }
+.join-sep { display: flex; align-items: center; gap: 10px; color: var(--doux-clair); font-size: 12px; margin-top: 6px; }
+.join-sep::before, .join-sep::after { content: ''; flex: 1; height: 1px; background: color-mix(in srgb, var(--doux) 35%, transparent); }
