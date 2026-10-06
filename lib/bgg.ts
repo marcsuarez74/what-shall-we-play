@@ -54,6 +54,21 @@ const n = (v: unknown): number | null => {
   const x = Number(v); return Number.isFinite(x) ? Math.round(x * 100) / 100 : null;
 };
 
+// Les éléments URL XMLAPI2 (image/thumbnail, name et yearpublished de /collection)
+// sont du CONTENU TEXTE (épinglé sur réponses réelles : /collection 2026-10-05,
+// /thing 2026-10-06) — pas des attributs. On accepte aussi les formes d'objet
+// (#text / @_value / @_src) et les nombres (parseTagValue de fast-xml-parser).
+function texteOuAttribut(v: unknown): string | undefined {
+  if (typeof v === 'string') return v;
+  if (typeof v === 'number') return String(v);
+  if (v && typeof v === 'object') {
+    const o = v as Record<string, unknown>;
+    const t = o['#text'] ?? o['@_value'] ?? o['@_src'];
+    return typeof t === 'number' ? String(t) : (t as string | undefined);
+  }
+  return undefined;
+}
+
 export function parseThingXml(xml: string): ThingParsed | null {
   const root = parser.parse(xml)?.items;
   const item = Array.isArray(root?.item) ? root.item.find((i: Record<string, unknown>) => i['@_type'] === 'boardgame') : root?.item;
@@ -90,7 +105,7 @@ export function parseThingXml(xml: string): ThingParsed | null {
       .find((l: Record<string, unknown>) => l['@_type'] === 'boardgamepublisher')?.['@_value'] ?? null,
     minPlayers: n(val('minplayers')), maxPlayers: n(val('maxplayers')), playtimeMin: n(val('playingtime')),
     weight: n(val('statistics.ratings.averageweight')), rating: n(val('statistics.ratings.average')),
-    imageUrl: item.image?.['@_src'] ?? null,
+    imageUrl: texteOuAttribut(item.image) ?? null,
     designer: linkNames('boardgamedesigner'), artist: linkNames('boardgameartist'), bestPlayers,
   };
 }
@@ -151,21 +166,9 @@ export function parseCollectionXml(xml: string): JeuBgg[] {
   const root = parser.parse(xml)?.items;
   const items = root?.item ? (Array.isArray(root.item) ? root.item : [root.item]) : [];
   const out: JeuBgg[] = [];
-  // XMLAPI2 /collection réel (épinglé 2026-10-05, cf. fixture) : name/yearpublished/
-  // thumbnail sont du CONTENU TEXTE — pas des attributs @value. Un élément avec
-  // attribut + texte est parsé en objet { '@_sortindex', '#text' }. On accepte les
-  // deux formes (texte d'abord, @value/@_src en repli).
-  const champ = (v: unknown): string | undefined => {
-    if (typeof v === 'string') return v;
-    // parseTagValue (défaut fast-xml-parser) : « 2017 » arrive en nombre
-    if (typeof v === 'number') return String(v);
-    if (v && typeof v === 'object') {
-      const o = v as Record<string, unknown>;
-      const t = o['#text'] ?? o['@_value'] ?? o['@_src'];
-      return typeof t === 'number' ? String(t) : t as string | undefined;
-    }
-    return undefined;
-  };
+  // XMLAPI2 /collection réel (épinglé 2026-10-05, cf. fixture) : les valeurs sont
+  // du contenu texte ; texteOuAttribut accepte aussi les formes @value/@_src.
+  const champ = texteOuAttribut;
   for (const i of items as Record<string, unknown>[]) {
     if (i['@_subtype'] && i['@_subtype'] !== 'boardgame') continue;
     const bggId = Number(i['@_objectid']);

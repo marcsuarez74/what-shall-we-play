@@ -1,8 +1,8 @@
 export const THING_XML = `<?xml version="1.0" encoding="utf-8"?>
 <items termsofuse="https://boardgamegeek.com/xmlapi/termsofuse">
   <item type="boardgame" id="167791">
-    <thumbnail src="https://cf.geekdo-images.com/t.jpg"/>
-    <image src="https://cf.geekdo-images.com/f.jpg"/>
+    <thumbnail>https://cf.geekdo-images.com/t.jpg</thumbnail>
+    <image>https://cf.geekdo-images.com/f.jpg</image>
     <name type="primary" sortindex="1" value="Terraforming Mars"/>
     <yearpublished value="2016"/>
     <minplayers value="1"/>
@@ -38,10 +38,10 @@ export const THING_XML = `<?xml version="1.0" encoding="utf-8"?>
   </item>
 </items>`;
 
-// Forme XMLAPI2 /collection RÉELLE (épinglée sur une vraie réponse BGG, 2026-10-05) :
-// name/yearpublished/image/thumbnail/numplays sont du CONTENU TEXTE — pas des
-// attributs @value. (Le fixture v3.6.0 supposait des @value : l'import n'avait
-// jamais tourné avec de vraies données faute d'auth — d'où l'import vide v4.3.1.)
+// Forme XMLAPI2 /thing RÉELLE (épinglée 2026-10-06, requête avec token) :
+// image/thumbnail sont du CONTENU TEXTE — pas des attributs @value/@_src
+// (le fixture v3.6.0 supposait <image src="…"/> : l'import n'a JAMAIS eu de
+// pochettes avec de vraies données — mêmes causes que /collection, v4.3.1).
 export const COLLECTION_XML = `<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <items totalitems="2" termsofuse="https://boardgamegeek.com/xmlapi/termsofuse" pubdate="Mon, 05 Oct 2026 20:50:29 +0000">
   <item objecttype="thing" objectid="174430" subtype="boardgame" collid="9001">
