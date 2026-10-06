@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 // Import de collection BGG (v3.6.0) : BGG simulé au niveau de NOS routes (pas de token en CI).
 const stamp = Date.now().toString(36);
-const pseudo = `imp-${stamp}`.slice(0, 20);
+const pseudo = `imp_${stamp}`.slice(0, 20);
 
 const COLLECTION = {
   jeux: [
@@ -76,7 +76,7 @@ test('import : relance idempotente — tout devient « déjà présent », rien 
     const id = Number(new URL(r.request().url()).searchParams.get('id'));
     return r.fulfill({ json: THING(id, 'X', null) });
   });
-  await register(page, `rel-${stamp}`.slice(0, 20));
+  await register(page, `rel_${stamp}`.slice(0, 20));
   await page.request.post('/api/games', { form: { title: 'Wingspan', box_format: 'moyen' } });
   await page.request.post('/api/games', { form: { title: 'Catan', box_format: 'grand', bgg_id: '13' } });
 
@@ -97,7 +97,7 @@ test('import : relance idempotente — tout devient « déjà présent », rien 
 
 test('import : un échec n\u2019arrête pas la boucle — réessai rejoue seulement l\u2019échec', async ({ page }) => {
   await page.route('**/api/bgg/collection*', (r) => r.fulfill({ json: COLLECTION }));
-  await register(page, `ech-${stamp}`.slice(0, 20));
+  await register(page, `ech_${stamp}`.slice(0, 20));
   await page.request.post('/api/games', { form: { title: 'Catan', box_format: 'grand', bgg_id: '13' } });
   // Gloomhaven (174430) échoue (502), Wingspan (266192) passe — échec en milieu de boucle
   await page.route('**/api/bgg/thing*', (r) => {

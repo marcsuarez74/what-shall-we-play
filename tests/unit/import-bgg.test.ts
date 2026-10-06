@@ -8,7 +8,7 @@ const jeu = (bggId: number, titre: string, annee: number | null = 2020): JeuBgg 
   ({ bggId, titre, annee, thumb: null });
 
 function ludothequeDe(titres: { titre: string; bggId?: number | null }[]): Game[] {
-  const uid = (registerUser(`imp-${Math.random().toString(36).slice(2, 8)}`, '1234') as { id: number }).id;
+  const uid = (registerUser(`imp_${Math.random().toString(36).slice(2, 8)}`, '1234') as { id: number }).id;
   return titres.map(({ titre, bggId = null }) => {
     const v = validateGameInput({ title: titre, box_format: 'moyen' });
     if (!v.ok) throw new Error('fixture invalide');

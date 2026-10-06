@@ -11,7 +11,7 @@ async function register(page: Page, pseudo: string) {
 }
 
 test('menu : « Rapporter un bug » présent et mène à /bugs', async ({ page }) => {
-  await register(page, `menu-${Date.now().toString(36)}`);
+  await register(page, `menu_${Date.now().toString(36)}`);
   await page.goto('/etagere');
   await page.locator('.user-chip summary').click();
   const lien = page.getByRole('link', { name: /Rapporter un bug/ });
@@ -21,7 +21,7 @@ test('menu : « Rapporter un bug » présent et mène à /bugs', async ({ page }
 });
 
 test('rapport : infos visibles, bouton verrouillé tant que c\u2019est incomplet, 503 propre sans jeton', async ({ page }) => {
-  await register(page, `bug-${Date.now().toString(36)}`);
+  await register(page, `bug_${Date.now().toString(36)}`);
   await page.goto('/bugs');
   await expect(page.getByRole('heading', { name: 'Rapporter un bug' })).toBeVisible();
   // transparence : les infos techniques sont affichées avant l'envoi
@@ -46,7 +46,7 @@ test('rapport : infos visibles, bouton verrouillé tant que c\u2019est incomplet
 });
 
 test('rapport : capture jointe avec aperçu et retrait', async ({ page }) => {
-  await register(page, `cap-${Date.now().toString(36)}`);
+  await register(page, `cap_${Date.now().toString(36)}`);
   await page.goto('/bugs');
   // « joindre » : input file caché piloté par le bouton — on charge une vraie image
   await page.locator('input[type=file]').setInputFiles({

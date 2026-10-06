@@ -3,7 +3,7 @@ import { gameIdByTitle, putOnShelf } from './helpers/shelf';
 
 test('étagère : boîte → fiche, valider sa sélection, lancer', async ({ page }) => {
   await page.goto('/register');
-  await page.getByLabel('Pseudo').fill(`shelf-${Date.now()}`);
+  await page.getByLabel('Pseudo').fill(`shelf_${Date.now()}`);
   await page.getByLabel('Code secret').fill('1234');
   const registerDone = page.waitForResponse((r) => r.url().endsWith('/api/auth/register'));
   await page.getByRole('button', { name: 'Créer mon compte' }).click();
@@ -38,7 +38,7 @@ test('étagère : boîte → fiche, valider sa sélection, lancer', async ({ pag
 // v3.0.0) : le navigateur ne revendiquait QUE l'horizontal au-dessus des boîtes.
 test('le scroll vertical de la page passe au-dessus des rangées de boîtes', async ({ page }) => {
   await page.goto('/register');
-  await page.getByLabel('Pseudo').fill(`vscroll-${Date.now()}`.slice(0, 20));
+  await page.getByLabel('Pseudo').fill(`vscroll_${Date.now()}`.slice(0, 20));
   await page.getByLabel('Code secret').fill('1234');
   const reg = page.waitForResponse((r) => r.url().endsWith('/api/auth/register'));
   await page.getByRole('button', { name: 'Créer mon compte' }).click();

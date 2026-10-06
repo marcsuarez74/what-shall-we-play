@@ -16,7 +16,7 @@ async function registerAndStart(page: import('@playwright/test').Page, pseudo: s
 }
 
 test('profil : sticker choisi visible sur l avatar et dans les chips', async ({ page }) => {
-  const pseudo = `prof-${Date.now()}`;
+  const pseudo = `prof_${Date.now()}`;
   await registerAndStart(page, pseudo);
 
   await page.goto('/profil');
@@ -34,7 +34,7 @@ test('profil : sticker choisi visible sur l avatar et dans les chips', async ({ 
 });
 
 test('profil : changement de code effectif', async ({ page }) => {
-  const pseudo = `code-${Date.now()}`;
+  const pseudo = `code_${Date.now()}`;
   await registerAndStart(page, pseudo);
 
   await page.goto('/profil');
@@ -62,7 +62,7 @@ test('profil : changement de code effectif', async ({ page }) => {
 });
 
 test('avatar photo : chip ronde, aucun hash bcrypt dans la page, boîtes non sélectionnables', async ({ page }) => {
-  const pseudo = `photo-${Date.now()}`;
+  const pseudo = `photo_${Date.now()}`;
   await registerAndStart(page, pseudo);
   // PNG 1×1 (base64)
   const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
@@ -94,7 +94,7 @@ test('avatar photo : chip ronde, aucun hash bcrypt dans la page, boîtes non sé
 
 test('onboarding : l\'emoji choisi à l\'inscription est porté partout', async ({ page }) => {
   await page.goto('/register');
-  await page.getByLabel('Pseudo').fill(`emo-${Date.now().toString(36)}`);
+  await page.getByLabel('Pseudo').fill(`emo_${Date.now().toString(36)}`);
   await page.getByLabel('Code secret').fill('1234');
   await page.getByRole('button', { name: 'Avatar 🦊' }).click();
   const reg = page.waitForResponse((r) => r.url().endsWith('/api/auth/register'));
@@ -109,7 +109,7 @@ test('onboarding : l\'emoji choisi à l\'inscription est porté partout', async 
 });
 
 test('profil : suppression du compte puis connexion impossible', async ({ page }) => {
-  const pseudo = `del-${Date.now()}`;
+  const pseudo = `del_${Date.now()}`;
   await registerAndStart(page, pseudo);
 
   await page.goto('/profil');
@@ -138,20 +138,20 @@ test('profil : podiums dans les stats et mes parties médailles', async ({ page,
   const invite = await browser.newContext();
   const p2 = await invite.newPage();
   await p2.goto('/register');
-  await p2.getByLabel('Pseudo').fill(`inv-${s}`);
+  await p2.getByLabel('Pseudo').fill(`inv_${s}`);
   await p2.getByLabel('Code secret').fill('1234');
   await p2.getByRole('button', { name: 'Créer mon compte' }).click();
   await p2.waitForURL('**/etagere');
 
   await page.goto('/register');
-  await page.getByLabel('Pseudo').fill(`pod-${s}`);
+  await page.getByLabel('Pseudo').fill(`pod_${s}`);
   await page.getByLabel('Code secret').fill('1234');
   const reg = page.waitForResponse((r) => r.url().endsWith('/api/auth/register'));
   await page.getByRole('button', { name: 'Créer mon compte' }).click();
   await reg;
   await page.waitForURL('/etagere');
   await page.reload(); // la liste des joueurs est rendue côté serveur
-  await page.locator('.player-list label', { hasText: `inv-${s}` }).locator('input').check();
+  await page.locator('.player-list label', { hasText: `inv_${s}` }).locator('input').check();
   const nightDone = page.waitForResponse((r) => r.url().endsWith('/api/nights') && r.request().method() === 'POST');
   await page.getByRole('button', { name: 'Créer la partie' }).click();
   await nightDone;

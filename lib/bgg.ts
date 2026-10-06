@@ -7,7 +7,9 @@ import type { JeuBgg } from './import-bgg';
 // BASE : boardgamegeek.com (et plus api.geekdo.com). Verrouillage BGG (401 +
 // WWW-Authenticate: Bearer) : le cookie de session est posé sur .boardgamegeek.com,
 // c'est donc ce domaine qui accepte l'auth par cookie. Même backend derrière.
-const BASE = 'https://boardgamegeek.com/xmlapi2';
+// Base XMLAPI2 surchargeable pour les E2E (stub local, cf. tests/e2e/bgg-stub.cjs) :
+// les routes serveur testées bout-en-bout (récupération de pochettes) y branchent.
+const BASE = process.env.BGG_BASE ?? 'https://boardgamegeek.com/xmlapi2';
 const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: '@_' });
 
 function headers(): Record<string, string> {
@@ -54,19 +56,35 @@ const n = (v: unknown): number | null => {
   const x = Number(v); return Number.isFinite(x) ? Math.round(x * 100) / 100 : null;
 };
 
+// Les titres BGG contiennent parfois des entités HTML numériques (&#039; pour ')
+// que fast-xml-parser laisse en l'état (épinglé en prod : « The King&#039;s Dilemma »).
+function decodeEntites(s: string): string {
+  const nomme: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'" };
+  return s
+    .replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(Number(d)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16)))
+    .replace(/&(amp|lt|gt|quot|apos);/g, (_, n: string) => nomme[n]);
+}
+
 // Les éléments URL XMLAPI2 (image/thumbnail, name et yearpublished de /collection)
 // sont du CONTENU TEXTE (épinglé sur réponses réelles : /collection 2026-10-05,
 // /thing 2026-10-06) — pas des attributs. On accepte aussi les formes d'objet
 // (#text / @_value / @_src) et les nombres (parseTagValue de fast-xml-parser).
 function texteOuAttribut(v: unknown): string | undefined {
-  if (typeof v === 'string') return v;
+  if (typeof v === 'string') return decodeEntites(v);
   if (typeof v === 'number') return String(v);
   if (v && typeof v === 'object') {
     const o = v as Record<string, unknown>;
     const t = o['#text'] ?? o['@_value'] ?? o['@_src'];
-    return typeof t === 'number' ? String(t) : (t as string | undefined);
+    if (typeof t === 'number') return String(t);
+    return typeof t === 'string' ? decodeEntites(t) : (t as string | undefined);
   }
   return undefined;
+}
+
+// Comparaison « contient » insensible à la casse et aux accents (NFD + diacritiques).
+function sansAccents(s: string): string {
+  return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 }
 
 export function parseThingXml(xml: string): ThingParsed | null {
@@ -117,11 +135,15 @@ export async function searchBoardgames(q: string): Promise<{ bggId: number; name
   const items = root?.item ? (Array.isArray(root.item) ? root.item : [root.item]) : [];
   // Forme réelle /search (épinglée 2026-10-05) : année en @value, comme /thing.
   // Aucune image dans les réponses — les pochettes viennent de /thing, côté UI.
-  return items.map((i: Record<string, unknown>) => ({
+  // L'autocomplete promet « contient ce que je tape » : /search BGG est flou
+  // (préfixes, mots voisins) → post-filtre insensible casse + accents.
+  const q2 = sansAccents(q);
+  const parsed: { bggId: number; name: string; annee: number | null }[] = items.map((i: Record<string, unknown>) => ({
     bggId: Number(i['@_id']),
-    name: String((i.name as Record<string, unknown> | undefined)?.['@_value'] ?? ''),
+    name: texteOuAttribut(i.name) ?? '',
     annee: n((i.yearpublished as Record<string, unknown> | undefined)?.['@_value']),
   }));
+  return parsed.filter((r) => sansAccents(r.name).includes(q2));
 }
 
 export async function getThing(bggId: number): Promise<ThingResult | null> {

@@ -16,13 +16,22 @@ export default defineConfig({
     baseURL: 'http://localhost:3000',
     trace: 'retain-on-failure', // diagnostic des rouges CI (artefacts uploadés)
   },
-  webServer: {
-    command: `rm -rf ${dataDir} && npm run dev`,
-    url: 'http://localhost:3000',
-    reuseExistingServer: true,
-    timeout: 120_000,
-    // GITHUB_BUG_TOKEN forcé à vide : un jeton hérité du shell ouvrirait une
-    // vraie issue GitHub (et ferait échouer la suite, qui attend un 503 sans jeton).
-    env: { DATA_DIR: dataDir, GITHUB_BUG_TOKEN: '' },
-  },
+  webServer: [
+    {
+      command: `rm -rf ${dataDir} && npm run dev`,
+      url: 'http://localhost:3000',
+      reuseExistingServer: true,
+      timeout: 120_000,
+      // GITHUB_BUG_TOKEN forcé à vide : un jeton hérité du shell ouvrirait une
+      // vraie issue GitHub (et ferait échouer la suite, qui attend un 503 sans jeton).
+      // BGG_BASE : XMLAPI2 branché sur le stub local (récupération de pochettes bout-en-bout).
+      env: { DATA_DIR: dataDir, GITHUB_BUG_TOKEN: '', BGG_BASE: 'http://localhost:8765/xmlapi2' },
+    },
+    {
+      command: 'node tests/e2e/bgg-stub.cjs',
+      url: 'http://localhost:8765',
+      reuseExistingServer: true,
+      timeout: 10_000,
+    },
+  ],
 });

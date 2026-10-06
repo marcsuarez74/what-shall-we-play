@@ -8,7 +8,7 @@ const uid = (p: string) => (registerUser(p, '1234') as { id: number }).id;
 
 describe('états de partie', () => {
   it('sortir la boîte : création → en_jeu, jeu verrouillé, tirage refusé ensuite', () => {
-    const marc = uid('e-marc'); const lea = uid('e-lea');
+    const marc = uid('e_marc'); const lea = uid('e_lea');
     const g = createGame(marc, { title: 'Cascadia', box_format: 'moyen' });
     const n = createNight(marc, [marc, lea]);
     addNightGame(n, g, marc);
@@ -21,7 +21,7 @@ describe('états de partie', () => {
     expect(boxOutNight(n, marc, g)).toEqual({ error: 'La boîte est déjà sortie', status: 409 });
   });
   it('refuse une boîte hors étagère, un hors-la-soirée, et le tirage sur une partie terminée', () => {
-    const marc = uid('e-m2'); const lea = uid('e-l2'); const zoe = uid('e-z2');
+    const marc = uid('e_m2'); const lea = uid('e_l2'); const zoe = uid('e_z2');
     const g = createGame(marc, { title: 'Azul', box_format: 'petit' });
     const n = createNight(marc, [marc, lea]);
     expect(boxOutNight(n, marc, g)).toEqual({ error: "Ce jeu n'est pas sur l'étagère", status: 400 });
@@ -33,7 +33,7 @@ describe('états de partie', () => {
     expect(drawAllowed(n)).toEqual({ error: 'Cette partie est terminée', status: 409 });
   });
   it('terminer : créateur seulement, scores atomiques, double end refusé', () => {
-    const marc = uid('e-m3'); const lea = uid('e-l3'); const zoe = uid('e-z3');
+    const marc = uid('e_m3'); const lea = uid('e_l3'); const zoe = uid('e_z3');
     const n = createNight(marc, [marc, lea]);
     const rLea = endNight(n, lea);
     expect('error' in rLea && rLea.status).toBe(403); // pas le créateur
@@ -43,7 +43,7 @@ describe('états de partie', () => {
     expect(getNightScores(n).map((r) => r.score)).toEqual([24, 19]);
   });
   it('scores invalides : rejet 400 ET la partie reste en_jeu (rien de semi-enregistré)', () => {
-    const marc = uid('e-m4'); const lea = uid('e-l4');
+    const marc = uid('e_m4'); const lea = uid('e_l4');
     const g = createGame(marc, { title: 'Harmonies', box_format: 'petit' });
     const n = createNight(marc, [marc, lea]);
     addNightGame(n, g, marc);
@@ -56,14 +56,14 @@ describe('états de partie', () => {
     expect(getNightScores(n)).toHaveLength(0);
   });
   it('terminer sans scores = aucune ligne ; depuis creation = abandon', () => {
-    const marc = uid('e-m5'); const lea = uid('e-l5');
+    const marc = uid('e_m5'); const lea = uid('e_l5');
     const n = createNight(marc, [marc, lea]);
     endNight(n, marc); // abandon depuis creation
     expect(getNight(n)!.status).toBe('termine');
     expect(getNightScores(n)).toHaveLength(0);
   });
   it('lectures : getNightGame, historique avec gagnant, soirée du jour terminée, active exclut termine', () => {
-    const marc = uid('e-m6'); const lea = uid('e-l6');
+    const marc = uid('e_m6'); const lea = uid('e_l6');
     const g = createGame(marc, { title: 'Terraforming Mars', box_format: 'grand' });
     const n = createNight(marc, [marc, lea]);
     addNightGame(n, g, marc);
@@ -71,7 +71,7 @@ describe('états de partie', () => {
     endNight(n, marc, { [marc]: 81, [lea]: 88 });
     expect(getNightGame(n)!.title).toBe('Terraforming Mars');
     const card = getHistoryCards(marc).find((c) => c.id === n)!;
-    expect(card.gagnant_pseudo).toBe('e-l6');
+    expect(card.gagnant_pseudo).toBe('e_l6');
     expect(card.gagnant_score).toBe(88);
     expect(card.game_title).toBe('Terraforming Mars');
     expect(getActiveNight(marc)).toBeNull(); // terminée → plus active
@@ -80,7 +80,7 @@ describe('états de partie', () => {
     expect(duJour?.game_title).toBe('Terraforming Mars');
   });
   it('historique : carte sans scores ni gagnant (soirée migrée)', () => {
-    const marc = uid('e-m7');
+    const marc = uid('e_m7');
     const n = createNight(marc, [marc]);
     getDb().prepare(`UPDATE nights SET played_at = date('now','-1 day'), status='termine', ended_at=datetime('now','localtime') WHERE id=?`).run(n);
     const card = getHistoryCards(marc).find((c) => c.id === n)!;

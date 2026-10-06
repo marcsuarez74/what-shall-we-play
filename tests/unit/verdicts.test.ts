@@ -23,7 +23,7 @@ function soireeJouee(pseudo: string, titre: string) {
 // Jeu unique par appel : poidsVerdicts agrège par jeu sur toutes les soirées
 // de la base de test (partagée entre les tests du fichier).
 function soireeJugee(prefixe: string, titre: string, verdicts: Verdict[]) {
-  const joueurs = verdicts.map((_, i) => uid(`${prefixe}-${i}`));
+  const joueurs = verdicts.map((_, i) => uid(`${prefixe}_${i}`));
   const hote = joueurs[0];
   const jeu = createGame(hote, { title: titre, box_format: 'moyen' });
   const n = createNight(hote, joueurs);
@@ -36,7 +36,7 @@ function soireeJugee(prefixe: string, titre: string, verdicts: Verdict[]) {
 
 describe('poserVerdict', () => {
   it('poser puis re-voter : remplace (une ligne par joueur), lisible via monVerdict/verdictsDeNuit', () => {
-    const { hote, n } = soireeJouee('vd-revote', 'Cascadia');
+    const { hote, n } = soireeJouee('vd_revote', 'Cascadia');
     expect(monVerdict(n, hote)).toBeNull(); // rien posé
     expect(poserVerdict(n, hote, 'adore')).toEqual({ ok: true });
     expect(monVerdict(n, hote)).toBe('adore');
@@ -50,7 +50,7 @@ describe('poserVerdict', () => {
   });
 
   it('game_id copié de nights.game_id au moment du vote, rafraîchi à chaque re-vote', () => {
-    const hote = uid('vd-gid');
+    const hote = uid('vd_gid');
     const azul = createGame(hote, { title: 'Azul', box_format: 'petit' });
     const n = createNight(hote, [hote]);
     addNightGame(n, azul, hote);
@@ -68,8 +68,8 @@ describe('poserVerdict', () => {
   });
 
   it('gardes : partie inconnue 404, non-participant 403, en_jeu 409, création 409, sans boîte 409', () => {
-    const { hote, n } = soireeJouee('vd-garde', 'Wingspan');
-    const zarb = uid('vd-zarb');
+    const { hote, n } = soireeJouee('vd_garde', 'Wingspan');
+    const zarb = uid('vd_zarb');
     expect(poserVerdict(99999, hote, 'adore')).toEqual({ error: 'Partie introuvable', status: 404 });
     expect(poserVerdict(n, zarb, 'adore')).toEqual({ error: 'Seuls les joueurs de la partie peuvent donner leur verdict', status: 403 });
 
@@ -81,26 +81,26 @@ describe('poserVerdict', () => {
     expect(poserVerdict(enCours, hote, 'adore')).toEqual({ error: 'La partie est en cours — le verdict se donne après', status: 409 });
 
     // création : la soirée n'a pas encore commencé
-    const vierge = uid('vd-vierge');
+    const vierge = uid('vd_vierge');
     const pasCommencee = createNight(vierge, [vierge]);
     expect(poserVerdict(pasCommencee, vierge, 'bien')).toEqual({ error: 'La partie n’a pas encore commencé', status: 409 });
 
     // terminée sans boîte (abandon depuis création) : rien à juger
-    const abandonneur = uid('vd-abandon');
+    const abandonneur = uid('vd_abandon');
     const abandon = createNight(abandonneur, [abandonneur]);
     endNight(abandon, abandonneur);
     expect(poserVerdict(abandon, abandonneur, 'neutre')).toEqual({ error: 'Aucune boîte à juger', status: 409 });
   });
 
   it('verdict invalide (hors adore/bien/neutre) : 400, rien enregistré', () => {
-    const { hote, n } = soireeJouee('vd-invalide', '7 Wonders');
+    const { hote, n } = soireeJouee('vd_invalide', '7 Wonders');
     expect(poserVerdict(n, hote, 'bof' as Verdict)).toEqual({ error: 'Verdict invalide', status: 400 });
     expect(monVerdict(n, hote)).toBeNull();
   });
 
   it('verdictsDeNuit agrège les verdicts de plusieurs joueurs', () => {
-    const hote = uid('vd-agreg');
-    const invite = uid('vd-aggi');
+    const hote = uid('vd_agreg');
+    const invite = uid('vd_aggi');
     const g = createGame(hote, { title: 'Harmonies', box_format: 'moyen' });
     const n = createNight(hote, [hote, invite]);
     addNightGame(n, g, hote);
@@ -122,48 +122,48 @@ describe('poidsVerdicts', () => {
   });
 
   it('unanimement adoré, 3+ verdicts → ×1,08 (borne haute)', () => {
-    const { jeu } = soireeJugee('pw-uni', 'Cascadia', ['adore', 'adore', 'adore']);
+    const { jeu } = soireeJugee('pw_uni', 'Cascadia', ['adore', 'adore', 'adore']);
     expect(poidsVerdicts([jeu]).get(jeu)).toBeCloseTo(1.08, 5);
   });
 
   it('un seul adore → confiance 1/3 → ×1 + 0,08×1×(1/3)', () => {
-    const { jeu } = soireeJugee('pw-solo', 'Azul', ['adore']);
+    const { jeu } = soireeJugee('pw_solo', 'Azul', ['adore']);
     expect(poidsVerdicts([jeu]).get(jeu)).toBeCloseTo(1 + 0.08 / 3, 5);
   });
 
   it('1 adore + 1 bien → score 0,5 → ×1 + 0,08×0,5×(2/3) ≈ 1,0267', () => {
-    const { jeu } = soireeJugee('pw-mi', 'Harmonies', ['adore', 'bien']);
+    const { jeu } = soireeJugee('pw_mi', 'Harmonies', ['adore', 'bien']);
     expect(poidsVerdicts([jeu]).get(jeu)).toBeCloseTo(1 + 0.08 * 0.5 * (2 / 3), 5);
   });
 
   it('1 adore + 1 neutre → le neutre équilibre le score vers 0 → ×1,00', () => {
-    const { jeu } = soireeJugee('pw-eq', 'Wingspan', ['adore', 'neutre']);
+    const { jeu } = soireeJugee('pw_eq', 'Wingspan', ['adore', 'neutre']);
     expect(poidsVerdicts([jeu]).get(jeu)).toBeCloseTo(1, 5);
   });
 
   it('unanimement bien → score 0 → ×1,00 exact', () => {
-    const { jeu } = soireeJugee('pw-bien', '7 Wonders', ['bien', 'bien']);
+    const { jeu } = soireeJugee('pw_bien', '7 Wonders', ['bien', 'bien']);
     expect(poidsVerdicts([jeu]).get(jeu)).toBeCloseTo(1, 5);
   });
 
   it('dominant neutre (2 neutre, 1 adore) → score −1/3 → ≈ 0,99333, jamais sous 0,98', () => {
-    const { jeu } = soireeJugee('pw-dom', 'Dune', ['neutre', 'neutre', 'adore']);
+    const { jeu } = soireeJugee('pw_dom', 'Dune', ['neutre', 'neutre', 'adore']);
     expect(poidsVerdicts([jeu]).get(jeu)).toBeCloseTo(1 + 0.02 * (-1 / 3), 5);
   });
 
   it('unanimement neutre (3+) → score −1 → ×0,98 (borne basse)', () => {
-    const { jeu } = soireeJugee('pw-bas', 'Root', ['neutre', 'neutre', 'neutre']);
+    const { jeu } = soireeJugee('pw_bas', 'Root', ['neutre', 'neutre', 'neutre']);
     expect(poidsVerdicts([jeu]).get(jeu)).toBeCloseTo(0.98, 5);
   });
 
   it('jamais hors bornes [0,98 ; 1,08] quel que soit le mélange planté', () => {
     const cas = [
-      soireeJugee('pw-x1', 'Scythe', ['adore']),
-      soireeJugee('pw-x2', 'Brass', ['bien', 'bien', 'bien', 'bien', 'bien']),
-      soireeJugee('pw-x3', 'Gaia', ['neutre']),
-      soireeJugee('pw-x4', 'Everdell', ['adore', 'adore', 'neutre', 'adore', 'bien', 'adore', 'adore']),
-      soireeJugee('pw-x5', 'Spirit Island', ['neutre', 'adore', 'neutre', 'bien', 'neutre']),
-      soireeJugee('pw-x6', 'Ark Nova', ['neutre', 'neutre', 'neutre', 'neutre', 'neutre', 'neutre']),
+      soireeJugee('pw_x1', 'Scythe', ['adore']),
+      soireeJugee('pw_x2', 'Brass', ['bien', 'bien', 'bien', 'bien', 'bien']),
+      soireeJugee('pw_x3', 'Gaia', ['neutre']),
+      soireeJugee('pw_x4', 'Everdell', ['adore', 'adore', 'neutre', 'adore', 'bien', 'adore', 'adore']),
+      soireeJugee('pw_x5', 'Spirit Island', ['neutre', 'adore', 'neutre', 'bien', 'neutre']),
+      soireeJugee('pw_x6', 'Ark Nova', ['neutre', 'neutre', 'neutre', 'neutre', 'neutre', 'neutre']),
     ];
     const p = poidsVerdicts(cas.map((c) => c.jeu));
     for (const c of cas) {
@@ -174,7 +174,7 @@ describe('poidsVerdicts', () => {
   });
 
   it('agrège par jeu sur toutes les soirées : deux nuits du même jeu cumulent', () => {
-    const hote = uid('pw-deuxnuits');
+    const hote = uid('pw_deuxnuits');
     const jeu = createGame(hote, { title: 'Cascadia', box_format: 'moyen' });
     for (const prefixe of ['a', 'b']) {
       const n = createNight(hote, [hote]);
@@ -191,8 +191,8 @@ describe('poidsVerdicts', () => {
 // Compteurs 😍🙂😐 de la fiche jeu (toutes soirées confondues).
 describe('verdictsJeu', () => {
   it('compte adore/bien/neutre d\'un jeu, toutes soirées confondues', () => {
-    const hote = uid('vj-hote');
-    const invite = uid('vj-invite');
+    const hote = uid('vj_hote');
+    const invite = uid('vj_invite');
     const jeu = createGame(hote, { title: 'Wingspan VJ', box_format: 'moyen' });
     // nuit 1 : deux joueurs jugent ; nuit 2 : l'hôte re-juge le même jeu (cumul)
     const n1 = createNight(hote, [hote, invite]);
@@ -210,7 +210,7 @@ describe('verdictsJeu', () => {
   });
 
   it('jeu jamais jugé → compteurs à zéro', () => {
-    const hote = uid('vj-zero');
+    const hote = uid('vj_zero');
     const jeu = createGame(hote, { title: 'Everdell VJ', box_format: 'moyen' });
     expect(verdictsJeu(jeu)).toEqual({ adore: 0, bien: 0, neutre: 0 });
   });
@@ -220,8 +220,8 @@ describe('verdictsJeu', () => {
 // mode ludothèque) — Record par game_id, sans N+1.
 describe('verdictsParJeu', () => {
   it('cumul multi-nuits par game_id ; jeu jamais jugé → absent du record', () => {
-    const hote = uid('vpj-hote');
-    const invite = uid('vpj-invite');
+    const hote = uid('vpj_hote');
+    const invite = uid('vpj_invite');
     const jeu = createGame(hote, { title: 'Cascadia VPJ', box_format: 'moyen' });
     const jamais = createGame(hote, { title: 'Everdell VPJ', box_format: 'moyen' });
     const n1 = createNight(hote, [hote, invite]);
@@ -244,11 +244,11 @@ describe('verdictsParJeu', () => {
 // top 3 trié par total desc (égalité : adore desc).
 describe('verdictPersoStats', () => {
   it('vide si je n\'ai jamais voté', () => {
-    expect(verdictPersoStats(uid('vps-vierge'))).toEqual([]);
+    expect(verdictPersoStats(uid('vps_vierge'))).toEqual([]);
   });
 
   it('ratio exact adore/total par jeu, cumulé sur toutes mes soirées', () => {
-    const moi = uid('vps-ratio');
+    const moi = uid('vps_ratio');
     const jeu = createGame(moi, { title: 'Cascadia', box_format: 'moyen' });
     for (const v of ['adore', 'bien'] as Verdict[]) {
       const n = createNight(moi, [moi]);
@@ -261,7 +261,7 @@ describe('verdictPersoStats', () => {
   });
 
   it('top 3 : total desc puis adore desc — le 4e jeu (total le plus faible) sort', () => {
-    const moi = uid('vps-top3');
+    const moi = uid('vps_top3');
     const plantes: [string, Verdict[]][] = [
       ['GrosTotal', ['adore', 'bien', 'neutre']], // total 3, adore 1 → 1er
       ['EgalAdore', ['adore', 'adore']],          // total 2, adore 2 → 2e (égalité : adore desc)
@@ -291,7 +291,7 @@ describe('verdictPersoStats', () => {
 // Rappel « Mes parties » : tant que je n'ai pas voté, la ligne porte mon_verdict null.
 describe('getMyParties : mon_verdict', () => {
   it('null tant que je n\'ai pas voté, puis mon verdict une fois posé (LEFT JOIN nuit+joueur)', () => {
-    const moi = uid('gmp-moi');
+    const moi = uid('gmp_moi');
     const jeu = createGame(moi, { title: 'Dune GMP', box_format: 'moyen' });
     const n = createNight(moi, [moi]);
     addNightGame(n, jeu, moi);

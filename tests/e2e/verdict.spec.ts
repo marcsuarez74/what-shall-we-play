@@ -48,7 +48,7 @@ async function sortirEtTerminer(page: Page, nid: number, gid: number, scores: Re
 
 test('solo : bloc sur la nuit terminée, vote à 1, changement d avis reste cohérent', async ({ page }) => {
   const s = Date.now().toString(36);
-  await register(page, `vd-${s}`);
+  await register(page, `vd_${s}`);
   const nid = await creerPartieSolo(page);
   const gid = await newGame(page, 'Cascadia', 'grand');
   await putOnShelf(page, gid, nid);
@@ -97,11 +97,11 @@ test('duo : le verdict de A fait bouger le compteur chez B sans recharger', asyn
   const s = Date.now().toString(36);
   const ctxA = await browser.newContext();
   const a = await ctxA.newPage();
-  await register(a, `va-a-${s}`);
+  await register(a, `va_a_${s}`);
   const ctxB = await browser.newContext();
   const b = await ctxB.newPage();
-  await register(b, `va-b-${s}`);
-  const nid = await creerPartie(a, `va-b-${s}`);
+  await register(b, `va_b_${s}`);
+  const nid = await creerPartie(a, `va_b_${s}`);
   const gid = await newGame(a, 'Wingspan', 'grand');
   await putOnShelf(a, gid, nid);
   await sortirEtTerminer(a, nid, gid, { [(await monId(a))]: 24, [(await monId(b))]: 19 });
@@ -122,7 +122,7 @@ test('duo : le verdict de A fait bouger le compteur chez B sans recharger', asyn
 test('non-membre : impossible de poser un verdict sur la soirée des autres', async ({ browser }) => {
   const s = Date.now().toString(36);
   const hote = await browser.newContext().then((c) => c.newPage());
-  await register(hote, `vh-${s}`);
+  await register(hote, `vh_${s}`);
   const nid = await creerPartieSolo(hote);
   const gid = await newGame(hote, 'Azul', 'petit');
   await putOnShelf(hote, gid, nid);
@@ -130,7 +130,7 @@ test('non-membre : impossible de poser un verdict sur la soirée des autres', as
 
   const ctxX = await browser.newContext();
   const intrus = await ctxX.newPage();
-  await register(intrus, `vx-${s}`);
+  await register(intrus, `vx_${s}`);
   // La route garde l'accès (pattern votes : userCanAccessNight → 404 « introuvable »,
   // la soirée des autres n'existe pas pour lui ; le 403 de poserVerdict est couvert
   // en unitaire T1). Le contrat testé : rejet, jamais d'écriture.
@@ -141,7 +141,7 @@ test('non-membre : impossible de poser un verdict sur la soirée des autres', as
 
 test('poids : après verdicts posés, le tirage répond toujours un jeu de l étagère', async ({ page }) => {
   const s = Date.now().toString(36);
-  await register(page, `vw-${s}`);
+  await register(page, `vw_${s}`);
   const nid1 = await creerPartieSolo(page);
   const gid1 = await newGame(page, 'Cascadia', 'grand');
   await putOnShelf(page, gid1, nid1);

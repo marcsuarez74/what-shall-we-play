@@ -4,7 +4,7 @@ import { gameIdByTitle, putOnShelf } from './helpers/shelf';
 test('tirage : roue plein écran puis verdict sur le jeu tiré', async ({ page }) => {
   // Compte neuf
   await page.goto('/register');
-  await page.getByLabel('Pseudo').fill(`tirage-${Date.now()}`);
+  await page.getByLabel('Pseudo').fill(`tirage_${Date.now()}`);
   await page.getByLabel('Code secret').fill('1234');
   const registerDone = page.waitForResponse((r) => r.url().endsWith('/api/auth/register'));
   await page.getByRole('button', { name: 'Créer mon compte' }).click();

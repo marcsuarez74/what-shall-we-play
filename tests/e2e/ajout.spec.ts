@@ -24,7 +24,7 @@ test('ajout : un seul résultat BGG -> fiche remplie -> ludothèque', async ({ p
   await page.route('**/api/bgg/search*', (r) =>
     r.fulfill({ json: { results: [{ bggId: 503, name: 'Through the Desert' }] } }));
   await page.route('**/api/bgg/thing*', (r) => r.fulfill({ json: THING }));
-  await register(page, `ajout-${stamp}`);
+  await register(page, `ajout_${stamp}`);
 
   await page.goto('/games/add');
   await page.getByLabel('Titre du jeu').fill('Through the Desert');
@@ -64,7 +64,7 @@ test('ajout : plusieurs résultats -> liste de choix', async ({ page }) => {
     json: { results: [{ bggId: 503, name: 'Through the Desert' }, { bggId: 279537, name: 'The Search for Planet X' }] },
   }));
   await page.route('**/api/bgg/thing*', (r) => r.fulfill({ json: THING }));
-  await register(page, `ajout2-${stamp}`);
+  await register(page, `ajout2_${stamp}`);
 
   await page.goto('/games/add');
   await page.getByLabel('Titre du jeu').fill('through');
@@ -74,7 +74,7 @@ test('ajout : plusieurs résultats -> liste de choix', async ({ page }) => {
   await expect(page.locator('.sheet-facts')).toContainText('Reiner Knizia');
 });
 
-test('ajout : autocomplete live — [pochette|♟] nom (année)', async ({ page }) => {
+test('ajout : autocomplete live — nom (année), sans pochette (v4.5.0)', async ({ page }) => {
   await page.route('**/api/bgg/search*', (r) => r.fulfill({
     json: { results: [
       { bggId: 266192, name: 'Wingspan', annee: 2019 },
@@ -84,22 +84,16 @@ test('ajout : autocomplete live — [pochette|♟] nom (année)', async ({ page 
   await page.route('**/api/bgg/thing*', (r) => r.fulfill({
     json: { ...THING, bggId: 266192, title: 'Wingspan', year: 2019, coverName: 'c-ws.jpg' },
   }));
-  // jpeg 1×1 valide : l'élément <img> doit charger pour être visible
-  await page.route('**/api/cover/*', (r) => r.fulfill({
-    contentType: 'image/jpeg',
-    body: Buffer.from('/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/wAALCAABAAEBAREA/8QAFAABAAAAAAAAAAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAD8AVN//2Q==', 'base64'),
-  }));
-  await register(page, `ajout5-${stamp}`);
+  await register(page, `ajout5_${stamp}`);
 
   await page.goto('/games/add');
   // Live : la liste apparaît SANS cliquer sur « Récupérer » (debounce 500 ms),
-  // nom + année immédiats (donnés par /search)
+  // nom + année immédiats (donnés par /search) — v4.5.0 : plus de pochette ici.
   await page.getByLabel('Titre du jeu').fill('wingspan');
   const ws = page.getByRole('button', { name: 'Wingspan (2019)' });
   await expect(ws).toBeVisible();
   await expect(page.getByRole('button', { name: 'Wingspan Asia (2022)' })).toBeVisible();
-  // La pochette remplace le ♟ (préchargement /thing en fond)
-  await expect(page.locator('.suggestions img.sugg-cover').first()).toBeVisible();
+  await expect(page.locator('.suggestions img')).toHaveCount(0);
   // Choix -> fiche : l'année y figure
   await ws.click();
   await expect(page.locator('.fiche-meta')).toContainText('2019');
@@ -108,7 +102,7 @@ test('ajout : autocomplete live — [pochette|♟] nom (année)', async ({ page 
 
 test('ajout : aucun résultat -> message orientant', async ({ page }) => {
   await page.route('**/api/bgg/search*', (r) => r.fulfill({ json: { results: [] } }));
-  await register(page, `ajout3-${stamp}`);
+  await register(page, `ajout3_${stamp}`);
 
   await page.goto('/games/add');
   await page.getByLabel('Titre du jeu').fill('Zzzbla');
@@ -118,7 +112,7 @@ test('ajout : aucun résultat -> message orientant', async ({ page }) => {
 
 test('ajout : BGG indisponible (token absent) -> saisie à la main', async ({ page }) => {
   await page.route('**/api/bgg/search*', (r) => r.fulfill({ status: 502, json: { error: 'indisponible' } }));
-  await register(page, `ajout4-${stamp}`);
+  await register(page, `ajout4_${stamp}`);
 
   await page.goto('/games/add');
   await page.getByLabel('Titre du jeu').fill('Azul');

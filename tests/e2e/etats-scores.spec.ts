@@ -17,7 +17,7 @@ async function registerAndStart(page: Page, pseudo: string) {
 }
 
 test('étagère : badge En préparation, puis bandeau en jeu après la boîte', async ({ page }) => {
-  await registerAndStart(page, `eta-${Date.now()}`);
+  await registerAndStart(page, `eta_${Date.now()}`);
   const g = await newGame(page, 'Cascadia', 'moyen');
   await putOnShelf(page, g);
   await page.goto('/etagere');
@@ -64,12 +64,12 @@ test('carnet des scores : créateur seulement, médailles en direct, égalité, 
   const invite = await browser.newContext();
   const p2 = await invite.newPage();
   await p2.goto('/register');
-  await p2.getByLabel('Pseudo').fill(`inv-${s}`);
+  await p2.getByLabel('Pseudo').fill(`inv_${s}`);
   await p2.getByLabel('Code secret').fill('1234');
   await p2.getByRole('button', { name: 'Créer mon compte' }).click();
   await p2.waitForURL('**/etagere');
 
-  await registerAndStart2Joueurs(page, `car-${s}`, `inv-${s}`); // reload + check invité + Créer la partie
+  await registerAndStart2Joueurs(page, `car_${s}`, `inv_${s}`); // reload + check invité + Créer la partie
   const g = await newGame(page, 'Azul', 'petit');
   await putOnShelf(page, g);
   const nid = await nightIdOf(page);
@@ -108,12 +108,12 @@ test('historique : une carte par partie, détail avec podium et partage', async 
   const invite = await browser.newContext();
   const p2 = await invite.newPage();
   await p2.goto('/register');
-  await p2.getByLabel('Pseudo').fill(`his-${s}`);
+  await p2.getByLabel('Pseudo').fill(`his_${s}`);
   await p2.getByLabel('Code secret').fill('1234');
   await p2.getByRole('button', { name: 'Créer mon compte' }).click();
   await p2.waitForURL('**/etagere');
 
-  await registerAndStart2Joueurs(page, `pod-${s}`, `his-${s}`);
+  await registerAndStart2Joueurs(page, `pod_${s}`, `his_${s}`);
   const g = await newGame(page, 'Cascadia', 'moyen');
   await putOnShelf(page, g);
   const nid = await nightIdOf(page);
@@ -156,7 +156,7 @@ test('historique : une carte par partie, détail avec podium et partage', async 
 });
 
 test('soirée terminée sans scores : détail sobre, aucune erreur', async ({ page }) => {
-  await registerAndStart(page, `sans-${Date.now().toString(36)}`);
+  await registerAndStart(page, `sans_${Date.now().toString(36)}`);
   const g = await newGame(page, 'Harmonies', 'moyen');
   await putOnShelf(page, g);
   const nid = await nightIdOf(page);

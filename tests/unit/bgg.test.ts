@@ -75,6 +75,32 @@ describe('collection BGG (import)', () => {
       { bggId: 473508, name: 'Wingspan Pocket', annee: null }, // sans année publiée
     ]);
   });
+  it('recherche : ne garde que les jeux dont le nom CONTIENT la requête', async () => {
+    // /search BGG fait du flou (préfixes, mots voisins) — l'autocomplete promet « contient ».
+    global.fetch = vi.fn().mockResolvedValue(new Response(`<?xml version="1.0" encoding="utf-8"?>
+<items total="2" termsofuse="https://boardgamegeek.com/xmlapi/termsofuse">
+  <item type="boardgame" id="266192"><name type="primary" value="Wingspan"/><yearpublished value="2019"/></item>
+  <item type="boardgame" id="1234"><name type="primary" value="Hatch"/><yearpublished value="2021"/></item>
+</items>`, { status: 200 }));
+    expect(await searchBoardgames('wingspan')).toEqual([
+      { bggId: 266192, name: 'Wingspan', annee: 2019 },
+    ]);
+  });
+  it('recherche : contient insensible aux accents (« etang » trouve « Étang »)', async () => {
+    global.fetch = vi.fn().mockResolvedValue(new Response(`<?xml version="1.0" encoding="utf-8"?>
+<items total="1" termsofuse="https://boardgamegeek.com/xmlapi/termsofuse">
+  <item type="boardgame" id="99"><name type="primary" value="Étang des oasis"/><yearpublished value="2018"/></item>
+</items>`, { status: 200 }));
+    expect(await searchBoardgames('etang')).toEqual([{ bggId: 99, name: 'Étang des oasis', annee: 2018 }]);
+  });
+  it('recherche : décode les entités numériques (&#039; → \')', async () => {
+    // Épinglé en prod : « The King&#039;s Dilemma » stocké tel quel par le parseur.
+    global.fetch = vi.fn().mockResolvedValue(new Response(`<?xml version="1.0" encoding="utf-8"?>
+<items total="1" termsofuse="https://boardgamegeek.com/xmlapi/termsofuse">
+  <item type="boardgame" id="244529"><name type="primary" value="The King&#039;s Dilemma"/><yearpublished value="2019"/></item>
+</items>`, { status: 200 }));
+    expect(await searchBoardgames("king's")).toEqual([{ bggId: 244529, name: "The King's Dilemma", annee: 2019 }]);
+  });
   it('épingles Review Focus n°2 : <errors> BGG -> 404 (pas une collection vide)', async () => {
     global.fetch = vi.fn().mockResolvedValue(new Response(COLLECTION_ERRORS_XML, { status: 200 }));
     expect(await collectionUtilisateur('introuvable')).toEqual({

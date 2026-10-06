@@ -42,13 +42,13 @@ test('valider : la phrase « xxx a validé sa sélection » apparaît chez les a
   const s = Date.now().toString(36);
   const ctxA = await browser.newContext();
   const a = await ctxA.newPage();
-  await register(a, `val-m-${s}`);
+  await register(a, `val_m_${s}`);
 
   // Marc invite Léa (inscrite avant lui → dans sa liste)
   const ctxB = await browser.newContext();
   const b = await ctxB.newPage();
-  await register(b, `val-l-${s}`);
-  const nightId = await creerPartie(a, `val-l-${s}`);
+  await register(b, `val_l_${s}`);
+  const nightId = await creerPartie(a, `val_l_${s}`);
 
   // Marc pose une boîte : la ligne d'état « X/Y prêts » existe chez le créateur
   await poserBoite(a, nightId, 'Le jeu de marc');
@@ -60,7 +60,7 @@ test('valider : la phrase « xxx a validé sa sélection » apparaît chez les a
   // Léa valide DEPUIS SON TÉLÉPHONE (page b) : la phrase apparaît chez Marc sans recharger
   await b.getByRole('button', { name: 'Valider ma sélection' }).click();
   await expect(a.locator('.etats')).toContainText('a validé sa sélection', { timeout: 5_000 });
-  await expect(a.locator('.etats')).toContainText(`val-l-${s}`);
+  await expect(a.locator('.etats')).toContainText(`val_l_${s}`);
   // Chez Léa aussi, l'état a basculé
   await expect(b.locator('.pill-ok')).toContainText('✓ Validée');
 
@@ -77,12 +77,12 @@ test('lancer : un appui quand tout le monde a validé, double-appui sinon', asyn
   const s = Date.now().toString(36);
   const ctxA = await browser.newContext();
   const a = await ctxA.newPage();
-  await register(a, `lan-m-${s}`);
+  await register(a, `lan_m_${s}`);
 
   const ctxB = await browser.newContext();
   const b = await ctxB.newPage();
-  await register(b, `lan-l-${s}`);
-  const nightId = await creerPartie(a, `lan-l-${s}`);
+  await register(b, `lan_l_${s}`);
+  const nightId = await creerPartie(a, `lan_l_${s}`);
   await poserBoite(a, nightId, 'Le jeu du soir');
 
   // Marc valide : 1/2 prêts — la ligne d'état apparaît, le bouton demande confirmation au premier appui

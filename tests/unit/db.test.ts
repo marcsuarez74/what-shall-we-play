@@ -79,7 +79,7 @@ describe('db', () => {
   });
 
   it('night_verdicts : UNIQUE par (nuit, joueur) et CASCADE sur la nuit', () => {
-    const marc = registerUser(`db-v-${Date.now().toString(36)}`, '1234') as { id: number };
+    const marc = registerUser(`db_v_${Date.now().toString(36)}`, '1234') as { id: number };
     const nuit = createNight(marc.id, [marc.id]);
     const jeu = createGame(marc.id, { title: 'Cascadia', box_format: 'moyen' });
     addNightGame(nuit, jeu, marc.id); // sur l'étagère, pour pouvoir sortir la boîte

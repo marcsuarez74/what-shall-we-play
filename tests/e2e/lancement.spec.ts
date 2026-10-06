@@ -26,7 +26,7 @@ async function peuplerEtagere(page: import('@playwright/test').Page, nightId: nu
 }
 
 test('barre de lancement + validation visibles sans scroller (4 rangées)', async ({ page }) => {
-  const nightId = await registerAndStart(page, `fix-${Date.now()}`);
+  const nightId = await registerAndStart(page, `fix_${Date.now()}`);
   // 4 formats = 4 rangées : la page dépasse l'écran
   await peuplerEtagere(page, nightId, [['Alpha', 'grand'], ['Bravo', 'moyen'], ['Charlie', 'petit'], ['Delta', 'mini']]);
   await page.locator('.box').first().waitFor();
@@ -48,7 +48,7 @@ test('barre de lancement + validation visibles sans scroller (4 rangées)', asyn
 });
 
 test('les filtres réduisent la vue, jamais le pool du tirage', async ({ page }) => {
-  const nightId = await registerAndStart(page, `filtre-${Date.now()}`);
+  const nightId = await registerAndStart(page, `filtre_${Date.now()}`);
   await peuplerEtagere(page, nightId, [['Alpha', 'grand'], ['Bravo', 'moyen'], ['Charlie', 'petit'], ['Delta', 'mini']]);
   await page.locator('.box').first().waitFor();
 

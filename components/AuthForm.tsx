@@ -1,10 +1,14 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import PinInput from './PinInput';
 import LanguageSwitch from './LanguageSwitch';
 import { useI18n } from './LanguageProvider';
 import { ALLOWED_STICKERS } from '@/lib/stickers';
+
+// Jeton d'appareil « Se souvenir de moi » (v4.5.0) : gardé en localStorage pour
+// restaurer la session quand la PWA perd son cookie (constaté sur Android).
+const DEVICE_KEY = 'wsp_device_token';
 
 export default function AuthForm({ mode }: { mode: 'login' | 'register' }) {
   const router = useRouter();
@@ -12,17 +16,44 @@ export default function AuthForm({ mode }: { mode: 'login' | 'register' }) {
   const [pseudo, setPseudo] = useState('');
   const [code, setCode] = useState('');
   const [sticker, setSticker] = useState('🎲');
+  const [seSouvenir, setSeSouvenir] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
+  // Restauration silencieuse au démarrage : le cookie a disparu (PWA tuée) mais
+  // le jeton d'appareil est là → session rétablie sans saisie. Jeton à usage
+  // unique : le serveur en rend un neuf qu'on re-range.
+  useEffect(() => {
+    if (mode !== 'login') return;
+    const dt = localStorage.getItem(DEVICE_KEY);
+    if (!dt) return;
+    fetch('/api/auth/restore', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: dt }),
+    })
+      .then(async (r) => {
+        if (!r.ok) { localStorage.removeItem(DEVICE_KEY); return; }
+        const data = await r.json();
+        localStorage.setItem(DEVICE_KEY, data.device_token);
+        router.push('/etagere');
+        router.refresh();
+      })
+      .catch(() => {}); // hors ligne : la page de login reste affichée
+  }, [mode, router]);
+
   async function submit(e: React.FormEvent) {
     e.preventDefault(); setBusy(true); setError(null);
+    const body = mode === 'register'
+      ? { pseudo: pseudo.trim(), code, sticker }
+      : { pseudo: pseudo.trim(), code, remember: seSouvenir };
     const res = await fetch(`/api/auth/${mode}`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(mode === 'register' ? { pseudo, code, sticker } : { pseudo, code }),
+      body: JSON.stringify(body),
     });
     setBusy(false);
     if (!res.ok) { setError((await res.json()).error); return; }
+    const data = await res.json().catch(() => ({})) as { device_token?: string };
+    if (data.device_token) localStorage.setItem(DEVICE_KEY, data.device_token);
     router.push('/etagere'); router.refresh();
   }
 
@@ -35,6 +66,12 @@ export default function AuthForm({ mode }: { mode: 'login' | 'register' }) {
       <span className="pin-label">{t('auth.codeSecret')}</span>
       <PinInput label={t('auth.codeSecretLabel')} value={code} onChange={setCode}
                 autoComplete={mode === 'login' ? 'current-password' : 'new-password'} />
+      {mode === 'login' && (
+        <label className="remember">
+          <input type="checkbox" checked={seSouvenir} onChange={(e) => setSeSouvenir(e.target.checked)} />
+          {t('auth.seSouvenir')}
+        </label>
+      )}
       {mode === 'register' && (
         <>
           <span className="pin-label">{t('auth.avatarChoix')}</span>

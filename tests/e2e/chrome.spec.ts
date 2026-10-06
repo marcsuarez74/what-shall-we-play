@@ -7,7 +7,7 @@ import { test, expect } from '@playwright/test';
 test('chip utilisateur : une seule ligne, même avec le titre de page le plus long', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/register');
-  await page.getByLabel('Pseudo').fill(`chip-${Date.now().toString(36)}`);
+  await page.getByLabel('Pseudo').fill(`chip_${Date.now().toString(36)}`);
   await page.getByLabel('Code secret').fill('1234');
   const done = page.waitForResponse((r) => r.url().endsWith('/api/auth/register'));
   await page.getByRole('button', { name: 'Créer mon compte' }).click();

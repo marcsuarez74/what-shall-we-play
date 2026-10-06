@@ -6,8 +6,8 @@ import { getDb } from '@/lib/db';
 
 describe('nights', () => {
   it('crée une soirée vide, puis chacun ajoute depuis sa ludothèque', () => {
-    const marc = (registerUser('n-marc', '1234') as { id: number }).id;
-    const lea = (registerUser('n-lea', '1234') as { id: number }).id;
+    const marc = (registerUser('n_marc', '1234') as { id: number }).id;
+    const lea = (registerUser('n_lea', '1234') as { id: number }).id;
     const gm = createGame(marc, { title: 'Terraforming Mars', box_format: 'grand' });
     const gl = createGame(lea, { title: 'Harmonies', box_format: 'petit' });
     const nightId = createNight(marc, [marc, lea]);
@@ -18,19 +18,19 @@ describe('nights', () => {
     expect(games.map((g) => g.title).sort()).toEqual(['Harmonies', 'Terraforming Mars']);
     expect(getActiveNight(marc)?.id).toBe(nightId);
     expect(userCanAccessNight(lea, nightId)).toBe(true);
-    expect(userCanAccessNight((registerUser('n-autre', '1234') as { id: number }).id, nightId)).toBe(false);
+    expect(userCanAccessNight((registerUser('n_autre', '1234') as { id: number }).id, nightId)).toBe(false);
   });
   it('modifie les joueurs présents', () => {
-    const a = (registerUser('n-a', '1234') as { id: number }).id;
-    const b = (registerUser('n-b', '1234') as { id: number }).id;
-    const c = (registerUser('n-c', '1234') as { id: number }).id;
+    const a = (registerUser('n_a', '1234') as { id: number }).id;
+    const b = (registerUser('n_b', '1234') as { id: number }).id;
+    const c = (registerUser('n_c', '1234') as { id: number }).id;
     const nightId = createNight(a, [a, b]);
     setNightPlayers(nightId, [a, c]);
     expect(getShelfGames(nightId)).toHaveLength(0); // b parti, c et a n'ont rien
   });
   it('liste mes soirées (créateur ou participant), la plus récente d\'abord', () => {
-    const u = (registerUser('n-hist', '1234') as { id: number }).id;
-    const autre = (registerUser('n-hist-b', '1234') as { id: number }).id;
+    const u = (registerUser('n_hist', '1234') as { id: number }).id;
+    const autre = (registerUser('n_hist_b', '1234') as { id: number }).id;
     const hier = createNight(u, [u]);
     const invite = createNight(autre, [autre, u]); // je n'y suis qu'invité
     const etrangere = createNight(autre, [autre]); // sans moi
@@ -42,7 +42,7 @@ describe('nights', () => {
     expect(ids).not.toContain(etrangere);
   });
   it('getActiveNight suit le jour local (Europe/Paris) et bascule au lendemain', () => {
-    const u = (registerUser('n-tz', '1234') as { id: number }).id;
+    const u = (registerUser('n_tz', '1234') as { id: number }).id;
     const nightId = createNight(u, [u]);
     const db = getDb();
     const today = (db.prepare(`SELECT date('now','localtime') AS d`).get() as { d: string }).d;
@@ -56,8 +56,8 @@ describe('nights', () => {
 
 describe('validation de sélection', () => {
   it('valide, saute à l\'ajout d\'un jeu, puis re-valide', () => {
-    const marc = (registerUser('v-marc', '1234') as { id: number }).id;
-    const lea = (registerUser('v-lea', '1234') as { id: number }).id;
+    const marc = (registerUser('v_marc', '1234') as { id: number }).id;
+    const lea = (registerUser('v_lea', '1234') as { id: number }).id;
     const nightId = createNight(marc, [marc, lea]);
     const valDe = (id: number) => getNightPlayers(nightId).find((p) => p.id === id)?.validated_at ?? null;
     expect(valDe(lea)).toBeNull(); // personne n'a validé à la création
@@ -77,20 +77,20 @@ describe('validation de sélection', () => {
     expect(valDe(lea)).toBeNull();
   });
   it('refuse un joueur hors de la partie', () => {
-    const marc = (registerUser('v-marc2', '1234') as { id: number }).id;
-    const zzz = (registerUser('v-hors', '1234') as { id: number }).id;
+    const marc = (registerUser('v_marc2', '1234') as { id: number }).id;
+    const zzz = (registerUser('v_hors', '1234') as { id: number }).id;
     const nightId = createNight(marc, [marc]);
     expect(() => validateSelection(nightId, zzz)).toThrow(/pas dans/);
   });
   it('modifier la liste des joueurs préserve la validation de ceux qui restent', () => {
-    const marc = (registerUser('v-marc3', '1234') as { id: number }).id;
-    const lea = (registerUser('v-lea3', '1234') as { id: number }).id;
+    const marc = (registerUser('v_marc3', '1234') as { id: number }).id;
+    const lea = (registerUser('v_lea3', '1234') as { id: number }).id;
     const nightId = createNight(marc, [marc, lea]);
     validateSelection(nightId, lea);
     setNightPlayers(nightId, [marc, lea]); // ré-enregistrement sans changement
     expect(getNightPlayers(nightId).find((p) => p.id === lea)?.validated_at).not.toBeNull();
     // un joueur qui arrive n'est PAS validé d'office
-    const thib = (registerUser('v-thib3', '1234') as { id: number }).id;
+    const thib = (registerUser('v_thib3', '1234') as { id: number }).id;
     setNightPlayers(nightId, [marc, lea, thib]);
     const joueurs = getNightPlayers(nightId);
     expect(joueurs.find((p) => p.id === thib)?.validated_at).toBeNull();

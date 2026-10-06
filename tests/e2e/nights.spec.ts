@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { gameIdByTitle, putOnShelf } from './helpers/shelf';
 
 test('soirées : historique avec date, joueurs et tirages', async ({ page }) => {
-  const pseudo = `nights-${Date.now()}`; // 20 caractères exactement (limite d'inscription)
+  const pseudo = `nights_${Date.now()}`; // 20 caractères exactement (limite d'inscription)
 
   // Compte neuf (pattern Task 11)
   await page.goto('/register');
@@ -51,7 +51,7 @@ test('soirées : historique avec date, joueurs et tirages', async ({ page }) => 
 test('soirées : écran vide pour un nouveau compte', async ({ page }) => {
   // Pseudo ≤ 20 caractères (limite d'inscription) : suffixe compact en base 36
   await page.goto('/register');
-  await page.getByLabel('Pseudo').fill(`nights-e-${Date.now().toString(36)}`);
+  await page.getByLabel('Pseudo').fill(`nights_e_${Date.now().toString(36)}`);
   await page.getByLabel('Code secret').fill('1234');
   const registerDone = page.waitForResponse((r) => r.url().endsWith('/api/auth/register'));
   await page.getByRole('button', { name: 'Créer mon compte' }).click();
