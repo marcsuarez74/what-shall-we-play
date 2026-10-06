@@ -4,6 +4,13 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [4.7.5] — 2026-10-06
+
+### Corrigé
+- Feuille « Ajouter à la partie » : le spinner d'une pochette en cours de chargement
+  s'affichait au milieu de la liste au lieu de rester dans sa vignette (visible depuis le
+  chargement différé des pochettes, v4.7.3).
+
 ## [4.7.4] — 2026-10-06
 
 ### Modifié
