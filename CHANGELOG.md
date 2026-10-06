@@ -4,6 +4,38 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [4.7.0] — 2026-10-06
+
+### Ajouté
+- **Préparer une partie programmée** — « Préparer l'étagère » ouvre l'étagère de la partie
+  à l'avance : chacun ajoute ses jeux et vote. Le tirage s'ouvre le jour J.
+- **Titre de partie** (facultatif) à la programmation, modifiable ensuite ; sans titre,
+  la partie s'affiche « Partie du jeudi 9 octobre ». Il ouvre le message d'invitation.
+- **Supprimer une partie programmée** (organisateur) — confirmation qui liste ce qui
+  disparaît : la partie chez les joueurs, les invités et leurs votes, les jeux de l'étagère
+  (ils restent dans les ludothèques).
+- **Lien d'invitation sur toute partie non terminée**, y compris celle du soir : « 🔗 Inviter »
+  sur les cartes, « Copier le lien » sur l'étagère.
+- **L'invité peut créer son compte** depuis sa soirée : même identité, ses votes sont gardés.
+- **L'invité peut se retirer de la soirée** (confirmation, ses votes partent avec lui).
+
+### Modifié
+- **L'invité ne voit que sa soirée** : titre, date, organisateur, joueurs, étagère et vote.
+  Plus d'onglets, de profil ni d'ajout de jeux ; pendant et après la partie, le jeu sorti
+  puis le résultat en lecture seule. L'organisateur saisit toujours ses scores.
+- Le lien d'invitation affiche l'invitation (qui invite, quand, combien de joueurs et de
+  jeux) avant de demander un prénom ; « Me connecter et rejoindre » pour les comptes.
+- Sur l'étagère de l'organisateur, **joueurs et invités sont séparés** (chips en pointillé,
+  badge INVITÉ(E)) ; les invités n'entrent pas dans le décompte « prêts ».
+- Un invité n'est plus jamais proposé comme joueur d'une nouvelle partie.
+- Les maquettes validées sont versionnées dans `mockup/`.
+
+### Corrigé
+- L'invité d'une partie programmée arrivait sur une page vide (l'étagère ne montrait que
+  la partie du jour).
+- La page Parties se met à jour en direct (un invité qui rejoint, une partie supprimée).
+- La liste des parties programmées touchait le bouton « Programmer une partie ».
+
 ## [4.6.0] — 2026-10-06
 
 ### Ajouté

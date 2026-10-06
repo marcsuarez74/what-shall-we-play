@@ -1,17 +1,18 @@
 import { redirect } from 'next/navigation';
 import { getSessionUser } from '@/lib/session';
-import { getActiveNight, getPlannedNights, getHistoryCards, getNightPlayers, getNightGame } from '@/lib/nights';
+import { getActiveNight, getPlannedNights, getHistoryCards, getNightPlayers, getNightGame, getShelfGames, lienInvitation } from '@/lib/nights';
+import { listComptes } from '@/lib/users';
 import { coverSrc } from '@/lib/formats';
-import { getDb } from '@/lib/db';
 import { t, type Lang } from '@/lib/i18n';
-import { formatDate } from '@/lib/i18n/format';
+import { formatDate, titrePartie } from '@/lib/i18n/format';
 import { getLang } from '@/lib/i18n/server';
-import type { UserLite } from '@/lib/types';
 import PlayerChip from '@/components/PlayerChip';
 import NightPlanner from '@/components/NightPlanner';
 import InviteButton from '@/components/InviteButton';
 import TerminerNight from '@/components/TerminerNight';
 import UserMenu from '@/components/UserMenu';
+import UserSync from '@/components/UserSync';
+import SupprimerPartie from '@/components/SupprimerPartie';
 
 // « 2026-10-02 » → jour « 2 » + mois « oct. » — la date est le héros d'une carte programmée.
 function dayMonth(playedAt: string, lang: Lang): { day: string; month: string } {
@@ -31,7 +32,7 @@ export default async function Page() {
   const cartes = getHistoryCards(user.id);
   // Le jeu de la partie (boîte sortie) — les picks cumulés ne s'affichent plus (v3.3.0).
   const activeGame = active?.game_id ? getNightGame(active.id) : null;
-  const users = getDb().prepare('SELECT id, pseudo, sticker, avatar_path FROM users ORDER BY pseudo COLLATE NOCASE').all() as UserLite[];
+  const users = listComptes(); // v4.7.0 : jamais les invités
   // Dates longues / heures des cartes programmées, dans la langue du cookie.
   const dateLongue = (playedAt: string) => formatDate(lang, `${playedAt}T12:00:00`, { dateStyle: 'long' });
   const heureCourte = (playedAt: string, start: string | null | undefined) =>
@@ -39,6 +40,8 @@ export default async function Page() {
 
   return (
     <main className="page">
+      {/* v4.7.0 : un invité qui rejoint, une partie supprimée — la page suit en direct */}
+      <UserSync />
       <div className="page-head">
         <h1>{t(lang, 'soiree.titre')}</h1>
         <UserMenu me={user} />
@@ -59,6 +62,15 @@ export default async function Page() {
                 {getNightPlayers(active.id).map((p) => <PlayerChip key={p.id} u={p} />)}
               </div>
               {activeGame && <p className="jeu-partie">{t(lang, 'soiree.jeuPartie', { j: activeGame.title })}</p>}
+              <div className="lien-actions">
+                <a className="btn-copper as-link" href="/etagere">{t(lang, 'soiree.ouvrirEtagere')}</a>
+                {active.creator_id === user.id && active.status === 'creation' && (() => {
+                  const ps = getNightPlayers(active.id);
+                  return <InviteButton label={t(lang, 'soiree.inviter')} lien={lienInvitation(active)} titre={active.titre}
+                                       dateLong={dateLongue(active.played_at)} time={heureCourte(active.played_at, active.start_time)}
+                                       pseudos={ps.map((p) => p.pseudo)} />;
+                })()}
+              </div>
             </li>
           </ul>
         ) : (
@@ -77,7 +89,10 @@ export default async function Page() {
           <ul className="nights-list">
             {planned.map((n) => {
               const players = getNightPlayers(n.id);
+              const invites = players.filter((p) => p.est_invite);
+              const nbJeux = getShelfGames(n.id).length;
               const { day, month } = dayMonth(n.played_at, lang);
+              const createur = n.creator_id === user.id;
               return (
                 <li key={n.id} className="night-card planned-card">
                   <div className="plan-date" aria-hidden="true">
@@ -85,6 +100,14 @@ export default async function Page() {
                     <span className="plan-month">{month}</span>
                   </div>
                   <div className="plan-body">
+                    <div className="plan-top">
+                      <span className="plan-titre">{titrePartie(lang, n)}</span>
+                      {createur && (
+                        <SupprimerPartie nightId={n.id} date={dateLongue(n.played_at)} nbJeux={nbJeux}
+                                         joueurs={players.filter((p) => !p.est_invite && p.id !== user.id).map((p) => p.pseudo)}
+                                         invites={invites.map((p) => p.pseudo)} />
+                      )}
+                    </div>
                     <div className="plan-when">
                       <span className="plan-long">{dateLongue(n.played_at)}</span>
                       {n.start_time && (
@@ -94,14 +117,18 @@ export default async function Page() {
                     <div className="chips">
                       {players.map((p) => <PlayerChip key={p.id} u={p} />)}
                     </div>
-                    <InviteButton
-                      dateLong={dateLongue(n.played_at)}
-                      time={heureCourte(n.played_at, n.start_time)}
-                      pseudos={players.map((p) => p.pseudo)}
-                      lien={n.creator_id === user.id && n.lien_token
-                        ? `${process.env.PUBLIC_URL ?? 'https://what-shall-we-play.marco-studio.fr'}/nights/${n.id}/rejoindre?k=${n.lien_token}`
-                        : undefined}
-                    />
+                    <p className="plan-meta">{t(lang, 'soiree.nbJeuxEtagere', { n: nbJeux })}</p>
+                    <div className="lien-actions">
+                      <a className="btn-copper as-link" href={`/etagere?night=${n.id}`}>{t(lang, 'soiree.preparerEtagere')}</a>
+                      <InviteButton
+                        label={createur ? t(lang, 'soiree.inviter') : undefined}
+                        titre={n.titre}
+                        dateLong={dateLongue(n.played_at)}
+                        time={heureCourte(n.played_at, n.start_time)}
+                        pseudos={players.map((p) => p.pseudo)}
+                        lien={createur ? lienInvitation(n) : undefined}
+                      />
+                    </div>
                   </div>
                 </li>
               );

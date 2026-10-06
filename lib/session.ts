@@ -6,8 +6,21 @@ export const COOKIE_NAME = 'wsp_session';
 export function cookieOpts(jours = 30) {
   return { httpOnly: true, sameSite: 'lax' as const, maxAge: 60 * 60 * 24 * jours, path: '/' };
 }
-export async function getSessionUser(): Promise<UserRow | null> {
+// Toute session, compte ou invité — réservé aux routes qu'un invité a le droit
+// d'utiliser (vote, sync live, langue, retrait, conversion en compte).
+export async function getSessionAny(): Promise<UserRow | null> {
   const store = await cookies();
   const token = store.get(COOKIE_NAME)?.value;
   return token ? getUserByToken(token) : null;
+}
+// v4.7.0 : un invité n'est pas un utilisateur de l'app — refus par défaut. Toutes
+// les pages et routes existantes le voient « non connecté » ; seule sa soirée
+// (/invite) et quelques routes passent par getSessionAny / getSessionInvite.
+export async function getSessionUser(): Promise<UserRow | null> {
+  const u = await getSessionAny();
+  return u && !u.est_invite ? u : null;
+}
+export async function getSessionInvite(): Promise<UserRow | null> {
+  const u = await getSessionAny();
+  return u?.est_invite ? u : null;
 }

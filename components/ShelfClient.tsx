@@ -1,7 +1,9 @@
 'use client';
 import { useMemo, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { FORMATS, FORMAT_SCALE, formatLabel, coverSrc } from '@/lib/formats';
+import { coverSrc } from '@/lib/formats';
+import { titrePartie, formatDate } from '@/lib/i18n/format';
 import type { Game, Night, UserLite } from '@/lib/types';
 import type { ShelfVote } from '@/lib/nights';
 import { filterShelf, type ShelfFilters } from '@/lib/filters';
@@ -9,9 +11,9 @@ import GameSheet from './GameSheet';
 import NightPicker from './NightPicker';
 import PlayerChip from './PlayerChip';
 import RetirerInvite from './RetirerInvite';
-import BoxImage from './BoxImage';
 import ShelfControls from './ShelfControls';
-import OwnerBadge from './OwnerBadge';
+import ShelfRows, { grouperVotes } from './ShelfRows';
+import LienInvitation from './LienInvitation';
 import ShelfPicker from './ShelfPicker';
 import UserMenu from './UserMenu';
 import { useI18n } from './LanguageProvider';
@@ -22,10 +24,15 @@ import { useI18n } from './LanguageProvider';
 // est prêt — un appui si tout le monde a validé, double-appui « Sûr ? » sinon.
 // v3.3 — la carte porte l'ÉTAT de la partie (badge), et une fois la boîte
 // sortie (en_jeu) l'étagère gèle : bandeau vert, plus d'ajout ni de validation.
-export default function ShelfClient({ night, partyGame, players, games, myLibrary, users, plays, votes, me }: {
+// v4.7.0 — l'étagère s'ouvre aussi sur une partie programmée (futur) : ajouts et
+// votes à l'avance, tirage fermé jusqu'au jour J. Les invités sont un groupe à part
+// (ils ne valident pas de sélection) ; le créateur partage le lien d'invitation.
+export default function ShelfClient({ night, partyGame, players, games, myLibrary, users, plays, votes, me, futur = false, lien }: {
   night: Night; partyGame: Game | null; players: UserLite[]; games: Game[]; myLibrary: Game[]; users: UserLite[]; plays: Record<number, number>;
   votes: ShelfVote[];
   me: UserLite;
+  futur?: boolean;
+  lien?: string;
 }) {
   const router = useRouter();
   const { lang, t } = useI18n();
@@ -42,20 +49,10 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
   const filtered = useMemo(() => filterShelf(games, filters), [games, filters]);
   const enJeu = night.status === 'en_jeu';
   // En jeu : LA boîte de la partie a quitté l'étagère — elle ne revient pas dans les rangées.
-  const byFormat = useMemo(() => FORMATS.map((f) => ({ f, list: filtered.filter((g) => g.id !== partyGame?.id && g.box_format === f) })), [filtered, partyGame]);
+  const surEtagere = useMemo(() => filtered.filter((g) => g.id !== partyGame?.id), [filtered, partyGame]);
 
   // v3.5 — votes de la partie, vus par boîte : total, c'est MON vote, prénoms.
-  const votesParJeu = useMemo(() => {
-    const m = new Map<number, { total: number; votants: string[]; moi: boolean }>();
-    for (const v of votes) {
-      const e = m.get(v.game_id) ?? { total: 0, votants: [], moi: false };
-      e.total += 1;
-      e.votants.push(v.pseudo.split(' ')[0]);
-      if (v.user_id === me.id) e.moi = true;
-      m.set(v.game_id, e);
-    }
-    return m;
-  }, [votes, me.id]);
+  const votesParJeu = useMemo(() => grouperVotes(votes, me.id), [votes, me.id]);
 
   // v3.5 — les boîtes qui portent au moins un vote : le pool « Votés 👍 ».
   const jeuxVotes = useMemo(
@@ -69,8 +66,11 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
   const jAiValide = !!monEtat?.validated_at;
   // hors branche du créateur validé, le pool vaut toujours « tous » (garde anti-état fantôme)
   const poolActif = jAiValide ? pool : 'tous';
-  const enAttente = players.filter((p) => !p.validated_at);
-  const tousPrets = players.length > 0 && enAttente.length === 0;
+  const comptes = players.filter((p) => !p.est_invite);
+  const invites = players.filter((p) => p.est_invite);
+  // les invités ne valident pas de sélection : seuls les comptes comptent pour « prêts »
+  const enAttente = comptes.filter((p) => !p.validated_at);
+  const tousPrets = comptes.length > 0 && enAttente.length === 0;
   const prenom = (p: UserLite) => p.pseudo.split(' ')[0];
 
   async function valider() {
@@ -123,13 +123,17 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
         <h1>{t('etagere.titre')}</h1>
         <UserMenu me={me} />
       </header>
+      {futur && <Link className="link-btn retour-parties" href="/nights">{t('etagere.retourParties')}</Link>}
       <section className={'night-card' + (enJeu ? ' enjeu' : '')}>
         <div className="night-card-head">
           {enJeu
             ? <span className="badge-etat b-enjeu"><span className="pt" />{t('etagere.enJeu')}</span>
-            : <span className="badge-etat b-prep"><span className="pt" />{t('etagere.enPrep')}</span>}
+            : futur
+              ? <span className="badge-etat b-prog"><span className="pt" />{t('soiree.badgeProgrammee')}</span>
+              : <span className="badge-etat b-prep"><span className="pt" />{t('etagere.enPrep')}</span>}
           {!enJeu && <button type="button" className="link-btn" onClick={() => setEditingNight(true)}>{t('etagere.modifier')}</button>}
         </div>
+        {(night.titre || futur) && <p className="nc-titre">{titrePartie(lang, night)}</p>}
         {enJeu && partyGame && (
           <div className="bandeau v">
             <span className="b-cov">{cover ? <img src={cover} alt="" /> : '📦'}</span>
@@ -138,25 +142,40 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
         )}
         {!enJeu && (
           <>
+            {invites.length > 0 && <p className="sous-label">{t('etagere.joueursN', { n: comptes.length })}</p>}
             <div className="chips">
-              {players.map((p) => (
-                <span key={p.id} className="chip-groupe">
-                  <PlayerChip u={p} etat={p.validated_at ? 'ok' : 'attente'} />
-                  {p.est_invite && night.creator_id === me.id ? (
-                    <RetirerInvite nightId={night.id} inviteId={p.id} nom={p.pseudo} />
-                  ) : null}
-                </span>
-              ))}
+              {/* programmée : pas de tirage, donc pas de « prêt » à signaler */}
+              {comptes.map((p) => <PlayerChip key={p.id} u={p} etat={futur ? undefined : p.validated_at ? 'ok' : 'attente'} />)}
             </div>
-            <div className="etats">
-              {players.map((p) => (
+            {invites.length > 0 && (
+              <>
+                <p className="sous-label">{t('etagere.invitesN', { n: invites.length })}</p>
+                <div className="chips">
+                  {invites.map((p) => (
+                    <span key={p.id} className="chip-groupe">
+                      <PlayerChip u={p} />
+                      {estCreateur ? <RetirerInvite nightId={night.id} inviteId={p.id} nom={p.pseudo} /> : null}
+                    </span>
+                  ))}
+                </div>
+              </>
+            )}
+            {!futur && <div className="etats">
+              {comptes.map((p) => (
                 <p key={p.id} className={p.validated_at ? 'ok' : ''}>
                   {p.validated_at
                     ? t('etagere.aValide', { p: prenom(p) })
                     : t('etagere.pasEncore', { p: prenom(p) })}
                 </p>
               ))}
-            </div>
+            </div>}
+            {estCreateur && lien && (
+              <LienInvitation lien={lien} partage={{
+                dateLong: formatDate(lang, `${night.played_at}T12:00:00`, { dateStyle: 'long' }),
+                time: night.start_time ? formatDate(lang, `${night.played_at}T${night.start_time}`, { timeStyle: 'short' }) : null,
+                pseudos: players.map((p) => p.pseudo), titre: night.titre,
+              }} />
+            )}
           </>
         )}
       </section>
@@ -180,38 +199,11 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
           </button>
         </div>
       ) : null}
-      {byFormat.map(({ f, list }) => list.length === 0 ? null : (
-        <section key={f} className="shelf-block">
-          <div className="row" role="list">
-            {list.map((g) => (
-              <button key={g.id} role="listitem" className={`box ${FORMAT_SCALE[f] < 0.7 ? 'sm' : ''}`}
-                      style={{ width: 96 * FORMAT_SCALE[f], height: 96 * FORMAT_SCALE[f] }}
-                      onClick={() => setDetail(g)}>
-                <BoxImage game={g} />
-                {g.owner_pseudo && (
-                  <OwnerBadge owner={{ pseudo: g.owner_pseudo, sticker: g.owner_sticker ?? null, avatar_path: g.owner_avatar_path ?? null }} />
-                )}
-                {!enJeu && (() => {
-                  const v = votesParJeu.get(g.id);
-                  return (
-                    <span className={'vote-badge' + (v?.moi ? ' vote-moi' : '')} role="button"
-                          aria-pressed={v?.moi ?? false}
-                          aria-label={t('etagere.votesPour', { n: v?.total ?? 0, j: g.title })}
-                          title={v?.votants.length ? v.votants.slice(0, 4).join(' · ') + (v.votants.length > 4 ? ' …' : '') : undefined}
-                          onClick={(e) => { e.stopPropagation(); voter(g.id); }}>
-                      <span className="emoji" aria-hidden="true">👍</span>{v?.total ?? 0}
-                    </span>
-                  );
-                })()}
-              </button>
-            ))}
-          </div>
-          <div className="rail" />
-          <p className="row-label">{formatLabel(f, lang)} {t('etagere.onSwipe')}</p>
-        </section>
-      ))}
+      <ShelfRows games={surEtagere} votes={enJeu ? null : votesParJeu} onVote={voter} onOpen={setDetail} />
       <div className="cta-zone">
-        {enJeu ? (
+        {futur ? (
+          <p className="cta-jourj">{t('etagere.tirageJourJ')}</p>
+        ) : enJeu ? (
           <>
             <div className="cta-row">
               {estCreateur
@@ -277,6 +269,7 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
                onClick={(e) => e.stopPropagation()}>
             <button type="button" className="sheet-close" aria-label={t('etagere.fermer')} onClick={() => setEditingNight(false)}>✕</button>
             <NightPicker users={users} prechecked={players.map((p) => p.id)} night={night}
+                         editInfos={estCreateur ? { futur } : undefined}
                          onClose={() => setEditingNight(false)} />
           </div>
         </div>

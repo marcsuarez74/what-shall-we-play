@@ -1,10 +1,10 @@
-// app/api/users/route.ts — liste des inscrits (pour cocher les joueurs présents)
+// app/api/users/route.ts — liste des comptes, jamais les invités (pour cocher les joueurs présents)
 import { NextResponse } from 'next/server';
 import { getSessionUser } from '@/lib/session';
-import { getDb } from '@/lib/db';
+import { listComptes } from '@/lib/users';
 
 export async function GET() {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: 'Non connecté' }, { status: 401 });
-  return NextResponse.json({ users: getDb().prepare('SELECT id, pseudo, sticker, avatar_path FROM users ORDER BY pseudo COLLATE NOCASE').all() });
+  return NextResponse.json({ users: listComptes() });
 }

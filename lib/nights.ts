@@ -29,16 +29,79 @@ export function notifyNight(nightId: number): void {
     .all(nightId) as { user_id: number }[]).map((r) => r.user_id));
 }
 
-export function createNight(creatorId: number, playerIds: number[], opts?: { playedAt?: string; startTime?: string | null }): number {
+// Date calendaire RÉELLE (pas seulement le format) : '2026-10-32' est rejeté.
+// Heure bornée : '24:99' est rejeté. Sinon la page QG rendrait Invalid Date (500).
+// Date d'aujourd'hui ou plus. v4.7.0 : partagée par la création et la modification.
+export function validerPlanning(playedAt: unknown, startTime: unknown, lang: Lang = 'fr'): string | null {
+  if (playedAt != null) {
+    if (typeof playedAt !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(playedAt)) return t(lang, 'soiree.errDateInvalide');
+    const d = new Date(`${playedAt}T12:00:00`); // midi : immune aux pièges de minuit
+    if (Number.isNaN(d.getTime()) || d.toLocaleDateString('sv-SE') !== playedAt) return t(lang, 'soiree.errDateInvalide');
+    if (playedAt < new Date().toLocaleDateString('sv-SE')) return t(lang, 'soiree.errDatePassee');
+  }
+  if (startTime != null) {
+    const m = typeof startTime === 'string' ? /^(\d{2}):(\d{2})$/.exec(startTime) : null;
+    if (!m || Number(m[1]) >= 24 || Number(m[2]) >= 60) return t(lang, 'soiree.errHeureInvalide');
+  }
+  return null;
+}
+
+// v4.7.0 — titre facultatif : espaces réduits, vide → null (repli sur la date à
+// l'affichage), 40 caractères au plus. undefined = « pas fourni ».
+export const TITRE_MAX = 40;
+export function normaliserTitre(v: unknown): string | null | undefined | false {
+  if (v === undefined) return undefined;
+  if (v === null) return null;
+  if (typeof v !== 'string') return false;
+  const s = v.trim().replace(/\s+/g, ' ');
+  if (s.length > TITRE_MAX) return false;
+  return s || null;
+}
+
+export function createNight(creatorId: number, playerIds: number[], opts?: { playedAt?: string; startTime?: string | null; titre?: string | null }): number {
   const info = getDb()
-    .prepare("INSERT INTO nights (creator_id, played_at, start_time, lien_token) VALUES (?, COALESCE(?, date('now','localtime')), ?, ?)")
-    .run(creatorId, opts?.playedAt ?? null, opts?.startTime ?? null, crypto.randomBytes(16).toString('hex'));
+    .prepare("INSERT INTO nights (creator_id, played_at, start_time, lien_token, titre) VALUES (?, COALESCE(?, date('now','localtime')), ?, ?, ?)")
+    .run(creatorId, opts?.playedAt ?? null, opts?.startTime ?? null, crypto.randomBytes(16).toString('hex'), opts?.titre ?? null);
   const nightId = Number(info.lastInsertRowid);
   setNightPlayers(nightId, playerIds.includes(creatorId) ? playerIds : [...playerIds, creatorId]);
   return nightId;
 }
 export function getNight(nightId: number): Night | null {
   return (getDb().prepare('SELECT * FROM nights WHERE id = ?').get(nightId) as Night | undefined) ?? null;
+}
+// v4.7.0 — une partie programmée (date à venir) : étagère ouverte, tirage fermé.
+export function estFuture(night: { played_at: string }): boolean {
+  return (getDb().prepare("SELECT ? > date('now','localtime') AS f").get(night.played_at) as { f: number }).f === 1;
+}
+// v4.7.0 — l'étagère d'une partie précise (?night=) : une partie non terminée
+// dont on est joueur ou créateur. Sinon null (la page retombe sur « ce soir »).
+export function getShelfNight(userId: number, nightId: number): Night | null {
+  const night = getNight(nightId);
+  return night && night.status !== 'termine' && userCanAccessNight(userId, nightId) ? night : null;
+}
+// Lien d'invitation absolu (partage WhatsApp, copie) d'une partie.
+export function lienInvitation(night: { id: number; lien_token?: string | null }): string | undefined {
+  if (!night.lien_token) return undefined;
+  return `${process.env.PUBLIC_URL ?? 'https://what-shall-we-play.marco-studio.fr'}/nights/${night.id}/rejoindre?k=${night.lien_token}`;
+}
+// v4.7.0 — la soirée d'un invité : il n'en a qu'une (celle de son lien).
+export function getInviteNight(userId: number): Night | null {
+  return (getDb().prepare(`
+    SELECT n.* FROM nights n JOIN night_players np ON np.night_id = n.id
+    WHERE np.user_id = ? ORDER BY n.id DESC LIMIT 1`).get(userId) as Night | undefined) ?? null;
+}
+// v4.7.0 — titre, date, heure d'une partie non terminée : créateur seulement.
+export function modifierInfosNuit(nightId: number, userId: number, infos: { titre?: string | null; playedAt?: string; startTime?: string | null }, lang: Lang = 'fr'): { ok: true } | { error: string; status: number } {
+  const night = getNight(nightId);
+  if (!night) return { error: t(lang, 'erreurs.soireeIntrouvable'), status: 404 };
+  if (night.creator_id !== userId) return { error: t(lang, 'soiree.errSeulCreateur'), status: 403 };
+  if (night.status !== 'creation') return { error: t(lang, 'soiree.errPartieTerminee'), status: 409 };
+  const db = getDb();
+  if (infos.titre !== undefined) db.prepare('UPDATE nights SET titre = ? WHERE id = ?').run(infos.titre, nightId);
+  if (infos.playedAt !== undefined) db.prepare('UPDATE nights SET played_at = ? WHERE id = ?').run(infos.playedAt, nightId);
+  if (infos.startTime !== undefined) db.prepare('UPDATE nights SET start_time = ? WHERE id = ?').run(infos.startTime, nightId);
+  notifyNight(nightId);
+  return { ok: true };
 }
 export function setNightPlayers(nightId: number, playerIds: number[]): void {
   const db = getDb();
@@ -86,7 +149,8 @@ export function retirerInvite(nightId: number, inviteId: number, userId: number,
   const night = getNight(nightId);
   const inv = db.prepare('SELECT id, host_id, est_invite FROM users WHERE id = ?').get(inviteId) as { id: number; host_id: number | null; est_invite: number } | undefined;
   if (!night || !inv || !inv.est_invite) return { ok: false, error: t(lang, 'soiree.lienInvalide'), status: 404 };
-  const autorise = inv.host_id === userId || night.creator_id === userId;
+  // v4.7.0 : l'invité peut aussi se retirer lui-même (« Se retirer de la soirée »)
+  const autorise = inv.host_id === userId || night.creator_id === userId || inviteId === userId;
   if (!autorise) return { ok: false, error: t(lang, 'erreurs.impossible'), status: 403 };
   const dansLaSoiree = db.prepare('SELECT 1 FROM night_players WHERE night_id = ? AND user_id = ?').get(nightId, inviteId);
   if (!dansLaSoiree) return { ok: false, error: t(lang, 'soiree.lienInvalide'), status: 404 };
@@ -141,6 +205,7 @@ export function boxOutNight(nightId: number, userId: number, gameId: number, lan
   if (!userCanAccessNight(userId, nightId)) return { error: t(lang, 'soiree.errSeulsJoueursBoite'), status: 403 };
   if (night.status === 'en_jeu') return { error: t(lang, 'soiree.errBoiteDejaSortie'), status: 409 };
   if (night.status === 'termine') return { error: t(lang, 'soiree.errPartieTerminee'), status: 409 };
+  if (estFuture(night)) return { error: t(lang, 'soiree.errPasAujourdhui'), status: 409 };
   if (!getShelfGames(nightId).some((g) => g.id === gameId)) return { error: t(lang, 'soiree.errJeuPasSurEtagere'), status: 400 };
   getDb().prepare(`UPDATE nights SET game_id = ?, status = 'en_jeu' WHERE id = ?`).run(gameId, nightId);
   notifyNight(nightId);
@@ -153,6 +218,7 @@ export function drawAllowed(nightId: number, lang: Lang = 'fr'): { ok: true } | 
   if (!night) return { error: t(lang, 'erreurs.soireeIntrouvable'), status: 404 };
   if (night.status === 'en_jeu') return { error: t(lang, 'soiree.errBoiteVerrouille'), status: 409 };
   if (night.status === 'termine') return { error: t(lang, 'soiree.errPartieTerminee'), status: 409 };
+  if (estFuture(night)) return { error: t(lang, 'soiree.errPasAujourdhui'), status: 409 }; // v4.7.0 : tirage le jour J
   return { ok: true };
 }
 
@@ -258,7 +324,19 @@ export function supprimerNuit(nightId: number, userId: number, lang: Lang = 'fr'
   const night = getNight(nightId);
   if (!night) return { error: t(lang, 'erreurs.soireeIntrouvable'), status: 404 };
   if (!userCanAccessNight(userId, nightId)) return { error: t(lang, 'erreurs.soireeIntrouvable'), status: 404 };
-  getDb().prepare('DELETE FROM nights WHERE id = ?').run(nightId);
+  // v4.7.0 : une partie à venir ou en cours ne se supprime que par son créateur
+  if (night.status !== 'termine' && night.creator_id !== userId) return { error: t(lang, 'soiree.errSeulCreateur'), status: 403 };
+  const db = getDb();
+  const joueurs = getNightPlayers(nightId).map((p) => p.id);
+  db.transaction(() => {
+    // v4.7.0 : ses invités n'existent que pour elle — ils partent avec (CASCADE
+    // sur leurs votes, scores, sessions) ; leurs tirages d'abord (cf. retirerInvite).
+    const invites = db.prepare('SELECT u.id FROM users u JOIN night_players np ON np.user_id = u.id WHERE np.night_id = ? AND u.est_invite = 1').all(nightId) as { id: number }[];
+    for (const { id } of invites) db.prepare('DELETE FROM picks WHERE spinner_id = ?').run(id);
+    db.prepare('DELETE FROM nights WHERE id = ?').run(nightId);
+    for (const { id } of invites) db.prepare('DELETE FROM users WHERE id = ?').run(id);
+  })();
+  emitToUsers(joueurs); // la partie disparaît en direct chez les joueurs
   return { ok: true };
 }
 

@@ -11,7 +11,7 @@ export default function PlayerChip({ u, etat }: { u: UserLite; etat?: 'ok' | 'at
   const src = avatarSrc(u);
   const { t } = useI18n();
   return (
-    <span className={`chip ${etat === 'ok' ? 'ok' : ''} ${etat === 'attente' ? 'attente' : ''}`}>
+    <span className={`chip ${etat === 'ok' ? 'ok' : ''} ${etat === 'attente' ? 'attente' : ''} ${u.est_invite ? 'invite' : ''}`}>
       {src ? <img className="chip-avatar" src={src} alt="" /> : <span aria-hidden="true">{u.sticker ?? '🎲'}</span>}
       {' '}{u.pseudo}
       {u.est_invite ? <span className="tag-invite">{t('soiree.tagInvite')}</span> : null}

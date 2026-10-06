@@ -17,7 +17,8 @@ const HIDDEN = ['/login', '/register', '/tirage'];
 export default function TabBar() {
   const path = usePathname();
   const { t } = useI18n();
-  if (path === '/' || HIDDEN.includes(path) || path.endsWith('/rejoindre') || path.endsWith('/scores')) return null;
+  // v4.7.0 : /invite (la soirée de l'invité) n'a pas d'onglets — il n'a accès à rien d'autre.
+  if (path === '/' || HIDDEN.includes(path) || path === '/invite' || path.endsWith('/rejoindre') || path.endsWith('/scores')) return null;
   return (
     <nav className="tabbar" aria-label={t('tabbar.navigation')}>
       {TABS.map((tab) => {

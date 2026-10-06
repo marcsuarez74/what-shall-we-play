@@ -10,7 +10,7 @@ import { ALLOWED_STICKERS } from '@/lib/stickers';
 // restaurer la session quand la PWA perd son cookie (constaté sur Android).
 const DEVICE_KEY = 'wsp_device_token';
 
-export default function AuthForm({ mode }: { mode: 'login' | 'register' }) {
+export default function AuthForm({ mode, next }: { mode: 'login' | 'register'; next?: string }) {
   const router = useRouter();
   const { lang, t } = useI18n();
   const [pseudo, setPseudo] = useState('');
@@ -35,10 +35,10 @@ export default function AuthForm({ mode }: { mode: 'login' | 'register' }) {
         if (!r.ok) { localStorage.removeItem(DEVICE_KEY); return; }
         const data = await r.json();
         localStorage.setItem(DEVICE_KEY, data.device_token);
-        router.push('/etagere'); // push suffit (Next 15) — cf. UserMenu.logout
+        router.push(next ?? '/etagere'); // push suffit (Next 15) — cf. UserMenu.logout
       })
       .catch(() => {}); // hors ligne : la page de login reste affichée
-  }, [mode, router]);
+  }, [mode, router, next]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault(); setBusy(true); setError(null);
@@ -53,7 +53,7 @@ export default function AuthForm({ mode }: { mode: 'login' | 'register' }) {
     if (!res.ok) { setError((await res.json()).error); return; }
     const data = await res.json().catch(() => ({})) as { device_token?: string };
     if (data.device_token) localStorage.setItem(DEVICE_KEY, data.device_token);
-    router.push('/etagere'); router.refresh();
+    router.push(next ?? '/etagere'); router.refresh(); // next : retour au lien d'invitation (v4.7.0)
   }
 
   return (

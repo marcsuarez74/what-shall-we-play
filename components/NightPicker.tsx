@@ -5,12 +5,14 @@ import type { Night, UserLite } from '@/lib/types';
 import PlayerChip from './PlayerChip';
 import { useI18n } from './LanguageProvider';
 
-export default function NightPicker({ users, prechecked, night, withDate = false, onClose }: {
+export default function NightPicker({ users, prechecked, night, withDate = false, editInfos, onClose }: {
   users: UserLite[];
   prechecked: number[];
   night?: Night | null;
-  /** QG Parties : ajoute les champs date + heure (programmation). */
+  /** QG Parties : ajoute les champs titre + date + heure (programmation). */
   withDate?: boolean;
+  /** v4.7.0 — modification par le créateur : titre, et date + heure si la partie est programmée. */
+  editInfos?: { futur: boolean };
   onClose?: () => void;
 }) {
   const router = useRouter();
@@ -18,8 +20,11 @@ export default function NightPicker({ users, prechecked, night, withDate = false
   const [checked, setChecked] = useState<Set<number>>(() => new Set(prechecked));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [date, setDate] = useState('');
-  const [time, setTime] = useState('');
+  const avecTitre = withDate || !!editInfos;
+  const avecDate = withDate || !!editInfos?.futur;
+  const [titre, setTitre] = useState(night?.titre ?? '');
+  const [date, setDate] = useState(editInfos?.futur ? night?.played_at ?? '' : '');
+  const [time, setTime] = useState(editInfos?.futur ? night?.start_time ?? '' : '');
   // La programmation se fait au plus tôt demain ; le jour J, la partie se crée sans date.
   // Arithmétique calendaire ( setDate) et non +24 h : sûr pendant le passage à l'heure d'été.
   const d = new Date();
@@ -36,14 +41,15 @@ export default function NightPicker({ users, prechecked, night, withDate = false
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (withDate && !date) { setError(t('soiree.choisirDate')); return; }
+    if (avecDate && !date) { setError(t('soiree.choisirDate')); return; }
     setBusy(true); setError(null);
     const res = await fetch(night ? `/api/nights/${night.id}` : '/api/nights', {
       method: night ? 'PATCH' : 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         playerIds: [...checked],
-        ...(withDate ? { playedAt: date, startTime: time || null } : {}),
+        ...(avecTitre ? { titre } : {}),
+        ...(avecDate ? { playedAt: date, startTime: time || null } : {}),
       }),
     });
     setBusy(false);
@@ -55,7 +61,14 @@ export default function NightPicker({ users, prechecked, night, withDate = false
   return (
     <form className="night-picker" onSubmit={submit}>
       <h2>{night ? t('etagere.modifierPartie') : withDate ? t('soiree.programmer') : t('soiree.nouvellePartie')}</h2>
-      {withDate && (
+      {avecTitre && (
+        <label className="plan-titre-field">
+          {t('soiree.titreLabel')} <span className="opt">{t('soiree.facultatif')}</span>
+          <input type="text" value={titre} maxLength={40} placeholder={t('soiree.titrePlaceholder')}
+                 onChange={(e) => setTitre(e.target.value)} />
+        </label>
+      )}
+      {avecDate && (
         <div className="plan-fields">
           <label>
             {t('soiree.date')}

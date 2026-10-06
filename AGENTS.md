@@ -28,8 +28,9 @@ PWA Next.js de tirage au sort de la partie du jour — https://what-shall-we-pla
 - Les décisions, arbitrages et rulings sont consignés au ledger
   `.superpowers/sdd/<projet>/progress.md` (local, git-ignoré).
 - Tout design nouveau passe par une **maquette HTML autonome validée** par le client
-  avant le code (dossier `.superpowers/brainstorm/<session>/content/`) —
-  exception : retouches et corrections explicites (« pas besoin de maquette »).
+  avant le code, versionnée dans `mockup/` (`AAAA-MM-JJ-v<version>-<sujet>.html`,
+  indexée dans `mockup/README.md`) — exception : retouches et corrections explicites
+  (« pas besoin de maquette »).
 - Les règles de conduite E2E et les accroches stables (`aria-label`, hooks de test)
   sont une interface : ne pas les casser sans mettre à jour les tests dans le même commit.
 

@@ -1,14 +1,14 @@
 // POST { gameId } : bascule le 👍 du joueur connecté sur une boîte de l'étagère.
 // Gabarit de la route games : gardes de session et d'accès, la logique vit dans lib/nights.
 import { NextResponse } from 'next/server';
-import { getSessionUser } from '@/lib/session';
+import { getSessionAny } from '@/lib/session';
 import { getNight, userCanAccessNight, toggleNightVote } from '@/lib/nights';
 import { t } from '@/lib/i18n';
 import { getLang } from '@/lib/i18n/server';
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const lang = await getLang();
-  const user = await getSessionUser();
+  const user = await getSessionAny(); // v4.7.0 : l'invité vote (sa soirée seulement : userCanAccessNight)
   if (!user) return NextResponse.json({ error: t(lang, 'erreurs.nonConnecte') }, { status: 401 });
   const nightId = Number((await params).id);
   if (!Number.isInteger(nightId) || !getNight(nightId) || !userCanAccessNight(user.id, nightId))
