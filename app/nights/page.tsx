@@ -145,7 +145,7 @@ export default async function Page() {
             return (
               <a key={n.id} className="hist-card" href={`/nights/${n.id}`}>
                 {cover
-                  ? <span className="cov hist-cov"><img src={cover} alt="" loading="lazy" /></span>
+                  ? <span className="cov hist-cov"><img src={cover} alt="" loading="lazy" decoding="async" /></span>
                   : <span className="cov hist-cov">🎲</span>}
                 <span className="hc"><b>{n.game_title ?? t(lang, 'soiree.sansJeu')}</b>
                   <span className="gagnant">{n.gagnant_pseudo ? t(lang, 'soiree.gagnant', { p: n.gagnant_pseudo, s: n.gagnant_score as number }) : t(lang, 'soiree.pasDeScores')}</span></span>

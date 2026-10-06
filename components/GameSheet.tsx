@@ -37,7 +37,7 @@ export default function GameSheet({ game, players, playsCount, verdicts, onClose
         <button type="button" className="sheet-close" aria-label={t('etagere.fermer')} onClick={onClose}>✕</button>
         <div className="sheet-head">
           {cover
-            ? <img className="sheet-cover" src={cover} alt={game.title} />
+            ? <img className="sheet-cover" src={cover} alt={game.title} decoding="async" />
             : <div className="sheet-cover cover-placeholder">♟</div>}
           <div className="sheet-titles">
             <h2>{game.title}</h2>

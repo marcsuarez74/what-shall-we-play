@@ -71,7 +71,7 @@ export default function DedupeFlow({ pairs, foyerName, onDone }: {
           <div key={side} className={`duel-card ${busy ? 'busy' : ''}`}>
             <div className="cover">
               {coverSrc(g)
-                ? <img src={coverSrc(g) as string} alt="" />
+                ? <img src={coverSrc(g) as string} alt="" loading="lazy" decoding="async" />
                 : <span className="cover-placeholder" aria-hidden>♟</span>}
               {g.owner_pseudo && <span className="tag">{t('foyer.doublonChez', { p: g.owner_pseudo, s: g.owner_sticker ?? '' })}</span>}
             </div>

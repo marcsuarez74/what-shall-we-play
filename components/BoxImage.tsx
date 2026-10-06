@@ -17,7 +17,8 @@ export default function BoxImage({ game }: { game: Game }) {
   if (!src) return <span className="cover-placeholder">♟</span>;
   return (
     <>
-      <img ref={ref} src={src} alt={game.title} draggable={false}
+      {/* v4.7.3 (audit, point 11) : rangées horizontales → chargées à l'approche de l'écran */}
+      <img ref={ref} src={src} alt={game.title} draggable={false} loading="lazy" decoding="async"
            className={loaded ? 'on' : ''} onLoad={() => setLoaded(true)} />
       {!loaded && <span className="box-spin" aria-hidden="true" />}
     </>
