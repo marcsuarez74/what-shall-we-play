@@ -92,7 +92,7 @@ export function retirerInvite(nightId: number, inviteId: number, userId: number,
 }
 export function getNightPlayers(nightId: number): UserLite[] {
   return getDb().prepare(`
-    SELECT u.id, u.pseudo, u.sticker, u.avatar_path, np.validated_at FROM night_players np JOIN users u ON u.id = np.user_id
+    SELECT u.id, u.pseudo, u.sticker, u.avatar_path, u.est_invite, np.validated_at FROM night_players np JOIN users u ON u.id = np.user_id
     WHERE np.night_id = ? ORDER BY u.pseudo`).all(nightId) as UserLite[];
 }
 

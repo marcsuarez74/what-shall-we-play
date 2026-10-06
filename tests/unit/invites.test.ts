@@ -95,6 +95,16 @@ describe('rejoindreParLien', () => {
     expect(rejoindreParLien(nightId, getNight(nightId)!.lien_token, '  ', null)).toMatchObject({ ok: false, status: 400 });
     expect(rejoindreParLien(nightId, getNight(autre)!.lien_token, 'X', null)).toMatchObject({ ok: false, status: 403 });
   });
+
+  test('getNightPlayers expose est_invite (badge + retrait côté UI)', () => {
+    const stamp = Date.now().toString(36);
+    const hote = (registerUser(`cinv8_${stamp}`, '1234') as { id: number }).id;
+    const nightId = createNight(hote, [hote]);
+    rejoindreParLien(nightId, getNight(nightId)!.lien_token, `Sophie ${stamp}`, null);
+    const joueurs = getNightPlayers(nightId);
+    expect(joueurs.find((j) => j.pseudo === `Sophie ${stamp}`)?.est_invite).toBe(1);
+    expect(joueurs.find((j) => j.id === hote)?.est_invite).toBe(0);
+  });
 });
 
 describe('retirerInvite', () => {

@@ -34,10 +34,10 @@ export const fr = {
   'soiree.joinSansCompte': 'Pas besoin de compte : ton prénom reste sur cette soirée uniquement.',
   'soiree.joinAvecCompte': 'Tu es connecté(e) : tu vas rejoindre cette soirée avec ton compte.',
   'soiree.tagInvite': 'INVITÉ(E)',
-  'soiree.banniereInvite': 'Tu participes en tant qu’invité de {hote} — tout se passe comme pour les autres joueurs.',
-  'soiree.retirerInviteAria': 'Retirer {nom} de la soirée (ses scores et votes seront supprimés)',
+  'soiree.banniereInvite': ({ hote }: Record<string, string | number>) => `Tu participes en tant qu’invité de ${hote} — tout se passe comme pour les autres joueurs.`,
+  'soiree.retirerInviteAria': ({ nom }: Record<string, string | number>) => `Retirer ${nom} de la soirée (ses scores et votes seront supprimés)`,
   'soiree.retirerInviteSur': 'Sûr ?',
-  'annonce.lienSoiree': 'Rejoins-nous : {lien}',
+  'annonce.lienSoiree': ({ lien }: Record<string, string | number>) => `Rejoins-nous : ${lien}`,
   'auth.errIdentifiants': 'Identifiants incorrects',
   // Pluriel exemplaire (consommé par les zones T2-T6).
   'ludotheque.nbJeux': ({ n }: Record<string, string | number>) => `${n} jeu${Number(n) > 1 ? 'x' : ''}`,

@@ -16,7 +16,7 @@ export default function RejoindreSoiree({ nightId, token, dejaConnecte }: { nigh
   useEffect(() => {
     const dt = localStorage.getItem(cle);
     if (!dt) return;
-    fetch('/api/auth/restore', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ device_token: dt }) })
+    fetch('/api/auth/restore', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: dt }) })
       .then(async (r) => {
         if (!r.ok) { localStorage.removeItem(cle); return; }
         const data = await r.json();
