@@ -2,7 +2,7 @@
 <html lang="fr">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Cercles d'amis — v4.8</title>
+<title>Amis et groupes — v4.8</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Space+Grotesk:wght@400;500;600;700&display=swap">
@@ -235,126 +235,134 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--cuivre); ou
 <div class="wrap">
   <header class="intro">
     <div>
-      <p class="eyebrow">Maquette fonctionnelle · à valider avant code</p>
-      <h1>Cercles d'amis et invitations</h1>
-      <p class="lead">Un <b>cercle</b>, c'est un groupe de comptes avec qui tu joues souvent (« Les copains du jeudi »). On le crée une fois ; ensuite, programmer une partie invite tout le cercle en un geste. Chacun répond <b>Dispo</b> ou <b>Pas dispo</b> dans l'app. Un nouvel onglet <b>Amis</b> regroupe les cercles et l'activité de tes amis.</p>
+      <p class="eyebrow">Maquette fonctionnelle · version 2 · à valider avant code</p>
+      <h1>Amis, groupes et invitations</h1>
+      <p class="lead">La base, c'est le <b>lien d'amitié</b> entre deux comptes. Tes amis (et ton foyer) sont les seules personnes que tu vois et que tu peux inviter. Les <b>groupes</b> (« Les copains du jeudi ») servent à inviter plusieurs amis en un geste ; une même personne peut être dans plusieurs groupes. Chacun répond <b>Dispo</b> ou <b>Pas dispo</b> dans l'app.</p>
     </div>
     <div class="bloc">
       <h2>Ce qui change par rapport à aujourd'hui</h2>
       <ul>
-        <li><b>Nouvel onglet « Amis »</b> (5ᵉ) : mes cercles, et le fil d'activité de mes amis.</li>
-        <li><b>Programmer une partie</b> : on coche des cercles et/ou des personnes. Elles reçoivent une <b>invitation</b> au lieu d'être inscrites d'office.</li>
-        <li><b>Répondre dans l'app</b> : Dispo / Pas dispo, modifiable. Une pastille sur « Parties » compte les invitations sans réponse.</li>
-        <li><b>L'organisateur voit qui vient</b> : 3 dispo · 1 absent · 2 sans réponse.</li>
-        <li>Inchangé : la partie du jour (« Créer la partie ») inscrit directement les joueurs ; les invités par lien WhatsApp ; les foyers (ludothèque commune).</li>
+        <li><b>On ne voit plus tous les comptes</b> : les listes de joueurs ne proposent que tes amis et ton foyer.</li>
+        <li><b>Nouvel onglet « Amis »</b> : tes amis, tes groupes, l'activité de tes amis.</li>
+        <li><b>Programmer une partie</b> envoie des <b>invitations</b> ; « Dispo » rend joueur tout de suite.</li>
+        <li>Inchangé : la partie du jour (inscription directe), les invités par lien WhatsApp, les foyers.</li>
       </ul>
     </div>
   </header>
 
   <section class="regles">
     <div class="bloc">
-      <h2>Un cercle</h2>
+      <h2>Un lien d'amitié</h2>
       <table>
-        <tr><td>Qui peut en créer un</td><td>tout compte</td></tr>
-        <tr><td>Rejoindre</td><td>par le lien du cercle, ou ajouté par pseudo</td></tr>
-        <tr><td>Ajouter un membre</td><td>tout membre</td></tr>
-        <tr><td>Retirer un membre, supprimer le cercle</td><td>le créateur</td></tr>
-        <tr><td>Quitter</td><td>chacun, à tout moment</td></tr>
-        <tr><td>Invités par lien (sans compte)</td><td class="non">jamais membres</td></tr>
+        <tr><td>Par pseudo</td><td>demande, à accepter</td></tr>
+        <tr><td>Par « mon lien d'ami » (WhatsApp…)</td><td>amis dès l'ouverture</td></tr>
+        <tr><td>Déjà joué ensemble avant la v4.8</td><td>amis d'office</td></tr>
+        <tr><td>Retirer un ami</td><td>chacun, confirmé</td></tr>
+        <tr><td>Invités par lien (sans compte)</td><td class="non">jamais amis</td></tr>
       </table>
     </div>
     <div class="bloc">
-      <h2>Une invitation</h2>
+      <h2>Un groupe</h2>
       <ul>
-        <li><b>Dispo</b> → tu deviens joueur tout de suite : tu poses tes jeux et tu votes sur l'étagère, comme aujourd'hui.</li>
-        <li><b>Pas dispo</b> → la partie disparaît de tes parties à venir (réponse modifiable jusqu'au jour J).</li>
-        <li><b>Sans réponse</b> → la partie reste dans « Invitations ». L'organisateur peut t'inscrire lui-même à la dernière minute.</li>
-        <li>Le lien WhatsApp continue de marcher en parallèle, pour les personnes sans compte.</li>
+        <li>Créé par un compte, qui en est l'<b>admin</b>. On y ajoute ses amis ; plusieurs groupes possibles par personne.</li>
+        <li><b>Réglage « Adhésion »</b>, comme les communautés WhatsApp : <b>libre</b> (le lien suffit, tout membre peut ajouter) ou <b>sur validation de l'admin</b> (les demandes attendent son accord).</li>
+        <li>L'admin retire des membres et supprime le groupe ; chacun peut quitter.</li>
+        <li>Être dans le même groupe ne rend pas amis : on y voit les autres membres, sans plus.</li>
       </ul>
     </div>
     <div class="bloc">
       <h2>Points à trancher</h2>
       <ul class="questions">
-        <li><b>« Dispo » = joueur tout de suite</b> (la spec d'origine disait « au lancement »). Je propose tout de suite : l'étagère se prépare à l'avance depuis la v4.7.</li>
-        <li><b>Invitations seulement pour les parties programmées</b> ; la partie du jour garde l'inscription directe.</li>
-        <li><b>Fil d'activité</b> : parties terminées des 30 derniers jours où joue au moins un membre de mes cercles, en lecture seule.</li>
-        <li><b>Version</b> : v4.8.0 (MINOR).</li>
+        <li><b>Amis d'office à la mise à jour</b> : les comptes qui ont déjà joué une partie ensemble deviennent amis, pour que personne ne retrouve une liste vide.</li>
+        <li><b>Demande par pseudo à accepter</b>, lien d'ami immédiat (partager son lien vaut accord).</li>
+        <li><b>Admins</b> : le créateur seul en v1 (pas de nomination d'autres admins).</li>
       </ul>
     </div>
   </section>
 
-  <section>
-    <div class="groupe-head"><h2>Onglet Amis</h2><p>Marc gère ses cercles. Tous les boutons sont cliquables.</p></div>
+<section>
+    <div class="groupe-head"><h2>Onglet Amis</h2><p>Marc gère ses amis et ses groupes. Tous les boutons sont cliquables.</p></div>
     <div class="phones">
 
       <div class="ecran" id="a1">
-        <div class="ecran-titre"><span class="id">A1</span><h3>Mes cercles</h3></div>
+        <div class="ecran-titre"><span class="id">A1</span><h3>Mes amis</h3></div>
         <div class="phone">
           <div class="status"><span>19:30</span><span>●●● 5G</span></div>
           <div class="scroll">
             <div class="page-head"><h1>Amis</h1><span class="user-chip">🎲 M ▾</span></div>
-            <div class="seg" role="group" aria-label="Section"><button type="button" aria-pressed="true">Cercles</button><button type="button" aria-pressed="false" data-goto="a4">Activité</button></div>
-            <div class="card"><div class="cercle-card" data-goto="a2" role="button" tabindex="0">
-              <div class="cercle-ico">🎲</div>
-              <div class="cercle-body"><b>Les copains du jeudi</b><span class="meta">5 membres · créé par toi</span></div>
-              <div class="avatars"><span>🐻</span><span>🦊</span><span>🐙</span></div></div></div>
-            <div class="card"><div class="cercle-card">
-              <div class="cercle-ico">🏠</div>
-              <div class="cercle-body"><b>Famille</b><span class="meta">3 membres · créé par Julie</span></div>
-              <div class="avatars"><span>🦊</span><span>🐢</span></div></div></div>
-            <div class="card" id="a1-form" hidden>
-              <div class="field"><label for="a1-nom">Nom du cercle</label><input id="a1-nom" placeholder="Les copains du jeudi" maxlength="40"></div>
-              <div class="row-btns"><button class="btn-ghost sm" type="button" data-toggle="a1-form">Annuler</button><button class="btn-copper sm" type="button" data-goto="a2">Créer</button></div>
+            <div class="seg" role="group" aria-label="Section"><button type="button" aria-pressed="true">Amis</button><button type="button" aria-pressed="false" data-goto=a2>Groupes</button><button type="button" aria-pressed="false" data-goto=a4>Activité</button></div>
+            <div class="card rsvp" id="a1-demande">
+              <span class="sous-label">Demande d'ami</span>
+              <p class="qui">🐢 <b>Léo</b> veut t'ajouter en ami</p>
+              <div class="rsvp-btns"><button class="btn-dispo" type="button" data-demande="ok">Accepter</button><button class="btn-absent" type="button" data-demande="non">Refuser</button></div>
             </div>
-            <button class="btn-copper" type="button" data-toggle="a1-form">＋ Créer un cercle</button>
+            <div class="card">
+              <span class="sous-label">12 amis</span>
+              <div class="membre">🐻 Tom <span class="role">2 groupes</span></div>
+              <div class="membre">🦊 Julie <span class="role">foyer · 2 groupes</span></div>
+              <div class="membre">🐙 Yanis <span class="role">1 groupe</span></div>
+              <div class="membre" id="a1-leo" hidden>🐢 Léo <span class="role">nouvel ami</span></div>
+              <div class="membre">🦉 Leila</div>
+            </div>
+            <div class="field"><label for="a1-p">Ajouter un ami par pseudo</label><input id="a1-p" placeholder="pseudo" autocomplete="off"></div>
+            <div class="lien-card"><span class="sous-label">Mon lien d'ami</span><span class="lien-url">what-shall-we-play.marco-studio.fr/ami?k=9c2e…</span>
+              <div class="row-btns"><button class="btn-copper sm" type="button" data-copier>Copier</button><button class="btn-ghost sm" type="button" data-copier>WhatsApp</button></div><p class="toast" aria-live="polite"></p></div>
           </div>
-          <div class="tabbar"><span class=""><i>🗄️</i>Étagère</span><span class=""><i>📚</i>Ludo</span><span class=""><i>➕</i>Ajouter</span><span class=""><i>🎲</i>Parties<b class=pastille>1</b></span><span class="on"><i>👥</i>Amis</span></div>
+          <div class="tabbar"><span class=""><i>🗄️</i>Étagère</span><span class=""><i>📚</i>Ludo</span><span class=""><i>➕</i>Ajouter</span><span class=""><i>🎲</i>Parties</span><span class="on"><i>👥</i>Amis</span></div>
         </div>
-        <p class="note">5ᵉ onglet. Deux sections : Cercles et Activité.</p>
+        <p class="note">Une demande par pseudo s'accepte ici. Le lien d'ami, lui, rend amis dès qu'il est ouvert par un compte : le partager vaut accord.</p>
       </div>
 
       <div class="ecran" id="a2">
-        <div class="ecran-titre"><span class="id">A2</span><h3>Un cercle</h3></div>
+        <div class="ecran-titre"><span class="id">A2</span><h3>Un groupe, et son réglage d'adhésion</h3></div>
         <div class="phone">
           <div class="status"><span>19:31</span><span>●●● 5G</span></div>
           <div class="scroll">
-            <button class="link-btn" type="button" style="align-self:flex-start" data-goto="a1">← Amis</button>
-            <div class="hote"><div class="cercle-ico">🎲</div><div><h1 class="invite-h1" style="font-family:var(--display);font-size:22px">Les copains du jeudi</h1><span class="meta">5 membres</span></div></div>
+            <div class="seg" role="group" aria-label="Section"><button type="button" aria-pressed="false" data-goto=a1>Amis</button><button type="button" aria-pressed="true">Groupes</button><button type="button" aria-pressed="false" data-goto=a4>Activité</button></div>
+            <div class="hote"><div class="cercle-ico">🎲</div><div><h1 class="invite-h1" style="font-family:var(--display);font-size:22px">Les copains du jeudi</h1><span class="meta">5 membres · tu es admin</span></div></div>
+            <div class="card">
+              <span class="sous-label">Adhésion</span>
+              <label class="check-cercle" style="background:var(--noyer)"><input type="radio" name="adh" data-adhesion="libre"> Libre <small>le lien suffit, tout membre ajoute</small></label>
+              <label class="check-cercle" style="background:var(--noyer)"><input type="radio" name="adh" checked data-adhesion="validation"> Sur validation de l'admin</label>
+            </div>
+            <div class="card rsvp" id="a2-attente">
+              <span class="sous-label">Demande d'adhésion</span>
+              <p class="qui">🦉 <b>Leila</b> (ajoutée par Tom) attend ta validation</p>
+              <div class="rsvp-btns"><button class="btn-dispo" type="button" data-valider>Valider</button><button class="btn-absent" type="button" data-valider>Refuser</button></div>
+            </div>
             <div class="card">
               <span class="sous-label">Membres</span>
-              <div class="membre">🎲 Marc <span class="role">créateur</span></div>
+              <div class="membre">🎲 Marc <span class="role">admin</span></div>
               <div class="membre">🐻 Tom <button class="retirer" type="button" style="margin-left:auto" data-armer-retrait>✕</button></div>
               <div class="membre">🦊 Julie <button class="retirer" type="button" style="margin-left:auto" data-armer-retrait>✕</button></div>
               <div class="membre">🐙 Yanis <button class="retirer" type="button" style="margin-left:auto" data-armer-retrait>✕</button></div>
-              <div class="membre" id="a2-nouveau" hidden>🐢 Léo <span class="role">ajouté</span></div>
+              <div class="membre" id="a2-leila" hidden>🦉 Leila <span class="role">validée</span></div>
             </div>
-            <div class="field"><label for="a2-pseudo">Ajouter par pseudo</label><input id="a2-pseudo" value="le" autocomplete="off"></div>
-            <div class="suggestions" id="a2-sugg"><button type="button" data-ajout>🐢 Léo</button><button type="button" data-ajout>🦉 Leila</button></div>
-            <div class="lien-card"><span class="sous-label">Lien du cercle</span><span class="lien-url">what-shall-we-play.marco-studio.fr/cercles/rejoindre?k=4f1a…</span>
-              <div class="row-btns"><button class="btn-copper sm" type="button" data-copier>Copier le lien</button><button class="btn-ghost sm" type="button" data-copier>WhatsApp</button></div><p class="toast" aria-live="polite"></p></div>
-            <button class="btn-ghost sm" type="button" data-armer="Confirmer : supprimer le cercle" style="color:#E08A76">Supprimer le cercle</button>
+            <button class="btn-ghost sm" type="button">＋ Ajouter des amis au groupe</button>
+            <div class="lien-card"><span class="sous-label">Lien du groupe</span><span class="lien-url">…/groupes/rejoindre?k=4f1a…</span>
+              <div class="row-btns"><button class="btn-copper sm" type="button" data-copier>Copier le lien</button></div><p class="toast" aria-live="polite"></p></div>
+            <button class="btn-ghost sm" type="button" data-armer="Confirmer : supprimer le groupe" style="color:#E08A76">Supprimer le groupe</button>
           </div>
-          <div class="tabbar"><span class=""><i>🗄️</i>Étagère</span><span class=""><i>📚</i>Ludo</span><span class=""><i>➕</i>Ajouter</span><span class=""><i>🎲</i>Parties<b class=pastille>1</b></span><span class="on"><i>👥</i>Amis</span></div>
+          <div class="tabbar"><span class=""><i>🗄️</i>Étagère</span><span class=""><i>📚</i>Ludo</span><span class=""><i>➕</i>Ajouter</span><span class=""><i>🎲</i>Parties</span><span class="on"><i>👥</i>Amis</span></div>
         </div>
-        <p class="note">Le créateur voit les ✕ (retrait confirmé) et « Supprimer le cercle ». Un membre voit seulement « Quitter le cercle ».</p>
-        <p class="note">Supprimer un cercle ne touche ni aux parties ni aux comptes : il ne sert qu'à inviter.</p>
+        <p class="note">« Sur validation » : les arrivées (par lien ou ajoutées par un membre) attendent l'accord de l'admin. « Libre » : elles entrent directement.</p>
+        <p class="note">Un membre voit seulement la liste, « Ajouter des amis » (selon le réglage) et « Quitter le groupe ».</p>
       </div>
 
       <div class="ecran" id="a3">
-        <div class="ecran-titre"><span class="id">A3</span><h3>Lien d'un cercle reçu</h3></div>
+        <div class="ecran-titre"><span class="id">A3</span><h3>Lien d'ami reçu</h3></div>
         <div class="phone">
           <div class="status"><span>19:40</span><span>●●● 4G</span></div>
           <div class="scroll">
-            <div class="grand-emoji" aria-hidden="true">👥</div>
-            <p class="centre"><b>Marc</b> t'invite dans le cercle</p>
-            <div class="hero-date centre">Les copains du jeudi</div>
-            <p class="meta centre">5 membres : Marc, Tom, Julie, Yanis, Léo</p>
-            <button class="btn-copper" type="button">Rejoindre le cercle</button>
+            <div class="grand-emoji" aria-hidden="true">🤝</div>
+            <p class="centre"><b>Marc</b> t'ajoute en ami</p>
+            <p class="meta centre">Vous pourrez vous inviter à vos parties et voir l'activité de l'autre.</p>
+            <button class="btn-copper" type="button">Devenir amis</button>
             <div class="sep">pas encore de compte ?</div>
-            <button class="btn-ghost" type="button">Créer mon compte et rejoindre</button>
+            <button class="btn-ghost" type="button">Créer mon compte</button>
           </div>
         </div>
-        <p class="note">Les cercles sont réservés aux comptes. Connecté : un bouton. Sinon : création de compte (ou connexion), puis retour ici.</p>
+        <p class="note">Même écran pour un lien de groupe (« Marc t'invite dans le groupe… »). Avec adhésion sur validation : « Demande envoyée à l'admin ».</p>
       </div>
 
       <div class="ecran" id="a4">
@@ -363,7 +371,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--cuivre); ou
           <div class="status"><span>19:32</span><span>●●● 5G</span></div>
           <div class="scroll">
             <div class="page-head"><h1>Amis</h1><span class="user-chip">🎲 M ▾</span></div>
-            <div class="seg" role="group" aria-label="Section"><button type="button" aria-pressed="false" data-goto="a1">Cercles</button><button type="button" aria-pressed="true">Activité</button></div>
+            <div class="seg" role="group" aria-label="Section"><button type="button" aria-pressed="false" data-goto=a1>Amis</button><button type="button" aria-pressed="false" data-goto=a2>Groupes</button><button type="button" aria-pressed="true">Activité</button></div>
             <div class="fil">
               <div class="card fil-item"><span class="cov" style="background:linear-gradient(160deg,#2f6f8f,#1b3a52)">Azul</span><div><p><b>Tom, Julie</b> et 2 autres ont joué à <b>Azul</b></p><p>👑 Julie · 78 — 😍 2 · 🙂 1</p><span class="fil-date">hier</span></div></div>
               <div class="card fil-item"><span class="cov" style="background:linear-gradient(160deg,#6a8f3a,#34481c)">Cascadia</span><div><p><b>Yanis</b> et 3 autres ont joué à <b>Cascadia</b></p><p>👑 Yanis · 92 — 😍 3</p><span class="fil-date">samedi 3 octobre</span></div></div>
@@ -371,9 +379,9 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--cuivre); ou
             </div>
             <p class="vide">C'est tout pour les 30 derniers jours.</p>
           </div>
-          <div class="tabbar"><span class=""><i>🗄️</i>Étagère</span><span class=""><i>📚</i>Ludo</span><span class=""><i>➕</i>Ajouter</span><span class=""><i>🎲</i>Parties<b class=pastille>1</b></span><span class="on"><i>👥</i>Amis</span></div>
+          <div class="tabbar"><span class=""><i>🗄️</i>Étagère</span><span class=""><i>📚</i>Ludo</span><span class=""><i>➕</i>Ajouter</span><span class=""><i>🎲</i>Parties</span><span class="on"><i>👥</i>Amis</span></div>
         </div>
-        <p class="note">Lecture seule. Les parties terminées où joue au moins un membre de tes cercles. Pas de commentaires ni de likes (v1 minimale).</p>
+        <p class="note">Lecture seule : les parties terminées des 30 derniers jours où joue au moins un de tes amis.</p>
       </div>
     </div>
   </section>
@@ -390,21 +398,21 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--cuivre); ou
             <h2 class="sec-h">Programmer une partie</h2>
             <div class="field"><label for="p1-t">Titre <span style="font-weight:400">(facultatif)</span></label><input id="p1-t" value="Soirée Azul &amp; co"></div>
             <div class="row-btns"><div class="field"><label for="p1-d">Date</label><input id="p1-d" value="09/10/2026"></div><div class="field"><label for="p1-h">Heure</label><input id="p1-h" value="20:30"></div></div>
-            <span class="sous-label">Inviter</span>
+            <span class="sous-label">Inviter un groupe</span>
             <label class="check-cercle"><input type="checkbox" checked data-cercle> 🎲 Les copains du jeudi <small>4 personnes</small></label>
             <label class="check-cercle"><input type="checkbox" data-cercle> 🏠 Famille <small>2 personnes</small></label>
-            <span class="sous-label">ou des personnes</span>
+            <span class="sous-label">ou des amis</span>
             <label class="picker-row"><input type="checkbox" checked disabled> 🎲 Marc (toi, joueur d'office)</label>
             <label class="picker-row"><input type="checkbox" checked> 🐻 Tom</label>
             <label class="picker-row"><input type="checkbox" checked> 🦊 Julie</label>
             <label class="picker-row"><input type="checkbox" checked> 🐙 Yanis</label>
             <label class="picker-row"><input type="checkbox" checked> 🐢 Léo</label>
-            <p class="meta">4 invitations seront envoyées dans l'app. Chacun répond Dispo ou Pas dispo.</p>
+            <p class="meta">Seuls tes amis et ton foyer sont proposés. 4 invitations seront envoyées dans l'app.</p>
             <button class="btn-copper" type="button" data-goto="p3">Programmer et inviter</button>
           </div>
           <div class="tabbar"><span class=""><i>🗄️</i>Étagère</span><span class=""><i>📚</i>Ludo</span><span class=""><i>➕</i>Ajouter</span><span class="on"><i>🎲</i>Parties</span><span class=""><i>👥</i>Amis</span></div>
         </div>
-        <p class="note">Cocher un cercle coche ses membres ; on peut ensuite en décocher ou ajouter quelqu'un hors cercle. Le formulaire actuel est conservé, les cercles s'ajoutent au-dessus.</p>
+        <p class="note">Cocher un groupe coche ses membres ; on peut ensuite en décocher ou ajouter quelqu'un hors cercle. Le formulaire actuel est conservé, les cercles s'ajoutent au-dessus.</p>
       </div>
 
       <div class="ecran" id="p2">
@@ -416,7 +424,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--cuivre); ou
             <h2 class="sec-h">Invitations</h2>
             <div class="card rsvp">
               <div class="card-head"><div><div class="titre-soiree">Soirée Azul &amp; co</div><div class="hero-date" style="font-size:19px">Ven. 9 octobre<small>20:30</small></div></div><span class="badge b-prog"><span class="pt"></span>Invitation</span></div>
-              <p class="qui">🎲 <b>Marc</b> t'invite · via Les copains du jeudi · 4 invités</p>
+              <p class="qui">🎲 <b>Marc</b> t'invite · via le groupe Les copains du jeudi · 4 invités</p>
               <div class="rsvp-btns"><button class="btn-dispo" type="button" data-rsvp="dispo" aria-pressed="false">✓ Dispo</button><button class="btn-absent" type="button" data-rsvp="absent" aria-pressed="false">Pas dispo</button></div>
               <p class="reponse" aria-live="polite">Pas encore répondu.</p>
             </div>
@@ -478,6 +486,12 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--cuivre); ou
   document.querySelectorAll('[data-armer]').forEach((b) => { const i = b.textContent; b.addEventListener('click', () => {
     if (!b.classList.contains('armed')) { b.classList.add('armed'); b.textContent = b.dataset.armer; return; }
     b.textContent = '✓ Cercle supprimé'; setTimeout(() => { b.classList.remove('armed'); b.textContent = i; }, 1800); }); });
+  document.querySelectorAll('[data-demande]').forEach((b) => b.addEventListener('click', () => {
+    document.getElementById('a1-demande').remove(); if (b.dataset.demande === 'ok') document.getElementById('a1-leo').hidden = false; }));
+  document.querySelectorAll('[data-valider]').forEach((b) => b.addEventListener('click', () => {
+    document.getElementById('a2-attente').remove(); if (b.textContent === 'Valider') document.getElementById('a2-leila').hidden = false; }));
+  document.querySelectorAll('[data-adhesion]').forEach((r) => r.addEventListener('change', () => {
+    const at = document.getElementById('a2-attente'); if (at) at.hidden = r.dataset.adhesion === 'libre'; }));
   document.querySelectorAll('[data-rsvp]').forEach((b) => b.addEventListener('click', () => {
     const carte = b.closest('.rsvp');
     carte.querySelectorAll('[data-rsvp]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
