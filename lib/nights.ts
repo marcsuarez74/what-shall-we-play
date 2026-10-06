@@ -75,6 +75,21 @@ export function rejoindreParLien(
   setNightPlayers(nightId, [...joueurs.map((j) => j.id), invite.id]);
   return { ok: true, mode: 'invite', inviteId: invite.id };
 }
+
+// v4.6.0 : retrait d'un invité par son hôte — geste explicite. La ligne users
+// disparaît et les FK ON DELETE CASCADE emportent players/votes/scores/verdicts
+// (idiome « pas de vote fantôme ») ainsi que sessions et jetons d'appareil.
+export function retirerInvite(nightId: number, inviteId: number, userId: number, lang: Lang = 'fr'): { ok: true } | { ok: false; error: string; status: number } {
+  const db = getDb();
+  const inv = db.prepare('SELECT id, host_id, est_invite FROM users WHERE id = ?').get(inviteId) as { id: number; host_id: number | null; est_invite: number } | undefined;
+  if (!inv || !inv.est_invite) return { ok: false, error: t(lang, 'soiree.lienInvalide'), status: 404 };
+  if (inv.host_id !== userId) return { ok: false, error: t(lang, 'erreurs.impossible'), status: 403 };
+  const dansLaSoiree = db.prepare('SELECT 1 FROM night_players WHERE night_id = ? AND user_id = ?').get(nightId, inviteId);
+  if (!dansLaSoiree) return { ok: false, error: t(lang, 'soiree.lienInvalide'), status: 404 };
+  db.prepare('DELETE FROM users WHERE id = ?').run(inviteId);
+  notifyNight(nightId);
+  return { ok: true };
+}
 export function getNightPlayers(nightId: number): UserLite[] {
   return getDb().prepare(`
     SELECT u.id, u.pseudo, u.sticker, u.avatar_path, np.validated_at FROM night_players np JOIN users u ON u.id = np.user_id

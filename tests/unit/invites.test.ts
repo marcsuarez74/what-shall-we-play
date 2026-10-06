@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { getDb, runMigrations } from '@/lib/db';
-import { registerUser, creerInvite, verifyLogin, getUserByToken, createSession } from '@/lib/auth';
-import { createNight, getNight, getNightPlayers, rejoindreParLien } from '@/lib/nights';
+import { registerUser, creerInvite, verifyLogin, getUserByToken, createSession, createDeviceToken, consommerDeviceToken } from '@/lib/auth';
+import { createNight, getNight, getNightPlayers, rejoindreParLien, retirerInvite } from '@/lib/nights';
 
 describe('schéma invités (v4.6.0)', () => {
   test('colonnes est_invite / host_id / lien_token présentes et idempotentes', () => {
@@ -94,5 +94,37 @@ describe('rejoindreParLien', () => {
     expect(rejoindreParLien(nightId, null, 'X', null)).toMatchObject({ ok: false, status: 403 });
     expect(rejoindreParLien(nightId, getNight(nightId)!.lien_token, '  ', null)).toMatchObject({ ok: false, status: 400 });
     expect(rejoindreParLien(nightId, getNight(autre)!.lien_token, 'X', null)).toMatchObject({ ok: false, status: 403 });
+  });
+});
+
+describe('retirerInvite', () => {
+  test('l’hôte retire l’invité : users + votes + scores + session purgés (CASCADE comptée)', () => {
+    const stamp = Date.now().toString(36);
+    const hote = (registerUser(`cinv7_${stamp}`, '1234') as { id: number }).id;
+    const autre = (registerUser(`cinv7b_${stamp}`, '1234') as { id: number }).id;
+    const nightId = createNight(hote, [hote]);
+    const token = getNight(nightId)!.lien_token;
+    const inv = rejoindreParLien(nightId, token, `Sophie ${stamp}`, null) as { ok: true; inviteId: number };
+    const db = getDb();
+    // l'invité a voté et scoré
+    const g = db.prepare('INSERT INTO games (owner_id, title, box_format) VALUES (?, ?, ?)').run(hote, 'Test', 'moyen');
+    db.prepare('INSERT INTO night_games (night_id, game_id, added_by) VALUES (?, ?, ?)').run(nightId, Number(g.lastInsertRowid), hote);
+    db.prepare('INSERT INTO game_votes (night_id, game_id, user_id) VALUES (?, ?, ?)').run(nightId, Number(g.lastInsertRowid), inv.inviteId);
+    db.prepare('INSERT INTO night_scores (night_id, user_id, score) VALUES (?, ?, ?)').run(nightId, inv.inviteId, 12);
+    // l'invité est sessionné (cookie + jeton d'appareil)
+    const sess = createSession(inv.inviteId, 1);
+    const dev = createDeviceToken(inv.inviteId);
+
+    // un NON-hôte ne peut pas retirer
+    expect(retirerInvite(nightId, inv.inviteId, autre)).toMatchObject({ ok: false, status: 403 });
+    // l'hôte retire
+    expect(retirerInvite(nightId, inv.inviteId, hote)).toMatchObject({ ok: true });
+    expect(db.prepare('SELECT 1 FROM users WHERE id = ?').get(inv.inviteId)).toBeUndefined();
+    expect(db.prepare('SELECT 1 FROM game_votes WHERE user_id = ?').get(inv.inviteId)).toBeUndefined();
+    expect(db.prepare('SELECT 1 FROM night_scores WHERE user_id = ?').get(inv.inviteId)).toBeUndefined();
+    expect(getUserByToken(sess)).toBeNull(); // sa session est morte (CASCADE)
+    expect(consommerDeviceToken(dev)).toBeNull(); // son jeton aussi
+    // retirer deux fois : 404
+    expect(retirerInvite(nightId, inv.inviteId, hote)).toMatchObject({ ok: false, status: 404 });
   });
 });
