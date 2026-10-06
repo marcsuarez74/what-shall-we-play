@@ -4,7 +4,12 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
-## [Non publié]
+## [4.7.1] — 2026-10-06
+
+### Corrigé
+- La confirmation « Supprimer cette partie ? » s'affichait écrasée à côté du titre de la
+  partie programmée : elle passe sous le titre, en pleine largeur, boutons « Garder » et
+  « Supprimer la partie » côte à côte.
 
 ### Modifié
 - **CI** : build et tests (unitaires + E2E) ne tournent plus que sur la PR ; sur `main`,
