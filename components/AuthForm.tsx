@@ -35,8 +35,7 @@ export default function AuthForm({ mode }: { mode: 'login' | 'register' }) {
         if (!r.ok) { localStorage.removeItem(DEVICE_KEY); return; }
         const data = await r.json();
         localStorage.setItem(DEVICE_KEY, data.device_token);
-        router.push('/etagere');
-        router.refresh();
+        router.push('/etagere'); // push suffit (Next 15) — cf. UserMenu.logout
       })
       .catch(() => {}); // hors ligne : la page de login reste affichée
   }, [mode, router]);

@@ -33,8 +33,10 @@ export default function UserMenu({ me }: { me: UserLite }) {
       body: JSON.stringify({ device_token: dt }),
     });
     localStorage.removeItem('wsp_device_token');
+    // Pas de router.refresh() ici : appelé pendant la navigation qu'il lance,
+    // il re-rend l'ancienne route (la course push/refresh laissait la soirée
+    // affichée en CI) ; /login se rend fraîche de toute façon.
     router.push('/login');
-    router.refresh();
   }
 
   const initial = (me.pseudo ?? '?')[0].toUpperCase();

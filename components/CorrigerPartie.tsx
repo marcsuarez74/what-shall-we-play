@@ -58,8 +58,9 @@ export default function CorrigerPartie({ nightId, playedAt, gameId, titreJeu, jo
     const res = await fetch(`/api/nights/${nightId}`, { method: 'DELETE' });
     setOccupe(false);
     if (!res.ok) { setErr((await res.json()).error ?? t('erreurs.impossible')); setModale(false); return; }
+    // push suffit (Next 15 re-rend les routes dynamiques à neuf) — le refresh
+    // d'après-push re-rend la route COURANTE et court après la navigation.
     router.push('/nights');
-    router.refresh();
   }
 
   const detailScores = scores.filter((s) => s.score !== null).map((s) => `${s.pseudo} ${s.score}`).join(' · ') || '—';

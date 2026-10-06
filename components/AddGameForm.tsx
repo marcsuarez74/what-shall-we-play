@@ -123,7 +123,7 @@ export default function AddGameForm({ me }: { me: UserLite }) {
     const res = await fetch('/api/games', { method: 'POST', body: fd });
     setBusy(false);
     if (!res.ok) { setError((await res.json().catch(() => ({}))).error ?? t('ajout.errEnregistrement')); return; }
-    router.push('/etagere'); router.refresh();
+    router.push('/etagere'); // push suffit (Next 15) — cf. UserMenu.logout
   }
 
   const FormatPicker = ({ mini = false }: { mini?: boolean }) => (
