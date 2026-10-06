@@ -65,9 +65,13 @@ compose) : une soirée reste « la soirée du jour » jusqu'au changement de jou
 
 ```caddyfile
 jeu.votre-domaine.tld {
-    reverse_proxy localhost:3000
+    reverse_proxy 127.0.0.1:3000
 }
 ```
+
+L'app n'écoute que sur `127.0.0.1` (voir `docker-compose.yml`) : visez cette adresse plutôt que
+`localhost`, qui peut se résoudre en IPv6 (`::1`). Caddy transmet l'IP du client dans
+`X-Forwarded-For` sans configuration (limite de tentatives de connexion par IP).
 
 Équivalent nginx (`/etc/nginx/sites-available/jeu`) :
 
