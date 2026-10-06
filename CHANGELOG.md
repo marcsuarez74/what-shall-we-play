@@ -12,6 +12,8 @@ versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
   « Supprimer la partie » côte à côte.
 
 ### Modifié
+- **L'invité peut ouvrir la fiche d'un jeu** de l'étagère (même fiche que les joueurs,
+  en lecture seule : pas de « Retirer de la partie »).
 - **CI** : build et tests (unitaires + E2E) ne tournent plus que sur la PR ; sur `main`,
   la CI déploie directement (environ 1 min au lieu de 15). La PR teste déjà le résultat
   de la fusion, et `main` exige une branche à jour avant fusion.

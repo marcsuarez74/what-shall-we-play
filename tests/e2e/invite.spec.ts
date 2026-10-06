@@ -81,6 +81,13 @@ test('invité v4.7.0 : partie programmée → lien → vue restreinte → vote �
   const vote = pageI.getByRole('button', { name: new RegExp(`pour ${titreJeu}`) });
   await vote.click();
   await expect(vote).toHaveAttribute('aria-pressed', 'true');
+  // la fiche du jeu s'ouvre en lecture seule (pas de « retirer de la partie »)
+  await pageI.locator('.box').first().click();
+  const fiche = pageI.getByRole('dialog', { name: titreJeu });
+  await expect(fiche).toBeVisible();
+  await expect(fiche.locator('.btn-exclude')).toHaveCount(0);
+  await fiche.getByRole('button', { name: 'Fermer' }).click();
+  await expect(fiche).toHaveCount(0);
   await pageI.goto('/library'); // toute autre page le ramène à sa soirée
   await pageI.waitForURL('**/invite');
 
