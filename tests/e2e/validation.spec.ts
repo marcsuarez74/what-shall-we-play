@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { devenirAmis } from './helpers/amis';
 
 // v3.0.0 — « chacun dit quand il est prêt » : valider sa sélection est un
 // signal partagé (pas un verrou). L'état apparaît chez tous en direct, un
@@ -48,6 +49,7 @@ test('valider : la phrase « xxx a validé sa sélection » apparaît chez les a
   const ctxB = await browser.newContext();
   const b = await ctxB.newPage();
   await register(b, `val_l_${s}`);
+  await devenirAmis(a, b);
   const nightId = await creerPartie(a, `val_l_${s}`);
 
   // Marc pose une boîte : la ligne d'état « X/Y prêts » existe chez le créateur
@@ -82,6 +84,7 @@ test('lancer : un appui quand tout le monde a validé, double-appui sinon', asyn
   const ctxB = await browser.newContext();
   const b = await ctxB.newPage();
   await register(b, `lan_l_${s}`);
+  await devenirAmis(a, b);
   const nightId = await creerPartie(a, `lan_l_${s}`);
   await poserBoite(a, nightId, 'Le jeu du soir');
 

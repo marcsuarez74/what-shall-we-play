@@ -1,4 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
+import { devenirAmis } from './helpers/amis';
 import { newGame, putOnShelf } from './helpers/shelf';
 
 // v3.7 — le verdict 😍🙂😐 : trois pastilles sur la nuit terminée, révocables,
@@ -101,6 +102,7 @@ test('duo : le verdict de A fait bouger le compteur chez B sans recharger', asyn
   const ctxB = await browser.newContext();
   const b = await ctxB.newPage();
   await register(b, `va_b_${s}`);
+  await devenirAmis(a, b);
   const nid = await creerPartie(a, `va_b_${s}`);
   const gid = await newGame(a, 'Wingspan', 'grand');
   await putOnShelf(a, gid, nid);

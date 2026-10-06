@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { devenirAmiDe } from './helpers/amis';
 import { gameIdByTitle, putOnShelf } from './helpers/shelf';
 
 // QG Soirées : programmation (date + heure + joueurs), sections Ce soir / Programmées / Historique.
@@ -31,6 +32,7 @@ test('soirées : programmer pour demain → carte dans Programmées, étagère i
   const s = Date.now().toString(36);
   await register(page, `soir_${s}`);
   await registerOther(page, `inv_${s}`);
+  await devenirAmiDe(page, `inv_${s}`); // v4.8.0 : seuls les amis sont proposés
 
   await page.goto('/nights');
   await page.getByRole('button', { name: 'Programmer une partie' }).click();
@@ -38,13 +40,13 @@ test('soirées : programmer pour demain → carte dans Programmées, étagère i
   await page.getByLabel('Heure').fill('20:00');
   await page.locator('.player-list label', { hasText: `inv_${s}` }).locator('input').check();
   const post = page.waitForResponse((r) => r.url().endsWith('/api/nights') && r.request().method() === 'POST');
-  await page.getByRole('button', { name: 'Programmer', exact: true }).click();
+  await page.getByRole('button', { name: 'Programmer et inviter' }).click();
   await post;
 
   const card = page.locator('.planned-card').first();
   await expect(card).toBeVisible();
   await expect(card).toContainText('20:00');
-  await expect(card).toContainText(`inv_${s}`); // chips des joueurs invités
+  await expect(card).toContainText(`inv_${s}`); // v4.8.0 : invité dans l'app, sans réponse (⏳)
 
   // La programmée n'est PAS la nuit active : l'étagère reste à l'état vide
   await page.goto('/etagere');
@@ -84,6 +86,7 @@ async function setupTirage(page: import('@playwright/test').Page, s: string) {
   await page.getByLabel('Titre du jeu').fill('Cascadia');
   await page.getByRole('button', { name: 'Saisir à la main' }).click();
   await page.getByRole('button', { name: 'Ajouter à la ludothèque' }).click();
+  await devenirAmiDe(page, `lea_${s}`); await page.reload();
   await page.locator('.player-list label', { hasText: `lea_${s}` }).locator('input').check();
   const post = page.waitForResponse((r) => r.url().endsWith('/api/nights') && r.request().method() === 'POST');
   await page.getByRole('button', { name: 'Créer la partie' }).click();
@@ -163,6 +166,7 @@ test('programmée : « 🔗 Inviter » (créateur) avec date longue, heure, joue
   const s = Date.now().toString(36);
   await register(page, `inv_btn_${s}`);
   await registerOther(page, `thib_${s}`);
+  await devenirAmiDe(page, `thib_${s}`); // v4.8.0 : seuls les amis sont proposés
 
   await page.goto('/nights');
   await page.getByRole('button', { name: 'Programmer une partie' }).click();
@@ -173,7 +177,7 @@ test('programmée : « 🔗 Inviter » (créateur) avec date longue, heure, joue
   await page.getByLabel('Heure').fill('20:00');
   await page.locator('.player-list label', { hasText: `thib_${s}` }).locator('input').check();
   const post = page.waitForResponse((r) => r.url().endsWith('/api/nights') && r.request().method() === 'POST');
-  await page.getByRole('button', { name: 'Programmer', exact: true }).click();
+  await page.getByRole('button', { name: 'Programmer et inviter' }).click();
   await post;
 
   await page.locator('.planned-card').first().getByRole('button', { name: '🔗 Inviter' }).click();
@@ -183,7 +187,7 @@ test('programmée : « 🔗 Inviter » (créateur) avec date longue, heure, joue
   });
   expect(text).toContain(`🎲 Partie de jeux le ${dateLong} à 20:00 !`);
   expect(text).toContain(`inv_btn_${s}`); // créateur listé
-  expect(text).toContain(`thib_${s}`);    // invité listé
+  expect(text).not.toContain(`thib_${s}`); // v4.8.0 : invité dans l'app, pas encore joueur
   expect(text).toMatch(/Rejoins-nous : .*\/nights\/\d+\/rejoindre\?k=[0-9a-f]{32}/); // v4.7.0 : le lien clôt le message
 });
 

@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { devenirAmis } from './helpers/amis';
 import { newGame, putOnShelf } from './helpers/shelf';
 
 const hier = new Date(Date.now() - 86400000).toLocaleDateString('sv-SE');
@@ -54,6 +55,7 @@ test('retrait d\'un participant scoré → enregistré, podium à un seul score,
   await register(second, `rt2_${s}`);
   const secondId = await monId(second); // /api/me de SON contexte
   const gameId = await newGame(page, `Cascadia-rt-${s}`, 'grand');
+  await devenirAmis(page, second); // v4.8.0 : seuls les amis peuvent être inscrits
   const { nightId } = await (await page.request.post('/api/nights', { data: { playerIds: [] } })).json() as { nightId: number };
   await page.request.patch(`/api/nights/${nightId}`, { data: { playerIds: [createurId, secondId] } }); // branche v1 : nuit en préparation
   await putOnShelf(page, gameId, nightId);

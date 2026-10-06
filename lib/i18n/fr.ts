@@ -217,7 +217,6 @@ export const fr = {
   'soiree.surTerminer': 'Sûr ? Terminer',
   'soiree.programmerBtn': '＋ Programmer une partie',
   'soiree.programmer': 'Programmer une partie',
-  'soiree.programmerSubmit': 'Programmer',
   'soiree.nouvellePartie': 'Nouvelle partie',
   'soiree.creerPartie': 'Créer la partie',
   'soiree.enregistrer': 'Enregistrer',

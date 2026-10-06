@@ -214,7 +214,6 @@ export const en: Record<CléDict, ValeurDict> = {
   'soiree.surTerminer': 'Finish the game?',
   'soiree.programmerBtn': '＋ Schedule a game',
   'soiree.programmer': 'Schedule a game',
-  'soiree.programmerSubmit': 'Schedule',
   'soiree.nouvellePartie': 'New game',
   'soiree.creerPartie': 'Create a game',
   'soiree.enregistrer': 'Save',

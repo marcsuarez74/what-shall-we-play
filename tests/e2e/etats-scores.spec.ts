@@ -1,4 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
+import { devenirAmiDe } from './helpers/amis';
 import { newGame, gameIdByTitle, nightIdOf, putOnShelf } from './helpers/shelf';
 
 // v3.3 — la soirée a un ÉTAT visible : badge « En préparation » puis « En jeu »
@@ -51,6 +52,7 @@ async function registerAndStart2Joueurs(page: Page, pseudo: string, invitePseudo
   await reg;
   await page.waitForURL('/etagere');
   await page.reload(); // la liste des joueurs est rendue côté serveur
+  await devenirAmiDe(page, invitePseudo); await page.reload();
   await page.locator('.player-list label', { hasText: invitePseudo }).locator('input').check();
   const nightDone = page.waitForResponse((r) => r.url().endsWith('/api/nights') && r.request().method() === 'POST');
   await page.getByRole('button', { name: 'Créer la partie' }).click();

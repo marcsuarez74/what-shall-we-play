@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { devenirAmiDe } from './helpers/amis';
 import { gameIdByTitle, lancerTirage, putOnShelf } from './helpers/shelf';
 
 // Stamp base 36 : « parc-marc- » + 8 caractères ≤ limite d'inscription (20)
@@ -40,6 +41,7 @@ test('parcours complet : deux joueurs, sélection, tirage, historique', async ({
 
   // Marc crée la soirée avec Léa
   await a.goto('/etagere');
+  await devenirAmiDe(a, `parc_lea_${stamp}`); await a.reload(); // v4.8.0 : seuls les amis sont proposés
   await a.getByLabel(new RegExp(`parc_lea_${stamp}`)).check();
   await a.getByRole('button', { name: /Créer la partie/ }).click();
 

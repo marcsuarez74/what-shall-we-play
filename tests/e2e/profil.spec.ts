@@ -1,4 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
+import { devenirAmiDe } from './helpers/amis';
 import { newGame, gameIdByTitle, nightIdOf, putOnShelf } from './helpers/shelf';
 
 async function registerAndStart(page: import('@playwright/test').Page, pseudo: string) {
@@ -151,6 +152,7 @@ test('profil : podiums dans les stats et mes parties médailles', async ({ page,
   await reg;
   await page.waitForURL('/etagere');
   await page.reload(); // la liste des joueurs est rendue côté serveur
+  await devenirAmiDe(page, `inv_${s}`); await page.reload();
   await page.locator('.player-list label', { hasText: `inv_${s}` }).locator('input').check();
   const nightDone = page.waitForResponse((r) => r.url().endsWith('/api/nights') && r.request().method() === 'POST');
   await page.getByRole('button', { name: 'Créer la partie' }).click();
