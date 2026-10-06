@@ -29,6 +29,10 @@ export const fr = {
   'auth.errInvite': 'Ce profil est un invité de soirée : il n’a pas de connexion.',
   'soiree.lienInvalide': 'Ce lien d’invitation n’est plus valide.',
   'soiree.errNomInvite': 'Donne ton prénom pour rejoindre la soirée.',
+  'soiree.joinNomLabel': 'Ton prénom (ou ton surnom de table)',
+  'soiree.joinCta': 'Rejoindre la soirée',
+  'soiree.joinSansCompte': 'Pas besoin de compte : ton prénom reste sur cette soirée uniquement.',
+  'soiree.joinAvecCompte': 'Tu es connecté(e) : tu vas rejoindre cette soirée avec ton compte.',
   'auth.errIdentifiants': 'Identifiants incorrects',
   // Pluriel exemplaire (consommé par les zones T2-T6).
   'ludotheque.nbJeux': ({ n }: Record<string, string | number>) => `${n} jeu${Number(n) > 1 ? 'x' : ''}`,

@@ -2315,3 +2315,11 @@ a.btn-go.as-link { display: flex; align-items: center; justify-content: center; 
 .cp-creer { background: none; border: none; color: var(--cuivre); font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; padding: 0; margin-bottom: 10px; }
 .cp-form { background: var(--surface); border: 1px solid color-mix(in srgb, var(--doux) 30%, transparent); border-radius: 16px; padding: 14px; margin: 10px 0 14px; display: flex; flex-direction: column; gap: 12px; }
 .mp-pastille { display: inline-block; width: fit-content; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: color-mix(in srgb, var(--ambre) 18%, transparent); color: #EAD9A8; }
+
+/* v4.6.0 — jointure invité par lien (maquette v46) */
+.join-page { max-width: 430px; margin: 0 auto; padding: 40px 20px 40px; display: flex; flex-direction: column; gap: 12px; }
+.join-hero { font-size: 44px; text-align: center; padding-bottom: 4px; }
+.join-page label { font-size: 13px; font-weight: 600; color: var(--doux-clair); }
+.join-page input { background: var(--surface); border: 1px solid color-mix(in srgb, var(--doux) 40%, transparent); border-radius: 12px; color: var(--creme); font: inherit; font-size: 16px; padding: 12px 14px; outline: none; }
+.join-note { font-size: 12.5px; color: var(--doux-clair); line-height: 1.55; }
+.join-erreur { color: var(--rouge); font-size: 13.5px; }
