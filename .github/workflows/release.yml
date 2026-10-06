@@ -1,10 +1,17 @@
-# Crée la Release GitHub quand un tag v* est poussé :
-# les notes sont extraites de la section correspondante du CHANGELOG.
+# Crée la Release GitHub d'un tag v* : les notes sont extraites de la section
+# correspondante du CHANGELOG. Appelé par la CI après le déploiement sur main
+# (tag posé automatiquement — un tag poussé par GITHUB_TOKEN ne déclenche aucun
+# workflow, d'où l'appel explicite), ou déclenché par un tag poussé à la main.
 name: Release
 
 on:
   push:
     tags: ['v*']
+  workflow_call:
+    inputs:
+      tag:
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -13,11 +20,15 @@ jobs:
   release:
     name: Release GitHub
     runs-on: ubuntu-latest
+    env:
+      TAG: ${{ inputs.tag || github.ref_name }}
     steps:
       - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.tag || github.ref }}
       - name: Extraire les notes du CHANGELOG
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"
+          VERSION="${TAG#v}"
           awk -v ver="$VERSION" '
             $0 ~ "^## \\[" ver "\\]" { flag = 1; next }
             flag && /^## \[/ { exit }
@@ -31,12 +42,12 @@ jobs:
         run: |
           # Idempotent : si la release existe déjà (créée en parallèle du push du tag,
           # ou relance après échec), on ignore au lieu d'échouer en HTTP 422.
-          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
-            echo "::notice::La release $GITHUB_REF_NAME existe déjà — étape ignorée."
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "::notice::La release $TAG existe déjà — étape ignorée."
             exit 0
           fi
           # --notes-file (et pas --notes) : les backticks des notes ne doivent
           # jamais être interprétés comme de la substitution de commande par bash.
-          gh release create "$GITHUB_REF_NAME" \
-            --title "$GITHUB_REF_NAME" \
+          gh release create "$TAG" \
+            --title "$TAG" \
             --notes-file notes.md

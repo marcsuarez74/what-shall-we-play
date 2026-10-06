@@ -2333,7 +2333,7 @@ a.btn-go.as-link { display: flex; align-items: center; justify-content: center; 
 
 /* v4.7.0 — parties programmées : marge sous « Programmées » (la liste touchait le bouton) */
 .qg-head + .nights-list, .qg-head + .empty { margin-top: 12px; }
-.plan-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.plan-top { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 8px; } /* la confirmation de suppression passe sous le titre, pleine largeur */
 .plan-titre { font-family: var(--font-display, 'Bricolage Grotesque'), sans-serif; font-size: 16px; font-weight: 800; line-height: 1.15; color: var(--creme); min-width: 0; overflow-wrap: anywhere; }
 .plan-meta { font-size: 12.5px; color: var(--doux-clair); }
 .lien-actions { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -2351,6 +2351,8 @@ a.btn-go.as-link { display: flex; align-items: center; justify-content: center; 
 .suppr-btn:hover { color: #E08A76; border-color: color-mix(in srgb, #b5533c 60%, transparent); }
 .confirm-suppr { flex-basis: 100%; border: 1px solid color-mix(in srgb, #b5533c 70%, transparent); background: color-mix(in srgb, var(--rouge) 10%, transparent); border-radius: 12px; padding: 10px 11px; display: flex; flex-direction: column; gap: 8px; font-size: 12.5px; }
 .confirm-suppr ul { margin: 0; padding-left: 16px; color: var(--doux-clair); display: flex; flex-direction: column; gap: 2px; }
+.confirm-suppr .lien-actions { display: grid; grid-template-columns: 1fr 1fr; align-items: stretch; } /* Garder / Supprimer côte à côte, même hauteur */
+.confirm-suppr .lien-actions > button { min-height: 42px; padding: 8px 10px; margin: 0; }
 .btn-danger { appearance: none; border: 0; border-radius: 14px; background: var(--rouge); color: #fff; font: inherit; font-weight: 700; font-size: 13.5px; min-height: 40px; padding: 8px 14px; cursor: pointer; }
 .btn-danger:disabled { opacity: .6; cursor: not-allowed; }
 

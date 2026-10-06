@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { getSessionInvite } from '@/lib/session';
 import { getInviteNight, getNightPlayers, getShelfGames, getShelfVotes, getNightGame, getNightScores } from '@/lib/nights';
 import { rankScores } from '@/lib/ranks';
+import { getPickCounts } from '@/lib/games';
 import { getDb } from '@/lib/db';
 import { t } from '@/lib/i18n';
 import { formatDate, titrePartie } from '@/lib/i18n/format';
@@ -32,7 +33,7 @@ export default async function Page() {
         dateLong={formatDate(lang, `${night.played_at}T12:00:00`, { weekday: 'long', day: 'numeric', month: 'long' })}
         time={night.start_time ? formatDate(lang, `${night.played_at}T${night.start_time}`, { timeStyle: 'short' }) : null}
         hote={hote} players={getNightPlayers(night.id)} games={getShelfGames(night.id)} votes={getShelfVotes(night.id)}
-        partyGame={getNightGame(night.id)} classement={classement}
+        partyGame={getNightGame(night.id)} plays={getPickCounts()} classement={classement}
         me={{ id: me.id, pseudo: me.pseudo }} />
     </main>
   );
