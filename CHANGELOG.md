@@ -4,6 +4,13 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [Non publié]
+
+### Modifié
+- **CI** : build et tests (unitaires + E2E) ne tournent plus que sur la PR ; sur `main`,
+  la CI déploie directement (environ 1 min au lieu de 15). La PR teste déjà le résultat
+  de la fusion, et `main` exige une branche à jour avant fusion.
+
 ## [4.7.0] — 2026-10-06
 
 ### Ajouté

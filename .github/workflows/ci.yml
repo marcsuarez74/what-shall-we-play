@@ -47,9 +47,14 @@ jobs:
             echo "→ Modification purement docs : build, tests et déploiement sautés."
           fi
 
+  # Build et tests : sur la PR seulement. GitHub les joue sur le résultat de la
+  # fusion avec main, et main exige une branche à jour avant fusion : ce qui arrive
+  # sur main a déjà été testé tel quel. Sur main, la CI ne fait que déployer
+  # (le VPS reconstruit l'image : un build cassé fait échouer le déploiement).
   build:
     name: Build (Next.js + image Docker)
     needs: changes
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - name: Docs uniquement — build sauté (check maintenu vert)
@@ -73,6 +78,7 @@ jobs:
   test:
     name: Tests (unitaires + E2E)
     needs: changes
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - name: Docs uniquement — tests sautés (check maintenu vert)
@@ -112,7 +118,7 @@ jobs:
 
   deploy:
     name: Déploiement VPS
-    needs: [build, test, changes]
+    needs: changes
     if: github.ref == 'refs/heads/main' && github.event_name == 'push' && needs.changes.outputs.docs != 'true'
     runs-on: ubuntu-latest
     steps:

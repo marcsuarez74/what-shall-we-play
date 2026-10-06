@@ -14,8 +14,9 @@ PWA Next.js de tirage au sort de la partie du jour — https://what-shall-we-pla
   - **MAJOR** : changement de comportement ou de flux, cassant pour l'existant
   - **MINOR** : nouvelle fonctionnalité
   - **PATCH** : correction ou retouche cosmétique
-- Chaîne obligatoire : branche → PR → CI verte (4 jobs, dont la détection docs-only) →
-  fusion → déploiement → tag annoté (le workflow Release crée la release GitHub — ne pas
+- Chaîne obligatoire : branche → PR → CI verte (4 jobs, dont la détection docs-only ;
+  build et tests ne tournent que sur la PR, branche à jour avec main exigée) →
+  fusion → déploiement (seul job de la CI sur main) → tag annoté (le workflow Release crée la release GitHub — ne pas
   la créer à la main) → vérifier la prod
   (`curl -s https://what-shall-we-play.marco-studio.fr/sw.js | grep -o "wsp-v[0-9.]*"`).
 - **Toujours passer par une Pull Request — sans exception**, y compris pour les
