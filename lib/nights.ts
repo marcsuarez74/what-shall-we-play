@@ -82,7 +82,7 @@ export function getShelfNight(userId: number, nightId: number): Night | null {
 // Lien d'invitation absolu (partage WhatsApp, copie) d'une partie.
 export function lienInvitation(night: { id: number; lien_token?: string | null }): string | undefined {
   if (!night.lien_token) return undefined;
-  return `${process.env.PUBLIC_URL ?? 'https://what-shall-we-play.marco-studio.fr'}/nights/${night.id}/rejoindre?k=${night.lien_token}`;
+  return `${process.env.PUBLIC_URL || 'https://what-shall-we-play.marco-studio.fr'}/nights/${night.id}/rejoindre?k=${night.lien_token}`;
 }
 // v4.7.0 — la soirée d'un invité : il n'en a qu'une (celle de son lien).
 export function getInviteNight(userId: number): Night | null {
@@ -336,7 +336,10 @@ export function supprimerNuit(nightId: number, userId: number, lang: Lang = 'fr'
     db.prepare('DELETE FROM nights WHERE id = ?').run(nightId);
     for (const { id } of invites) db.prepare('DELETE FROM users WHERE id = ?').run(id);
   })();
-  emitToUsers(joueurs); // la partie disparaît en direct chez les joueurs
+  // La partie disparaît en direct chez les AUTRES joueurs. Pas chez celui qui supprime :
+  // il navigue lui-même, et un refresh live concurrent annulait sa redirection (course
+  // push/refresh, cf. db32a9c — E2E « supprimer → redirection » instable en CI).
+  emitToUsers(joueurs.filter((id) => id !== userId));
   return { ok: true };
 }
 

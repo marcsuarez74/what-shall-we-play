@@ -23,7 +23,7 @@ const spaceGrotesk = Space_Grotesk({
 export async function generateMetadata(): Promise<Metadata> {
   const description = t(await getLang(), 'meta.description');
   return {
-    metadataBase: new URL(process.env.PUBLIC_URL ?? 'https://what-shall-we-play.marco-studio.fr'),
+    metadataBase: new URL(process.env.PUBLIC_URL || 'https://what-shall-we-play.marco-studio.fr'),
     title: 'What Shall We Play?',
     description,
     icons: {

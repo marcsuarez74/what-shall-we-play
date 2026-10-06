@@ -135,3 +135,18 @@ describe('suppression d’une partie programmée', () => {
     expect(getDb().prepare('SELECT 1 FROM users WHERE id = ?').get(joueur)).toBeTruthy(); // un compte reste
   });
 });
+
+describe('suppression : notification en direct', () => {
+  test('les autres joueurs sont prévenus, pas celui qui supprime (course push/refresh)', async () => {
+    const { subscribeUser } = await import('@/lib/events');
+    const hote = id(registerUser(pseudo('notif_'), '1234'));
+    const autre = id(registerUser(pseudo('notif2_'), '1234'));
+    const nightId = createNight(hote, [hote, autre], { playedAt: demain() });
+    const recus: number[] = [];
+    const off1 = subscribeUser(hote, () => recus.push(hote));
+    const off2 = subscribeUser(autre, () => recus.push(autre));
+    supprimerNuit(nightId, hote);
+    off1(); off2();
+    expect(recus).toEqual([autre]);
+  });
+});

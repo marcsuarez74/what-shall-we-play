@@ -133,7 +133,10 @@ jobs:
             set -e
             cd "${{ secrets.VPS_DEPLOY_DIR }}"
             git pull --ff-only origin main
-            docker compose up -d --build
+            docker compose build
+            # l'app tourne en utilisateur node (v4.7.4) : data/ (volume de l'hôte) doit lui appartenir
+            docker compose run --rm --no-deps --user root --entrypoint chown app -R node:node /app/data
+            docker compose up -d
             docker image prune -f
 
   # Tag annoté de la version de package.json, posé après un déploiement réussi
