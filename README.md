@@ -82,6 +82,8 @@ server {
         proxy_pass http://127.0.0.1:3000;
         proxy_set_header Host $host;
         proxy_set_header X-Forwarded-Proto $scheme;
+        # IP réelle du client : sert à la limite de tentatives de connexion par IP
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     }
 }
 ```

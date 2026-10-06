@@ -42,12 +42,12 @@ describe('creerInvite', () => {
     expect((creerInvite('x'.repeat(21), hote) as { error: string }).error).toBeTruthy();
   });
 
-  test('la connexion d’un invité est rejetée', () => {
+  test('la connexion d’un invité est rejetée', async () => {
     const stamp = Date.now().toString(36);
     const hote = (registerUser(`cinv3_${stamp}`, '1234') as { id: number }).id;
     const inv = creerInvite(`Zoé ${stamp}`, hote) as { id: number };
     const pseudo = (getDb().prepare('SELECT pseudo FROM users WHERE id = ?').get(inv.id) as { pseudo: string }).pseudo;
-    const r = verifyLogin(pseudo, 'nimporte');
+    const r = await verifyLogin(pseudo, 'nimporte');
     if (!('error' in r)) throw new Error('un invité ne doit jamais se connecter');
     expect(r.status).toBe(401);
     expect(getUserByToken(createSession(inv.id, 1))).toBeTruthy(); // sa session marche, lui

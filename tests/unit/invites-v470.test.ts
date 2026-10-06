@@ -97,7 +97,7 @@ describe('invité restreint à sa soirée', () => {
 });
 
 describe('conversion invité → compte', () => {
-  test('même ligne : votes et soirée conservés, connexion possible', () => {
+  test('même ligne : votes et soirée conservés, connexion possible', async () => {
     const { hote, nightId, invite } = soireeAvecInvite();
     const g = createGame(hote, { title: 'Skull', box_format: 'petit' });
     addNightGame(nightId, g, hote);
@@ -107,7 +107,7 @@ describe('conversion invité → compte', () => {
     const row = getDb().prepare('SELECT est_invite, host_id FROM users WHERE id = ?').get(invite) as { est_invite: number; host_id: number | null };
     expect(row).toEqual({ est_invite: 0, host_id: null });
     expect(getDb().prepare('SELECT 1 FROM game_votes WHERE user_id = ?').get(invite)).toBeTruthy();
-    expect(verifyLogin(p, '4321')).toMatchObject({ id: invite });
+    expect(await verifyLogin(p, '4321')).toMatchObject({ id: invite });
     expect(listComptes().some((u) => u.id === invite)).toBe(true);
   });
 

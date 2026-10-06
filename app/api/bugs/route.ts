@@ -4,7 +4,7 @@
 import { NextResponse } from 'next/server';
 import { getSessionUser } from '@/lib/session';
 import { createBugReport, validerSignalement, type BugType } from '@/lib/bugs';
-import { saveBugCapture, COVER_EXT, type CoverExt } from '@/lib/storage';
+import { saveBugCapture, formatImage } from '@/lib/storage';
 import { t } from '@/lib/i18n';
 import { getLang } from '@/lib/i18n/server';
 
@@ -32,9 +32,9 @@ export async function POST(req: Request) {
   const file = form.get('capture');
   if (file instanceof File && file.size > 0) {
     if (file.size > 5 * 1024 * 1024) return NextResponse.json({ error: t(lang, 'bugs.errCapturePoids') }, { status: 400 });
-    const ext = (file.name.split('.').pop() ?? '').toLowerCase();
-    if (!(COVER_EXT as readonly string[]).includes(ext)) return NextResponse.json({ error: t(lang, 'bugs.errCaptureExt') }, { status: 400 });
-    captureName = saveBugCapture(Buffer.from(await file.arrayBuffer()), ext as CoverExt);
+    const buf = Buffer.from(await file.arrayBuffer());
+    if (!formatImage(buf)) return NextResponse.json({ error: t(lang, 'bugs.errCaptureExt') }, { status: 400 });
+    captureName = saveBugCapture(buf);
   }
 
   const res = await createBugReport({

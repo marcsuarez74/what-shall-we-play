@@ -1,5 +1,6 @@
 import Database from 'better-sqlite3';
 import fs from 'node:fs';
+import crypto from 'node:crypto';
 import path from 'node:path';
 
 export const DATA_DIR = process.env.DATA_DIR ?? path.join(process.cwd(), 'data');
@@ -151,6 +152,27 @@ export function runMigrations(db: Database.Database): void {
   db.prepare(`UPDATE nights SET status = 'termine' WHERE ended_at IS NOT NULL AND status = 'creation'`).run();
   // v4.6.0 : unicité des tokens de lien — index idempotent, ERREUR BRUYANTE si échec.
   db.prepare('CREATE UNIQUE INDEX IF NOT EXISTS idx_nights_lien_token ON nights(lien_token)').run();
+  // v4.7.2 (audit, point 6) : les jetons ne sont plus stockés qu'en empreinte sha256.
+  // Une seule fois (user_version) : les sessions existantes restent valides.
+  if ((db.pragma('user_version', { simple: true }) as number) < 1) {
+    const hacher = (t: string) => crypto.createHash('sha256').update(t).digest('hex');
+    db.transaction(() => {
+      for (const table of ['sessions', 'device_tokens']) {
+        const maj = db.prepare(`UPDATE ${table} SET token = ? WHERE token = ?`);
+        for (const { token } of db.prepare(`SELECT token FROM ${table}`).all() as { token: string }[]) maj.run(hacher(token), token);
+      }
+      db.pragma('user_version = 1');
+    })();
+  }
+}
+
+// v4.7.2 (audit, point 7) — au démarrage : sessions expirées, jetons d'appareil
+// inutilisés depuis un an (ils tournent à chaque restauration), invités sans soirée.
+// Rien d'autre : une donnée de jeu n'est jamais détruite implicitement.
+export function purger(db: Database.Database): void {
+  db.prepare("DELETE FROM sessions WHERE expires_at <= datetime('now')").run();
+  db.prepare("DELETE FROM device_tokens WHERE created_at <= datetime('now', '-1 year')").run();
+  db.prepare('DELETE FROM users WHERE est_invite = 1 AND id NOT IN (SELECT user_id FROM night_players)').run();
 }
 
 export function getDb(): Database.Database {
@@ -161,5 +183,6 @@ export function getDb(): Database.Database {
   db.pragma('foreign_keys = ON');
   db.exec(SCHEMA);
   runMigrations(db);
+  purger(db);
   return db;
 }
