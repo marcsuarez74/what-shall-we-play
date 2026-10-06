@@ -1,6 +1,7 @@
 import { getDb } from './db';
 import { emitToUsers } from './events';
 import { t, type Lang } from './i18n';
+import { creerInvite } from './auth';
 import crypto from 'node:crypto';
 import type { Game, Night, Pick, UserLite } from './types';
 
@@ -53,6 +54,26 @@ export function setNightPlayers(nightId: number, playerIds: number[]): void {
   // v3.5 — un joueur retiré de la soirée emporte ses votes (idiome « pas de vote fantôme »)
   getDb().prepare(`DELETE FROM game_votes WHERE night_id = ? AND user_id NOT IN (SELECT user_id FROM night_players WHERE night_id = ?)`).run(nightId, nightId);
   notifyNight(nightId); // les joueurs — y compris le nouvel arrivé — voient la partie
+}
+
+// v4.6.0 (invités par lien) : jointure par lien de soirée. Un compte sessionné
+// rejoint avec son compte (jamais d'invité fantôme) ; sinon le nom crée un invité.
+export function rejoindreParLien(
+  nightId: number, token: unknown, nom: unknown, sessionUser: { id: number } | null, lang: Lang = 'fr',
+): { ok: true; mode: 'compte' | 'invite'; inviteId?: number } | { ok: false; error: string; status: number } {
+  const night = getNight(nightId);
+  if (!night || typeof token !== 'string' || token.length < 16 || night.lien_token !== token)
+    return { ok: false, error: t(lang, 'soiree.lienInvalide'), status: 403 };
+  const joueurs = getNightPlayers(nightId);
+  if (sessionUser) {
+    if (joueurs.some((j) => j.id === sessionUser.id)) return { ok: true, mode: 'compte' };
+    setNightPlayers(nightId, [...joueurs.map((j) => j.id), sessionUser.id]);
+    return { ok: true, mode: 'compte' };
+  }
+  const invite = creerInvite(nom, night.creator_id, lang);
+  if ('error' in invite) return { ok: false, error: invite.error, status: invite.status };
+  setNightPlayers(nightId, [...joueurs.map((j) => j.id), invite.id]);
+  return { ok: true, mode: 'invite', inviteId: invite.id };
 }
 export function getNightPlayers(nightId: number): UserLite[] {
   return getDb().prepare(`

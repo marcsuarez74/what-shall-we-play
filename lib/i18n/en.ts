@@ -25,6 +25,8 @@ export const en: Record<CléDict, ValeurDict> = {
   'auth.errPseudoPris': 'Username already taken',
   'auth.errNomInvite': 'Give a first name (or nickname) of 1 to 20 characters.',
   'auth.errInvite': 'This profile is a party guest: it cannot log in.',
+  'soiree.lienInvalide': 'This invitation link is no longer valid.',
+  'soiree.errNomInvite': 'Give your first name to join the party.',
   'auth.errIdentifiants': 'Incorrect credentials',
   'ludotheque.nbJeux': ({ n }: Record<string, string | number>) => `${n} game${Number(n) > 1 ? 's' : ''}`,
   // Shelf zone (ShelfClient, ShelfControls, ShelfPicker, TermineeCard, /etagere page).

@@ -27,6 +27,8 @@ export const fr = {
   'auth.errPseudoPris': 'Pseudo déjà pris',
   'auth.errNomInvite': 'Donne un prénom (ou surnom) de 1 à 20 caractères.',
   'auth.errInvite': 'Ce profil est un invité de soirée : il n’a pas de connexion.',
+  'soiree.lienInvalide': 'Ce lien d’invitation n’est plus valide.',
+  'soiree.errNomInvite': 'Donne ton prénom pour rejoindre la soirée.',
   'auth.errIdentifiants': 'Identifiants incorrects',
   // Pluriel exemplaire (consommé par les zones T2-T6).
   'ludotheque.nbJeux': ({ n }: Record<string, string | number>) => `${n} jeu${Number(n) > 1 ? 'x' : ''}`,

@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { getDb, runMigrations } from '@/lib/db';
 import { registerUser, creerInvite, verifyLogin, getUserByToken, createSession } from '@/lib/auth';
-import { createNight, getNight } from '@/lib/nights';
+import { createNight, getNight, getNightPlayers, rejoindreParLien } from '@/lib/nights';
 
 describe('schéma invités (v4.6.0)', () => {
   test('colonnes est_invite / host_id / lien_token présentes et idempotentes', () => {
@@ -21,13 +21,14 @@ describe('schéma invités (v4.6.0)', () => {
 describe('creerInvite', () => {
   test('pseudo = nom choisi, unique ; collision → suffixe « 2 »', () => {
     const hote = (registerUser(`cinv_${Date.now().toString(36)}`, '1234') as { id: number }).id;
-    const a = creerInvite('Sophie', hote) as { id: number };
-    const b = creerInvite('Sophie', hote) as { id: number };
+    const nom = `Sophie ${Date.now().toString(36)}`; // unique par run : les tests du fichier partagent la DB
+    const a = creerInvite(nom, hote) as { id: number };
+    const b = creerInvite(nom, hote) as { id: number };
     const db = getDb();
     const pa = db.prepare('SELECT pseudo, est_invite, host_id FROM users WHERE id = ?').get(a.id) as { pseudo: string; est_invite: number; host_id: number };
     const pb = db.prepare('SELECT pseudo FROM users WHERE id = ?').get(b.id) as { pseudo: string };
-    expect(pa.pseudo).toBe('Sophie');
-    expect(pb.pseudo).toBe('Sophie 2');
+    expect(pa.pseudo).toBe(nom);
+    expect(pb.pseudo).toBe(`${nom} 2`);
     expect(pa.est_invite).toBe(1);
     expect(pa.host_id).toBe(hote);
   });
@@ -42,9 +43,11 @@ describe('creerInvite', () => {
   });
 
   test('la connexion d’un invité est rejetée', () => {
-    const hote = (registerUser(`cinv3_${Date.now().toString(36)}`, '1234') as { id: number }).id;
-    const inv = creerInvite('Zoé', hote) as { id: number };
-    const r = verifyLogin('Zoé', 'nimporte');
+    const stamp = Date.now().toString(36);
+    const hote = (registerUser(`cinv3_${stamp}`, '1234') as { id: number }).id;
+    const inv = creerInvite(`Zoé ${stamp}`, hote) as { id: number };
+    const pseudo = (getDb().prepare('SELECT pseudo FROM users WHERE id = ?').get(inv.id) as { pseudo: string }).pseudo;
+    const r = verifyLogin(pseudo, 'nimporte');
     if (!('error' in r)) throw new Error('un invité ne doit jamais se connecter');
     expect(r.status).toBe(401);
     expect(getUserByToken(createSession(inv.id, 1))).toBeTruthy(); // sa session marche, lui
@@ -59,5 +62,37 @@ describe('lien de soirée', () => {
     expect(n1.lien_token).toMatch(/^[0-9a-f]{32}$/);
     expect(n2.lien_token).toMatch(/^[0-9a-f]{32}$/);
     expect(n1.lien_token).not.toBe(n2.lien_token);
+  });
+});
+
+describe('rejoindreParLien', () => {
+  test('hôte + invité par nom ; compte déjà connecté rejoint avec son compte', () => {
+    const stamp = Date.now().toString(36);
+    const hote = (registerUser(`cinv5_${stamp}`, '1234') as { id: number }).id;
+    const compte = (registerUser(`cinv5c_${Date.now().toString(36)}`, '1234') as { id: number }).id;
+    const nightId = createNight(hote, [hote]);
+    const token = getNight(nightId)!.lien_token;
+
+    const rInvite = rejoindreParLien(nightId, token, `Sophie ${stamp}`, null);
+    expect(rInvite).toMatchObject({ ok: true, mode: 'invite' });
+    const joueurs = getNightPlayers(nightId);
+    expect(joueurs.map((j) => j.pseudo)).toContain(`Sophie ${stamp}`);
+
+    const rCompte = rejoindreParLien(nightId, token, null, { id: compte });
+    expect(rCompte).toMatchObject({ ok: true, mode: 'compte' });
+    expect(getNightPlayers(nightId).map((j) => j.id)).toContain(compte);
+
+    // déjà joueur : idempotent, pas d'erreur
+    expect(rejoindreParLien(nightId, token, null, { id: compte })).toMatchObject({ ok: true, mode: 'compte' });
+  });
+
+  test('token faux → 403 ; nom vide → 400 ; token d’une autre soirée → 403', () => {
+    const hote = (registerUser(`cinv6_${Date.now().toString(36)}`, '1234') as { id: number }).id;
+    const nightId = createNight(hote, [hote]);
+    const autre = createNight(hote, [hote]);
+    expect(rejoindreParLien(nightId, 'faux', 'X', null)).toMatchObject({ ok: false, status: 403 });
+    expect(rejoindreParLien(nightId, null, 'X', null)).toMatchObject({ ok: false, status: 403 });
+    expect(rejoindreParLien(nightId, getNight(nightId)!.lien_token, '  ', null)).toMatchObject({ ok: false, status: 400 });
+    expect(rejoindreParLien(nightId, getNight(autre)!.lien_token, 'X', null)).toMatchObject({ ok: false, status: 403 });
   });
 });
