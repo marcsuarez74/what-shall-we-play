@@ -4,6 +4,16 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [4.4.1] — 2026-10-06
+
+### Corrigé
+- **Pochettes BGG jamais rapatriées** — le parseur de `/thing` lisait l'image comme un
+  attribut (`@_src`) alors que le XMLAPI2 réel la livre en contenu texte (épinglé sur une
+  vraie réponse avec token, comme pour `/collection` en v4.3.1) : `imageUrl` valait toujours
+  `null`, aucune pochette n'était téléchargée — ni à l'ajout ni à l'import. Le cache BGG
+  (30 j) ayant conservé ces fiches amputées, il est purgé au déploiement ; les pochettes
+  arrivent en relançant l'import (les jeux existants sont enrichis, sans doublon créé).
+
 ## [4.4.0] — 2026-10-05
 
 ### Ajouté
