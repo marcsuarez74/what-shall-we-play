@@ -46,6 +46,7 @@ ALTER TABLE nights ADD COLUMN lien_token TEXT UNIQUE; -- généré à la créati
 ### v4.7.0 — cercles
 
 ```sql
+ALTER TABLE nights ADD COLUMN nom TEXT; -- nom facultatif de la partie
 CREATE TABLE IF NOT EXISTS cercles (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   nom TEXT NOT NULL,
@@ -90,8 +91,10 @@ RSVP révocable (re-répondre remplace), même idiome que les votes.
 1. **Création** (page « Cercles ») : nom + lien de partage. Ouvrir le lien avec un compte
    rejoint ; sans compte → invitation à en créer un (cercles = comptes).
 2. **Ajout par pseudo** sur la page du cercle (les deux portes : lien + pseudo).
-3. **Création de soirée** : cases à cocher des cercles + invités individuels → une
-   `night_invites` par membre (l'hôte est joueur d'office).
+3. **Création de soirée** : **nom facultatif** (placeholder « Soirée jeux 🎲 » — à vide,
+   l'affichage retombe sur « Partie du vendredi 9 octobre ») + cases à cocher des cercles +
+   invités individuels → une `night_invites` par membre (l'hôte est joueur d'office).
+   L'invitation doit dire à quoi on est invité : nom (ou date) + hôte + lieu.
 4. **RSVP** : la soirée apparaît chez les membres dans « Mes soirées » (pastille
    d'invitation) → boutons **Dispo / Pas dispo**, révocables. L'hôte voit le décompte
    (X dispo, Y absents, Z sans réponse).
@@ -111,12 +114,21 @@ RSVP révocable (re-répondre remplace), même idiome que les votes.
 - Pas d'e-mail, pas de push : la découverte passe par l'app (Mes soirées) et le partage
   de lien (WhatsApp) — périmètre assumé.
 
-## 6. UI (rappel des règles du dépôt)
+## 6. UI (règles du dépôt + décisions validées sur maquette)
 
 Palette noyer/crème/cuivre, Bricolage Grotesque + Space Grotesk, FR par défaut (chaîne
-typée dans `lib/i18n/` avec miroir EN). **Maquette HTML autonome validée avant le code**
-pour les écrans clés : vue de soirée côté invité, invitations + RSVP dans « Mes soirées »,
-formulaire de soirée avec cercles, page « Amis ».
+typée dans `lib/i18n/` avec miroir EN). **Maquette validée le 2026-10-06**
+(`.superpowers/brainstorm/v46-invites-cercles/content/maquette-v46-invites-cercles.html`) :
+
+- **5ᵉ onglet « Amis » (👥)** dans la TabBar — héberge Cercles et Activité (segmenté).
+- **Pastille cuivre de comptage** sur l'onglet 🎲 Parties : nombre d'invitations en
+  attente de RSVP, disparaît quand tout est répondu ; aria-label « Parties, N invitations
+  en attente ».
+- **Nom facultatif de partie** à la création (repli « Partie du <date> ») — l'invitation
+  dit nom (ou date) + hôte.
+- Écrans clés : invitations + RSVP en haut de « Mes soirées », vue de soirée côté invité
+  (badge « invitée de … »), formulaire de soirée avec cases à cocher des cercles,
+  détail cercle (membres, ajout par pseudo, lien), fil d'activité lecture seule.
 
 ## 7. Tests
 
