@@ -1,7 +1,9 @@
 import { redirect } from 'next/navigation';
 import { getSessionUser } from '@/lib/session';
 import { getActiveNight, getPlannedNights, getHistoryCards, getNightPlayers, getNightGame, getShelfGames, lienInvitation } from '@/lib/nights';
-import { listComptes } from '@/lib/users';
+import { listRelations } from '@/lib/amis';
+import { mesCercles, membresCercle } from '@/lib/cercles';
+import { mesInvitations, invitesNuit } from '@/lib/invitations';
 import { coverSrc } from '@/lib/formats';
 import { t, type Lang } from '@/lib/i18n';
 import { formatDate, titrePartie } from '@/lib/i18n/format';
@@ -13,6 +15,7 @@ import TerminerNight from '@/components/TerminerNight';
 import UserMenu from '@/components/UserMenu';
 import UserSync from '@/components/UserSync';
 import SupprimerPartie from '@/components/SupprimerPartie';
+import BoutonAction from '@/components/BoutonAction';
 
 // « 2026-10-02 » → jour « 2 » + mois « oct. » — la date est le héros d'une carte programmée.
 function dayMonth(playedAt: string, lang: Lang): { day: string; month: string } {
@@ -32,7 +35,12 @@ export default async function Page() {
   const cartes = getHistoryCards(user.id);
   // Le jeu de la partie (boîte sortie) — les picks cumulés ne s'affichent plus (v3.3.0).
   const activeGame = active?.game_id ? getNightGame(active.id) : null;
-  const users = listComptes(); // v4.7.0 : jamais les invités
+  // v4.8.0 : moi (joueur d'office) puis mes amis et mon foyer ; les cercles pour inviter en un geste.
+  const users = [{ id: user.id, pseudo: user.pseudo, sticker: user.sticker, avatar_path: user.avatar_path }, ...listRelations(user.id)];
+  const cercles = mesCercles(user.id).map((c) => ({
+    id: c.id, nom: c.nom, membres: membresCercle(c.id).filter((m) => m.etat === 'membre').map((m) => m.id),
+  }));
+  const invitations = mesInvitations(user.id);
   // Dates longues / heures des cartes programmées, dans la langue du cookie.
   const dateLongue = (playedAt: string) => formatDate(lang, `${playedAt}T12:00:00`, { dateStyle: 'long' });
   const heureCourte = (playedAt: string, start: string | null | undefined) =>
@@ -46,6 +54,37 @@ export default async function Page() {
         <h1>{t(lang, 'soiree.titre')}</h1>
         <UserMenu me={user} />
       </div>
+
+      {invitations.length > 0 && (
+        <section className="qg-section" aria-label={t(lang, 'soiree.invitations')}>
+          <h2>{t(lang, 'soiree.invitations')}</h2>
+          <ul className="nights-list">
+            {invitations.map((n) => (
+              <li key={n.id} className="night-card rsvp">
+                <div className="plan-top">
+                  <span className="plan-titre">{titrePartie(lang, n)}</span>
+                  <span className="badge-etat b-prep"><span className="pt" />{t(lang, 'soiree.badgeInvitation')}</span>
+                </div>
+                <div className="plan-when">
+                  <span className="plan-long">{dateLongue(n.played_at)}</span>
+                  {n.start_time && <span className="plan-time">{heureCourte(n.played_at, n.start_time)}</span>}
+                </div>
+                <p className="rsvp-qui">
+                  <PlayerChip u={{ id: n.creator_id, pseudo: n.hote_pseudo, sticker: n.hote_sticker, avatar_path: n.hote_avatar }} />
+                  {' '}{[t(lang, 'invite.tInvite', { hote: '' }).trim(), n.via_nom && t(lang, 'soiree.viaCercle', { nom: n.via_nom }),
+                    t(lang, 'soiree.nbInvites', { n: n.nb_invites })].filter(Boolean).join(' · ')}
+                </p>
+                <div className="rsvp-btns">
+                  <BoutonAction url={`/api/nights/${n.id}/invitation`} body={{ reponse: 'dispo' }} className="btn-dispo" label={t(lang, 'soiree.dispo')} />
+                  <BoutonAction url={`/api/nights/${n.id}/invitation`} body={{ reponse: 'absent' }} className="btn-absent"
+                                label={t(lang, 'soiree.pasDispo')} pressed={n.etat === 'absent'} />
+                </div>
+                <p className="hint">{n.etat === 'absent' ? t(lang, 'soiree.reponduAbsent') : t(lang, 'soiree.pasRepondu')}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section className="qg-section" aria-label={t(lang, 'soiree.ceSoir')}>
         <h2>{t(lang, 'soiree.ceSoir')}</h2>
@@ -81,7 +120,7 @@ export default async function Page() {
       <section className="qg-section" aria-label={t(lang, 'soiree.programmees')}>
         <div className="qg-head">
           <h2>{t(lang, 'soiree.programmees')}</h2>
-          <NightPlanner users={users} meId={user.id} />
+          <NightPlanner users={users} meId={user.id} cercles={cercles} />
         </div>
         {planned.length === 0 ? (
           <p className="empty">{t(lang, 'soiree.aucuneProgrammee')}</p>
@@ -89,7 +128,8 @@ export default async function Page() {
           <ul className="nights-list">
             {planned.map((n) => {
               const players = getNightPlayers(n.id);
-              const invites = players.filter((p) => p.est_invite);
+              const invitesLien = players.filter((p) => p.est_invite);
+              const invites = invitesNuit(n.id); // v4.8.0 : invitations dans l'app et leurs réponses
               const nbJeux = getShelfGames(n.id).length;
               const { day, month } = dayMonth(n.played_at, lang);
               const createur = n.creator_id === user.id;
@@ -105,7 +145,7 @@ export default async function Page() {
                       {createur && (
                         <SupprimerPartie nightId={n.id} date={dateLongue(n.played_at)} nbJeux={nbJeux}
                                          joueurs={players.filter((p) => !p.est_invite && p.id !== user.id).map((p) => p.pseudo)}
-                                         invites={invites.map((p) => p.pseudo)} />
+                                         invites={invitesLien.map((p) => p.pseudo)} />
                       )}
                     </div>
                     <div className="plan-when">
@@ -114,9 +154,29 @@ export default async function Page() {
                         <span className="plan-time">{heureCourte(n.played_at, n.start_time)}</span>
                       )}
                     </div>
+                    {invites.length > 0 && createur && (() => {
+                      const nb = (e: string) => invites.filter((i) => i.etat === e).length;
+                      return (
+                        <div className="decompte">
+                          <span className="d">{t(lang, 'soiree.decDispo', { n: nb('dispo') })}</span>
+                          {nb('absent') > 0 && <span className="a">{t(lang, 'soiree.decAbsent', { n: nb('absent') })}</span>}
+                          {nb('attente') > 0 && <span>{t(lang, 'soiree.decAttente', { n: nb('attente') })}</span>}
+                        </div>
+                      );
+                    })()}
                     <div className="chips">
                       {players.map((p) => <PlayerChip key={p.id} u={p} />)}
+                      {invites.filter((i) => i.etat !== 'dispo').map((i) => (
+                        <span key={i.id} className={i.etat === 'absent' ? 'chip-absent' : 'chip-attente'}
+                              aria-label={t(lang, i.etat === 'absent' ? 'soiree.absentAria' : 'soiree.sansReponse', { p: i.pseudo })}>
+                          <PlayerChip u={i} etat={i.etat === 'attente' ? 'attente' : undefined} />
+                        </span>
+                      ))}
                     </div>
+                    {createur && invites.filter((i) => i.etat === 'attente').map((i) => (
+                      <BoutonAction key={i.id} url={`/api/nights/${n.id}/invitation`} body={{ userId: i.id }}
+                                    className="link-btn" label={t(lang, 'soiree.inscrire', { p: i.pseudo })} />
+                    ))}
                     <p className="plan-meta">{t(lang, 'soiree.nbJeuxEtagere', { n: nbJeux })}</p>
                     <div className="lien-actions">
                       <a className="btn-copper as-link" href={`/etagere?night=${n.id}`}>{t(lang, 'soiree.preparerEtagere')}</a>

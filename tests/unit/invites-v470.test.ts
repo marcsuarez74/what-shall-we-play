@@ -6,7 +6,7 @@ import {
   boxOutNight, estFuture, getShelfNight, getInviteNight, modifierInfosNuit, normaliserTitre,
   addNightGame, toggleNightVote, endNight,
 } from '@/lib/nights';
-import { listComptes } from '@/lib/users';
+import { listRelations } from '@/lib/amis';
 import { createGame } from '@/lib/games';
 
 // v4.7.0 — refonte des invités : soirée unique, retrait par soi-même, conversion
@@ -77,8 +77,8 @@ describe('invité restreint à sa soirée', () => {
   });
 
   test('un invité n’est jamais proposé comme joueur', () => {
-    const { invite } = soireeAvecInvite();
-    expect(listComptes().some((u) => u.id === invite)).toBe(false);
+    const { hote, invite } = soireeAvecInvite();
+    expect(listRelations(hote).some((u) => u.id === invite)).toBe(false);
   });
 
   test('l’invité se retire lui-même : sa ligne disparaît', () => {
@@ -108,7 +108,6 @@ describe('conversion invité → compte', () => {
     expect(row).toEqual({ est_invite: 0, host_id: null });
     expect(getDb().prepare('SELECT 1 FROM game_votes WHERE user_id = ?').get(invite)).toBeTruthy();
     expect(await verifyLogin(p, '4321')).toMatchObject({ id: invite });
-    expect(listComptes().some((u) => u.id === invite)).toBe(true);
   });
 
   test('pseudo invalide, pris, ou compte déjà converti : refusé', () => {

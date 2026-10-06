@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { devenirAmiDe } from './helpers/amis';
 import { makePng } from './helpers/png';
 import { newGame, putOnShelf } from './helpers/shelf';
 
@@ -72,6 +73,7 @@ test('sync live : le jeu ajouté par un joueur apparaît chez les autres sans re
   const reg = a.waitForResponse((r) => r.url().endsWith('/api/auth/register'));
   await a.getByRole('button', { name: 'Créer mon compte' }).click();
   await reg;
+  await a.waitForURL('/etagere'); await devenirAmiDe(a, `sync_l_${s}`); await a.reload();
   await a.getByLabel(new RegExp(`sync_l_${s}`)).check();
   const nightDone = a.waitForResponse((r) => r.url().endsWith('/api/nights') && r.request().method() === 'POST');
   await a.getByRole('button', { name: 'Créer la partie' }).click();
@@ -122,6 +124,7 @@ test('ajouter un joueur : sa page ouverte bascule sur la partie en cours (sync)'
   const regA = a.waitForResponse((r) => r.url().endsWith('/api/auth/register'));
   await a.getByRole('button', { name: 'Créer mon compte' }).click();
   await regA;
+  await a.waitForURL('/etagere'); await devenirAmiDe(a, `add_l_${s}`); await a.reload();
   await a.getByLabel(new RegExp(`add_l_${s}`)).check();
   const nightDone = a.waitForResponse((r) => r.url().endsWith('/api/nights') && r.request().method() === 'POST');
   await a.getByRole('button', { name: 'Créer la partie' }).click();
@@ -347,6 +350,7 @@ test('joueur ajouté ensuite via modifier : elle voit la partie et les jeux déj
   await putOnShelf(a, await newGame(a, 'Posé avant elle 1', 'grand'), nightId);
   await putOnShelf(a, await newGame(a, 'Posé avant elle 2', 'petit'), nightId);
 
+  await devenirAmiDe(a, `mod_l_${s}`); // v4.8.0 : seuls les amis sont proposés
   await a.reload(); // la liste des joueurs est rendue côté serveur : léa apparaît
   await a.getByRole('button', { name: 'modifier' }).click();
   await a.locator('.player-list label', { hasText: `mod_l_${s}` }).locator('input').check();

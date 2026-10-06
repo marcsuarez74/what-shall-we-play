@@ -45,7 +45,7 @@ test('invité v4.7.0 : partie programmée → lien → vue restreinte → vote �
   await pageH.getByLabel('Titre').fill(titrePartie);
   await pageH.getByLabel('Date').fill(demain());
   await pageH.getByLabel('Heure').fill('20:30');
-  await pageH.getByRole('button', { name: 'Programmer', exact: true }).click();
+  await pageH.getByRole('button', { name: 'Programmer et inviter' }).click();
   const carte = pageH.locator('.planned-card', { hasText: titrePartie });
   await expect(carte).toBeVisible();
 

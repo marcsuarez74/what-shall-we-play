@@ -1,7 +1,9 @@
 // app/api/nights/route.ts
 import { NextResponse } from 'next/server';
 import { getSessionUser } from '@/lib/session';
-import { createNight, getActiveNight, getNightPlayers, validerPlanning, normaliserTitre } from '@/lib/nights';
+import { createNight, getActiveNight, getNightPlayers, validerPlanning, normaliserTitre, estFuture } from '@/lib/nights';
+import { filtrerJoueurs, inviter } from '@/lib/invitations';
+import { viaCercles } from '@/lib/cercles';
 import { refuserInvite } from '@/lib/auth';
 import { t } from '@/lib/i18n';
 import { getLang } from '@/lib/i18n/server';
@@ -27,6 +29,14 @@ export async function POST(req: Request) {
   if (titre === false) return NextResponse.json({ error: t(lang, 'soiree.errTitre') }, { status: 400 });
   const garde = refuserInvite(user, lang);
   if (garde) return NextResponse.json({ error: garde.error }, { status: garde.status }); // un invité ne crée pas de soirée
-  const nightId = createNight(user.id, (playerIds as number[]) ?? [], { playedAt, startTime, titre });
+  const ids = Array.isArray(playerIds) ? playerIds : [];
+  // v4.8.0 : une partie programmée invite (Dispo → joueur) ; celle du jour inscrit directement.
+  // Seules mes relations (et les membres de mes cercles) peuvent y être mises.
+  if (playedAt && estFuture({ played_at: playedAt })) {
+    const nightId = createNight(user.id, [user.id], { playedAt, startTime, titre });
+    inviter(nightId, user.id, ids, viaCercles(user.id, body.cercleIds));
+    return NextResponse.json({ nightId });
+  }
+  const nightId = createNight(user.id, filtrerJoueurs(user.id, ids), { playedAt, startTime, titre });
   return NextResponse.json({ nightId });
 }

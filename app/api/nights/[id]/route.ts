@@ -2,7 +2,8 @@
 // correction partielle { playedAt?, gameId?, playerIds?, scores? } (terminée, v4.2.0) · DELETE (supprimer).
 import { NextResponse } from 'next/server';
 import { getSessionUser } from '@/lib/session';
-import { getNight, corrigerNuit, supprimerNuit, setNightPlayers, userCanAccessNight, modifierInfosNuit, normaliserTitre, validerPlanning, type NuitPatch } from '@/lib/nights';
+import { getNight, corrigerNuit, supprimerNuit, setNightPlayers, userCanAccessNight, modifierInfosNuit, normaliserTitre, validerPlanning, estFuture, getNightPlayers, type NuitPatch } from '@/lib/nights';
+import { filtrerJoueurs, inviter, oublierInvitations } from '@/lib/invitations';
 import { t } from '@/lib/i18n';
 import { getLang } from '@/lib/i18n/server';
 
@@ -32,7 +33,17 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       }, lang);
       if ('error' in res) return NextResponse.json({ error: res.error }, { status: res.status });
     }
-    if (playerIds !== undefined) setNightPlayers(nightId, playerIds);
+    if (playerIds !== undefined) {
+      // v4.8.0 : les joueurs en place restent possibles, les nouveaux doivent m'être liés ;
+      // sur une partie programmée, un nouveau est invité (il répond Dispo / Pas dispo).
+      const avant = getNightPlayers(nightId).map((p) => p.id);
+      const garde = filtrerJoueurs(user.id, playerIds, avant);
+      if (estFuture(getNight(nightId)!)) {
+        oublierInvitations(nightId, avant.filter((id) => !garde.includes(id)));
+        setNightPlayers(nightId, garde.filter((id) => avant.includes(id)));
+        inviter(nightId, user.id, garde.filter((id) => !avant.includes(id)));
+      } else setNightPlayers(nightId, garde);
+    }
     return NextResponse.json({ ok: true });
   }
   // Corps malformé → 400 propre (même classe que la branche v1 au-dessus), jamais un 500.

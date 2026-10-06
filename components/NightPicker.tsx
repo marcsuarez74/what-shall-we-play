@@ -5,8 +5,14 @@ import type { Night, UserLite } from '@/lib/types';
 import PlayerChip from './PlayerChip';
 import { useI18n } from './LanguageProvider';
 
-export default function NightPicker({ users, prechecked, night, withDate = false, editInfos, onClose }: {
+export type CerclePicker = { id: number; nom: string; membres: number[] };
+
+export default function NightPicker({ users, prechecked, night, withDate = false, editInfos, onClose, meId, cercles = [] }: {
   users: UserLite[];
+  /** v4.8.0 — moi : toujours joueur, case cochée et figée. */
+  meId?: number;
+  /** v4.8.0 — programmer : cocher un cercle coche ses membres (puis on ajuste à la main). */
+  cercles?: CerclePicker[];
   prechecked: number[];
   night?: Night | null;
   /** QG Parties : ajoute les champs titre + date + heure (programmation). */
@@ -18,6 +24,7 @@ export default function NightPicker({ users, prechecked, night, withDate = false
   const router = useRouter();
   const { t } = useI18n();
   const [checked, setChecked] = useState<Set<number>>(() => new Set(prechecked));
+  const [cerclesCoches, setCerclesCoches] = useState<Set<number>>(() => new Set());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const avecTitre = withDate || !!editInfos;
@@ -39,6 +46,17 @@ export default function NightPicker({ users, prechecked, night, withDate = false
     });
   }
 
+  function toggleCercle(c: CerclePicker) {
+    const on = !cerclesCoches.has(c.id);
+    setCerclesCoches((s) => { const n = new Set(s); if (on) n.add(c.id); else n.delete(c.id); return n; });
+    setChecked((s) => {
+      const n = new Set(s);
+      for (const id of c.membres) if (id !== meId) { if (on) n.add(id); else n.delete(id); }
+      return n;
+    });
+  }
+  const nbInvitations = [...checked].filter((id) => id !== meId).length;
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (avecDate && !date) { setError(t('soiree.choisirDate')); return; }
@@ -48,6 +66,7 @@ export default function NightPicker({ users, prechecked, night, withDate = false
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         playerIds: [...checked],
+        ...(withDate ? { cercleIds: [...cerclesCoches] } : {}),
         ...(avecTitre ? { titre } : {}),
         ...(avecDate ? { playedAt: date, startTime: time || null } : {}),
       }),
@@ -80,22 +99,39 @@ export default function NightPicker({ users, prechecked, night, withDate = false
           </label>
         </div>
       )}
-      <p className="hint">{t('soiree.quiJoue')}</p>
+      {withDate && cercles.length > 0 && (
+        <>
+          <p className="hint">{t('soiree.inviterCercle')}</p>
+          <ul className="player-list">
+            {cercles.map((c) => (
+              <li key={c.id}>
+                <label>
+                  <input type="checkbox" checked={cerclesCoches.has(c.id)} onChange={() => toggleCercle(c)} />
+                  <span className="picker-cercle"><b>{c.nom}</b> <small>{t('cercles.personnes', { n: c.membres.filter((id) => id !== meId).length })}</small></span>
+                </label>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+      <p className="hint">{withDate && cercles.length > 0 ? t('soiree.ouDesAmis') : t('soiree.quiJoue')}</p>
       <ul className="player-list">
         {users.map((u) => (
           <li key={u.id}>
             <label>
-              <input type="checkbox" checked={checked.has(u.id)} onChange={() => toggle(u.id)} />
-              <span><PlayerChip u={u} /></span>
+              <input type="checkbox" checked={u.id === meId || checked.has(u.id)} disabled={u.id === meId}
+                     onChange={() => toggle(u.id)} />
+              <span><PlayerChip u={u} />{u.id === meId && <small className="opt"> {t('soiree.toiJoueur')}</small>}</span>
             </label>
           </li>
         ))}
       </ul>
+      <p className="hint">{t('soiree.seulsAmis')}{withDate && <> {t('soiree.nbInvitations', { n: nbInvitations })}</>}</p>
       {error && <p className="error" role="alert">{error}</p>}
       <div className="night-actions">
         {onClose && <button type="button" className="btn-ghost" onClick={onClose}>{t('soiree.annuler')}</button>}
         <button className="btn-copper" disabled={busy}>
-          {busy ? t('etagere.enregistrement') : night ? t('soiree.enregistrer') : withDate ? t('soiree.programmerSubmit') : t('soiree.creerPartie')}
+          {busy ? t('etagere.enregistrement') : night ? t('soiree.enregistrer') : withDate ? t('soiree.programmerInviter') : t('soiree.creerPartie')}
         </button>
       </div>
     </form>

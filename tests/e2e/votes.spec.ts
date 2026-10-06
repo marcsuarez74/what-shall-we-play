@@ -1,4 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
+import { devenirAmis } from './helpers/amis';
 import { lancerTirage, newGame, putOnShelf } from './helpers/shelf';
 
 // v3.5 — le vote s'incruste sur l'étagère : badge 👍 haut-droite de chaque boîte,
@@ -62,6 +63,7 @@ test('sync live : le vote de A monte le badge chez B sans rechargement', async (
   const ctxB = await browser.newContext();
   const b = await ctxB.newPage();
   await register(b, `vt_b_${s}`);
+  await devenirAmis(a, b);
   const nightId = await creerPartie(a, `vt_b_${s}`);
 
   const gid = await newGame(a, 'Wingspan', 'grand');
@@ -84,6 +86,7 @@ test('pool : segmenté seulement avec des votes, Votés → Lancer · M, tirage 
   const ctxB = await browser.newContext();
   const b = await ctxB.newPage();
   await register(b, `vp_b_${s}`);
+  await devenirAmis(a, b);
   const nightId = await creerPartie(a, `vp_b_${s}`);
 
   const g1 = await newGame(a, 'Cascadia', 'grand');
@@ -136,6 +139,7 @@ test('ajout tardif : la validation saute, le segmenté disparaît, le fantôme c
   const ctxB = await browser.newContext();
   const b = await ctxB.newPage();
   await register(b, `vl_b_${s}`);
+  await devenirAmis(a, b);
   const nightId = await creerPartie(a, `vl_b_${s}`);
 
   const g1 = await newGame(a, 'Azul', 'grand');
