@@ -135,11 +135,20 @@ export function runMigrations(db: Database.Database): void {
     // v4.0.0 (traduction EN) : langue du compte — lue uniquement par login/register
     // pour amorcer le cookie wsp_lang (le compte ne force jamais le navigateur).
     "ALTER TABLE users ADD COLUMN lang TEXT NOT NULL DEFAULT 'fr'",
+    // v4.6.0 (invités par lien) : un invité est une ligne users marquée, rattachée
+    // à son hôte ; la soirée porte un token de lien d'invitation.
+    // NB : SQLite interdit ADD COLUMN … UNIQUE — l'unicité passe par un index
+    // créé après la boucle (hors try/catch : une vraie erreur doit crier).
+    'ALTER TABLE users ADD COLUMN est_invite INTEGER NOT NULL DEFAULT 0',
+    'ALTER TABLE users ADD COLUMN host_id INTEGER REFERENCES users(id)',
+    'ALTER TABLE nights ADD COLUMN lien_token TEXT',
   ]) {
     try { db.exec(stmt); } catch { /* colonne déjà présente */ }
   }
   // v3.3 : les soirées archivées avant l'existence des états deviennent « termine ».
   db.prepare(`UPDATE nights SET status = 'termine' WHERE ended_at IS NOT NULL AND status = 'creation'`).run();
+  // v4.6.0 : unicité des tokens de lien — index idempotent, ERREUR BRUYANTE si échec.
+  db.prepare('CREATE UNIQUE INDEX IF NOT EXISTS idx_nights_lien_token ON nights(lien_token)').run();
 }
 
 export function getDb(): Database.Database {
