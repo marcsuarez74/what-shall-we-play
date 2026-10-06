@@ -4,6 +4,26 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [4.7.4] — 2026-10-06
+
+### Modifié
+Hygiène, issue de l'audit du dépôt (lot D).
+- **Le conteneur ne tourne plus en root** (utilisateur `node`) et porte une **sonde de santé**
+  (`HEALTHCHECK` sur `/api/sante` : serveur joignable, base lisible). Le déploiement rend le
+  dossier `data/` à l'utilisateur `node` avant le redémarrage.
+- **Le service worker est servi par une route** qui y injecte la version : un build ne
+  modifie plus aucun fichier suivi par git (fin de `public/sw.js` réécrit par un script).
+- README à jour : fonctionnalités actuelles, variables d'environnement, utilisateur Docker.
+- Fichiers par défaut de Next inutilisés retirés de `public/`.
+
+### Corrigé
+- L'inscription renvoie une erreur 400 (et non 500) sur une requête mal formée.
+- Une variable `PUBLIC_URL` vide ne casse plus les liens d'invitation ni les aperçus de partage.
+
+### Écarté
+- Chargement différé des panneaux (`next/dynamic`, point 12 de l'audit) : mesuré, le gain
+  est de 0,1 à 0,3 Ko par page (la ludothèque prenait même 0,2 Ko). Non retenu.
+
 ## [4.7.3] — 2026-10-06
 
 ### Performance

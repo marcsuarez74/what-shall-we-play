@@ -1,19 +1,24 @@
 # What Shall We Play?
 
-L'app des soirées jeux de société : chaque joueur y dépose sa bibliothèque, on coche qui est
-présent, on sélectionne les boîtes du soir… et **la roue** choisit à votre place. 🎡
+L'app des parties de jeux de société : chacun apporte sa ludothèque, on pose les boîtes du soir
+sur l'étagère, on vote… et **la roue** choisit à votre place. 🎡
 
 ## Fonctionnalités
 
-- **Comptes sans e-mail** : pseudo + code secret (bcrypt, session cookie 30 jours).
-- **Bibliothèque** : saisie manuelle ou recherche BoardGameGeek (si `BGG_TOKEN`), pochette
-  optionnelle, format de boîte obligatoire (mini/petit/moyen/grand).
-- **L'Étagère** : les jeux des joueurs présents, en rayons par format de boîte, sélection au
-  toucher (badge ✓ cuivré).
-- **Le tirage** : roue plein écran animée (~3,5 s) → verdict en cérémonie, « Sortir la boîte 📦 »
-  ou « Relancer », chaque tirage est enregistré dans la soirée.
-- **Soirées** : historique (date, joueurs, jeux tirés).
-- **PWA installable** (manifest + service worker minimal), pensée mobile-first.
+- **Comptes sans e-mail** : pseudo + code secret à 4 chiffres (bcrypt, limite de tentatives),
+  « Se souvenir de moi » (session d'un an + jeton d'appareil pour les PWA).
+- **Ludothèque** : saisie manuelle ou recherche BoardGameGeek (autocomplete, import de
+  collection), pochette réduite à l'enregistrement, format de boîte (mini/petit/moyen/grand).
+  **Foyers** : une ludothèque commune à plusieurs comptes, avec fusion des doublons.
+- **Parties** : du jour ou programmées (titre facultatif, date, heure). L'**étagère** d'une
+  partie range les boîtes des joueurs par format ; chacun ajoute ses jeux et vote 👍, même à
+  l'avance pour une partie programmée.
+- **Invités par lien** : sans compte, un invité ne voit que sa soirée (jeux, vote, fiche des
+  jeux) ; il peut se retirer ou créer son compte en gardant ses votes.
+- **Le tirage** (le jour J) : roue plein écran parmi toutes les boîtes ou les votées, puis
+  « Sortir la boîte 📦 ». Scores, podium, verdict du jeu 😍🙂😐, historique et corrections.
+- **Partage WhatsApp** : invitation (avec lien), résultat du tirage, podium.
+- **Français / anglais**, **PWA installable**, signalement de bug intégré (issue GitHub).
 
 ## Stack
 
@@ -29,6 +34,19 @@ npm run dev        # http://localhost:3000
 ```
 
 Les données (SQLite + pochettes) vivent dans `./data` (surchargeable avec `DATA_DIR`).
+
+### Variables d'environnement
+
+Toutes facultatives (fichier `.env` à côté du `docker-compose.yml` en production).
+
+| Variable | Rôle |
+|---|---|
+| `DATA_DIR` | dossier des données (défaut `./data`, `/app/data` dans l'image) |
+| `PUBLIC_URL` | URL publique, pour les liens partagés et les aperçus (défaut : le domaine de prod) |
+| `BGG_TOKEN` | jeton de l'API BoardGameGeek (recherche, fiches, import de collection) |
+| `BGG_COOKIE` | à défaut de jeton, cookie de session BGG (voir plus bas) |
+| `GITHUB_BUG_TOKEN`, `GITHUB_REPO` | signalement de bug : jeton et dépôt où créer l'issue |
+| `TZ` | fuseau du « jour » d'une partie (`Europe/Paris` dans l'image) |
 
 ### Scripts
 
@@ -46,8 +64,10 @@ Les données (SQLite + pochettes) vivent dans `./data` (surchargeable avec `DATA
 docker compose up -d --build
 ```
 
-L'app écoute sur le port 3000 ; SQLite et les pochettes sont persistés dans le volume
-`./data` monté sur `/app/data`. Pour activer la recherche BGG, renseignez le token dans un
+L'app écoute sur `127.0.0.1:3000` ; SQLite et les pochettes sont persistés dans le volume
+`./data` monté sur `/app/data`. Le conteneur tourne en utilisateur `node` (uid 1000) : le
+déploiement de la CI lui rend le dossier (`chown`) ; en manuel, faites-le une fois
+(`sudo chown -R 1000:1000 data`). Sonde de santé : `GET /api/sante`. Pour activer la recherche BGG, renseignez le token dans un
 fichier `.env` à côté du compose (il est transmis au conteneur) :
 
 ```bash

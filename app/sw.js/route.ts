@@ -1,4 +1,12 @@
-const CACHE = 'wsp-v3.6.0'; // remplacé à chaque build par la version de package.json (scripts/sync-sw-version.mjs)
+// app/sw.js/route.ts — le service worker, servi à /sw.js (v4.7.4, audit : hygiène).
+// Le nom du cache porte la version de package.json, injectée au build (route statique) :
+// plus de public/sw.js réécrit par un script à chaque build (l'arbre git restait modifié).
+// Changement de version → nouveau cache → l'ancien est purgé à l'activation.
+import pkg from '../../package.json';
+
+export const dynamic = 'force-static';
+
+const SW = `const CACHE = 'wsp-v${pkg.version}';
 self.addEventListener('install', (e) => self.skipWaiting());
 // v4.7.3 (audit, point 13) : les pochettes ont des noms uuid immuables → cache à part,
 // non versionné, qui survit aux releases (seul le code /_next/static/ est re-téléchargé).
@@ -13,3 +21,13 @@ self.addEventListener('fetch', (e) => {
     return res;
   })));
 });
+`;
+
+export function GET() {
+  return new Response(SW, {
+    headers: {
+      'Content-Type': 'application/javascript; charset=utf-8',
+      'Cache-Control': 'no-cache', // le navigateur revérifie le SW à chaque visite
+    },
+  });
+}

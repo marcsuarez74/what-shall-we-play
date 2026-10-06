@@ -82,7 +82,7 @@ export function getShelfNight(userId: number, nightId: number): Night | null {
 // Lien d'invitation absolu (partage WhatsApp, copie) d'une partie.
 export function lienInvitation(night: { id: number; lien_token?: string | null }): string | undefined {
   if (!night.lien_token) return undefined;
-  return `${process.env.PUBLIC_URL ?? 'https://what-shall-we-play.marco-studio.fr'}/nights/${night.id}/rejoindre?k=${night.lien_token}`;
+  return `${process.env.PUBLIC_URL || 'https://what-shall-we-play.marco-studio.fr'}/nights/${night.id}/rejoindre?k=${night.lien_token}`;
 }
 // v4.7.0 — la soirée d'un invité : il n'en a qu'une (celle de son lien).
 export function getInviteNight(userId: number): Night | null {

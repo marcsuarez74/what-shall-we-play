@@ -30,6 +30,12 @@ ENV NODE_ENV=production \
 COPY --from=build /app/.next/standalone ./
 COPY --from=build /app/.next/static ./.next/static
 COPY --from=build /app/public ./public
-RUN mkdir -p /app/data
+# v4.7.4 (audit, point 9) : l'app ne tourne plus en root. Le volume data/ monté depuis
+# l'hôte est rendu à l'utilisateur node par le déploiement (voir ci.yml).
+RUN mkdir -p /app/data && chown node:node /app/data
+USER node
 EXPOSE 3000
+# Sonde : serveur joignable et base lisible (wget de busybox, présent dans alpine)
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+  CMD wget -qO- http://127.0.0.1:3000/api/sante >/dev/null || exit 1
 CMD ["node", "server.js"]
