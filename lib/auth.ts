@@ -11,7 +11,9 @@ import type { UserRow } from './types';
 export type AuthResult = { id: number; lang?: string } | { error: string; status: number };
 
 export function validatePseudo(p: unknown, lang: Lang = 'fr'): string | null {
-  if (typeof p !== 'string' || !/^[A-Za-z0-9_-]{3,20}$/.test(p)) return t(lang, 'auth.errPseudo');
+  // v4.5.0 : trim côté serveur aussi ; caractères spéciaux limités à @ ! _ (v4.5.0,
+  // demande client — le tiret historique disparaît, aucun pseudo existant affecté).
+  if (typeof p !== 'string' || !/^[A-Za-z0-9@!_]{3,20}$/.test(p.trim())) return t(lang, 'auth.errPseudo');
   return null;
 }
 export function validateCode(c: unknown, lang: Lang = 'fr'): string | null {
@@ -20,7 +22,8 @@ export function validateCode(c: unknown, lang: Lang = 'fr'): string | null {
 }
 
 export function registerUser(pseudo: unknown, code: unknown, sticker?: unknown, lang: Lang = 'fr'): AuthResult {
-  const pe = validatePseudo(pseudo, lang); if (pe) return { error: pe, status: 400 };
+  const p = typeof pseudo === 'string' ? pseudo.trim() : pseudo;
+  const pe = validatePseudo(p, lang); if (pe) return { error: pe, status: 400 };
   const ce = validateCode(code, lang); if (ce) return { error: ce, status: 400 };
   // Avatar d'onboarding : un emoji de la grille validée, sinon le dé par défaut.
   const st = sticker == null || sticker === '' ? null : sticker;
@@ -29,8 +32,8 @@ export function registerUser(pseudo: unknown, code: unknown, sticker?: unknown, 
   const hash = bcrypt.hashSync(code as string, 10);
   try {
     const info = st != null
-      ? getDb().prepare('INSERT INTO users (pseudo, code_hash, sticker, lang) VALUES (?, ?, ?, ?)').run(pseudo, hash, st, lang)
-      : getDb().prepare('INSERT INTO users (pseudo, code_hash, lang) VALUES (?, ?, ?)').run(pseudo, hash, lang);
+      ? getDb().prepare('INSERT INTO users (pseudo, code_hash, sticker, lang) VALUES (?, ?, ?, ?)').run(p, hash, st, lang)
+      : getDb().prepare('INSERT INTO users (pseudo, code_hash, lang) VALUES (?, ?, ?)').run(p, hash, lang);
     return { id: Number(info.lastInsertRowid) };
   } catch (e: unknown) {
     if (String(e).includes('UNIQUE')) return { error: t(lang, 'auth.errPseudoPris'), status: 409 };
@@ -39,16 +42,39 @@ export function registerUser(pseudo: unknown, code: unknown, sticker?: unknown, 
 }
 
 export function verifyLogin(pseudo: unknown, code: unknown, lang: Lang = 'fr'): AuthResult {
-  const row = getDb().prepare('SELECT * FROM users WHERE pseudo = ?').get(pseudo) as UserRow | undefined;
+  // trim : un espace copié-collé ne doit pas faire échouer la connexion
+  const p = typeof pseudo === 'string' ? pseudo.trim() : pseudo;
+  const row = getDb().prepare('SELECT * FROM users WHERE pseudo = ?').get(p) as UserRow | undefined;
   if (!row || !bcrypt.compareSync(String(code ?? ''), row.code_hash))
     return { error: t(lang, 'auth.errIdentifiants'), status: 401 };
   return { id: row.id, lang: row.lang };
 }
 
-export function createSession(userId: number): string {
+export function createSession(userId: number, jours = 30): string {
   const token = crypto.randomBytes(32).toString('hex');
-  getDb().prepare(`INSERT INTO sessions (token, user_id, expires_at) VALUES (?, ?, datetime('now','+30 days'))`).run(token, userId);
+  getDb().prepare(`INSERT INTO sessions (token, user_id, expires_at) VALUES (?, ?, datetime('now','+${jours} days'))`).run(token, userId);
   return token;
+}
+
+// « Se souvenir de moi » (v4.5.0) : un jeton d'appareil longue durée complète le
+// cookie — les PWA peuvent perdre le cookie à la mort de l'app (constaté Android),
+// le localStorage survit. Rotation à chaque restauration (un jeton usagé meurt).
+export function createDeviceToken(userId: number): string {
+  const token = crypto.randomBytes(32).toString('hex');
+  getDb().prepare('INSERT INTO device_tokens (token, user_id) VALUES (?, ?)').run(token, userId);
+  return token;
+}
+
+export function consommerDeviceToken(token: string): { userId: number; deviceToken: string } | null {
+  const row = getDb().prepare('SELECT user_id FROM device_tokens WHERE token = ?').get(token) as
+    { user_id: number } | undefined;
+  if (!row) return null;
+  getDb().prepare('DELETE FROM device_tokens WHERE token = ?').run(token);
+  return { userId: row.user_id, deviceToken: createDeviceToken(row.user_id) };
+}
+
+export function supprimerDeviceToken(token: string): void {
+  getDb().prepare('DELETE FROM device_tokens WHERE token = ?').run(token);
 }
 
 export function getUserByToken(token: string): UserRow | null {

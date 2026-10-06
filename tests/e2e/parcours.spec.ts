@@ -12,7 +12,7 @@ test('parcours complet : deux joueurs, sélection, tirage, historique', async ({
   test.setTimeout(90_000);
   const ctxA = await browser.newContext(); const a = await ctxA.newPage();
   await a.goto('/register');
-  await a.getByLabel('Pseudo').fill(`parc-marc-${stamp}`);
+  await a.getByLabel('Pseudo').fill(`parc_marc_${stamp}`);
   await a.getByLabel('Code secret').fill('1234');
   const registerMarc = a.waitForResponse((r) => r.url().endsWith('/api/auth/register'));
   await a.getByRole('button', { name: 'Créer mon compte' }).click();
@@ -27,7 +27,7 @@ test('parcours complet : deux joueurs, sélection, tirage, historique', async ({
   // Léa s'inscrit et ajoute son jeu
   const ctxB = await browser.newContext(); const b = await ctxB.newPage();
   await b.goto('/register');
-  await b.getByLabel('Pseudo').fill(`parc-lea-${stamp}`);
+  await b.getByLabel('Pseudo').fill(`parc_lea_${stamp}`);
   await b.getByLabel('Code secret').fill('1234');
   const registerLea = b.waitForResponse((r) => r.url().endsWith('/api/auth/register'));
   await b.getByRole('button', { name: 'Créer mon compte' }).click();
@@ -40,7 +40,7 @@ test('parcours complet : deux joueurs, sélection, tirage, historique', async ({
 
   // Marc crée la soirée avec Léa
   await a.goto('/etagere');
-  await a.getByLabel(new RegExp(`parc-lea-${stamp}`)).check();
+  await a.getByLabel(new RegExp(`parc_lea_${stamp}`)).check();
   await a.getByRole('button', { name: /Créer la partie/ }).click();
 
   // Étagère vide à la création (v3) : chacun pose son jeu depuis SA session —
@@ -63,5 +63,5 @@ test('parcours complet : deux joueurs, sélection, tirage, historique', async ({
   // cumulés ne s'affichent plus (v3.3.0), le jeu de la partie attend la boîte sortie
   await a.goto('/nights');
   await expect(a.locator('[aria-label="Aujourd\'hui"] .badge-etat')).toContainText('En préparation');
-  await expect(a.locator('[aria-label="Aujourd\'hui"] .chips')).toContainText(`parc-marc-${stamp}`);
+  await expect(a.locator('[aria-label="Aujourd\'hui"] .chips')).toContainText(`parc_marc_${stamp}`);
 });

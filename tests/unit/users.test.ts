@@ -14,8 +14,8 @@ const pick = (nightId: number, gameId: number, spinnerId: number) =>
 
 describe('profil', () => {
   it('stats : plays / nights / games', () => {
-    const marc = uid('p-marc');
-    const lea = uid('p-lea');
+    const marc = uid('p_marc');
+    const lea = uid('p_lea');
     const g1 = createGame(marc, { title: 'Dune', box_format: 'grand' });
     const g2 = createGame(marc, { title: 'Meadow', box_format: 'moyen' });
     const n1 = createNight(marc, [marc, lea]);
@@ -27,7 +27,7 @@ describe('profil', () => {
   });
 
   it('setSticker accepte un emoji de la liste et rejette le reste', () => {
-    const marc = uid('p-stick');
+    const marc = uid('p_stick');
     expect(setSticker(marc, '🦊')).toEqual({ ok: true });
     expect((getDb().prepare('SELECT sticker FROM users WHERE id = ?').get(marc) as { sticker: string }).sticker).toBe('🦊');
     expect(setSticker(marc, '<script>')).toEqual({ error: 'Sticker inconnu', status: 400 });
@@ -46,8 +46,8 @@ describe('profil', () => {
   });
 
   it('deleteAccount : tout part, les soirées des autres restent', () => {
-    const marc = uid('p-del-marc');
-    const lea = uid('p-del-lea');
+    const marc = uid('p_del_marc');
+    const lea = uid('p_del_lea');
     const g = createGame(marc, { title: 'À supprimer', box_format: 'grand' });
     const nMarc = createNight(marc, [marc, lea]);
     const nLea = createNight(lea, [lea, marc]);
@@ -67,7 +67,7 @@ describe('profil', () => {
   });
 
   it('setAvatar enregistre le fichier et remplace l ancien', () => {
-    const u = uid('p-av');
+    const u = uid('p_av');
     const fake = Buffer.from('fakejpg1');
     const r1 = setAvatar(u, fake, 'jpg');
     if (!('ok' in r1)) throw new Error('upload 1 refusé : ' + (('error' in r1) && r1.error));
@@ -83,8 +83,8 @@ describe('profil', () => {
   });
 
   it('compte les podiums et liste mes parties avec ma médaille', () => {
-    const a = (registerUser('u-pod-a', '1234') as { id: number }).id;
-    const b = (registerUser('u-pod-b', '1234') as { id: number }).id;
+    const a = (registerUser('u_pod_a', '1234') as { id: number }).id;
+    const b = (registerUser('u_pod_b', '1234') as { id: number }).id;
     // deux soirées, chacune avec son jeu posé avant la sortie de boîte
     const n1 = createNight(a, [a, b]);
     const g1 = createGame(a, { title: 'Cascadia', box_format: 'moyen' });
@@ -106,7 +106,7 @@ describe('profil', () => {
   });
 
   it('revenir au sticker efface la photo de disque', () => {
-    const u = uid('p-av2');
+    const u = uid('p_av2');
     const r = setAvatar(u, Buffer.from('xx'), 'jpg');
     if (!('ok' in r)) throw new Error('upload refusé');
     const p = r.path;

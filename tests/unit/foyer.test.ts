@@ -13,17 +13,17 @@ const uid = (p: string) => (registerUser(p, '1234') as { id: number }).id;
 
 describe('foyer — bibliothèque partagée', () => {
   it('créer un foyer : code à 6 caractères sans ambiguïté, jeux transférés, nom par défaut', () => {
-    const marc = uid('f-marc');
+    const marc = uid('f_marc');
     const g1 = createGame(marc, { title: 'Azul', box_format: 'moyen' });
     const foyer = createFoyer(marc);
     expect(foyer.code).toMatch(/^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{6}$/);
-    expect(foyer.name).toBe('Chez f-marc');
+    expect(foyer.name).toBe('Chez f_marc');
     expect(getUserFoyerId(marc)).toBe(foyer.id);
     expect(listUserLibrary(marc).map((g) => g.id)).toContain(g1); // mes jeux sont devenus ceux du foyer
   });
 
   it('rejoindre par code (casse ignorée) : les jeux du nouvel arrivant rejoignent la collection commune', () => {
-    const marc = uid('f-jm'); const lea = uid('f-jl');
+    const marc = uid('f_jm'); const lea = uid('f_jl');
     const foyer = createFoyer(marc);
     createGame(lea, { title: 'Harmonies', box_format: 'petit' });
     const res = joinFoyerByCode(lea, foyer.code.toLowerCase());
@@ -33,9 +33,9 @@ describe('foyer — bibliothèque partagée', () => {
   });
 
   it('code inconnu ou déjà en foyer : erreur explicite', () => {
-    const marc = uid('f-x1');
+    const marc = uid('f_x1');
     expect(() => joinFoyerByCode(marc, 'ZZZZZZ')).toThrow(/code/i);
-    const lea = uid('f-x2'); const thib = uid('f-x3');
+    const lea = uid('f_x2'); const thib = uid('f_x3');
     const foyer = createFoyer(marc);
     joinFoyerByCode(lea, foyer.code);
     createFoyer(thib);
@@ -43,7 +43,7 @@ describe('foyer — bibliothèque partagée', () => {
   });
 
   it('doublons : détectés au titre normalisé (casse/accents), la fusion regroupe les parties jouées', () => {
-    const marc = uid('f-dm'); const lea = uid('f-dl');
+    const marc = uid('f_dm'); const lea = uid('f_dl');
     const gm = createGame(marc, { title: 'Harmonies', box_format: 'moyen' });
     const gl = createGame(lea, { title: 'Harmônies', box_format: 'petit' }); // doublon accentué
     const n = createNight(lea, [lea]);
@@ -58,7 +58,7 @@ describe('foyer — bibliothèque partagée', () => {
   });
 
   it('résolution : les deux fiches doivent appartenir au même foyer', () => {
-    const marc = uid('f-rm2'); const lea = uid('f-rl2');
+    const marc = uid('f_rm2'); const lea = uid('f_rl2');
     const foyer = createFoyer(marc);
     const horsFoyer = createGame(lea, { title: 'Hors foyer', box_format: 'petit' });
     const dedans = createGame(marc, { title: 'Dedans', box_format: 'petit' });
@@ -67,7 +67,7 @@ describe('foyer — bibliothèque partagée', () => {
   });
 
   it('quitter le foyer : mes ajouts me suivent, le reste reste au foyer', () => {
-    const marc = uid('f-qm'); const lea = uid('f-ql');
+    const marc = uid('f_qm'); const lea = uid('f_ql');
     createGame(marc, { title: 'De Marc', box_format: 'grand' });
     const foyer = createFoyer(marc);
     createGame(lea, { title: 'De Léa', box_format: 'moyen' });
@@ -80,14 +80,14 @@ describe('foyer — bibliothèque partagée', () => {
   });
 
   it('dernier membre qui part : le foyer disparaît', () => {
-    const marc = uid('f-last');
+    const marc = uid('f_last');
     createFoyer(marc);
     leaveFoyer(marc);
     expect(getFoyerForUser(marc)).toBeNull();
   });
 
   it('dissoudre : créateur seulement ; chaque jeu retourne à son ajouteur, tous détachés', () => {
-    const marc = uid('f-dim'); const lea = uid('f-dil');
+    const marc = uid('f_dim'); const lea = uid('f_dil');
     const foyer = createFoyer(marc);
     joinFoyerByCode(lea, foyer.code);
     const gm = createGame(marc, { title: 'A', box_format: 'grand' });
@@ -101,7 +101,7 @@ describe('foyer — bibliothèque partagée', () => {
   });
 
   it('renommage : n importe quel membre peut renommer', () => {
-    const marc = uid('f-nm'); const lea = uid('f-nl');
+    const marc = uid('f_nm'); const lea = uid('f_nl');
     const foyer = createFoyer(marc);
     joinFoyerByCode(lea, foyer.code);
     renameFoyer(lea, 'Chez Marc & Léa');
@@ -109,7 +109,7 @@ describe('foyer — bibliothèque partagée', () => {
   });
 
   it('étagère v3 : chacun ajoute depuis SA ludothèque — Marc pose un jeu du foyer ajouté par Léa, absente de la soirée', () => {
-    const marc = uid('f-sm'); const lea = uid('f-sl'); const ami = uid('f-sa');
+    const marc = uid('f_sm'); const lea = uid('f_sl'); const ami = uid('f_sa');
     const gl = createGame(lea, { title: 'Du foyer (Léa)', box_format: 'moyen' });
     const ga = createGame(ami, { title: 'À l ami', box_format: 'petit' });
     const foyer = createFoyer(marc);          // les jeux de Marc entrent au foyer
@@ -121,13 +121,13 @@ describe('foyer — bibliothèque partagée', () => {
     expect("error" in res && res.status).toBe(403);          // le jeu de l'ami n'est pas chez moi
     const shelf = getShelfGames(n);
     expect(shelf.map((x) => x.id)).toEqual([gl]);
-    expect(shelf[0].owner_pseudo).toBe('f-sm'); // badge = qui l'a ajoutée à la soirée
+    expect(shelf[0].owner_pseudo).toBe('f_sm'); // badge = qui l'a ajoutée à la soirée
     expect(removeNightGame(n, gl, ami)).toEqual({ ok: true }); // retrait collectif
     expect(getShelfGames(n)).toEqual([]);
   });
 
   it('suppression d un jeu : chaque membre du foyer le peut, un hors-foyer non', () => {
-    const marc = uid('f-gm'); const lea = uid('f-gl'); const zarb = uid('f-gz');
+    const marc = uid('f_gm'); const lea = uid('f_gl'); const zarb = uid('f_gz');
     const g1 = createGame(marc, { title: 'Commun', box_format: 'petit' });
     const g2 = createGame(marc, { title: 'Commun 2', box_format: 'petit' });
     const foyer = createFoyer(marc);
@@ -138,7 +138,7 @@ describe('foyer — bibliothèque partagée', () => {
   });
 
   it('les stats profil comptent la bibliothèque du foyer', () => {
-    const marc = uid('f-ps'); const lea = uid('f-pl');
+    const marc = uid('f_ps'); const lea = uid('f_pl');
     createGame(lea, { title: 'De Léa', box_format: 'petit' });
     const foyer = createFoyer(marc);
     joinFoyerByCode(lea, foyer.code);
@@ -146,7 +146,7 @@ describe('foyer — bibliothèque partagée', () => {
   });
 
   it('suppression de compte : mes jeux du foyer restent (réattribués), mes jeux perso disparaissent', () => {
-    const marc = uid('f-cm'); const lea = uid('f-cl'); const thib = uid('f-ct');
+    const marc = uid('f_cm'); const lea = uid('f_cl'); const thib = uid('f_ct');
     const gl = createGame(lea, { title: 'Reste au foyer', box_format: 'moyen' });
     const foyer = createFoyer(marc);
     joinFoyerByCode(lea, foyer.code); // les jeux de Léa (dont gl) entrent dans le foyer
@@ -158,7 +158,7 @@ describe('foyer — bibliothèque partagée', () => {
   });
 
   it('retirer un membre : geste du créateur ; ses ajouts le suivent, le foyer reste', () => {
-    const marc = uid('f-km'); const lea = uid('f-kl'); const zoe = uid('f-kz');
+    const marc = uid('f_km'); const lea = uid('f_kl'); const zoe = uid('f_kz');
     const gm = createGame(marc, { title: 'Du foyer (Marc)', box_format: 'moyen' });
     const foyer = createFoyer(marc);
     joinFoyerByCode(lea, foyer.code);
@@ -177,6 +177,6 @@ describe('foyer — bibliothèque partagée', () => {
     expect(listUserLibrary(marc).map((g) => g.id)).toEqual([gm]); // la commune reste
     const foyerApres = getFoyerForUser(marc);
     expect(foyerApres?.members.length).toBe(1);             // le foyer survit
-    expect(foyerApres?.members[0].pseudo).toBe('f-km');
+    expect(foyerApres?.members[0].pseudo).toBe('f_km');
   });
 });

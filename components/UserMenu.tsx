@@ -25,9 +25,18 @@ export default function UserMenu({ me }: { me: UserLite }) {
   }, []);
 
   async function logout() {
-    await fetch('/api/auth/logout', { method: 'POST' });
+    // Purge explicite du jeton d'appareil : sans lui, la restauration
+    // silencieuse remettrait la connexion en place au prochain démarrage.
+    const dt = localStorage.getItem('wsp_device_token');
+    await fetch('/api/auth/logout', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ device_token: dt }),
+    });
+    localStorage.removeItem('wsp_device_token');
+    // Pas de router.refresh() ici : appelé pendant la navigation qu'il lance,
+    // il re-rend l'ancienne route (la course push/refresh laissait la soirée
+    // affichée en CI) ; /login se rend fraîche de toute façon.
     router.push('/login');
-    router.refresh();
   }
 
   const initial = (me.pseudo ?? '?')[0].toUpperCase();

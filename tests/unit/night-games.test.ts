@@ -7,7 +7,7 @@ const uid = (p: string) => (registerUser(p, '1234') as { id: number }).id;
 
 describe('étagère v3 — chacun ajoute depuis sa ludothèque', () => {
   it('étagère vide à la création ; chaque ajout la fait grandir, badge = qui a ajouté', () => {
-    const marc = uid('ng-marc'); const lea = uid('ng-lea');
+    const marc = uid('ng_marc'); const lea = uid('ng_lea');
     const gm = createGame(marc, { title: 'A Grand', box_format: 'grand' });
     const gl = createGame(lea, { title: 'B Moyen', box_format: 'moyen' });
     const n = createNight(marc, [marc, lea]);
@@ -16,12 +16,12 @@ describe('étagère v3 — chacun ajoute depuis sa ludothèque', () => {
     addNightGame(n, gl, lea);
     const shelf = getShelfGames(n);
     expect(shelf.map((x) => x.title)).toEqual(['A Grand', 'B Moyen']); // ordre par format
-    expect(shelf[0].owner_pseudo).toBe('ng-marc'); // « apporté par » = qui l'a ajoutée
-    expect(shelf[1].owner_pseudo).toBe('ng-lea');
+    expect(shelf[0].owner_pseudo).toBe('ng_marc'); // « apporté par » = qui l'a ajoutée
+    expect(shelf[1].owner_pseudo).toBe('ng_lea');
   });
 
   it('ajout : réservé aux joueurs de la soirée et aux jeux de SA ludothèque', () => {
-    const marc = uid('ng-xm'); const lea = uid('ng-xl'); const zarb = uid('ng-xz');
+    const marc = uid('ng_xm'); const lea = uid('ng_xl'); const zarb = uid('ng_xz');
     const gMarc = createGame(marc, { title: 'De Marc', box_format: 'petit' });
     const gLea = createGame(lea, { title: 'De Léa', box_format: 'petit' });
     const n = createNight(marc, [marc, lea]);
@@ -33,18 +33,18 @@ describe('étagère v3 — chacun ajoute depuis sa ludothèque', () => {
   });
 
   it('doublon d ajout : pas de seconde ligne, le premier ajouteur garde le badge', () => {
-    const marc = uid('ng-dm'); const lea = uid('ng-dl');
+    const marc = uid('ng_dm'); const lea = uid('ng_dl');
     const g = createGame(marc, { title: 'Unique', box_format: 'moyen' });
     const n = createNight(marc, [marc, lea]);
     addNightGame(n, g, marc);
     addNightGame(n, g, lea); // déjà ajouté par Marc : ignoré
     const shelf = getShelfGames(n);
     expect(shelf).toHaveLength(1);
-    expect(shelf[0].owner_pseudo).toBe('ng-dm');
+    expect(shelf[0].owner_pseudo).toBe('ng_dm');
   });
 
   it('retrait : n importe quel joueur de la soirée peut le faire ; un hors-soirée non', () => {
-    const marc = uid('ng-rm'); const lea = uid('ng-rl'); const zarb = uid('ng-rz');
+    const marc = uid('ng_rm'); const lea = uid('ng_rl'); const zarb = uid('ng_rz');
     const g = createGame(marc, { title: 'À retirer', box_format: 'petit' });
     const n = createNight(marc, [marc, lea]);
     addNightGame(n, g, marc);

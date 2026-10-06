@@ -29,14 +29,14 @@ const demain = () => {
 
 test('soirées : programmer pour demain → carte dans Programmées, étagère intacte', async ({ page }) => {
   const s = Date.now().toString(36);
-  await register(page, `soir-${s}`);
-  await registerOther(page, `inv-${s}`);
+  await register(page, `soir_${s}`);
+  await registerOther(page, `inv_${s}`);
 
   await page.goto('/nights');
   await page.getByRole('button', { name: 'Programmer une partie' }).click();
   await page.getByLabel('Date').fill(demain());
   await page.getByLabel('Heure').fill('20:00');
-  await page.locator('.player-list label', { hasText: `inv-${s}` }).locator('input').check();
+  await page.locator('.player-list label', { hasText: `inv_${s}` }).locator('input').check();
   const post = page.waitForResponse((r) => r.url().endsWith('/api/nights') && r.request().method() === 'POST');
   await page.getByRole('button', { name: 'Programmer', exact: true }).click();
   await post;
@@ -44,7 +44,7 @@ test('soirées : programmer pour demain → carte dans Programmées, étagère i
   const card = page.locator('.planned-card').first();
   await expect(card).toBeVisible();
   await expect(card).toContainText('20:00');
-  await expect(card).toContainText(`inv-${s}`); // chips des joueurs invités
+  await expect(card).toContainText(`inv_${s}`); // chips des joueurs invités
 
   // La programmée n'est PAS la nuit active : l'étagère reste à l'état vide
   await page.goto('/etagere');
@@ -53,7 +53,7 @@ test('soirées : programmer pour demain → carte dans Programmées, étagère i
 
 test('jour J : une soirée datée d aujourd hui devient la nuit active', async ({ page }) => {
   const s = Date.now().toString(36);
-  await register(page, `jj-${s}`);
+  await register(page, `jj_${s}`);
   // Créée « le jour même » (API, playedAt par défaut = aujourd hui)
   await page.request.post('/api/nights', { data: { playerIds: [] } });
   await page.goto('/etagere');
@@ -62,7 +62,7 @@ test('jour J : une soirée datée d aujourd hui devient la nuit active', async (
 });
 
 test('API : date ou heure invalide rejetée, le QG reste sain', async ({ page }) => {
-  await register(page, `val-${Date.now().toString(36)}`);
+  await register(page, `val_${Date.now().toString(36)}`);
   // Date calendairement invalide (le regex seul la laisserait passer)
   const badDate = await page.request.post('/api/nights', { data: { playerIds: [], playedAt: '2026-10-32' } });
   expect(badDate.status()).toBe(400);
@@ -78,13 +78,13 @@ test('API : date ou heure invalide rejetée, le QG reste sain', async ({ page })
 
 /** Setup tirage à 2 joueurs : marc (créateur, propriétaire du jeu) + léa. */
 async function setupTirage(page: import('@playwright/test').Page, s: string) {
-  await register(page, `ann-${s}`); // marc
-  await registerOther(page, `lea-${s}`);
+  await register(page, `ann_${s}`); // marc
+  await registerOther(page, `lea_${s}`);
   await page.goto('/games/add');
   await page.getByLabel('Titre du jeu').fill('Cascadia');
   await page.getByRole('button', { name: 'Saisir à la main' }).click();
   await page.getByRole('button', { name: 'Ajouter à la ludothèque' }).click();
-  await page.locator('.player-list label', { hasText: `lea-${s}` }).locator('input').check();
+  await page.locator('.player-list label', { hasText: `lea_${s}` }).locator('input').check();
   const post = page.waitForResponse((r) => r.url().endsWith('/api/nights') && r.request().method() === 'POST');
   await page.getByRole('button', { name: 'Créer la partie' }).click();
   await post;
@@ -131,8 +131,8 @@ test('verdict : « Annoncer sur WhatsApp » partage le bon message (partage nati
     return calls[0]?.text ?? '';
   });
   expect(text).toContain('🎲 Cascadia a été tiré au sort !');
-  expect(text).toContain(`👉 ann-${s} ramène son jeu`); // le propriétaire
-  expect(text).toContain(`On attend lea-${s}`);         // les participants sauf le propriétaire
+  expect(text).toContain(`👉 ann_${s} ramène son jeu`); // le propriétaire
+  expect(text).toContain(`On attend lea_${s}`);         // les participants sauf le propriétaire
   expect(text).not.toContain('ce soir à');              // pas d'heure sur cette soirée
 });
 
@@ -161,8 +161,8 @@ test('programmée : « Inviter sur WhatsApp » avec date longue, heure et joueur
     });
   });
   const s = Date.now().toString(36);
-  await register(page, `inv-btn-${s}`);
-  await registerOther(page, `thib-${s}`);
+  await register(page, `inv_btn_${s}`);
+  await registerOther(page, `thib_${s}`);
 
   await page.goto('/nights');
   await page.getByRole('button', { name: 'Programmer une partie' }).click();
@@ -171,7 +171,7 @@ test('programmée : « Inviter sur WhatsApp » avec date longue, heure et joueur
   const dateLong = d.toLocaleDateString('fr-FR', { dateStyle: 'long' });
   await page.getByLabel('Date').fill(d.toLocaleDateString('sv-SE'));
   await page.getByLabel('Heure').fill('20:00');
-  await page.locator('.player-list label', { hasText: `thib-${s}` }).locator('input').check();
+  await page.locator('.player-list label', { hasText: `thib_${s}` }).locator('input').check();
   const post = page.waitForResponse((r) => r.url().endsWith('/api/nights') && r.request().method() === 'POST');
   await page.getByRole('button', { name: 'Programmer', exact: true }).click();
   await post;
@@ -182,12 +182,12 @@ test('programmée : « Inviter sur WhatsApp » avec date longue, heure et joueur
     return calls[0]?.text ?? '';
   });
   expect(text).toContain(`🎲 Partie de jeux le ${dateLong} à 20:00 !`);
-  expect(text).toContain(`inv-btn-${s}`); // créateur listé
-  expect(text).toContain(`thib-${s}`);    // invité listé
+  expect(text).toContain(`inv_btn_${s}`); // créateur listé
+  expect(text).toContain(`thib_${s}`);    // invité listé
 });
 
 test('terminer la soirée : étagère vidée, nuit conservée en historique', async ({ page }) => {
-  await register(page, `fin-${Date.now().toString(36)}`);
+  await register(page, `fin_${Date.now().toString(36)}`);
   await page.request.post('http://localhost:3000/api/nights', { data: { playerIds: [] } });
   await page.goto('/etagere');
   await expect(page.locator('.night-card')).toBeVisible();

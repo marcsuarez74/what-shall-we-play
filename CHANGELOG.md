@@ -4,6 +4,32 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [4.5.0] — 2026-10-06
+
+### Ajouté
+- **« Se souvenir de moi »** (cochée par défaut) — session d'un an au lieu de 30 jours, et un
+  **jeton d'appareil** en secours : les PWA peuvent perdre leur cookie quand l'app est tuée
+  (constaté Android) ; au retour sur la connexion, la session se restaure silencieusement.
+  La déconnexion purge explicitement le jeton. Décochée : comportement 30 jours inchangé.
+- **« Récupérer les pochettes »** dans la ludothèque — un bouton (visible seulement s'il
+  existe des jeux BGG sans image) qui complète les fiches existantes : fiche `/thing` +
+  téléchargement, garde 1 req/s, compteur final. Liste et bottom-sheet affichaient déjà les
+  pochettes ; c'était une question de données.
+
+### Modifié
+- **Autocomplete épuré** — la liste live devient `nom (année)` sans pochette (et sans le
+  préchargement `/thing` associé, des requêtes pour rien) ; l'année reste.
+- **Recherche « contient »** — l'autocomplete ne montre plus que les jeux dont le nom
+  contient ce qui est tapé (insensible à la casse et aux accents) ; `/search` BGG est flou,
+  le post-filtre honore la promesse.
+- **Pseudo resserré** — 3 à 20 caractères : lettres, chiffres et `@ ! _` (le tiret disparaît,
+  aucun pseudo existant concerné) ; **trim** à l'inscription et à la connexion (un espace
+  copié-collé ne fait plus échouer).
+
+### Corrigé
+- **Entités numériques** — les titres BGG du type « l&#039;Art » s'affichaient en code
+  numérique : décodage au point unique du parsing + backfill des fiches déjà stockées.
+
 ## [4.4.1] — 2026-10-06
 
 ### Corrigé

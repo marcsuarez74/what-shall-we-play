@@ -31,7 +31,7 @@ async function creerPartieSolo(page: Page) {
 }
 
 test('badge : visible à 0, tap = vote cuivré, re-tap retire, sans ouvrir la fiche', async ({ page }) => {
-  await register(page, `vt-${Date.now().toString(36)}`);
+  await register(page, `vt_${Date.now().toString(36)}`);
   const nightId = await creerPartieSolo(page);
   const gid = await newGame(page, 'Cascadia', 'grand');
   await putOnShelf(page, gid, nightId);
@@ -58,11 +58,11 @@ test('sync live : le vote de A monte le badge chez B sans rechargement', async (
   const s = Date.now().toString(36);
   const ctxA = await browser.newContext();
   const a = await ctxA.newPage();
-  await register(a, `vt-a-${s}`);
+  await register(a, `vt_a_${s}`);
   const ctxB = await browser.newContext();
   const b = await ctxB.newPage();
-  await register(b, `vt-b-${s}`);
-  const nightId = await creerPartie(a, `vt-b-${s}`);
+  await register(b, `vt_b_${s}`);
+  const nightId = await creerPartie(a, `vt_b_${s}`);
 
   const gid = await newGame(a, 'Wingspan', 'grand');
   await putOnShelf(a, gid, nightId);
@@ -80,11 +80,11 @@ test('pool : segmenté seulement avec des votes, Votés → Lancer · M, tirage 
   const s = Date.now().toString(36);
   const ctxA = await browser.newContext();
   const a = await ctxA.newPage();
-  await register(a, `vp-a-${s}`);
+  await register(a, `vp_a_${s}`);
   const ctxB = await browser.newContext();
   const b = await ctxB.newPage();
-  await register(b, `vp-b-${s}`);
-  const nightId = await creerPartie(a, `vp-b-${s}`);
+  await register(b, `vp_b_${s}`);
+  const nightId = await creerPartie(a, `vp_b_${s}`);
 
   const g1 = await newGame(a, 'Cascadia', 'grand');
   const g2 = await newGame(a, 'Wingspan', 'moyen');
@@ -132,11 +132,11 @@ test('ajout tardif : la validation saute, le segmenté disparaît, le fantôme c
   const s = Date.now().toString(36);
   const ctxA = await browser.newContext();
   const a = await ctxA.newPage();
-  await register(a, `vl-a-${s}`);
+  await register(a, `vl_a_${s}`);
   const ctxB = await browser.newContext();
   const b = await ctxB.newPage();
-  await register(b, `vl-b-${s}`);
-  const nightId = await creerPartie(a, `vl-b-${s}`);
+  await register(b, `vl_b_${s}`);
+  const nightId = await creerPartie(a, `vl_b_${s}`);
 
   const g1 = await newGame(a, 'Azul', 'grand');
   await putOnShelf(a, g1, nightId);
@@ -164,7 +164,7 @@ test('ajout tardif : la validation saute, le segmenté disparaît, le fantôme c
 
 test('gelé en jeu : plus de badge vote une fois la boîte sortie', async ({ browser }) => {  const s = Date.now().toString(36);
   const page = await browser.newContext().then((c) => c.newPage());
-  await register(page, `vg-${s}`);
+  await register(page, `vg_${s}`);
   const nightId = await creerPartieSolo(page);
   const gid = await newGame(page, '7 Wonders', 'moyen');
   await putOnShelf(page, gid, nightId);
@@ -186,7 +186,7 @@ test('gelé en jeu : plus de badge vote une fois la boîte sortie', async ({ bro
 
 test('issue #31 : le segmenté du pool tient dans la rangée CTA, le bouton Lancer reste compact', async ({ page }) => {
   test.setTimeout(60_000);
-  await register(page, `vc-${Date.now().toString(36)}`);
+  await register(page, `vc_${Date.now().toString(36)}`);
   const nightDone = page.waitForResponse((r) => r.url().endsWith('/api/nights') && r.request().method() === 'POST');
   await page.getByRole('button', { name: 'Créer la partie' }).click();
   const { nightId } = await (await nightDone).json() as { nightId: number };

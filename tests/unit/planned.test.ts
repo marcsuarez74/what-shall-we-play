@@ -14,8 +14,8 @@ const demain = () => {
 
 describe('soirées programmées', () => {
   it('programmée demain : ni active ni visible aujourd hui, mais dans Programmées des deux participants', () => {
-    const marc = uid('p-marc');
-    const lea = uid('p-lea');
+    const marc = uid('p_marc');
+    const lea = uid('p_lea');
     const g = createGame(marc, { title: 'Demain', box_format: 'petit' });
     const n = createNight(marc, [marc, lea], { playedAt: demain(), startTime: '20:00' });
     expect(getActiveNight(marc)).toBeNull(); // pas de soirée aujourd hui
@@ -28,7 +28,7 @@ describe('soirées programmées', () => {
   });
 
   it('reprogrammée aujourd hui : elle DEVIENT la nuit active (jour J automatique)', () => {
-    const thib = uid('p-thib');
+    const thib = uid('p_thib');
     const n = createNight(thib, [thib], { playedAt: demain() });
     expect(getActiveNight(thib)).toBeNull();
     getDb().prepare("UPDATE nights SET played_at = date('now','localtime') WHERE id = ?").run(n);
@@ -36,20 +36,20 @@ describe('soirées programmées', () => {
   });
 
   it('getActiveNight : un simple participant voit la nuit du jour même sans en être créateur', () => {
-    const marc = uid('p-host');
-    const lea = uid('p-guest');
+    const marc = uid('p_host');
+    const lea = uid('p_guest');
     const n = createNight(marc, [marc, lea]);
     expect(getActiveNight(lea)?.id).toBe(n);
   });
 
   it('start_time est persisté', () => {
-    const marc = uid('p-heure');
+    const marc = uid('p_heure');
     const n = createNight(marc, [marc], { startTime: '20:30' });
     expect(getNight(n)?.start_time).toBe('20:30');
   });
 
   it('terminer la nuit la sort de l état actif et la garde en historique', () => {
-    const marc = uid('p-fin');
+    const marc = uid('p_fin');
     const n = createNight(marc, [marc]);
     expect(getActiveNight(marc)?.id).toBe(n);
     endNight(n, marc);

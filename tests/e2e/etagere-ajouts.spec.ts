@@ -21,7 +21,7 @@ async function registerAndStart(page: import('@playwright/test').Page, pseudo: s
 }
 
 test('étagère vide à la création, le sélecteur ajoute depuis ma ludothèque', async ({ page }) => {
-  await registerAndStart(page, `eav3-${Date.now()}`);
+  await registerAndStart(page, `eav3_${Date.now()}`);
   await newGame(page, 'Azul', 'moyen');
   await newGame(page, 'Jaipur', 'petit');
   await page.goto('/etagere');
@@ -61,18 +61,18 @@ test('sync live : le jeu ajouté par un joueur apparaît chez les autres sans re
   const s = Date.now().toString(36);
   // Léa existe AVANT que la page de Marc liste les joueurs
   const other = await browser.newContext();
-  await other.request.post('/api/auth/register', { data: { pseudo: `sync-l-${s}`, code: '1234', sticker: '🌙' } });
+  await other.request.post('/api/auth/register', { data: { pseudo: `sync_l_${s}`, code: '1234', sticker: '🌙' } });
 
   // Marc s'inscrit (UI) et crée la partie avec Léa
   const ctxA = await browser.newContext();
   const a = await ctxA.newPage();
   await a.goto('/register');
-  await a.getByLabel('Pseudo').fill(`sync-m-${s}`);
+  await a.getByLabel('Pseudo').fill(`sync_m_${s}`);
   await a.getByLabel('Code secret').fill('1234');
   const reg = a.waitForResponse((r) => r.url().endsWith('/api/auth/register'));
   await a.getByRole('button', { name: 'Créer mon compte' }).click();
   await reg;
-  await a.getByLabel(new RegExp(`sync-l-${s}`)).check();
+  await a.getByLabel(new RegExp(`sync_l_${s}`)).check();
   const nightDone = a.waitForResponse((r) => r.url().endsWith('/api/nights') && r.request().method() === 'POST');
   await a.getByRole('button', { name: 'Créer la partie' }).click();
   const { nightId } = await (await nightDone).json() as { nightId: number };
@@ -103,7 +103,7 @@ test('ajouter un joueur : sa page ouverte bascule sur la partie en cours (sync)'
   const ctxB = await browser.newContext();
   const b = await ctxB.newPage();
   await b.goto('/register');
-  await b.getByLabel('Pseudo').fill(`add-l-${s}`);
+  await b.getByLabel('Pseudo').fill(`add_l_${s}`);
   await b.getByLabel('Code secret').fill('1234');
   const regB = b.waitForResponse((r) => r.url().endsWith('/api/auth/register'));
   await b.getByRole('button', { name: 'Créer mon compte' }).click();
@@ -117,12 +117,12 @@ test('ajouter un joueur : sa page ouverte bascule sur la partie en cours (sync)'
   const ctxA = await browser.newContext();
   const a = await ctxA.newPage();
   await a.goto('/register');
-  await a.getByLabel('Pseudo').fill(`add-m-${s}`);
+  await a.getByLabel('Pseudo').fill(`add_m_${s}`);
   await a.getByLabel('Code secret').fill('1234');
   const regA = a.waitForResponse((r) => r.url().endsWith('/api/auth/register'));
   await a.getByRole('button', { name: 'Créer mon compte' }).click();
   await regA;
-  await a.getByLabel(new RegExp(`add-l-${s}`)).check();
+  await a.getByLabel(new RegExp(`add_l_${s}`)).check();
   const nightDone = a.waitForResponse((r) => r.url().endsWith('/api/nights') && r.request().method() === 'POST');
   await a.getByRole('button', { name: 'Créer la partie' }).click();
   const { nightId } = await (await nightDone).json() as { nightId: number };
@@ -130,7 +130,7 @@ test('ajouter un joueur : sa page ouverte bascule sur la partie en cours (sync)'
   // La page de Léa, restée sur « nouvelle partie », bascule TOUTE SEULE
   await expect(b.locator('.night-card')).toBeVisible({ timeout: 5000 });
   await expect(b.locator('.night-card')).toContainText('En préparation'); // v3.3 : badge d'état
-  await expect(b.locator('.night-card')).toContainText(`add-l-${s}`);
+  await expect(b.locator('.night-card')).toContainText(`add_l_${s}`);
 
   // Marc pose un jeu : Léa le voit apparaître aussi, sans recharger
   const form = new FormData();
@@ -146,7 +146,7 @@ test('ajouter un joueur : sa page ouverte bascule sur la partie en cours (sync)'
 });
 
 test('retirer de la partie : depuis la fiche, l\'étagère redevient vide', async ({ page }) => {
-  const nightId = await registerAndStart(page, `retv3-${Date.now()}`);
+  const nightId = await registerAndStart(page, `retv3_${Date.now()}`);
   await putOnShelf(page, await newGame(page, 'Alpha', 'grand'), nightId);
   await putOnShelf(page, await newGame(page, 'Bravo', 'petit'), nightId);
   await page.goto('/etagere');
@@ -172,7 +172,7 @@ test('étagère : spinner pendant le chargement des pochettes', async ({ browser
   // SW bloqué : sans ça, il sert les pochettes et la route de test ne voit rien
   const context = await browser.newContext({ serviceWorkers: 'block' });
   const page = await context.newPage();
-  const nightId = await registerAndStart(page, `spin-${Date.now()}`);
+  const nightId = await registerAndStart(page, `spin_${Date.now()}`);
   const form = new FormData();
   form.set('title', 'Pochette lente'); form.set('box_format', 'moyen');
   const res = await page.request.post('/api/games', {
@@ -201,7 +201,7 @@ test('étagère : spinner pendant le chargement des pochettes', async ({ browser
 });
 
 test('étagère : pochette visible dès le montage quand le cache SW sert l’image (revisite)', async ({ page }) => {
-  const nightId = await registerAndStart(page, `swimg-${Date.now()}`);
+  const nightId = await registerAndStart(page, `swimg_${Date.now()}`);
   const res = await page.request.post('/api/games', {
     multipart: { title: 'Cache chaud', box_format: 'moyen', cover: { name: 'c.png', mimeType: 'image/png', buffer: makePng(8, 8) } },
   });
@@ -217,7 +217,7 @@ test('étagère : pochette visible dès le montage quand le cache SW sert l’im
 });
 
 test('étagère : recherche et filtres (joueurs pré-rempli, complexité, durée)', async ({ page }) => {
-  const nightId = await registerAndStart(page, `flt-${Date.now()}`);
+  const nightId = await registerAndStart(page, `flt_${Date.now()}`);
   await putOnShelf(page, await newGame(page, 'Azul', 'moyen', { min_players: '2', max_players: '4', playtime_min: '35', weight: '1.7' }), nightId);
   await putOnShelf(page, await newGame(page, 'Terraforming Mars', 'grand', { min_players: '1', max_players: '5', playtime_min: '120', weight: '3.4' }), nightId);
   await putOnShelf(page, await newGame(page, 'Jaipur', 'petit', { min_players: '2', max_players: '2', playtime_min: '30', weight: '1.5' }), nightId);
@@ -253,7 +253,7 @@ test('étagère : recherche et filtres (joueurs pré-rempli, complexité, durée
 });
 
 test('étagère : badge « apporté par » = qui a posé la boîte', async ({ page }) => {
-  const pseudo = `bdg-${Date.now()}`;
+  const pseudo = `bdg_${Date.now()}`;
   const nightId = await registerAndStart(page, pseudo);
   // sticker de l'ajouteur (pas de photo : c'est lui qui doit apparaître)
   await page.request.patch('/api/me', { data: { sticker: '🦊' } });
@@ -268,7 +268,7 @@ test('étagère : badge « apporté par » = qui a posé la boîte', async ({ pa
 });
 
 test('badge : la photo de l\'ajouteur est visible (pas avalée par l’opacité de la pochette)', async ({ page }) => {
-  const pseudo = `bdgph-${Date.now()}`;
+  const pseudo = `bdgph_${Date.now()}`;
   const nightId = await registerAndStart(page, pseudo);
   const png = makePng(4, 4);
   const up = await page.request.post('/api/me/avatar', {
@@ -285,7 +285,7 @@ test('badge : la photo de l\'ajouteur est visible (pas avalée par l’opacité 
 });
 
 test('bibliothèque : recherche, filtres (dont Boîte) et compteur', async ({ page }) => {
-  await registerAndStart(page, `libf-${Date.now()}`);
+  await registerAndStart(page, `libf_${Date.now()}`);
   const add = async (title: string, meta: Record<string, string>) => {
     const r = await page.request.post('/api/games', { multipart: { title, box_format: 'moyen', ...meta } });
     if (!r.ok()) throw new Error(`ajout ${title}: ${r.status()}`);
@@ -323,7 +323,7 @@ test('joueur ajouté ensuite via modifier : elle voit la partie et les jeux déj
   const ctxB = await browser.newContext();
   const b = await ctxB.newPage();
   await b.goto('/register');
-  await b.getByLabel('Pseudo').fill(`mod-l-${s}`);
+  await b.getByLabel('Pseudo').fill(`mod_l_${s}`);
   await b.getByLabel('Code secret').fill('1234');
   const regB = b.waitForResponse((r) => r.url().endsWith('/api/auth/register'));
   await b.getByRole('button', { name: 'Créer mon compte' }).click();
@@ -336,7 +336,7 @@ test('joueur ajouté ensuite via modifier : elle voit la partie et les jeux déj
   const ctxA = await browser.newContext();
   const a = await ctxA.newPage();
   await a.goto('/register');
-  await a.getByLabel('Pseudo').fill(`mod-m-${s}`);
+  await a.getByLabel('Pseudo').fill(`mod_m_${s}`);
   await a.getByLabel('Code secret').fill('1234');
   const regA = a.waitForResponse((r) => r.url().endsWith('/api/auth/register'));
   await a.getByRole('button', { name: 'Créer mon compte' }).click();
@@ -349,13 +349,13 @@ test('joueur ajouté ensuite via modifier : elle voit la partie et les jeux déj
 
   await a.reload(); // la liste des joueurs est rendue côté serveur : léa apparaît
   await a.getByRole('button', { name: 'modifier' }).click();
-  await a.locator('.player-list label', { hasText: `mod-l-${s}` }).locator('input').check();
+  await a.locator('.player-list label', { hasText: `mod_l_${s}` }).locator('input').check();
   await a.getByRole('button', { name: 'Enregistrer' }).click();
 
   // La page de Léa, restée ouverte, bascule toute seule : partie + les 2 jeux DÉJÀ posés
   await expect(b.locator('.night-card')).toBeVisible({ timeout: 5_000 });
   await expect(b.locator('.night-card')).toContainText('En préparation'); // v3.3 : badge d'état
-  await expect(b.locator('.night-card')).toContainText(`mod-l-${s}`);
+  await expect(b.locator('.night-card')).toContainText(`mod_l_${s}`);
   await expect(b.locator('.shelf-block .box')).toHaveCount(2);
   await expect(b.getByRole('button', { name: '+ Ajouter d\'autres jeux' })).toBeVisible();
 
@@ -371,7 +371,7 @@ test('joueur ajouté ensuite via modifier : elle voit la partie et les jeux déj
 // depuis le bottomsheet il y a un scroll sur la ligne du jeu ». Ajouter ne doit
 // JAMAIS faire sauter le défilement de la feuille.
 test('picker : ajouter un jeu ne fait pas sauter le défilement de la feuille', async ({ page }) => {
-  await registerAndStart(page, `scroll-${Date.now()}`);
+  await registerAndStart(page, `scroll_${Date.now()}`);
   for (let i = 1; i <= 8; i++) await newGame(page, `Rangement ${i}`, i % 2 ? 'moyen' : 'petit');
   await page.goto('/etagere');
   await page.getByRole('button', { name: 'Ajouter des jeux depuis ma ludothèque' }).click();
@@ -403,7 +403,7 @@ test('picker : ajouter un jeu ne fait pas sauter le défilement de la feuille', 
 // (zoom iOS sur les champs < 16px + contenu plus large que la liste), et les
 // filtres de l'étagère absents de la liste du sélecteur.
 test('picker : aucun défilement horizontal, même avec un titre interminable', async ({ page }) => {
-  await registerAndStart(page, `hscrol-${Date.now()}`);
+  await registerAndStart(page, `hscrol_${Date.now()}`);
   await newGame(page, 'SuperLongTitreDeJeuSansAucunEspaceInterneVraimentTresLargePourDeborderLaFeuille', 'moyen');
   for (let i = 1; i <= 3; i++) await newGame(page, `Rangement ${i}`, 'petit');
   await page.goto('/etagere');
@@ -430,7 +430,7 @@ test('picker : aucun défilement horizontal, même avec un titre interminable', 
 });
 
 test('picker : les filtres de l\'étagère s\'appliquent à la liste', async ({ page }) => {
-  await registerAndStart(page, `filtre-${Date.now()}`);
+  await registerAndStart(page, `filtre_${Date.now()}`);
   await newGame(page, 'Grand Jeu Lourd', 'grand', { playtime_min: '120', weight: '3.4', min_players: '3', max_players: '5' });
   await newGame(page, 'Petit Jeu Rapide', 'petit', { playtime_min: '20', weight: '1.3', min_players: '2', max_players: '4' });
   await page.goto('/etagere');

@@ -23,7 +23,7 @@ async function addGame(page: import('@playwright/test').Page, title: string, for
 test('retirer un membre : ses ajouts le suivent, le foyer reste au créateur', async ({ browser }) => {
   const ctxA = await browser.newContext();
   const a = await ctxA.newPage();
-  await register(a, `kikA-${stamp}`);
+  await register(a, `kikA_${stamp}`);
   await a.goto('/profil');
   await a.getByRole('button', { name: 'Créer un foyer' }).click();
   await expect(a.locator('.code-zone')).toBeVisible();
@@ -33,7 +33,7 @@ test('retirer un membre : ses ajouts le suivent, le foyer reste au créateur', a
   // Léa rejoint et ajoute son jeu à la collection commune
   const ctxB = await browser.newContext();
   const b = await ctxB.newPage();
-  await register(b, `kikB-${stamp}`);
+  await register(b, `kikB_${stamp}`);
   await addGame(b, 'De Léa', 'petit');
   await b.goto('/profil');
   await b.getByRole('button', { name: 'Rejoindre avec un code' }).click();
@@ -44,7 +44,7 @@ test('retirer un membre : ses ajouts le suivent, le foyer reste au créateur', a
   // Le créateur voit les ✕ (pas sur lui-même) ; double-tap pour retirer
   await a.goto('/profil');
   await expect(a.locator('.member')).toHaveCount(2);
-  await a.getByRole('button', { name: 'Retirer kikB-' + stamp + ' du foyer', exact: false }).click();
+  await a.getByRole('button', { name: 'Retirer kikB_' + stamp + ' du foyer', exact: false }).click();
   await a.getByRole('button', { name: /Sûr \? Retirer/ }).click();
   await expect(a.locator('.member')).toHaveCount(1);
 
@@ -66,7 +66,7 @@ test('foyer : créer, rejoindre par code, fusion guidée, collection commune, so
   // — Marc crée son foyer (ses jeux passent dans la collection commune)
   const ctxA = await browser.newContext();
   const a = await ctxA.newPage();
-  await register(a, `foyA-${stamp}`);
+  await register(a, `foyA_${stamp}`);
   await addGame(a, 'Azul', 'moyen');
   await a.goto('/profil');
   await a.getByRole('button', { name: 'Créer un foyer' }).click();
@@ -74,13 +74,13 @@ test('foyer : créer, rejoindre par code, fusion guidée, collection commune, so
   await expect(codeZone).toBeVisible();
   const code = (await codeZone.innerText()).trim();
   expect(code).toHaveLength(6);
-  await expect(a.locator('.foyer-name')).toContainText(`Chez foyA-${stamp}`);
+  await expect(a.locator('.foyer-name')).toContainText(`Chez foyA_${stamp}`);
   await expect(a.locator('.member')).toHaveCount(1);
 
   // — Léa rejoint avec le code (dicté, casse libre) ; elle a un doublon d'Azul
   const ctxB = await browser.newContext();
   const b = await ctxB.newPage();
-  await register(b, `foyB-${stamp}`);
+  await register(b, `foyB_${stamp}`);
   await addGame(b, 'azûl', 'petit'); // titre accentué : doublon au titre normalisé
   await addGame(b, 'Harmonies', 'moyen');
   await b.goto('/profil');
@@ -90,7 +90,7 @@ test('foyer : créer, rejoindre par code, fusion guidée, collection commune, so
 
   // — Fusion guidée : 1 doublon, elle garde sa fiche
   await expect(b.getByText('1 doublon à trier')).toBeVisible();
-  await b.getByRole('button', { name: `Garder celle de foyB-${stamp}` }).click();
+  await b.getByRole('button', { name: `Garder celle de foyB_${stamp}` }).click();
   await expect(b.getByText('Bibliothèques fusionnées')).toBeVisible();
   await expect(b.getByText('1 doublon retiré')).toBeVisible();
   await b.getByRole('button', { name: 'Voir ma ludothèque' }).click();
@@ -137,7 +137,7 @@ test('foyer : créer, rejoindre par code, fusion guidée, collection commune, so
 test('dissoudre : réservé au créateur ; le dernier départ supprime le foyer', async ({ browser }) => {
   const ctxA = await browser.newContext();
   const a = await ctxA.newPage();
-  await register(a, `foyC-${stamp}`);
+  await register(a, `foyC_${stamp}`);
   await a.goto('/profil');
   await a.getByRole('button', { name: 'Créer un foyer' }).click();
   await expect(a.locator('.code-zone')).toBeVisible();

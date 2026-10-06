@@ -31,24 +31,22 @@ export default function AddGameForm({ me }: { me: UserLite }) {
   const [stage, setStage] = useState<Stage>('etiquette');
   const [mode, setMode] = useState<Mode>('bgg');
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
-  const [covers, setCovers] = useState<Record<number, string | null>>({});
   const [thing, setThing] = useState<Thing | null>(null);
   const [photo, setPhoto] = useState<File | null>(null);
   const [manual, setManual] = useState({ year: '', publisher: '', min_players: '', max_players: '', playtime_min: '' });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const debounce = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const coversDemandes = useRef<Set<number>>(new Set());
 
   function clearDebounce() {
     if (debounce.current) { clearTimeout(debounce.current); debounce.current = null; }
   }
 
-  // Autocomplete (v4.4.0) : la liste live remplace l'ancien écran « choix ».
-  // /search ne renvoie aucune image — les pochettes sont préchargées en fond via
-  // /thing (sérialisées par la garde 1 req/s, cache 30 jours) et remplacent le ♟.
-  // La requête est un paramètre explicite : le debounce capture la valeur de la
-  // frappe, pas le state du rendu (closure stale sinon).
+  // Autocomplete (v4.4.0, épurée v4.5.0) : la liste live remplace l'ancien écran
+  // « choix » — [nom (année)], SANS pochette : /search ne donne aucune image et
+  // le préchargement /thing coûtait des requêtes pour rien. La requête est un
+  // paramètre explicite : le debounce capture la valeur de la frappe, pas le
+  // state du rendu (closure stale sinon).
   async function chercher(q: string) {
     if (q.length < 2) return;
     setBusy(true); setError(null);
@@ -57,16 +55,7 @@ export default function AddGameForm({ me }: { me: UserLite }) {
       if (!res.ok) throw new Error();
       const results: Suggestion[] = (await res.json()).results;
       if (results.length === 0) { setSuggestions([]); setError(t('ajout.errAucunJeu', { q })); return; }
-      const liste = results.slice(0, MAX_SUGGESTIONS);
-      setSuggestions(liste);
-      for (const s of liste) {
-        if (coversDemandes.current.has(s.bggId)) continue;
-        coversDemandes.current.add(s.bggId);
-        fetch(`/api/bgg/thing?id=${s.bggId}`)
-          .then((r) => (r.ok ? r.json() : null))
-          .then((t2: Thing | null) => { if (t2) setCovers((prev) => ({ ...prev, [s.bggId]: t2.coverName ?? null })); })
-          .catch(() => {}); // pochette optionnelle : le ♟ reste
-      }
+      setSuggestions(results.slice(0, MAX_SUGGESTIONS));
     } catch {
       setSuggestions([]); setError(t('ajout.errBggToken'));
     } finally { setBusy(false); }
@@ -134,7 +123,7 @@ export default function AddGameForm({ me }: { me: UserLite }) {
     const res = await fetch('/api/games', { method: 'POST', body: fd });
     setBusy(false);
     if (!res.ok) { setError((await res.json().catch(() => ({}))).error ?? t('ajout.errEnregistrement')); return; }
-    router.push('/etagere'); router.refresh();
+    router.push('/etagere'); // push suffit (Next 15) — cf. UserMenu.logout
   }
 
   const FormatPicker = ({ mini = false }: { mini?: boolean }) => (
@@ -176,9 +165,6 @@ export default function AddGameForm({ me }: { me: UserLite }) {
               {suggestions.map((s) => (
                 <li key={s.bggId}>
                   <button type="button" onClick={() => pick(s)}>
-                    {covers[s.bggId]
-                      ? <img className="sugg-cover" src={`/api/cover/${covers[s.bggId]}`} alt="" />
-                      : <span className="sugg-cover is-ph" aria-hidden>♟</span>}
                     <span className="sugg-nom">{s.name}</span>
                     {s.annee != null && <span className="sugg-annee">({s.annee})</span>}
                   </button>

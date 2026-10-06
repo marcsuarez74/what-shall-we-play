@@ -37,7 +37,7 @@ test('EN : les erreurs API suivent le cookie (tirage sur une sélection vide)', 
   await ctx.addCookies([{ name: 'wsp_lang', value: 'en', url: 'http://localhost:3000' }]);
   const page = await ctx.newPage();
   await page.goto('/register');
-  await page.getByLabel('Username').fill(`i18n-${Date.now().toString(36)}`);
+  await page.getByLabel('Username').fill(`i18n_${Date.now().toString(36)}`);
   await page.getByLabel('Secret code').fill('1234');
   await page.getByRole('button', { name: 'Create my account' }).click();
   await page.waitForURL('**/etagere');
@@ -70,7 +70,7 @@ test('EN : la FAQ est traduite (12 questions, sous-titre, aria dérivé)', async
 // purgés pour ne rien devoir au wsp_lang restant — le login ré-amorce le cookie
 // depuis le compte → <html lang="en"> à nouveau.
 test('sélecteur EN du menu : la langue suit le compte après reconnexion', async ({ page, context }) => {
-  const pseudo = `i18n-sw-${Date.now().toString(36)}`;
+  const pseudo = `i18n_sw_${Date.now().toString(36)}`;
   await page.goto('/register');
   await page.getByLabel('Pseudo').fill(pseudo);
   await page.getByLabel('Code secret').fill('1234');

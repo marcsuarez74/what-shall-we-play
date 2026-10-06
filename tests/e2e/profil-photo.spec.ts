@@ -62,7 +62,7 @@ async function pickPhoto(page: import('@playwright/test').Page, png: Buffer) {
 }
 
 test('les inputs caméra/galerie restent rendus (iOS : display:none casse le click programmatique)', async ({ page }) => {
-  const pseudo = `iosin-${Date.now()}`;
+  const pseudo = `iosin_${Date.now()}`;
   await registerAndStart(page, pseudo);
   await page.goto('/profil');
   await page.getByRole('button', { name: "Changer d'avatar" }).click();
@@ -72,7 +72,7 @@ test('les inputs caméra/galerie restent rendus (iOS : display:none casse le cli
 });
 
 test('recadrage : cadré juste dès le départ, fiable à chaque prise, avatar conforme', async ({ page }) => {
-  const pseudo = `crop-${Date.now()}`;
+  const pseudo = `crop_${Date.now()}`;
   await registerAndStart(page, pseudo);
   await page.goto('/profil');
   const png = makePhoto(1200, 1600);

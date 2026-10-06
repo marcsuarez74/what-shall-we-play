@@ -57,7 +57,7 @@ describe('createBugReport', () => {
   it('ouvre l\u2019issue (titre préfixé, label), l\u2019enregistre et renvoie son URL', async () => {
     const fetchMock = vi.fn(async () => issueOk(14));
     vi.stubGlobal('fetch', fetchMock);
-    const marc = uid('bug-marc');
+    const marc = uid('bug_marc');
     const r = await createBugReport({ ...input(marc, 'bug-marc'), captureName: '3f0f7c1e-1c2b-4a5d-9e8f-0a1b2c3d4e5f.png' });
     expect(r).toEqual({ ok: true, issueUrl: 'https://github.com/org/repo-test/issues/14', issueNumber: 14 });
     const [url, opts] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
@@ -73,7 +73,7 @@ describe('createBugReport', () => {
   it('amélioration : préfixe et label ✨', async () => {
     const fetchMock = vi.fn(async () => issueOk(15));
     vi.stubGlobal('fetch', fetchMock);
-    await createBugReport({ ...input(uid('bug-amelio'), 'bug-amelio'), type: 'amelioration' });
+    await createBugReport({ ...input(uid('bug_amelio'), 'bug-amelio'), type: 'amelioration' });
     const [, opts] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
     expect(JSON.parse(String(opts.body)).title).toBe('[Amélioration] La roue reste bloquée');
     expect(JSON.parse(String(opts.body)).labels).toEqual(['amélioration']);
@@ -81,11 +81,11 @@ describe('createBugReport', () => {
 
   it('quota : 3 OK puis 429 — et les échecs ne consomment pas le quota', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => issueOk(1)));
-    const lea = uid('bug-lea');
+    const lea = uid('bug_lea');
     for (let i = 0; i < 3; i++) expect(await createBugReport(input(lea, 'bug-lea'))).toMatchObject({ ok: true });
     expect((await erreurDe(createBugReport(input(lea, 'bug-lea')))).status).toBe(429);
     // échec GitHub : pas d'insertion → le compte d'un autre joueur part de zéro
-    const zoe = uid('bug-zoe');
+    const zoe = uid('bug_zoe');
     vi.stubGlobal('fetch', vi.fn(async () => new Response('{"message":"boom"}', { status: 500 })));
     expect((await erreurDe(createBugReport(input(zoe, 'bug-zoe')))).status).toBe(502);
     expect((getDb().prepare('SELECT COUNT(*) AS t FROM bug_reports WHERE user_id = ?').get(zoe) as { t: number }).t).toBe(0);
@@ -93,14 +93,14 @@ describe('createBugReport', () => {
 
   it('token absent → 503 ; réseau en échec → 502', async () => {
     vi.stubEnv('GITHUB_BUG_TOKEN', '');
-    const r = await createBugReport(input(uid('bug-sans'), 'bug-sans'));
+    const r = await createBugReport(input(uid('bug_sans'), 'bug-sans'));
     expect(r).toEqual({ error: 'Signalement indisponible pour le moment — réessaie plus tard', status: 503 });
     vi.stubEnv('GITHUB_BUG_TOKEN', 'jeton-test');
     vi.stubGlobal('fetch', vi.fn(async () => { throw new Error('réseau'); }));
-    expect((await erreurDe(createBugReport(input(uid('bug-off'), 'bug-off')))).status).toBe(502);
+    expect((await erreurDe(createBugReport(input(uid('bug_off'), 'bug-off')))).status).toBe(502);
     // corps 2xx illisible : le parse doit être sous le try → 502, pas d'exception non gérée
     vi.stubGlobal('fetch', vi.fn(async () => new Response('pas du json', { status: 201 })));
-    expect((await erreurDe(createBugReport(input(uid('bug-json'), 'bug-json')))).status).toBe(502);
+    expect((await erreurDe(createBugReport(input(uid('bug_json'), 'bug-json')))).status).toBe(502);
   });
 });
 

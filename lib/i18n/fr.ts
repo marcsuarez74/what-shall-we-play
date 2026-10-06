@@ -16,11 +16,12 @@ export const fr = {
   'auth.chiffre': ({ n }: Record<string, string | number>) => `Chiffre ${n}`,
   'auth.entrer': 'Entrer',
   'auth.creer': 'Créer mon compte',
+  'auth.seSouvenir': 'Se souvenir de moi',
   'auth.faq': '❓ Questions fréquentes',
   'auth.lienLogin': 'Pas de compte ? Le créer',
   'auth.lienRegister': 'Déjà un compte ? Entrer',
   // Erreurs (lib/auth.ts) — la route les renvoie dans la langue du navigateur.
-  'auth.errPseudo': 'Pseudo : 3 à 20 caractères (lettres, chiffres, _ -)',
+  'auth.errPseudo': 'Pseudo : 3 à 20 caractères — lettres, chiffres et @ ! _',
   'auth.errCode': 'Code secret : 4 chiffres',
   'auth.errEmoji': 'Emoji invalide',
   'auth.errPseudoPris': 'Pseudo déjà pris',
@@ -268,6 +269,9 @@ export const fr = {
   'etagere.selectionAttente': 'sélection en attente',
   // Zone ludothèque (/library — LibraryClient).
   'ludotheque.titre': 'Ma ludothèque',
+  'ludotheque.recupererCovers': 'Récupérer les pochettes',
+  'ludotheque.coversEncours': 'Récupération…',
+  'ludotheque.coversFaites': ({ n }: Record<string, string | number>) => `${n} pochette${Number(n) > 1 ? 's' : ''} récupérée${Number(n) > 1 ? 's' : ''}`,
   'ludotheque.foyerAvant': '🏠 Foyer ',
   'ludotheque.foyerApres': ({ n }: Record<string, string | number>) => ` · ${n} membre${Number(n) > 1 ? 's' : ''}`,
   'ludotheque.vide': "Aucun jeu pour l'instant. Onglet « Ajouter » pour commencer votre étagère.",

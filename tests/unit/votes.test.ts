@@ -11,23 +11,23 @@ const uid = (p: string) => (registerUser(p, '1234') as { id: number }).id;
 
 describe('toggleNightVote', () => {
   it('bascule : vote → présent, re-vote → absent ; deux joueurs sur le même jeu → total 2', () => {
-    const marc = uid('vt-marc'); const lea = uid('vt-lea');
+    const marc = uid('vt_marc'); const lea = uid('vt_lea');
     const g = createGame(marc, { title: 'Cascadia', box_format: 'grand' });
     const n = createNight(marc, [marc, lea]);
     addNightGame(n, g, marc);
 
     expect(toggleNightVote(n, g, marc)).toEqual({ ok: true });
-    expect(getShelfVotes(n)).toEqual([{ game_id: g, user_id: marc, pseudo: 'vt-marc' }]);
+    expect(getShelfVotes(n)).toEqual([{ game_id: g, user_id: marc, pseudo: 'vt_marc' }]);
     expect(toggleNightVote(n, g, lea)).toEqual({ ok: true }); // second joueur
     expect(getShelfVotes(n)).toHaveLength(2); // pas de doublon, pas de fusion
 
     expect(toggleNightVote(n, g, marc)).toEqual({ ok: true }); // retirer SON vote
     expect(getShelfVotes(n)).toHaveLength(1); // le vote de Léa reste
-    expect(getShelfVotes(n)[0].pseudo).toBe('vt-lea');
+    expect(getShelfVotes(n)[0].pseudo).toBe('vt_lea');
   });
 
   it('gardes : partie inconnue 404, non-participant 403, jeu hors étagère 403, en_jeu 409', () => {
-    const marc = uid('vt-gm'); const lea = uid('vt-gl'); const zarb = uid('vt-gz');
+    const marc = uid('vt_gm'); const lea = uid('vt_gl'); const zarb = uid('vt_gz');
     const g = createGame(marc, { title: 'Wingspan', box_format: 'moyen' });
     const n = createNight(marc, [marc, lea]);
     addNightGame(n, g, marc);
@@ -50,7 +50,7 @@ describe('toggleNightVote', () => {
   });
 
   it('voter ne saute jamais la validation (contrairement à l ajout/retrait d une boîte)', () => {
-    const marc = uid('vt-val'); const lea = uid('vt-l2');
+    const marc = uid('vt_val'); const lea = uid('vt_l2');
     const g = createGame(marc, { title: 'Azul', box_format: 'petit' });
     const n = createNight(marc, [marc, lea]);
     addNightGame(n, g, marc);
@@ -63,7 +63,7 @@ describe('toggleNightVote', () => {
   });
 
   it('une boîte retirée emporte ses votes (pas de vote fantôme)', () => {
-    const marc = uid('vt-rm'); const lea = uid('vt-rl');
+    const marc = uid('vt_rm'); const lea = uid('vt_rl');
     const g = createGame(marc, { title: '7 Wonders', box_format: 'moyen' });
     const n = createNight(marc, [marc, lea]);
     addNightGame(n, g, marc);
@@ -74,7 +74,7 @@ describe('toggleNightVote', () => {
   });
 
   it('un joueur retiré de la soirée emporte ses votes (pas de vote fantôme)', () => {
-    const marc = uid('vt-pj'); const lea = uid('vt-pl');
+    const marc = uid('vt_pj'); const lea = uid('vt_pl');
     const g = createGame(marc, { title: 'Cascadia', box_format: 'grand' });
     const n = createNight(marc, [marc, lea]);
     addNightGame(n, g, marc);
@@ -82,9 +82,9 @@ describe('toggleNightVote', () => {
     toggleNightVote(n, g, lea);
 
     setNightPlayers(n, [marc]); // léa retirée de la soirée
-    expect(getShelfVotes(n)).toEqual([{ game_id: g, user_id: marc, pseudo: 'vt-pj' }]);
+    expect(getShelfVotes(n)).toEqual([{ game_id: g, user_id: marc, pseudo: 'vt_pj' }]);
 
     setNightPlayers(n, [marc, lea]); // léa re-ajoutée
-    expect(getShelfVotes(n)).toEqual([{ game_id: g, user_id: marc, pseudo: 'vt-pj' }]); // son vote ne revient pas
+    expect(getShelfVotes(n)).toEqual([{ game_id: g, user_id: marc, pseudo: 'vt_pj' }]); // son vote ne revient pas
   });
 });

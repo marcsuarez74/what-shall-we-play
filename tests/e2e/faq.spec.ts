@@ -32,7 +32,7 @@ test('lien FAQ depuis l accueil non connecté (register)', async ({ page }) => {
 test('menu profil → FAQ (connecté)', async ({ page }) => {
   // register gabarit local (Pseudo + Code secret 1234)
   await page.goto('/register');
-  await page.getByLabel('Pseudo').fill(`faq-${Date.now().toString(36)}`);
+  await page.getByLabel('Pseudo').fill(`faq_${Date.now().toString(36)}`);
   await page.getByLabel('Code secret').fill('1234');
   await page.getByRole('button', { name: 'Créer mon compte' }).click();
   await page.waitForURL('/etagere');
