@@ -21,7 +21,7 @@ export default function RejoindreSoiree({ nightId, token, dejaConnecte }: { nigh
         if (!r.ok) { localStorage.removeItem(cle); return; }
         const data = await r.json();
         localStorage.setItem(cle, data.device_token); // rotation à chaque restauration
-        router.replace(`/nights/${nightId}`);
+        router.replace('/etagere'); // l'écran vivant de la soirée (l'archive est /nights/<id>)
       })
       .catch(() => {}); // hors ligne : le formulaire reste affiché
   }, [cle, nightId, router]);
@@ -36,7 +36,7 @@ export default function RejoindreSoiree({ nightId, token, dejaConnecte }: { nigh
     if (!r.ok) { setErreur((await r.json().catch(() => ({}))).error ?? t('soiree.lienInvalide')); return; }
     const data = await r.json();
     if (data.device_token) localStorage.setItem(cle, data.device_token);
-    router.replace(`/nights/${nightId}`);
+    router.replace('/etagere'); // l'écran vivant — cf. T8 ruling
   }
 
   return (

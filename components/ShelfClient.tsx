@@ -8,6 +8,7 @@ import { filterShelf, type ShelfFilters } from '@/lib/filters';
 import GameSheet from './GameSheet';
 import NightPicker from './NightPicker';
 import PlayerChip from './PlayerChip';
+import RetirerInvite from './RetirerInvite';
 import BoxImage from './BoxImage';
 import ShelfControls from './ShelfControls';
 import OwnerBadge from './OwnerBadge';
@@ -138,7 +139,14 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
         {!enJeu && (
           <>
             <div className="chips">
-              {players.map((p) => <PlayerChip key={p.id} u={p} etat={p.validated_at ? 'ok' : 'attente'} />)}
+              {players.map((p) => (
+                <span key={p.id} className="chip-groupe">
+                  <PlayerChip u={p} etat={p.validated_at ? 'ok' : 'attente'} />
+                  {p.est_invite && night.creator_id === me.id ? (
+                    <RetirerInvite nightId={night.id} inviteId={p.id} nom={p.pseudo} />
+                  ) : null}
+                </span>
+              ))}
             </div>
             <div className="etats">
               {players.map((p) => (

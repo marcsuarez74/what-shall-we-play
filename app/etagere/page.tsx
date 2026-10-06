@@ -34,6 +34,11 @@ export default async function Page() {
   }
   return <main className="page">
     <UserSync />
+    {user.est_invite ? (
+      <p className="bandeau-invite">♟ {t(lang, 'soiree.banniereInvite', {
+        hote: (getDb().prepare('SELECT pseudo FROM users WHERE id = ?').get(night.creator_id) as { pseudo: string }).pseudo,
+      })}</p>
+    ) : null}
     <ShelfClient night={night} partyGame={getNightGame(night.id)} players={getNightPlayers(night.id)} games={getShelfGames(night.id)}
                  myLibrary={listUserLibrary(user.id)} users={users}
                  plays={getPickCounts()} votes={getShelfVotes(night.id)}

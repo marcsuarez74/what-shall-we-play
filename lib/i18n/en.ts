@@ -31,6 +31,11 @@ export const en: Record<CléDict, ValeurDict> = {
   'soiree.joinCta': 'Join the party',
   'soiree.joinSansCompte': 'No account needed: your name stays with this party only.',
   'soiree.joinAvecCompte': 'You are signed in: you will join this party with your account.',
+  'soiree.tagInvite': 'GUEST',
+  'soiree.banniereInvite': 'You are {hote}’s guest — everything works like for other players.',
+  'soiree.retirerInviteAria': 'Remove {nom} from the party (their scores and votes will be deleted)',
+  'soiree.retirerInviteSur': 'Sure?',
+  'annonce.lienSoiree': 'Join us: {lien}',
   'auth.errIdentifiants': 'Incorrect credentials',
   'ludotheque.nbJeux': ({ n }: Record<string, string | number>) => `${n} game${Number(n) > 1 ? 's' : ''}`,
   // Shelf zone (ShelfClient, ShelfControls, ShelfPicker, TermineeCard, /etagere page).
