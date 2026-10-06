@@ -14,6 +14,7 @@ export default function PlayerChip({ u, etat }: { u: UserLite; etat?: 'ok' | 'at
     <span className={`chip ${etat === 'ok' ? 'ok' : ''} ${etat === 'attente' ? 'attente' : ''}`}>
       {src ? <img className="chip-avatar" src={src} alt="" /> : <span aria-hidden="true">{u.sticker ?? '🎲'}</span>}
       {' '}{u.pseudo}
+      {u.est_invite ? <span className="tag-invite">{t('soiree.tagInvite')}</span> : null}
       {etat && (
         <span className="st" aria-label={etat === 'ok' ? t('etagere.selectionOk') : t('etagere.selectionAttente')}>
           {etat === 'ok' ? '✓' : '⏳'}

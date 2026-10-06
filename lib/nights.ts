@@ -1,6 +1,8 @@
 import { getDb } from './db';
 import { emitToUsers } from './events';
 import { t, type Lang } from './i18n';
+import { creerInvite } from './auth';
+import crypto from 'node:crypto';
 import type { Game, Night, Pick, UserLite } from './types';
 
 export function getActiveNight(userId: number): Night | null {
@@ -29,8 +31,8 @@ export function notifyNight(nightId: number): void {
 
 export function createNight(creatorId: number, playerIds: number[], opts?: { playedAt?: string; startTime?: string | null }): number {
   const info = getDb()
-    .prepare(`INSERT INTO nights (creator_id, played_at, start_time) VALUES (?, COALESCE(?, date('now','localtime')), ?)`)
-    .run(creatorId, opts?.playedAt ?? null, opts?.startTime ?? null);
+    .prepare("INSERT INTO nights (creator_id, played_at, start_time, lien_token) VALUES (?, COALESCE(?, date('now','localtime')), ?, ?)")
+    .run(creatorId, opts?.playedAt ?? null, opts?.startTime ?? null, crypto.randomBytes(16).toString('hex'));
   const nightId = Number(info.lastInsertRowid);
   setNightPlayers(nightId, playerIds.includes(creatorId) ? playerIds : [...playerIds, creatorId]);
   return nightId;
@@ -53,9 +55,54 @@ export function setNightPlayers(nightId: number, playerIds: number[]): void {
   getDb().prepare(`DELETE FROM game_votes WHERE night_id = ? AND user_id NOT IN (SELECT user_id FROM night_players WHERE night_id = ?)`).run(nightId, nightId);
   notifyNight(nightId); // les joueurs — y compris le nouvel arrivé — voient la partie
 }
+
+// v4.6.0 (invités par lien) : jointure par lien de soirée. Un compte sessionné
+// rejoint avec son compte (jamais d'invité fantôme) ; sinon le nom crée un invité.
+export function rejoindreParLien(
+  nightId: number, token: unknown, nom: unknown, sessionUser: { id: number } | null, lang: Lang = 'fr',
+): { ok: true; mode: 'compte' | 'invite'; inviteId?: number } | { ok: false; error: string; status: number } {
+  const night = getNight(nightId);
+  if (!night || night.status === 'termine' || typeof token !== 'string' || token.length < 16 || night.lien_token !== token)
+    return { ok: false, error: t(lang, 'soiree.lienInvalide'), status: 403 }; // le lien d'une archive ne rouvre pas la partie
+  const joueurs = getNightPlayers(nightId);
+  if (sessionUser) {
+    if (joueurs.some((j) => j.id === sessionUser.id)) return { ok: true, mode: 'compte' };
+    setNightPlayers(nightId, [...joueurs.map((j) => j.id), sessionUser.id]);
+    return { ok: true, mode: 'compte' };
+  }
+  const invite = creerInvite(nom, night.creator_id, lang);
+  if ('error' in invite) return { ok: false, error: invite.error, status: invite.status };
+  setNightPlayers(nightId, [...joueurs.map((j) => j.id), invite.id]);
+  return { ok: true, mode: 'invite', inviteId: invite.id };
+}
+
+// v4.6.0 : retrait d'un invité — geste explicite du créateur de la soirée ou de
+// l'hôte qui l'a nommé. Transaction : ses picks (ses actions) disparaissent, les
+// jeux qu'il avait posés sur l'étagère passent sous le créateur (contenu de la
+// soirée conservé), la ligne users disparaît et les FK CASCADE emportent
+// players/votes/scores/verdicts/sessions/jetons (idiome « pas de vote fantôme »).
+export function retirerInvite(nightId: number, inviteId: number, userId: number, lang: Lang = 'fr'): { ok: true } | { ok: false; error: string; status: number } {
+  const db = getDb();
+  const night = getNight(nightId);
+  const inv = db.prepare('SELECT id, host_id, est_invite FROM users WHERE id = ?').get(inviteId) as { id: number; host_id: number | null; est_invite: number } | undefined;
+  if (!night || !inv || !inv.est_invite) return { ok: false, error: t(lang, 'soiree.lienInvalide'), status: 404 };
+  const autorise = inv.host_id === userId || night.creator_id === userId;
+  if (!autorise) return { ok: false, error: t(lang, 'erreurs.impossible'), status: 403 };
+  const dansLaSoiree = db.prepare('SELECT 1 FROM night_players WHERE night_id = ? AND user_id = ?').get(nightId, inviteId);
+  if (!dansLaSoiree) return { ok: false, error: t(lang, 'soiree.lienInvalide'), status: 404 };
+  db.transaction(() => {
+    // l'étagère de la soirée n'est pas la propriété de l'invité : le créateur l'adopte
+    db.prepare('UPDATE night_games SET added_by = ? WHERE night_id = ? AND added_by = ?').run(night.creator_id, nightId, inviteId);
+    // ses tirages (picks) sont ses actions : ils partent avec lui
+    db.prepare('DELETE FROM picks WHERE spinner_id = ?').run(inviteId);
+    db.prepare('DELETE FROM users WHERE id = ?').run(inviteId);
+  })();
+  notifyNight(nightId);
+  return { ok: true };
+}
 export function getNightPlayers(nightId: number): UserLite[] {
   return getDb().prepare(`
-    SELECT u.id, u.pseudo, u.sticker, u.avatar_path, np.validated_at FROM night_players np JOIN users u ON u.id = np.user_id
+    SELECT u.id, u.pseudo, u.sticker, u.avatar_path, u.est_invite, np.validated_at FROM night_players np JOIN users u ON u.id = np.user_id
     WHERE np.night_id = ? ORDER BY u.pseudo`).all(nightId) as UserLite[];
 }
 

@@ -11,13 +11,13 @@ const TABS: { href: string; icon: string; label: CléDict }[] = [
   { href: '/nights', icon: '🎲', label: 'tabbar.parties' },
 ];
 
-// La roue et les écrans de connexion restent hors navigation (moment plein écran / pas de session).
+// La roue, les écrans de connexion et la jointure invité restent hors navigation
+// (moment plein écran / pas de session).
 const HIDDEN = ['/login', '/register', '/tirage'];
-
 export default function TabBar() {
   const path = usePathname();
   const { t } = useI18n();
-  if (path === '/' || HIDDEN.includes(path) || path.endsWith('/scores')) return null;
+  if (path === '/' || HIDDEN.includes(path) || path.endsWith('/rejoindre') || path.endsWith('/scores')) return null;
   return (
     <nav className="tabbar" aria-label={t('tabbar.navigation')}>
       {TABS.map((tab) => {

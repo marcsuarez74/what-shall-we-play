@@ -4,6 +4,17 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [4.6.0] — 2026-10-06
+
+### Ajouté
+- **Invités par lien** — chaque soirée porte un lien d'invitation : l'invité rejoint
+  depuis son navigateur avec un simple prénom, sans compte, et fait tout ce qu'un joueur
+  fait (étagère, votes, scores, verdict). Son identité reste sur cette soirée ; l'hôte
+  peut le retirer explicitement (ses scores et votes sont supprimés avec lui).
+- Le message d'invitation WhatsApp se termine par le lien de la soirée.
+- **« Se souvenir » pour les invités** : leur session survit à la perte du cookie de la
+  PWA (jeton d'appareil dédié à la soirée, restauration silencieuse à la réouverture du lien).
+
 ## [4.5.0] — 2026-10-06
 
 ### Ajouté
