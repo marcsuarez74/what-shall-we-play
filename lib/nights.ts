@@ -336,7 +336,10 @@ export function supprimerNuit(nightId: number, userId: number, lang: Lang = 'fr'
     db.prepare('DELETE FROM nights WHERE id = ?').run(nightId);
     for (const { id } of invites) db.prepare('DELETE FROM users WHERE id = ?').run(id);
   })();
-  emitToUsers(joueurs); // la partie disparaît en direct chez les joueurs
+  // La partie disparaît en direct chez les AUTRES joueurs. Pas chez celui qui supprime :
+  // il navigue lui-même, et un refresh live concurrent annulait sa redirection (course
+  // push/refresh, cf. db32a9c — E2E « supprimer → redirection » instable en CI).
+  emitToUsers(joueurs.filter((id) => id !== userId));
   return { ok: true };
 }
 

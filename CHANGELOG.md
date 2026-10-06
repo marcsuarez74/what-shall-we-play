@@ -19,6 +19,8 @@ Hygiène, issue de l'audit du dépôt (lot D).
 ### Corrigé
 - L'inscription renvoie une erreur 400 (et non 500) sur une requête mal formée.
 - Une variable `PUBLIC_URL` vide ne casse plus les liens d'invitation ni les aperçus de partage.
+- Supprimer une partie redirige toujours vers « Mes parties » : la notification en direct
+  (v4.7.0) ne vise plus celui qui supprime, dont la page se rafraîchissait en même temps.
 
 ### Écarté
 - Chargement différé des panneaux (`next/dynamic`, point 12 de l'audit) : mesuré, le gain
