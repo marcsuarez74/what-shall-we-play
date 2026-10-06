@@ -1,0 +1,495 @@
+<!doctype html>
+<html lang="fr">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cercles d'amis — v4.8</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Space+Grotesk:wght@400;500;600;700&display=swap">
+<style>
+/* Layout : planche de maquettes — en-tête de spec, puis téléphones en grille (hôte / invité),
+   chaque téléphone est interactif. Palette et typo = design system de l'app (noyer/crème/cuivre). */
+:root {
+  --noyer: #2A1F17;
+  --surface: #3A2B1F;
+  --surface-plus: #46352a;
+  --creme: #F3E9DC;
+  --cuivre: #C96F3B;
+  --vert: #3E9B6E;
+  --rouge: #C4553B;
+  --ambre: #C9A23B;
+  --doux: #8A7660;
+  --doux-clair: #B9A58C;
+  --planche: #1f1711;
+  --display: 'Bricolage Grotesque', 'Space Grotesk', system-ui, sans-serif;
+  --ui: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+[hidden] { display: none !important; }
+body { background: var(--planche); color: var(--creme); font-family: var(--ui); font-size: 15px; line-height: 1.45; padding: 28px 16px 60px; }
+h1, h2, h3 { font-family: var(--display); line-height: 1.1; letter-spacing: -0.01em; text-wrap: balance; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--cuivre); outline-offset: 2px; }
+
+.wrap { max-width: 1240px; margin: 0 auto; display: flex; flex-direction: column; gap: 34px; }
+
+/* ---------- En-tête spec ---------- */
+.intro { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 22px; }
+@media (max-width: 860px) { .intro { grid-template-columns: 1fr; } }
+.intro h1 { font-size: clamp(28px, 4vw, 40px); font-weight: 800; }
+.eyebrow { font-size: 11.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--cuivre); margin-bottom: 8px; }
+.lead { color: var(--doux-clair); margin-top: 10px; max-width: 62ch; }
+.bloc { background: var(--noyer); border: 1px solid color-mix(in srgb, var(--doux) 35%, transparent); border-radius: 16px; padding: 16px 18px; min-width: 0; }
+.bloc h2 { font-size: 17px; font-weight: 800; margin-bottom: 10px; }
+.bloc ul { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.bloc li { font-size: 13.5px; color: var(--doux-clair); padding-left: 16px; position: relative; }
+.bloc li::before { content: ''; position: absolute; left: 2px; top: 8px; width: 6px; height: 6px; border-radius: 50%; background: var(--doux); }
+.bloc li.bug::before { background: var(--rouge); }
+.bloc li b { color: var(--creme); font-weight: 600; }
+.bloc code { font-size: 12px; background: var(--surface); padding: 1px 5px; border-radius: 5px; color: var(--creme); }
+.regles { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.regles table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.regles td { padding: 6px 0; border-top: 1px solid color-mix(in srgb, var(--doux) 25%, transparent); color: var(--doux-clair); vertical-align: top; }
+.regles td:first-child { color: var(--creme); width: 52%; padding-right: 10px; }
+.oui { color: var(--vert); font-weight: 700; }
+.non { color: var(--rouge); font-weight: 700; }
+
+/* ---------- Groupes de téléphones ---------- */
+.groupe-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.groupe-head h2 { font-size: 24px; font-weight: 800; }
+.groupe-head p { color: var(--doux-clair); font-size: 13.5px; }
+.phones { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 22px; align-items: start; }
+.ecran { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.ecran-titre { display: flex; gap: 10px; align-items: baseline; }
+.ecran-titre .id { font-family: var(--display); font-weight: 800; color: var(--cuivre); font-size: 15px; }
+.ecran-titre h3 { font-size: 15px; font-weight: 600; font-family: var(--ui); }
+.note { font-size: 12.5px; color: var(--doux-clair); border-left: 2px solid var(--cuivre); padding: 2px 0 2px 10px; }
+.note.fix { border-color: var(--vert); }
+
+.phone { background: var(--noyer); border: 1px solid color-mix(in srgb, var(--doux) 45%, transparent); border-radius: 30px; overflow: hidden; display: flex; flex-direction: column; height: 640px; max-width: 100%; position: relative; box-shadow: 0 14px 40px rgba(0,0,0,.35); }
+.status { height: 26px; flex: 0 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 0 22px; font-size: 11px; color: var(--doux-clair); }
+.scroll { flex: 1 1 auto; overflow-y: auto; padding: 6px 16px 20px; display: flex; flex-direction: column; gap: 12px; scrollbar-width: thin; }
+.tabbar { flex: 0 0 auto; height: 58px; display: flex; border-top: 1px solid color-mix(in srgb, var(--doux) 35%, transparent); background: var(--surface); }
+.tabbar span { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10.5px; color: var(--doux-clair); gap: 1px; }
+.tabbar span.on { color: var(--cuivre); font-weight: 700; }
+.tabbar i { font-style: normal; font-size: 17px; }
+
+/* ---------- Composants app ---------- */
+.page-head { display: flex; justify-content: space-between; align-items: center; }
+.page-head h1 { font-size: 26px; font-weight: 800; }
+.user-chip { background: var(--surface); border: 1px solid var(--doux); border-radius: 999px; padding: 4px 10px; font-size: 13px; }
+.sec-h { font-family: var(--display); font-size: 17px; font-weight: 800; }
+.qg-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.btn-copper { appearance: none; border: 0; border-radius: 14px; background: var(--cuivre); color: var(--noyer); font-weight: 700; font-size: 15px; min-height: 46px; padding: 10px 18px; }
+.btn-copper.sm { min-height: 36px; font-size: 13px; padding: 6px 12px; border-radius: 11px; }
+.btn-copper:disabled { background: var(--surface); color: var(--doux-clair); border: 1px solid var(--doux); cursor: not-allowed; }
+.btn-ghost { appearance: none; background: transparent; border: 1px solid var(--doux); border-radius: 14px; font-size: 14px; min-height: 42px; padding: 8px 14px; }
+.btn-ghost.sm { min-height: 34px; font-size: 13px; padding: 5px 11px; border-radius: 11px; }
+.btn-ghost.armed { color: #E08A76; border-color: color-mix(in srgb, #b5533c 70%, transparent); }
+.link-btn { background: none; border: 0; color: var(--cuivre); font-size: 13.5px; font-weight: 600; padding: 0; }
+.row-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+.row-btns > * { flex: 1 1 auto; }
+
+.card { background: var(--surface); border: 1px solid rgba(185,165,140,.25); border-radius: 16px; padding: 13px 14px; display: flex; flex-direction: column; gap: 10px; }
+.card.live { border-color: var(--cuivre); }
+.card-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.badge { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 4px 10px; font-size: 11.5px; font-weight: 600; }
+.badge .pt { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.b-prep { background: color-mix(in srgb, var(--ambre) 18%, transparent); color: #EAD9A8; }
+.b-prog { background: color-mix(in srgb, var(--doux) 25%, transparent); color: var(--doux-clair); }
+.b-jeu { background: color-mix(in srgb, var(--vert) 20%, transparent); color: #9BD8B7; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { display: inline-flex; align-items: center; gap: 5px; background: var(--noyer); border: 1px solid var(--doux); border-radius: 999px; font-size: 12.5px; padding: 4px 10px; }
+.chip.invite { border-style: dashed; border-color: var(--cuivre); }
+.tag-invite { font-size: 9px; font-weight: 800; color: var(--cuivre); letter-spacing: .05em; }
+.retirer { background: none; border: 0; color: var(--doux); font-size: 12px; padding: 0 0 0 2px; }
+.retirer.armed { color: #E08A76; font-weight: 700; }
+.sous-label { font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--doux-clair); font-weight: 700; }
+.meta { font-size: 12.5px; color: var(--doux-clair); }
+
+.plan { display: flex; gap: 12px; }
+.plan-date { flex: 0 0 52px; height: 58px; border-radius: 12px; background: var(--noyer); border: 1px solid var(--doux); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.plan-date b { font-family: var(--display); font-size: 22px; line-height: 1; }
+.plan-date span { font-size: 11px; color: var(--doux-clair); }
+.plan-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.plan-when { font-weight: 600; font-size: 14px; }
+.plan-titre { font-family: var(--display); font-weight: 800; font-size: 16px; line-height: 1.1; }
+.titre-soiree { font-family: var(--display); font-weight: 800; font-size: 15px; color: var(--cuivre); }
+.plan-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.suppr-btn { flex: none; background: none; border: 1px solid color-mix(in srgb, var(--doux) 60%, transparent); border-radius: 999px; color: var(--doux-clair); font-size: 11px; padding: 3px 9px; }
+.confirm-suppr { border: 1px solid color-mix(in srgb, #b5533c 70%, transparent); background: color-mix(in srgb, var(--rouge) 10%, transparent); border-radius: 12px; padding: 10px 11px; display: flex; flex-direction: column; gap: 8px; font-size: 12.5px; }
+.confirm-suppr ul { margin: 0; padding-left: 16px; color: var(--doux-clair); display: flex; flex-direction: column; gap: 2px; }
+.btn-danger { appearance: none; border: 0; border-radius: 11px; background: var(--rouge); color: #fff; font-weight: 700; font-size: 13px; min-height: 36px; padding: 6px 12px; }
+.supprimee { font-size: 13px; color: var(--doux-clair); text-align: center; padding: 6px 0; }
+.plan-when small { color: var(--cuivre); font-weight: 700; margin-left: 6px; font-size: 13px; }
+.liste { display: flex; flex-direction: column; gap: 10px; }
+.fix-mt { margin-top: 14px; outline: 1px dashed var(--vert); outline-offset: 4px; border-radius: 16px; }
+
+.lien-card { background: color-mix(in srgb, var(--cuivre) 10%, var(--surface)); border: 1px solid color-mix(in srgb, var(--cuivre) 45%, transparent); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.lien-url { font-size: 11.5px; background: var(--noyer); border-radius: 8px; padding: 7px 9px; color: var(--doux-clair); overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.toast { font-size: 12px; color: #9BD8B7; min-height: 16px; }
+
+.pool { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; }
+.jeu { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.cov { aspect-ratio: 3/4; max-width: 100%; border-radius: 9px; display: grid; place-items: end start; padding: 6px; font-family: var(--display); font-weight: 800; font-size: 12px; line-height: 1.05; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.5); position: relative; }
+.cov .qui { position: absolute; top: 5px; right: 5px; font-family: var(--ui); font-size: 9px; font-weight: 700; background: rgba(0,0,0,.45); border-radius: 999px; padding: 1px 6px; }
+.vote { display: flex; align-items: center; justify-content: center; gap: 4px; border: 1px solid var(--doux); background: transparent; border-radius: 999px; font-size: 12px; padding: 3px 0; font-variant-numeric: tabular-nums; }
+.vote[aria-pressed="true"] { background: var(--cuivre); border-color: var(--cuivre); color: var(--noyer); font-weight: 700; }
+.vote.ro { cursor: default; }
+.ajout { border: 1px dashed var(--doux); border-radius: 9px; aspect-ratio: 3/4; display: grid; place-items: center; color: var(--doux-clair); font-size: 12px; text-align: center; padding: 6px; background: none; }
+.info { font-size: 12px; color: var(--doux-clair); background: var(--surface); border-radius: 10px; padding: 9px 11px; }
+
+.bandeau { border-radius: 12px; padding: 10px 12px; background: color-mix(in srgb, var(--cuivre) 10%, transparent); border: 1px solid color-mix(in srgb, var(--cuivre) 40%, transparent); font-size: 12.5px; color: var(--doux-clair); }
+.bandeau b { color: var(--creme); }
+.top-invite { display: flex; justify-content: space-between; align-items: center; padding-top: 4px; }
+.marque { font-family: var(--display); font-weight: 800; font-size: 14px; color: var(--doux-clair); }
+.hote { display: flex; align-items: center; gap: 10px; }
+.avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--cuivre); color: var(--noyer); display: grid; place-items: center; font-weight: 800; font-family: var(--display); }
+.hero-date { font-family: var(--display); font-size: 26px; font-weight: 800; line-height: 1.05; }
+.hero-date small { display: block; font-family: var(--ui); font-size: 14px; color: var(--cuivre); font-weight: 700; margin-top: 4px; }
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field label { font-size: 12.5px; font-weight: 600; color: var(--doux-clair); }
+.field input { background: var(--surface); border: 1px solid color-mix(in srgb, var(--doux) 50%, transparent); border-radius: 12px; color: var(--creme); font: inherit; font-size: 16px; padding: 11px 13px; outline: none; width: 100%; }
+.field small { font-size: 11.5px; color: var(--doux-clair); }
+.code { display: flex; gap: 8px; }
+.code input { text-align: center; font-size: 20px; padding: 10px 0; }
+.sep { display: flex; align-items: center; gap: 10px; color: var(--doux-clair); font-size: 12px; }
+.sep::before, .sep::after { content: ''; flex: 1; height: 1px; background: color-mix(in srgb, var(--doux) 35%, transparent); }
+.cta-compte { border: 1px solid color-mix(in srgb, var(--vert) 50%, transparent); background: color-mix(in srgb, var(--vert) 10%, transparent); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.cta-compte p { font-size: 12.5px; color: var(--doux-clair); }
+.cta-compte b { color: var(--creme); }
+.btn-vert { appearance: none; border: 0; border-radius: 12px; background: var(--vert); color: #fff; font-weight: 700; font-size: 14px; min-height: 40px; }
+.seg { display: flex; background: var(--surface); border-radius: 12px; padding: 3px; gap: 3px; }
+.seg button { flex: 1; border: 0; background: none; border-radius: 9px; font-size: 12px; padding: 6px 0; color: var(--doux-clair); }
+.seg button[aria-pressed="true"] { background: var(--surface-plus); color: var(--creme); font-weight: 700; }
+.picker-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: var(--surface); border-radius: 12px; font-size: 14px; }
+.picker-row input { accent-color: var(--cuivre); width: 17px; height: 17px; }
+.barre { text-decoration: line-through; color: var(--doux); }
+.centre { text-align: center; }
+.grand-emoji { font-size: 40px; text-align: center; }
+
+/* ---------- Étagère réelle de l'app : un rayon par format de boîte ---------- */
+.etagere { display: flex; flex-direction: column; gap: 4px; margin: 0 -4px; }
+.shelf-count { color: var(--doux-clair); font-size: 12px; padding: 0 4px; }
+.shelf-block { display: flex; flex-direction: column; gap: 4px; }
+.shelf-row { display: flex; gap: 14px; align-items: flex-end; overflow-x: auto; overflow-y: clip; scroll-snap-type: x mandatory; scrollbar-width: none; padding: 12px 6px 4px; }
+.shelf-row::-webkit-scrollbar { display: none; }
+.rail { height: 7px; border-radius: 999px; background: var(--doux); opacity: .55; margin: -2px 4px 0; }
+.row-label { color: var(--doux-clair); font-size: 13px; padding: 0 4px 8px; }
+.box { position: relative; flex: 0 0 auto; scroll-snap-align: start; border: 2px solid var(--doux); border-radius: 10px; box-shadow: 0 6px 14px rgba(0,0,0,.35); padding: 0; cursor: pointer; }
+.box .art { position: absolute; inset: 0; border-radius: 8px; display: grid; place-items: end start; padding: 5px; font-family: var(--display); font-weight: 800; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.6); line-height: 1.02; text-align: left; overflow: hidden; }
+.owner-badge { position: absolute; right: 4px; bottom: 4px; z-index: 2; width: 16px; height: 16px; border-radius: 50%; display: grid; place-items: center; font-size: 9px; line-height: 1; background: var(--noyer); border: 1px solid var(--doux); }
+.vote-badge { position: absolute; top: -7px; right: -5px; z-index: 3; display: flex; align-items: center; gap: 2px; border: 1.5px solid var(--doux); border-radius: 999px; background: var(--noyer); color: var(--doux-clair); font-size: 10.5px; font-weight: 800; padding: 3px 7px; cursor: pointer; box-shadow: 0 3px 8px rgba(0,0,0,.55); user-select: none; font-variant-numeric: tabular-nums; }
+.vote-badge.vote-moi { border-color: var(--cuivre); background: var(--cuivre); color: #fff; }
+.vote-badge .emoji { font-size: 9.5px; }
+.add-more { padding: 2px 4px 0; }
+
+.questions { counter-reset: q; }
+.questions li { counter-increment: q; padding-left: 26px; }
+.questions li::before { content: counter(q); width: 18px; height: 18px; top: 1px; left: 0; background: var(--cuivre); color: var(--noyer); font-size: 11px; font-weight: 800; display: grid; place-items: center; }
+@media (prefers-reduced-motion: no-preference) { .vote, .btn-ghost, .retirer { transition: background .12s, color .12s, border-color .12s; } }
+</style>
+<style>
+.scroll > * { flex-shrink: 0; } /* le contenu défile au lieu de se comprimer */
+.tabbar span { position: relative; }
+.pastille { position: absolute; top: 5px; left: calc(50% + 6px); min-width: 16px; height: 16px; border-radius: 999px; background: var(--cuivre); color: var(--noyer); font-size: 10px; font-weight: 800; display: grid; place-items: center; padding: 0 4px; }
+.cercle-card { display: flex; align-items: center; gap: 12px; }
+.cercle-ico { width: 44px; height: 44px; border-radius: 12px; background: color-mix(in srgb, var(--cuivre) 18%, var(--noyer)); display: grid; place-items: center; font-size: 20px; flex: none; }
+.cercle-body { flex: 1; min-width: 0; }
+.cercle-body b { display: block; font-family: var(--display); font-size: 15px; }
+.avatars { display: flex; }
+.avatars span { width: 24px; height: 24px; border-radius: 50%; background: var(--noyer); border: 2px solid var(--surface); display: grid; place-items: center; font-size: 12px; margin-left: -6px; }
+.avatars span:first-child { margin-left: 0; }
+.membre { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid color-mix(in srgb, var(--doux) 22%, transparent); font-size: 14px; }
+.membre:first-child { border-top: 0; }
+.membre .role { margin-left: auto; font-size: 11px; color: var(--doux-clair); }
+.suggestions { background: var(--noyer); border: 1px solid var(--doux); border-radius: 12px; overflow: hidden; }
+.suggestions button { display: flex; width: 100%; gap: 8px; align-items: center; background: none; border: 0; border-top: 1px solid color-mix(in srgb, var(--doux) 25%, transparent); padding: 9px 12px; font-size: 13.5px; text-align: left; }
+.suggestions button:first-child { border-top: 0; }
+.rsvp { border: 1.5px solid color-mix(in srgb, var(--cuivre) 55%, transparent); background: color-mix(in srgb, var(--cuivre) 8%, var(--surface)); }
+.rsvp .qui { font-size: 12.5px; color: var(--doux-clair); }
+.rsvp-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.btn-dispo { appearance: none; border: 0; border-radius: 12px; background: var(--vert); color: #fff; font-weight: 700; font-size: 14px; min-height: 42px; }
+.btn-dispo[aria-pressed="true"], .btn-absent[aria-pressed="true"] { outline: 2px solid var(--creme); outline-offset: 2px; }
+.btn-absent { appearance: none; border: 1px solid var(--doux); border-radius: 12px; background: transparent; font-size: 14px; min-height: 42px; }
+.reponse { font-size: 12.5px; color: var(--doux-clair); }
+.decompte { display: flex; gap: 6px; flex-wrap: wrap; font-size: 12px; }
+.decompte span { border-radius: 999px; padding: 3px 9px; background: var(--noyer); border: 1px solid var(--doux); }
+.decompte .d { color: #9BD8B7; border-color: color-mix(in srgb, var(--vert) 60%, transparent); }
+.decompte .a { color: #E08A76; border-color: color-mix(in srgb, #b5533c 60%, transparent); }
+.chip.attente-rsvp { opacity: .6; border-style: dotted; }
+.chip.absent { opacity: .45; text-decoration: line-through; }
+.check-cercle { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--surface); border-radius: 12px; font-size: 14px; }
+.check-cercle input { accent-color: var(--cuivre); width: 17px; height: 17px; }
+.check-cercle small { color: var(--doux-clair); margin-left: auto; font-size: 11.5px; }
+.fil { display: flex; flex-direction: column; gap: 10px; }
+.fil-item { display: flex; gap: 10px; align-items: flex-start; }
+.fil-item .cov { width: 46px; height: 46px; flex: none; border-radius: 8px; font-size: 10px; padding: 4px; }
+.fil-item p { font-size: 13px; color: var(--doux-clair); }
+.fil-item p b { color: var(--creme); }
+.fil-date { font-size: 11px; color: var(--doux); }
+.vide { text-align: center; font-size: 13px; color: var(--doux-clair); padding: 10px 0; }
+</style>
+<div class="wrap">
+  <header class="intro">
+    <div>
+      <p class="eyebrow">Maquette fonctionnelle · à valider avant code</p>
+      <h1>Cercles d'amis et invitations</h1>
+      <p class="lead">Un <b>cercle</b>, c'est un groupe de comptes avec qui tu joues souvent (« Les copains du jeudi »). On le crée une fois ; ensuite, programmer une partie invite tout le cercle en un geste. Chacun répond <b>Dispo</b> ou <b>Pas dispo</b> dans l'app. Un nouvel onglet <b>Amis</b> regroupe les cercles et l'activité de tes amis.</p>
+    </div>
+    <div class="bloc">
+      <h2>Ce qui change par rapport à aujourd'hui</h2>
+      <ul>
+        <li><b>Nouvel onglet « Amis »</b> (5ᵉ) : mes cercles, et le fil d'activité de mes amis.</li>
+        <li><b>Programmer une partie</b> : on coche des cercles et/ou des personnes. Elles reçoivent une <b>invitation</b> au lieu d'être inscrites d'office.</li>
+        <li><b>Répondre dans l'app</b> : Dispo / Pas dispo, modifiable. Une pastille sur « Parties » compte les invitations sans réponse.</li>
+        <li><b>L'organisateur voit qui vient</b> : 3 dispo · 1 absent · 2 sans réponse.</li>
+        <li>Inchangé : la partie du jour (« Créer la partie ») inscrit directement les joueurs ; les invités par lien WhatsApp ; les foyers (ludothèque commune).</li>
+      </ul>
+    </div>
+  </header>
+
+  <section class="regles">
+    <div class="bloc">
+      <h2>Un cercle</h2>
+      <table>
+        <tr><td>Qui peut en créer un</td><td>tout compte</td></tr>
+        <tr><td>Rejoindre</td><td>par le lien du cercle, ou ajouté par pseudo</td></tr>
+        <tr><td>Ajouter un membre</td><td>tout membre</td></tr>
+        <tr><td>Retirer un membre, supprimer le cercle</td><td>le créateur</td></tr>
+        <tr><td>Quitter</td><td>chacun, à tout moment</td></tr>
+        <tr><td>Invités par lien (sans compte)</td><td class="non">jamais membres</td></tr>
+      </table>
+    </div>
+    <div class="bloc">
+      <h2>Une invitation</h2>
+      <ul>
+        <li><b>Dispo</b> → tu deviens joueur tout de suite : tu poses tes jeux et tu votes sur l'étagère, comme aujourd'hui.</li>
+        <li><b>Pas dispo</b> → la partie disparaît de tes parties à venir (réponse modifiable jusqu'au jour J).</li>
+        <li><b>Sans réponse</b> → la partie reste dans « Invitations ». L'organisateur peut t'inscrire lui-même à la dernière minute.</li>
+        <li>Le lien WhatsApp continue de marcher en parallèle, pour les personnes sans compte.</li>
+      </ul>
+    </div>
+    <div class="bloc">
+      <h2>Points à trancher</h2>
+      <ul class="questions">
+        <li><b>« Dispo » = joueur tout de suite</b> (la spec d'origine disait « au lancement »). Je propose tout de suite : l'étagère se prépare à l'avance depuis la v4.7.</li>
+        <li><b>Invitations seulement pour les parties programmées</b> ; la partie du jour garde l'inscription directe.</li>
+        <li><b>Fil d'activité</b> : parties terminées des 30 derniers jours où joue au moins un membre de mes cercles, en lecture seule.</li>
+        <li><b>Version</b> : v4.8.0 (MINOR).</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <div class="groupe-head"><h2>Onglet Amis</h2><p>Marc gère ses cercles. Tous les boutons sont cliquables.</p></div>
+    <div class="phones">
+
+      <div class="ecran" id="a1">
+        <div class="ecran-titre"><span class="id">A1</span><h3>Mes cercles</h3></div>
+        <div class="phone">
+          <div class="status"><span>19:30</span><span>●●● 5G</span></div>
+          <div class="scroll">
+            <div class="page-head"><h1>Amis</h1><span class="user-chip">🎲 M ▾</span></div>
+            <div class="seg" role="group" aria-label="Section"><button type="button" aria-pressed="true">Cercles</button><button type="button" aria-pressed="false" data-goto="a4">Activité</button></div>
+            <div class="card"><div class="cercle-card" data-goto="a2" role="button" tabindex="0">
+              <div class="cercle-ico">🎲</div>
+              <div class="cercle-body"><b>Les copains du jeudi</b><span class="meta">5 membres · créé par toi</span></div>
+              <div class="avatars"><span>🐻</span><span>🦊</span><span>🐙</span></div></div></div>
+            <div class="card"><div class="cercle-card">
+              <div class="cercle-ico">🏠</div>
+              <div class="cercle-body"><b>Famille</b><span class="meta">3 membres · créé par Julie</span></div>
+              <div class="avatars"><span>🦊</span><span>🐢</span></div></div></div>
+            <div class="card" id="a1-form" hidden>
+              <div class="field"><label for="a1-nom">Nom du cercle</label><input id="a1-nom" placeholder="Les copains du jeudi" maxlength="40"></div>
+              <div class="row-btns"><button class="btn-ghost sm" type="button" data-toggle="a1-form">Annuler</button><button class="btn-copper sm" type="button" data-goto="a2">Créer</button></div>
+            </div>
+            <button class="btn-copper" type="button" data-toggle="a1-form">＋ Créer un cercle</button>
+          </div>
+          <div class="tabbar"><span class=""><i>🗄️</i>Étagère</span><span class=""><i>📚</i>Ludo</span><span class=""><i>➕</i>Ajouter</span><span class=""><i>🎲</i>Parties<b class=pastille>1</b></span><span class="on"><i>👥</i>Amis</span></div>
+        </div>
+        <p class="note">5ᵉ onglet. Deux sections : Cercles et Activité.</p>
+      </div>
+
+      <div class="ecran" id="a2">
+        <div class="ecran-titre"><span class="id">A2</span><h3>Un cercle</h3></div>
+        <div class="phone">
+          <div class="status"><span>19:31</span><span>●●● 5G</span></div>
+          <div class="scroll">
+            <button class="link-btn" type="button" style="align-self:flex-start" data-goto="a1">← Amis</button>
+            <div class="hote"><div class="cercle-ico">🎲</div><div><h1 class="invite-h1" style="font-family:var(--display);font-size:22px">Les copains du jeudi</h1><span class="meta">5 membres</span></div></div>
+            <div class="card">
+              <span class="sous-label">Membres</span>
+              <div class="membre">🎲 Marc <span class="role">créateur</span></div>
+              <div class="membre">🐻 Tom <button class="retirer" type="button" style="margin-left:auto" data-armer-retrait>✕</button></div>
+              <div class="membre">🦊 Julie <button class="retirer" type="button" style="margin-left:auto" data-armer-retrait>✕</button></div>
+              <div class="membre">🐙 Yanis <button class="retirer" type="button" style="margin-left:auto" data-armer-retrait>✕</button></div>
+              <div class="membre" id="a2-nouveau" hidden>🐢 Léo <span class="role">ajouté</span></div>
+            </div>
+            <div class="field"><label for="a2-pseudo">Ajouter par pseudo</label><input id="a2-pseudo" value="le" autocomplete="off"></div>
+            <div class="suggestions" id="a2-sugg"><button type="button" data-ajout>🐢 Léo</button><button type="button" data-ajout>🦉 Leila</button></div>
+            <div class="lien-card"><span class="sous-label">Lien du cercle</span><span class="lien-url">what-shall-we-play.marco-studio.fr/cercles/rejoindre?k=4f1a…</span>
+              <div class="row-btns"><button class="btn-copper sm" type="button" data-copier>Copier le lien</button><button class="btn-ghost sm" type="button" data-copier>WhatsApp</button></div><p class="toast" aria-live="polite"></p></div>
+            <button class="btn-ghost sm" type="button" data-armer="Confirmer : supprimer le cercle" style="color:#E08A76">Supprimer le cercle</button>
+          </div>
+          <div class="tabbar"><span class=""><i>🗄️</i>Étagère</span><span class=""><i>📚</i>Ludo</span><span class=""><i>➕</i>Ajouter</span><span class=""><i>🎲</i>Parties<b class=pastille>1</b></span><span class="on"><i>👥</i>Amis</span></div>
+        </div>
+        <p class="note">Le créateur voit les ✕ (retrait confirmé) et « Supprimer le cercle ». Un membre voit seulement « Quitter le cercle ».</p>
+        <p class="note">Supprimer un cercle ne touche ni aux parties ni aux comptes : il ne sert qu'à inviter.</p>
+      </div>
+
+      <div class="ecran" id="a3">
+        <div class="ecran-titre"><span class="id">A3</span><h3>Lien d'un cercle reçu</h3></div>
+        <div class="phone">
+          <div class="status"><span>19:40</span><span>●●● 4G</span></div>
+          <div class="scroll">
+            <div class="grand-emoji" aria-hidden="true">👥</div>
+            <p class="centre"><b>Marc</b> t'invite dans le cercle</p>
+            <div class="hero-date centre">Les copains du jeudi</div>
+            <p class="meta centre">5 membres : Marc, Tom, Julie, Yanis, Léo</p>
+            <button class="btn-copper" type="button">Rejoindre le cercle</button>
+            <div class="sep">pas encore de compte ?</div>
+            <button class="btn-ghost" type="button">Créer mon compte et rejoindre</button>
+          </div>
+        </div>
+        <p class="note">Les cercles sont réservés aux comptes. Connecté : un bouton. Sinon : création de compte (ou connexion), puis retour ici.</p>
+      </div>
+
+      <div class="ecran" id="a4">
+        <div class="ecran-titre"><span class="id">A4</span><h3>Activité de mes amis</h3></div>
+        <div class="phone">
+          <div class="status"><span>19:32</span><span>●●● 5G</span></div>
+          <div class="scroll">
+            <div class="page-head"><h1>Amis</h1><span class="user-chip">🎲 M ▾</span></div>
+            <div class="seg" role="group" aria-label="Section"><button type="button" aria-pressed="false" data-goto="a1">Cercles</button><button type="button" aria-pressed="true">Activité</button></div>
+            <div class="fil">
+              <div class="card fil-item"><span class="cov" style="background:linear-gradient(160deg,#2f6f8f,#1b3a52)">Azul</span><div><p><b>Tom, Julie</b> et 2 autres ont joué à <b>Azul</b></p><p>👑 Julie · 78 — 😍 2 · 🙂 1</p><span class="fil-date">hier</span></div></div>
+              <div class="card fil-item"><span class="cov" style="background:linear-gradient(160deg,#6a8f3a,#34481c)">Cascadia</span><div><p><b>Yanis</b> et 3 autres ont joué à <b>Cascadia</b></p><p>👑 Yanis · 92 — 😍 3</p><span class="fil-date">samedi 3 octobre</span></div></div>
+              <div class="card fil-item"><span class="cov" style="background:linear-gradient(160deg,#a03a3a,#521c1c)">Codenames</span><div><p><b>Julie</b> et 5 autres ont joué à <b>Codenames</b></p><p>Pas de scores — 🙂 4 · 😐 1</p><span class="fil-date">jeudi 1er octobre</span></div></div>
+            </div>
+            <p class="vide">C'est tout pour les 30 derniers jours.</p>
+          </div>
+          <div class="tabbar"><span class=""><i>🗄️</i>Étagère</span><span class=""><i>📚</i>Ludo</span><span class=""><i>➕</i>Ajouter</span><span class=""><i>🎲</i>Parties<b class=pastille>1</b></span><span class="on"><i>👥</i>Amis</span></div>
+        </div>
+        <p class="note">Lecture seule. Les parties terminées où joue au moins un membre de tes cercles. Pas de commentaires ni de likes (v1 minimale).</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="groupe-head"><h2>Programmer et répondre</h2><p>Marc invite un cercle, Tom répond.</p></div>
+    <div class="phones">
+
+      <div class="ecran" id="p1">
+        <div class="ecran-titre"><span class="id">P1</span><h3>Programmer : inviter un cercle</h3></div>
+        <div class="phone">
+          <div class="status"><span>19:35</span><span>●●● 5G</span></div>
+          <div class="scroll">
+            <h2 class="sec-h">Programmer une partie</h2>
+            <div class="field"><label for="p1-t">Titre <span style="font-weight:400">(facultatif)</span></label><input id="p1-t" value="Soirée Azul &amp; co"></div>
+            <div class="row-btns"><div class="field"><label for="p1-d">Date</label><input id="p1-d" value="09/10/2026"></div><div class="field"><label for="p1-h">Heure</label><input id="p1-h" value="20:30"></div></div>
+            <span class="sous-label">Inviter</span>
+            <label class="check-cercle"><input type="checkbox" checked data-cercle> 🎲 Les copains du jeudi <small>4 personnes</small></label>
+            <label class="check-cercle"><input type="checkbox" data-cercle> 🏠 Famille <small>2 personnes</small></label>
+            <span class="sous-label">ou des personnes</span>
+            <label class="picker-row"><input type="checkbox" checked disabled> 🎲 Marc (toi, joueur d'office)</label>
+            <label class="picker-row"><input type="checkbox" checked> 🐻 Tom</label>
+            <label class="picker-row"><input type="checkbox" checked> 🦊 Julie</label>
+            <label class="picker-row"><input type="checkbox" checked> 🐙 Yanis</label>
+            <label class="picker-row"><input type="checkbox" checked> 🐢 Léo</label>
+            <p class="meta">4 invitations seront envoyées dans l'app. Chacun répond Dispo ou Pas dispo.</p>
+            <button class="btn-copper" type="button" data-goto="p3">Programmer et inviter</button>
+          </div>
+          <div class="tabbar"><span class=""><i>🗄️</i>Étagère</span><span class=""><i>📚</i>Ludo</span><span class=""><i>➕</i>Ajouter</span><span class="on"><i>🎲</i>Parties</span><span class=""><i>👥</i>Amis</span></div>
+        </div>
+        <p class="note">Cocher un cercle coche ses membres ; on peut ensuite en décocher ou ajouter quelqu'un hors cercle. Le formulaire actuel est conservé, les cercles s'ajoutent au-dessus.</p>
+      </div>
+
+      <div class="ecran" id="p2">
+        <div class="ecran-titre"><span class="id">P2</span><h3>Tom reçoit l'invitation</h3></div>
+        <div class="phone">
+          <div class="status"><span>19:36</span><span>●●● 4G</span></div>
+          <div class="scroll">
+            <div class="page-head"><h1>Mes parties</h1><span class="user-chip">🐻 T ▾</span></div>
+            <h2 class="sec-h">Invitations</h2>
+            <div class="card rsvp">
+              <div class="card-head"><div><div class="titre-soiree">Soirée Azul &amp; co</div><div class="hero-date" style="font-size:19px">Ven. 9 octobre<small>20:30</small></div></div><span class="badge b-prog"><span class="pt"></span>Invitation</span></div>
+              <p class="qui">🎲 <b>Marc</b> t'invite · via Les copains du jeudi · 4 invités</p>
+              <div class="rsvp-btns"><button class="btn-dispo" type="button" data-rsvp="dispo" aria-pressed="false">✓ Dispo</button><button class="btn-absent" type="button" data-rsvp="absent" aria-pressed="false">Pas dispo</button></div>
+              <p class="reponse" aria-live="polite">Pas encore répondu.</p>
+            </div>
+            <h2 class="sec-h">Programmées</h2>
+            <p class="empty" style="font-size:13px;color:var(--doux-clair)">Aucune partie programmée.</p>
+          </div>
+          <div class="tabbar"><span class=""><i>🗄️</i>Étagère</span><span class=""><i>📚</i>Ludo</span><span class=""><i>➕</i>Ajouter</span><span class="on"><i>🎲</i>Parties<b class=pastille>1</b></span><span class=""><i>👥</i>Amis</span></div>
+        </div>
+        <p class="note">La pastille cuivre sur « Parties » compte les invitations sans réponse ; elle disparaît quand Tom a répondu.</p>
+        <p class="note">« Dispo » : la partie passe dans « Programmées », Tom peut préparer l'étagère. « Pas dispo » : elle disparaît, la réponse reste modifiable depuis l'invitation.</p>
+      </div>
+
+      <div class="ecran" id="p3">
+        <div class="ecran-titre"><span class="id">P3</span><h3>Marc voit qui vient</h3></div>
+        <div class="phone">
+          <div class="status"><span>19:50</span><span>●●● 5G</span></div>
+          <div class="scroll">
+            <div class="page-head"><h1>Mes parties</h1><span class="user-chip">🎲 M ▾</span></div>
+            <h2 class="sec-h">Programmées</h2>
+            <div class="card">
+              <div class="plan">
+                <div class="plan-date"><b>9</b><span>oct</span></div>
+                <div class="plan-body">
+                  <div class="plan-titre">Soirée Azul &amp; co</div>
+                  <div class="plan-when meta">vendredi 9 octobre<small>20:30</small></div>
+                  <div class="decompte"><span class="d">2 dispo</span><span class="a">1 absent</span><span>1 sans réponse</span></div>
+                  <div class="chips">
+                    <span class="chip">🎲 Marc</span><span class="chip">🐻 Tom</span><span class="chip">🦊 Julie</span>
+                    <span class="chip absent">🐙 Yanis</span><span class="chip attente-rsvp">🐢 Léo ⏳</span>
+                  </div>
+                  <button class="link-btn" type="button" style="align-self:flex-start" data-inscrire>＋ Inscrire Léo moi-même</button>
+                  <p class="meta">3 jeux sur l'étagère</p>
+                  <div class="row-btns"><button class="btn-copper sm" type="button">Préparer l'étagère</button><button class="btn-ghost sm" type="button">🔗 Inviter</button></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="tabbar"><span class=""><i>🗄️</i>Étagère</span><span class=""><i>📚</i>Ludo</span><span class=""><i>➕</i>Ajouter</span><span class="on"><i>🎲</i>Parties</span><span class=""><i>👥</i>Amis</span></div>
+        </div>
+        <p class="note">Joueurs (dispo) en clair, absents barrés, sans réponse en pointillé ⏳. L'organisateur peut inscrire un « sans réponse » de dernière minute.</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+  const aller = (id) => { const c = document.getElementById(id); if (!c) return;
+    c.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' });
+    const ph = c.querySelector('.phone'); ph.style.outline = '2px solid var(--cuivre)'; setTimeout(() => (ph.style.outline = ''), 1200); };
+  document.querySelectorAll('[data-goto]').forEach((b) => b.addEventListener('click', () => aller(b.dataset.goto)));
+  document.querySelectorAll('[data-toggle]').forEach((b) => b.addEventListener('click', () => { const f = document.getElementById(b.dataset.toggle); f.hidden = !f.hidden; }));
+  document.querySelectorAll('[data-copier]').forEach((b) => b.addEventListener('click', () => {
+    const t = b.closest('.lien-card').querySelector('.toast'); t.textContent = '✓ Lien copié'; setTimeout(() => (t.textContent = ''), 2000); }));
+  document.querySelectorAll('[data-ajout]').forEach((b) => b.addEventListener('click', () => {
+    document.getElementById('a2-nouveau').hidden = false; document.getElementById('a2-sugg').hidden = true; document.getElementById('a2-pseudo').value = ''; }));
+  document.querySelectorAll('[data-armer-retrait]').forEach((b) => b.addEventListener('click', () => {
+    if (!b.classList.contains('armed')) { b.classList.add('armed'); b.textContent = 'Sûr ?'; return; } b.closest('.membre').remove(); }));
+  document.querySelectorAll('[data-armer]').forEach((b) => { const i = b.textContent; b.addEventListener('click', () => {
+    if (!b.classList.contains('armed')) { b.classList.add('armed'); b.textContent = b.dataset.armer; return; }
+    b.textContent = '✓ Cercle supprimé'; setTimeout(() => { b.classList.remove('armed'); b.textContent = i; }, 1800); }); });
+  document.querySelectorAll('[data-rsvp]').forEach((b) => b.addEventListener('click', () => {
+    const carte = b.closest('.rsvp');
+    carte.querySelectorAll('[data-rsvp]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    carte.querySelector('.reponse').textContent = b.dataset.rsvp === 'dispo'
+      ? '✓ Tu es inscrit : la partie est dans « Programmées ». Tu peux changer d’avis.'
+      : 'Noté : tu ne viens pas. Tu peux changer d’avis jusqu’au jour J.';
+    const p = document.querySelector('#p2 .pastille'); if (p) p.remove(); }));
+  const ins = document.querySelector('[data-inscrire]');
+  ins?.addEventListener('click', () => { const c = document.querySelector('#p3 .attente-rsvp'); c.classList.remove('attente-rsvp'); c.textContent = '🐢 Léo';
+    const d = document.querySelector('#p3 .decompte'); d.innerHTML = '<span class="d">3 dispo</span><span class="a">1 absent</span>'; ins.remove(); });
+  document.querySelectorAll('[data-cercle]').forEach((c) => c.addEventListener('change', () => {
+    const n = document.querySelectorAll('#p1 .picker-row input:not([disabled])'); if (c.closest('label').textContent.includes('copains')) n.forEach((x) => (x.checked = c.checked)); }));
+})();
+</script>
+</html>
