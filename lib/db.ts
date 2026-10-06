@@ -114,6 +114,40 @@ CREATE TABLE IF NOT EXISTS foyers (
   created_by INTEGER NOT NULL REFERENCES users(id),
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
+-- v4.8.0 : amitiés (une ligne par paire, user_a < user_b), cercles, invitations.
+CREATE TABLE IF NOT EXISTS amities (
+  user_a INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  user_b INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  etat TEXT NOT NULL CHECK (etat IN ('demande','ami')),
+  demandeur INTEGER NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (user_a, user_b),
+  CHECK (user_a < user_b)
+);
+CREATE TABLE IF NOT EXISTS cercles (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  nom TEXT NOT NULL,
+  lien_token TEXT NOT NULL UNIQUE,
+  adhesion TEXT NOT NULL DEFAULT 'validation' CHECK (adhesion IN ('libre','validation')),
+  created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE TABLE IF NOT EXISTS cercle_membres (
+  cercle_id INTEGER NOT NULL REFERENCES cercles(id) ON DELETE CASCADE,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  role TEXT NOT NULL DEFAULT 'membre' CHECK (role IN ('admin','membre')),
+  etat TEXT NOT NULL DEFAULT 'membre' CHECK (etat IN ('membre','attente')),
+  ajoute_par INTEGER,
+  UNIQUE (cercle_id, user_id)
+);
+CREATE TABLE IF NOT EXISTS night_invites (
+  night_id INTEGER NOT NULL REFERENCES nights(id) ON DELETE CASCADE,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  etat TEXT NOT NULL DEFAULT 'attente' CHECK (etat IN ('attente','dispo','absent')),
+  via_cercle INTEGER REFERENCES cercles(id) ON DELETE SET NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now','localtime')),
+  UNIQUE (night_id, user_id)
+);
 `;
 
 let db: Database.Database | null = null;
@@ -145,6 +179,8 @@ export function runMigrations(db: Database.Database): void {
     'ALTER TABLE nights ADD COLUMN lien_token TEXT',
     // v4.7.0 : titre facultatif d'une partie (repli d'affichage sur la date).
     'ALTER TABLE nights ADD COLUMN titre TEXT',
+    // v4.8.0 : lien d'ami personnel (créé à la demande ; unicité par index plus bas).
+    'ALTER TABLE users ADD COLUMN lien_ami TEXT',
   ]) {
     try { db.exec(stmt); } catch { /* colonne déjà présente */ }
   }
@@ -162,6 +198,21 @@ export function runMigrations(db: Database.Database): void {
         for (const { token } of db.prepare(`SELECT token FROM ${table}`).all() as { token: string }[]) maj.run(hacher(token), token);
       }
       db.pragma('user_version = 1');
+    })();
+  }
+  db.prepare('CREATE UNIQUE INDEX IF NOT EXISTS idx_users_lien_ami ON users(lien_ami)').run();
+  // v4.8.0 : les listes de joueurs ne montrent plus que les amis et le foyer. Une seule
+  // fois : les comptes qui ont déjà joué une partie ensemble deviennent amis d'office
+  // (personne ne retrouve une liste vide après la mise à jour).
+  if ((db.pragma('user_version', { simple: true }) as number) < 2) {
+    db.transaction(() => {
+      db.prepare(`
+        INSERT OR IGNORE INTO amities (user_a, user_b, etat, demandeur)
+        SELECT DISTINCT a.user_id, b.user_id, 'ami', a.user_id
+        FROM night_players a JOIN night_players b ON a.night_id = b.night_id AND a.user_id < b.user_id
+        JOIN users ua ON ua.id = a.user_id AND ua.est_invite = 0
+        JOIN users ub ON ub.id = b.user_id AND ub.est_invite = 0`).run();
+      db.pragma('user_version = 2');
     })();
   }
 }

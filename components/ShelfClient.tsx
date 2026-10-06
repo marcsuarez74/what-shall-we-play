@@ -268,7 +268,7 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
           <div className="bottom-sheet" role="dialog" aria-modal="true" aria-label={t('etagere.modifierPartie')}
                onClick={(e) => e.stopPropagation()}>
             <button type="button" className="sheet-close" aria-label={t('etagere.fermer')} onClick={() => setEditingNight(false)}>✕</button>
-            <NightPicker users={users} prechecked={players.map((p) => p.id)} night={night}
+            <NightPicker users={users} prechecked={players.map((p) => p.id)} night={night} meId={me.id}
                          editInfos={estCreateur ? { futur } : undefined}
                          onClose={() => setEditingNight(false)} />
           </div>

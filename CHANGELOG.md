@@ -4,6 +4,30 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [4.8.0] — 2026-10-06
+
+### Ajouté
+Amis, cercles et invitations (maquette validée : `mockup/2026-10-06-v480-cercles.html`).
+- **Amis** : un lien réciproque entre deux comptes. On devient amis par pseudo (demande à
+  accepter ou refuser) ou par **son lien d'ami** (amis dès l'ouverture : le partager vaut
+  accord). Chacun peut retirer un ami (confirmé). Les comptes qui avaient déjà joué une
+  partie ensemble sont amis d'office à la mise à jour.
+- **Cercles** : des listes d'amis pour inviter en un geste ; une personne peut être dans
+  plusieurs cercles. Réglage d'adhésion **libre** (le lien suffit, tout membre ajoute) ou
+  **sur validation d'un admin**. Plusieurs admins possibles ; le dernier admin nomme un
+  successeur avant de partir. Supprimer un cercle ne touche ni aux parties ni aux comptes.
+- **Invitations** : programmer une partie invite les amis et cercles cochés. « Dispo » rend
+  joueur tout de suite (étagère, votes), « Pas dispo » retire ; la réponse reste modifiable
+  jusqu'au jour J. L'organisateur voit le décompte et peut inscrire lui-même un
+  « sans réponse ». Pastille sur l'onglet Parties pour les invitations en attente.
+- **Activité** : les parties terminées des 30 derniers jours où joue au moins un ami.
+- **Onglet « Amis »** (5ᵉ onglet) : sections Amis, Cercles, Activité.
+
+### Modifié
+- Les listes de joueurs ne proposent plus tous les comptes : seulement **mes amis et mon
+  foyer** (les joueurs déjà dans une partie y restent). La partie du jour garde
+  l'inscription directe.
+
 ## [4.7.5] — 2026-10-06
 
 ### Corrigé

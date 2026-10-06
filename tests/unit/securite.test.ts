@@ -65,7 +65,7 @@ describe('jetons hachés en base', () => {
     db.prepare("INSERT INTO sessions (token, user_id, expires_at) VALUES (?, ?, datetime('now','+1 day'))").run(clair, u);
     db.pragma('user_version = 0');
     runMigrations(db);
-    expect(db.pragma('user_version', { simple: true })).toBe(1);
+    expect(db.pragma('user_version', { simple: true })).toBeGreaterThanOrEqual(1);
     expect(getUserByToken(clair)?.id).toBe(u);
     runMigrations(db); // idempotent : pas de double hachage
     expect(getUserByToken(clair)?.id).toBe(u);

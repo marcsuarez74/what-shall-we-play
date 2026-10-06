@@ -4,6 +4,8 @@ import RegisterSW from "@/components/RegisterSW";
 import TabBar from "@/components/TabBar";
 import { LanguageProvider } from "@/components/LanguageProvider";
 import { getLang } from "@/lib/i18n/server";
+import { getSessionUser } from "@/lib/session";
+import { nbInvitationsEnAttente } from "@/lib/invitations";
 import { t } from "@/lib/i18n";
 import "./globals.css";
 
@@ -56,12 +58,13 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const lang = await getLang();
+  const user = await getSessionUser();
   return (
     <html lang={lang} className={`${bricolage.variable} ${spaceGrotesk.variable}`}>
       <body>
         <LanguageProvider lang={lang}>
           {children}
-          <TabBar />
+          <TabBar invitations={user ? nbInvitationsEnAttente(user.id) : 0} />
           <RegisterSW />
         </LanguageProvider>
       </body>

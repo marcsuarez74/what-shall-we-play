@@ -1,11 +1,11 @@
 'use client';
 import { useState } from 'react';
 import type { UserLite } from '@/lib/types';
-import NightPicker from './NightPicker';
+import NightPicker, { type CerclePicker } from './NightPicker';
 import { useI18n } from './LanguageProvider';
 
 // « ＋ Programmer une partie » → bottom-sheet avec NightPicker (date + heure + joueurs).
-export default function NightPlanner({ users, meId }: { users: UserLite[]; meId: number }) {
+export default function NightPlanner({ users, meId, cercles }: { users: UserLite[]; meId: number; cercles: CerclePicker[] }) {
   const [open, setOpen] = useState(false);
   const { t } = useI18n();
   return (
@@ -16,7 +16,7 @@ export default function NightPlanner({ users, meId }: { users: UserLite[]; meId:
       {open && (
         <div className="sheet-backdrop" onClick={() => setOpen(false)}>
           <div className="bottom-sheet" onClick={(e) => e.stopPropagation()}>
-            <NightPicker users={users} prechecked={[meId]} withDate onClose={() => setOpen(false)} />
+            <NightPicker users={users} prechecked={[meId]} meId={meId} cercles={cercles} withDate onClose={() => setOpen(false)} />
           </div>
         </div>
       )}

@@ -86,7 +86,7 @@ export default function AuthForm({ mode, next }: { mode: 'login' | 'register'; n
       {error && <p className="error" role="alert">{error}</p>}
       <button disabled={busy || code.length !== 4}>{t(mode === 'login' ? 'auth.entrer' : 'auth.creer')}</button>
       <a href="/faq">{t('auth.faq')}</a>
-      <a href={mode === 'login' ? '/register' : '/login'}>
+      <a href={`${mode === 'login' ? '/register' : '/login'}${next ? `?next=${encodeURIComponent(next)}` : ''}`}>
         {t(mode === 'login' ? 'auth.lienLogin' : 'auth.lienRegister')}
       </a>
       <LanguageSwitch lang={lang} />
