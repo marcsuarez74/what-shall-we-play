@@ -3,7 +3,7 @@
 > **Fichier vivant** : les idées se déposent ici en vrac, chaque feature partira d'ici vers un vrai
 > brainstorming (maquette → spec → plan) au moment de la lancer.
 > Tailles indicatives : 🟢 S · 🟡 M · 🔴 L · 🔴+ XL
-> Dernière mise à jour : 2026-10-06
+> Dernière mise à jour : 2026-10-07
 
 ## Ordre suggéré
 
@@ -15,10 +15,10 @@
 | 4 | Le verdict du jeu 😍🙂😐 — ✓ v3.7.0 | 🟢 S | Une ligne d'état, un gros effet sur les stats et les tirages |
 | 5 | Ajout au calendrier | 🟢 S | Minuscule, collé au flow WhatsApp existant |
 | 6 | Suggestions intelligentes | 🟡 M | La roue garde le dernier mot, mais informée (données BGG déjà là) |
-| 7 | Mon cercle d'amis | 🔴 L | Le socle social : qui voit qui — le prêt s'appuiera dessus |
+| 7 | Mon cercle d'amis — ✓ v4.8.0 | 🔴 L | Le socle social : qui voit qui — le prêt s'appuiera dessus |
 | 8 | Monétisation premium | 🟡 M | Infra paiement ; ouvre la voie au financement de la ludothèque |
 | 9 | Ludothèque virtuelle | 🔴+ XL | Dépend des cercles ; le prêt communautaire pourrait être la feature premium |
-| 10 | Notifications push | 🔴 L | Le plus d'infra ; prend tout son sens une fois les cercles en place |
+| 10 | Notifications push — ✓ v4.9.0 | 🔴 L | Le plus d'infra ; prend tout son sens une fois les cercles en place |
 | 11 | FAQ — ✓ v3.8.0 | 🟢 S | Petite, sans dépendance — à glisser au fil de l'eau, quand le contenu existe |
 | 12 | Paramétrage de la sélection des jeux | 🟡 M | Petit, colle au flow de création ; rend la sélection plus juste |
 | 13 | Le veto ❌ (et le ❤️) | 🟡 M | Sur l'existant (vote v3.5.0), gros effet social pour peu |
@@ -108,7 +108,12 @@ lourd ».
 - **Note** : on ne remplace pas le hasard, on l'informe — les filtres sont optionnels et la roue
   garde le dernier mot.
 
-## 7. Mon cercle d'amis
+## 7. Mon cercle d'amis — ✓ v4.8.0
+
+> **Livré (2026-10-06)** — amis (par pseudo ou lien d'ami), cercles multiples (adhésion libre ou
+> sur validation d'un admin), invitations aux parties programmées (Dispo / Pas dispo), activité
+> des amis, onglet « Amis ». Les listes de joueurs se limitent aux amis et au foyer. Le prêt de
+> jeux (#9) peut maintenant s'appuyer dessus.
 
 Plutôt que de voir tous ceux qui ont créé un compte : chacun crée des **cercles d'amis** avec
 invitations, et on peut appartenir à **plusieurs** cercles. Finalement le principe du foyer… mais
@@ -152,7 +157,11 @@ de lourdes garanties avant d'ouvrir au public.
 - **Note** : démarrer par le prêt dans les cercles (forte confiance, zéro garantie de paiement),
   et laisser le volet communauté mûrir derrière un accès premium/invitations.
 
-## 10. Notifications push
+## 10. Notifications push — ✓ v4.9.0
+
+> **Livré (2026-10-07)** — Web Push (VAPID) : invitation, réponse Dispo / Pas dispo, rappel du
+> jour J, amis et cercles ; réglage par type au profil. Les quatre notifications ci-dessous
+> sont couvertes ; le reste de la note vaut toujours (pas de feed).
 
 PWA push (VAPID) : « ta soirée commence », « c'est à toi de valider ta sélection », invitation à un
 cercle. L'app devient vivante sans être ouverte.
@@ -209,6 +218,9 @@ le jeu sort du pool, quel que soit le nombre de votes.
 
 ## 14. Parties récurrentes & rendez-vous
 
+> **Déjà en place** : soirées programmées, invitations Dispo / Pas dispo (v4.8.0), rappel push
+> du jour J (v4.9.0). **Reste** : la récurrence, le conflit d'horaire et la limite de joueurs.
+
 Planifier des parties qui reviennent (le jeudi, tous les quinze jours). Les joueurs **voient les
 prochaines dates et rejoignent** celles qu'ils veulent. Deux gardes-fou :
 
@@ -222,6 +234,9 @@ prochaines dates et rejoignent** celles qu'ils veulent. Deux gardes-fou :
   d'horaire alerte sans empêcher : c'est le groupe qui décide.
 
 ## 15. Événements (marathon, KijouKan…)
+
+> **Déjà en place** : le sondage multi-dates (v4.10.0 — « Plusieurs dates », 2 à 6 soirs, retenir
+> un ou plusieurs). **Reste** : l'entité « événement » (marathon) et le sondage permanent KijouKan.
 
 Une section « Événements » au-dessus des soirées :
 
@@ -262,9 +277,9 @@ courte, sourcée, liée au jeu de la partie en cours.
 Piochées dans les apps du genre (jeux de société, organisation de soirées) — ce qui existe déjà
 chez nous n'est pas répété :
 
-- **Sondage multi-dates** — une soirée avec plusieurs propositions de dates, les participants
-  choisissent (à fondre dans #14/#15)
-- **Groupes** — organiser ses rondes en groupes (chevauche #7 : un seul brainstorming)
+- **Sondage multi-dates** — ✓ livré v4.10.0 : 2 à 6 soirs proposés, chacun coche ses dispos,
+  l'organisateur retient un ou plusieurs soirs (chacun devient une partie programmée)
+- **Groupes** — ✓ livré avec les cercles (#7, v4.8.0)
 - **Chat** — discuter avec les participants (le partage WhatsApp couvre déjà une part du besoin —
   à arbitrer)
 - **Partage par lien** — ✓ livré avec les invités (#2) : chaque soirée porte son lien
