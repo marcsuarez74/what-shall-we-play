@@ -43,6 +43,8 @@ Toutes facultatives (fichier `.env` à côté du `docker-compose.yml` en product
 |---|---|
 | `DATA_DIR` | dossier des données (défaut `./data`, `/app/data` dans l'image) |
 | `PUBLIC_URL` | URL publique, pour les liens partagés et les aperçus (défaut : le domaine de prod) |
+| `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` | Clés des notifications push (facultatives : générées une fois dans `data/vapid.json` sinon) |
+| `VAPID_SUBJECT` | Contact déclaré aux services de push (défaut : `mailto:contact@marco-studio.fr`) |
 | `BGG_TOKEN` | jeton de l'API BoardGameGeek (recherche, fiches, import de collection) |
 | `BGG_COOKIE` | à défaut de jeton, cookie de session BGG (voir plus bas) |
 | `GITHUB_BUG_TOKEN`, `GITHUB_REPO` | signalement de bug : jeton et dépôt où créer l'issue |

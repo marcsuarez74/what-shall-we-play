@@ -16,6 +16,7 @@ import UserMenu from '@/components/UserMenu';
 import UserSync from '@/components/UserSync';
 import SupprimerPartie from '@/components/SupprimerPartie';
 import BoutonAction from '@/components/BoutonAction';
+import BandeauNotifications from '@/components/BandeauNotifications';
 
 // « 2026-10-02 » → jour « 2 » + mois « oct. » — la date est le héros d'une carte programmée.
 function dayMonth(playedAt: string, lang: Lang): { day: string; month: string } {
@@ -57,6 +58,7 @@ export default async function Page() {
 
       {invitations.length > 0 && (
         <section className="qg-section" aria-label={t(lang, 'soiree.invitations')}>
+          <BandeauNotifications />
           <h2>{t(lang, 'soiree.invitations')}</h2>
           <ul className="nights-list">
             {invitations.map((n) => (

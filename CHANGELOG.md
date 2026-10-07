@@ -4,6 +4,26 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [4.9.0] — 2026-10-07
+
+### Ajouté
+Notifications push (maquette validée : `mockup/2026-10-07-v490-notifications.html`).
+- **Quatre notifications**, même app fermée : invitation à une partie, réponse Dispo /
+  Pas dispo (pour l'organisateur), **rappel le jour J** (10 h, ou 2 h avant l'heure prévue
+  si c'est plus tard) et amis / cercles (demande d'ami, adhésion à valider, ajout à un
+  cercle). Toucher une notification ouvre le bon écran.
+- **Au profil** : « Activer les notifications » sur cet appareil, puis un interrupteur par
+  type (réglage du compte, tous actifs par défaut). L'écran explique les cas où c'est
+  impossible : notifications bloquées par le navigateur, iPhone sans l'app installée.
+- **Sur Parties**, un bandeau propose d'activer quand une invitation arrive (fermable).
+- Les textes suivent la langue du compte ; une nouvelle réponse remplace la précédente
+  pour la même partie au lieu de s'empiler.
+
+### Technique
+- Web Push (VAPID) via la dépendance `web-push`. Clés lues dans l'environnement
+  (`VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`) ou générées une fois dans `data/vapid.json`.
+  Un envoi qui échoue ne bloque jamais l'action ; un abonnement expiré est oublié.
+
 ## [4.8.0] — 2026-10-06
 
 ### Ajouté

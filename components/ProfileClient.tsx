@@ -9,6 +9,7 @@ import { formatDate } from '@/lib/i18n/format';
 import type { Game, UserLite } from '@/lib/types';
 import PinInput from './PinInput';
 import FoyerCard, { type FoyerData } from './FoyerCard';
+import NotificationsCard from './NotificationsCard';
 import BoxImage from './BoxImage';
 import UserMenu from './UserMenu';
 import CreerPartiePassee from './CreerPartiePassee';
@@ -179,6 +180,7 @@ export default function ProfileClient({ me, stats, verdictStats, foyer, parties,
       )}
 
       <FoyerCard foyer={foyer} meId={me.id} />
+      <NotificationsCard />
 
       <p className="pod-lb">{t('profil.mesParties')}</p>
       <button type="button" className="cp-creer" onClick={() => setCreerOuvert((o) => !o)}>{t('parties.creerPassee')}</button>

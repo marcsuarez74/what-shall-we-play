@@ -9,6 +9,7 @@ import { emitToUsers } from './events';
 import { listRelations } from './amis';
 import { t, type Lang } from './i18n';
 import type { UserLite } from './types';
+import { notifier } from './push';
 
 type Res = { ok: true } | { error: string; status: number };
 export type Adhesion = 'libre' | 'validation';
@@ -29,6 +30,17 @@ function ligne(cercleId: number, userId: number) {
 }
 const estMembre = (c: number, u: number) => ligne(c, u)?.etat === 'membre';
 const estAdmin = (c: number, u: number) => { const l = ligne(c, u); return l?.etat === 'membre' && l.role === 'admin'; };
+// v4.9.0 : une arrivée en attente prévient les admins ; un ajout direct prévient la personne ajoutée.
+function notifierArrivee(c: Cercle, userId: number, etat: 'membre' | 'attente') {
+  const pseudo = (getDb().prepare('SELECT pseudo FROM users WHERE id = ?').get(userId) as { pseudo: string }).pseudo;
+  const url = `/amis/cercles/${c.id}`;
+  if (etat === 'attente') {
+    const admins = (getDb().prepare("SELECT user_id FROM cercle_membres WHERE cercle_id = ? AND role = 'admin' AND etat = 'membre'").all(c.id) as { user_id: number }[]).map((r) => r.user_id);
+    void notifier(admins, 'amis', (lang) => ({ titre: t(lang, 'notif.adhesion', { p: pseudo, nom: c.nom }), url, tag: `adhesion-${c.id}-${userId}` }));
+  } else {
+    void notifier([userId], 'amis', (lang) => ({ titre: t(lang, 'notif.ajouteCercle', { nom: c.nom }), url, tag: `cercle-${c.id}` }));
+  }
+}
 function prevenir(cercleId: number) {
   emitToUsers((getDb().prepare('SELECT user_id FROM cercle_membres WHERE cercle_id = ?').all(cercleId) as { user_id: number }[]).map((r) => r.user_id));
 }
@@ -82,6 +94,7 @@ export function ajouterMembre(cercleId: number, acteur: number, userId: number, 
   const etat = estAdmin(cercleId, acteur) || c.adhesion === 'libre' ? 'membre' : 'attente';
   getDb().prepare("INSERT INTO cercle_membres (cercle_id, user_id, role, etat, ajoute_par) VALUES (?, ?, 'membre', ?, ?)").run(cercleId, userId, etat, acteur);
   prevenir(cercleId);
+  notifierArrivee(c, userId, etat);
   return { ok: true, etat };
 }
 
@@ -99,6 +112,7 @@ export function rejoindreParLien(moi: number, token: unknown, lang: Lang = 'fr')
   const etat = c.adhesion === 'libre' ? 'membre' : 'attente';
   getDb().prepare("INSERT INTO cercle_membres (cercle_id, user_id, role, etat, ajoute_par) VALUES (?, ?, 'membre', ?, NULL)").run(c.id, moi, etat);
   prevenir(c.id);
+  if (etat === 'attente') notifierArrivee(c, moi, etat);
   return { ok: true, id: c.id, etat };
 }
 

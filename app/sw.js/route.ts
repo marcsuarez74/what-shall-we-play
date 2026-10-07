@@ -21,6 +21,22 @@ self.addEventListener('fetch', (e) => {
     return res;
   })));
 });
+// v4.9.0 : notifications push. Le tag remplace une notification du même sujet au lieu de l'empiler.
+self.addEventListener('push', (e) => {
+  let m = {};
+  try { m = e.data ? e.data.json() : {}; } catch (_) { /* message illisible : notification générique */ }
+  e.waitUntil(self.registration.showNotification(m.titre || 'What Shall We Play', {
+    body: m.corps || '', tag: m.tag, icon: '/icons/icon-192.png', badge: '/icons/icon-192.png', data: { url: m.url || '/nights' },
+  }));
+});
+self.addEventListener('notificationclick', (e) => {
+  e.notification.close();
+  const url = new URL((e.notification.data && e.notification.data.url) || '/nights', self.location.origin).href;
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((ws) => {
+    const w = ws.find((c) => c.url.startsWith(self.location.origin));
+    return w ? w.navigate(url).then((c) => (c || w).focus()) : self.clients.openWindow(url);
+  }));
+});
 `;
 
 export function GET() {

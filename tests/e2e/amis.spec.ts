@@ -14,6 +14,7 @@ async function register(page: Page, pseudo: string) {
 }
 
 test('lien d’ami → cercle → partie programmée → Dispo → joueur', async ({ browser }) => {
+  test.setTimeout(90_000); // parcours long : trois comptes, cinq écrans
   const s = Date.now().toString(36);
   const a = await (await browser.newContext()).newPage();
   const b = await (await browser.newContext()).newPage();
