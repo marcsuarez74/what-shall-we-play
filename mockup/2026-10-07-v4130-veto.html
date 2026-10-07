@@ -291,23 +291,146 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--cuivre); ou
 .coche input { accent-color:var(--cuivre); width:17px; height:17px; }
 .ev-card { border-left:3px solid var(--ambre); }
 </style>
-<div class="wrap">
-<section class="intro"><div><p class="eyebrow">Maquette fonctionnelle · à valider</p><h1>Le veto ❌</h1><p class="lead">Le contrepoint du vote 👍 : « <b>pas ce soir</b> ». Un joueur peut écarter un jeu de la partie ; <b>un veto sort le jeu du pool</b>, quel que soit le nombre de 👍. Gros effet social pour peu de code : on évite le « on a tiré un jeu que personne ne veut ».</p>
-<div class="bloc" style="margin-top:16px"><h2>Règles</h2><ul><li><b>Un veto écarte le jeu</b> du tirage, pool « Tous » comme « Votés ». Les 👍 existants sont <b>gardés</b>, pas supprimés : ils reviennent si le veto est retiré.</li><li><b>Révocable</b> jusqu'au lancement de la roue ; <b>par partie</b> (jamais « pour toujours »).</li><li><b>Visible et nommé</b> (comme les votes) : pas de veto anonyme.</li><li>Les <b>invités par lien</b> vetoent aussi (même identité éphémère que leurs votes).</li><li>Aucune donnée détruite : un veto est une ligne qu'on pose ou qu'on retire.</li></ul></div></div>
-<div class="bloc"><h2>Points à trancher</h2><ul class="questions"><li><b>Garder 👍 ou passer à ❤️</b> (backlog #13) ? Recommandé : <b>garder 👍</b> — zéro migration, zéro changement de vocabulaire partout (étagère, pool, partage WhatsApp) ; seul ❌ s'ajoute.</li><li><b>Quota de vetos</b> : recommandé <b>1 par joueur et par partie</b> (un veto précieux évite que tout soit écarté). Ou illimité ?</li><li>Veto <b>nommé</b> (« Léa ») ou anonyme ? Recommandé : nommé, pour rester convivial.</li><li>Le <b>créateur</b> peut-il lever le veto d'un autre joueur ? Recommandé : non (chacun défait le sien).</li></ul></div></section>
-<section><div class="cercle-head"><h2>Les écrans</h2><p>Les boutons sont cliquables.</p></div><div class="phones"><div class="ecran" id="s1"><div class="ecran-titre"><span class="id">S1</span><h3>Étagère : une boîte écartée</h3></div>
-<div class="phone"><div class="status"><span>19:30</span><span>●●● 5G</span></div><div class="scroll"><div class="page-head"><h1>Étagère</h1><span class="user-chip">🎲 M ▾</span></div><h2 class="sec-h">Grandes boîtes</h2><div class="etagere"><div class="shelf-block"><div class="shelf-row">
-<div class="box " style="width:84px;height:108px"><div class="art" style="background:#8a4b2b">Terraforming Mars</div><span class="vote-badge">👍 2</span></div>
-<div class="box veto" style="width:84px;height:108px"><div class="art" style="background:#4a5d7a">Gloomhaven</div><span class="veto-badge">❌ Léa</span></div>
-<div class="box " style="width:84px;height:108px"><div class="art" style="background:#3E7E8C">Azul</div><span class="vote-badge vote-moi">👍 3</span></div>
-<div class="box " style="width:84px;height:108px"><div class="art" style="background:#5E8A3E">Wingspan</div></div></div><div class="rail"></div></div></div>
-<div class="info"><b>Gloomhaven</b> est écarté du tirage : Léa a mis son veto. Les 👍 qu'il avait sont gardés au cas où le veto serait retiré.</div></div><div class="tabbar"><span class="on"><i>🗄️</i>Étagère</span><span class=""><i>📚</i>Ludo</span><span class=""><i>➕</i>Ajouter</span><span class=""><i>🎲</i>Parties</span><span class=""><i>👥</i>Amis</span></div></div><p class="note">Le jeu vetoé est <b>grisé</b> avec le nom de qui l'a écarté (visible de tous, comme les votes). Sorti du pool « Tous » <i>et</i> « Votés ».</p></div><div class="ecran" id="s2"><div class="ecran-titre"><span class="id">S2</span><h3>Fiche du jeu : 👍 ou ❌</h3></div>
-<div class="phone"><div class="status"><span>19:30</span><span>●●● 5G</span></div><div class="scroll"><h2 class="sec-h">Gloomhaven</h2><p class="meta">1–4 joueurs · 120 min · ⚖ 3,9 / 5</p>
-<div class="rsvp-btns"><button class="btn-dispo" type="button" aria-pressed="false" style="background:var(--cuivre);color:var(--noyer)">👍 J'ai envie</button><button class="btn-veto" id="vt" type="button" aria-pressed="false">❌ Pas ce soir</button></div>
-<div class="info" id="vi">Il te reste <b>1 veto</b> pour cette partie.</div><div class="info">Le veto est <b>révocable</b> jusqu'au lancement. Il écarte le jeu pour <b>cette partie seulement</b>.</div></div><div class="tabbar"><span class=""><i>🗄️</i>Étagère</span><span class=""><i>📚</i>Ludo</span><span class=""><i>➕</i>Ajouter</span><span class="on"><i>🎲</i>Parties</span><span class=""><i>👥</i>Amis</span></div></div><p class="note">Les deux gestes cohabitent dans la fiche de la boîte : on écarte ou on soutient, pas les deux.</p></div><div class="ecran" id="s3"><div class="ecran-titre"><span class="id">S3</span><h3>Lancement : le pool, après veto</h3></div>
-<div class="phone"><div class="status"><span>19:30</span><span>●●● 5G</span></div><div class="scroll"><h2 class="sec-h">Prêts à lancer</h2><div class="opt"><button aria-pressed="true" type="button">Tous les jeux</button><button aria-pressed="false" type="button">Votés 👍</button></div>
-<div class="info"><b>17 jeux</b> en lice · <b>1 écarté</b> par veto</div>
-<div class="jlist"><div class="jl out"><b>Gloomhaven</b><span class="why">❌ veto de Léa</span></div></div>
-<button class="btn-copper" type="button">Lancer · 17</button>
-<div class="warn"><b>Cas extrême</b><span>Si <i>tous</i> les jeux sont vetoés : « Lancer » est désactivé, avec « Tous les jeux sont écartés : un joueur peut retirer son veto. »</span></div></div><div class="tabbar"><span class="on"><i>🗄️</i>Étagère</span><span class=""><i>📚</i>Ludo</span><span class=""><i>➕</i>Ajouter</span><span class=""><i>🎲</i>Parties</span><span class=""><i>👥</i>Amis</span></div></div><p class="note">Les vetos se lisent au lancement, comme les votes. Aucune règle cachée.</p></div></div></section></div>
-<script>const vt=document.getElementById('vt'),vi=document.getElementById('vi');vt.onclick=()=>{const on=vt.getAttribute('aria-pressed')!=='true';vt.setAttribute('aria-pressed',String(on));vi.innerHTML=on?'Veto posé. Il te reste <b>0 veto</b> — <b>retire-le</b> pour en écarter un autre.':'Il te reste <b>1 veto</b> pour cette partie.';};</script>
+
+<style>
+/* Étagère « prod » : mêmes composants que l'app (ShelfControls, ShelfRows, cta-zone, bottom-sheet) */
+.sp { position:relative; }
+.sp .scroll { padding-bottom: 150px; }
+.sp .night-card { background:var(--surface); border:1px solid rgba(185,165,140,.25); border-radius:16px; padding:11px 13px; display:flex; flex-direction:column; gap:7px; }
+.sp .collection-controls { margin:0; } .sp .controls-row { display:flex; gap:8px; align-items:center; }
+.sp .shelf-search { flex:1; min-width:0; padding:9px 13px; border-radius:12px; font:inherit; font-size:15px; background:var(--surface); border:1.5px solid var(--doux); color:var(--creme); }
+.sp .fbtn { display:inline-flex; align-items:center; gap:7px; font:inherit; font-size:13px; font-weight:600; color:var(--creme); background:var(--surface); border:1.5px solid var(--doux); border-radius:12px; padding:9px 12px; white-space:nowrap; }
+.sp .fbtn .badge { min-width:18px; height:18px; border-radius:999px; background:var(--cuivre); color:#fff; font-size:11px; font-weight:700; display:grid; place-items:center; padding:0 5px; }
+.sp .fbtn[aria-expanded="true"] { border-color:var(--cuivre); color:var(--cuivre); }
+.sp .fam-row { display:flex; flex-direction:column; gap:9px; padding:11px; margin-top:8px; background:color-mix(in srgb,var(--surface) 55%,transparent); border:1px solid color-mix(in srgb,var(--doux) 30%,transparent); border-radius:14px; }
+.sp .fam { display:inline-flex; align-items:stretch; flex-wrap:nowrap; }
+.sp .fam-k { align-self:center; padding-right:8px; font-size:11.5px; font-weight:600; color:var(--doux); min-width:74px; }
+.sp .fchip { font:inherit; font-size:12.5px; font-weight:600; padding:6px 10px; background:var(--surface); border:1.5px solid var(--doux); color:var(--doux-clair); border-right-width:0; }
+.sp .fchip:first-of-type { border-radius:999px 0 0 999px; } .sp .fchip:last-of-type { border-right-width:1.5px; border-radius:0 999px 999px 0; }
+.sp .fchip.on { background:var(--cuivre); border-color:var(--cuivre); color:#fff; position:relative; z-index:1; }
+.sp .shelf-count { color:var(--doux-clair); font-size:12px; display:flex; align-items:center; gap:10px; }
+.sp .shelf-count .link-btn { font-size:12px; }
+.sp .suggest { font-size:12px; color:var(--doux-clair); }
+.sp .shelf-block { display:flex; flex-direction:column; gap:4px; }
+.sp .row { display:flex; gap:12px; align-items:flex-end; overflow-x:auto; padding:12px 6px 4px; scrollbar-width:none; }
+.sp .box { position:relative; flex:0 0 auto; border:2px solid var(--doux); border-radius:10px; box-shadow:0 6px 14px rgba(0,0,0,.35); padding:0; background:none; }
+.sp .box .art { position:absolute; inset:0; border-radius:8px; display:grid; place-items:end start; padding:5px; font-family:var(--display); font-weight:800; color:#fff; text-shadow:0 1px 3px rgba(0,0,0,.6); line-height:1.02; text-align:left; overflow:hidden; font-size:11px; }
+.sp .box.sm .art { font-size:8px; padding:3px; }
+.sp .box.veto { filter:grayscale(.9); opacity:.55; }
+.sp .vote-badge .emoji { font-size:9.5px; }
+.sp .veto-badge { position:absolute; top:-7px; right:-5px; z-index:3; background:var(--rouge); color:#fff; border-radius:999px; font-size:10.5px; font-weight:800; padding:3px 7px; box-shadow:0 3px 8px rgba(0,0,0,.55); }
+.sp .rail { height:7px; border-radius:999px; background:var(--doux); opacity:.55; margin:-2px 4px 0; }
+.sp .row-label { color:var(--doux-clair); font-size:12.5px; padding:0 4px; }
+.sp .vide { padding:14px 0; }
+.sp .cta-zone { position:absolute; left:0; right:0; bottom:58px; z-index:30; display:flex; flex-direction:column; gap:7px; padding:18px 14px 10px; background:linear-gradient(180deg, rgba(42,31,23,0) 0%, var(--noyer) 35%); }
+.sp .cta-row { display:flex; gap:8px; align-items:center; }
+.sp .choix-pool { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:3px; flex:1; min-width:0; background:var(--noyer); border:1px solid color-mix(in srgb,var(--doux) 40%,transparent); border-radius:13px; padding:3px; }
+.sp .choix-pool button { border:0; background:none; color:var(--doux-clair); font:inherit; font-size:12px; font-weight:600; padding:9px 4px; border-radius:10px; white-space:nowrap; }
+.sp .choix-pool button .n { display:inline-grid; place-items:center; background:color-mix(in srgb,var(--doux) 30%,transparent); border-radius:999px; padding:1px 7px; font-size:10.5px; margin-left:4px; }
+.sp .choix-pool button.actif { background:var(--surface-plus); color:var(--creme); font-weight:700; }
+.sp .choix-pool button.actif .n { background:var(--cuivre); color:#fff; }
+.sp .cta-row .btn-copper { flex:none; padding-left:18px; padding-right:18px; }
+.sp .cta-statut { font-size:12px; color:var(--doux-clair); text-align:center; }
+.sp .cta-statut b { color:var(--creme); }
+.sp .backdrop { position:absolute; inset:0; z-index:40; background:rgba(20,14,9,.62); display:flex; align-items:flex-end; }
+.sp .bsheet { position:relative; width:100%; max-height:92%; overflow-y:auto; background:var(--surface); border-radius:22px 22px 0 0; border-top:1px solid var(--doux); box-shadow:0 -12px 32px rgba(0,0,0,.45); padding:20px 16px 18px; display:flex; flex-direction:column; gap:12px; }
+.sp .sheet-close { position:absolute; top:10px; right:10px; width:32px; height:32px; border-radius:50%; border:1px solid var(--doux); background:rgba(42,31,23,.6); color:var(--creme); font-size:14px; display:grid; place-items:center; }
+.sp .sheet-head { display:flex; gap:12px; align-items:flex-start; padding-right:30px; }
+.sp .sheet-cover { width:78px; height:78px; border-radius:12px; flex:0 0 auto; display:grid; place-items:end start; padding:5px; font-family:var(--display); font-weight:800; color:#fff; font-size:11px; }
+.sp .sheet-titles h2 { font-size:21px; margin-bottom:3px; } .sp .sheet-meta { color:var(--doux-clair); font-size:13px; }
+.sp .sheet-facts { list-style:none; display:grid; gap:6px; }
+.sp .sheet-facts li { display:flex; justify-content:space-between; gap:14px; padding:7px 11px; background:color-mix(in srgb,var(--surface) 55%,transparent); border:1px solid color-mix(in srgb,var(--doux) 35%,transparent); border-radius:10px; font-size:12.5px; }
+.sp .sheet-facts li span { color:var(--doux-clair); } .sp .sheet-facts li strong { font-weight:600; text-align:right; }
+.sp .btn-exclude { width:100%; padding:11px; border-radius:12px; background:transparent; border:1.5px solid color-mix(in srgb,#b5533c 55%,transparent); color:#d98a76; font:inherit; font-size:14px; font-weight:600; }
+.sp .btn-veto2 { width:100%; padding:11px; border-radius:12px; background:var(--rouge); border:0; color:#fff; font:inherit; font-size:14.5px; font-weight:700; }
+.sp .btn-veto2.off { background:transparent; border:1.5px solid var(--doux); color:var(--doux-clair); font-weight:600; }
+.sp .btn-veto2[disabled] { opacity:.6; }
+.sp .hint { font-size:12px; color:var(--doux-clair); }
+.sp .toast2 { position:absolute; left:14px; right:14px; bottom:140px; z-index:60; background:var(--vert); color:#fff; border-radius:12px; padding:9px 12px; font-size:12.5px; font-weight:600; text-align:center; }
+.scen { display:flex; flex-wrap:wrap; gap:6px; margin-top:4px; } .scen button { border:1px solid var(--doux); background:transparent; border-radius:999px; padding:5px 11px; font-size:12px; }
+</style>
+<div class="wrap"><section class="intro"><div><p class="eyebrow">Maquette fonctionnelle · v2 · à valider</p><h1>Le veto ❌</h1><p class="lead">Le contrepoint du 👍 : « <b>pas ce soir</b> ». Le geste passe par la <b>fiche du jeu</b> (la bottom-sheet qui s'ouvre déjà quand on touche une boîte) : aucune page, aucun nouvel écran. Un veto <b>écarte le jeu du tirage</b>, quel que soit le nombre de 👍.</p>
+<div class="bloc" style="margin-top:16px"><h2>Règles</h2><ul><li><b>Où</b> : touche la boîte → fiche du jeu → <b>❌ Mettre un veto</b>. Le 👍 reste sur la boîte, inchangé.</li><li><b>Sur l'étagère</b> : la boîte vetoée est grisée et son badge 👍 devient <b>❌ prénom</b> (visible de tous).</li><li><b>Le pool</b> (Tous <i>et</i> Votés) <b>exclut</b> les jeux vetoés ; la zone basse dit combien sont écartés.</li><li><b>Les 👍 sont gardés</b> : ils reviennent si le veto est retiré.</li><li><b>Révocable</b> jusqu'au lancement, par son auteur seulement ; <b>1 veto par joueur</b> et par partie.</li><li>Les invités par lien vetoent comme les autres (même identité que leurs votes).</li></ul></div></div><div class="bloc"><h2>Points à trancher</h2><ul class="questions"><li><b>1 veto par joueur et par partie</b> : OK ? (ou plusieurs, ou illimité).</li><li>Veto <b>nommé</b> (« ❌ Léa ») : OK ?</li><li>On <b>garde 👍</b> (aucune migration) plutôt que de passer à ❤️ : OK ?</li></ul></div></section>
+<section><div class="cercle-head"><h2>Le parcours</h2><p>Les mêmes composants que l'app : tout est cliquable.</p></div><div class="phones"><div class="ecran" style="max-width:380px"><div class="ecran-titre"><span class="id">▶</span><h3>Parcours interactif — étagère de l'app</h3></div>
+<div class="phone sp"><div class="status"><span>19:30</span><span>●●● 5G</span></div><div class="scroll" id="sp"></div><div class="tabbar"><span class="on"><i>🗄️</i>Étagère</span><span class=""><i>📚</i>Ludo</span><span class=""><i>➕</i>Ajouter</span><span class=""><i>🎲</i>Parties</span><span class=""><i>👥</i>Amis</span></div></div>
+<div class="scen"></div><p class="note">Le veto est posé depuis la fiche du jeu : même bottom-sheet que « Retirer de la partie ».</p></div>
+<script>window.CFG={suggest:false,veto:true,vetos:{}};</script><div class="ecran" style="max-width:520px"><div class="ecran-titre"><span class="id">1</span><h3>À essayer, dans l'ordre</h3></div>
+<div class="bloc"><ul class="questions">
+<li><b>Touche une boîte</b> de l'étagère (pas le 👍) : la <b>fiche du jeu</b> (bottom-sheet existante) s'ouvre.</li>
+<li>Nouveau : sous les infos, un bouton <b>❌ Mettre un veto</b> et son explication, au-dessus de « Retirer de la partie ».</li>
+<li>Pose le veto : la fiche se ferme, la boîte est <b>grisée</b> avec « ❌ Marc » à la place du 👍, et la zone basse dit « 1 jeu écarté par veto » ; <b>Lancer · N</b> baisse de 1.</li>
+<li>Rouvre la boîte : « <b>Retirer mon veto</b> ». Tente un 2ᵉ veto sur un autre jeu : bouton grisé (<b>1 veto par joueur</b>).</li>
+<li>Scénario « Léa a vetoé » : sa boîte est grisée « ❌ Léa » ; sa fiche dit « Écarté par Léa » (seule Léa peut le retirer).</li>
+<li>Scénario « Tous écartés » : « Lancer » est désactivé.</li></ul></div>
+<div class="scen"><button type="button" onclick="SCEN({})">Réinitialiser</button><button type="button" onclick="SCEN({vetos:{2:'Léa'}})">Léa a vetoé Gloomhaven</button><button type="button" onclick="SCEN({sheet:2})">Ouvrir la fiche de Gloomhaven</button><button type="button" onclick="SCEN({vetos:Object.fromEntries(G.map(g=>[g.id,'Léa']))})">Tous écartés</button></div></div></div></section></div><script>
+const CFG = window.CFG;
+const SCALE = {grand:1, moyen:.78, petit:.62, mini:.45}, FMT = ['grand','moyen','petit','mini'], FLAB = {grand:'Grande boîte', moyen:'Boîte moyenne', petit:'Petite boîte', mini:'Mini boîte'};
+const G = [
+ [1,'Terraforming Mars','grand',1,5,120,3.2,'#8a4b2b','🦊'],[2,'Gloomhaven','grand',1,4,120,3.9,'#4a5d7a','🎲'],[3,'Wingspan','grand',1,5,70,2.4,'#5E8A3E','🎲'],
+ [4,'Azul','moyen',2,4,45,1.8,'#3E7E8C','🦊'],[5,'Cascadia','moyen',1,4,40,1.8,'#7A6A3E','🐻'],[6,'7 Wonders','moyen',2,7,30,2.3,'#7a4a6a','🎲'],[7,'Catan','moyen',3,4,75,2.3,'#a65a2a','🐻'],
+ [8,'Kingdomino','petit',2,4,20,1.2,'#3e6a9b','🦊'],[9,'Splendor','petit',2,4,30,1.8,'#8a3e5a','🎲'],[10,'Love Letter','mini',2,4,20,1.1,'#9b3e3e','🐻'],
+ [11,'Codenames','petit',2,8,15,1.3,'#3e8a6a','🎲'],[12,'Les Aventuriers du Rail','moyen',2,5,60,1.9,'#6a5a9b','🦊'],[13,'Dixit','moyen',3,8,30,1.2,'#9b7a3e','🐻'],[14,'Carcassonne','petit',2,5,35,1.9,'#5a7a3e','🎲'],
+].map(([id,t,f,a,b,d,w,c,o])=>({id,t,f,a,b,d,w,c,o}));
+const ST = {open:false, fp:null, fw:null, fd:null, pool:'tous', sheet:null, votes:{2:['Julie'],4:['Léa','Tom'],5:['Léa'],7:['Julie'],3:['Tom']}, mine:{4:1}, vetos:CFG.vetos||{}, toast:'', run:false};
+const $ = (s)=>document.querySelector(s);
+const ME='Marc', PLAYERS=4;
+const wcat=(x)=>x<2?'leger':x<3?'moyen':'lourd';
+function passe(g){ if(ST.fp!=null&&(ST.fp<g.a||ST.fp>g.b))return false; if(ST.fw&&wcat(g.w)!==ST.fw)return false;
+  if(ST.fd){const d=g.d; if(ST.fd==='court'&&d>=30)return false; if(ST.fd==='moyen'&&(d<30||d>60))return false; if(ST.fd==='long'&&d<=60)return false;} return true; }
+const filtered=()=>G.filter(passe), vetoed=(g)=>!!ST.vetos[g.id];
+const jeuxVotes=()=>filtered().filter(g=>!vetoed(g)&&(ST.votes[g.id]||[]).length>0);
+const pool=()=>ST.pool==='votes'&&jeuxVotes().length>0?jeuxVotes():filtered().filter(g=>!vetoed(g));
+const myVeto=()=>Object.keys(ST.vetos).find(k=>ST.vetos[k]===ME);
+const nAct=()=>(ST.fp!=null)+(!!ST.fw)+(!!ST.fd);
+function toast(m){ST.toast=m;draw();setTimeout(()=>{ST.toast='';draw()},2200)}
+function draw(){
+  const f=filtered(), act=nAct(), P=pool();
+  let h='';
+  h+=`<div class="page-head"><h1>Étagère</h1><span class="user-chip">🎲 M ▾</span></div>`;
+  h+=`<div class="night-card"><div class="card-head"><span class="badge b-prep"><span class="pt"></span>En préparation</span><button class="link-btn" type="button">Modifier</button></div><p class="titre-soiree">Soirée Azul &amp; co</p><div class="chips"><span class="chip">🎲 Marc ✓</span><span class="chip">🦊 Julie ✓</span><span class="chip">🐻 Tom ✓</span><span class="chip">🐙 Léa ✓</span></div></div>`;
+  h+=`<div class="collection-controls"><div class="controls-row"><input class="shelf-search" placeholder="Rechercher un jeu…"><button class="fbtn" type="button" data-a="toggle" aria-expanded="${ST.open}">Filtres ${act?`<span class="badge">${act}</span>`:''}</button></div>`;
+  if(ST.open){ h+=`<div class="fam-row">`;
+    h+=`<div class="fam"><span class="fam-k">Joueurs</span>${[1,2,3,4,5,6].map(n=>`<button class="fchip ${ST.fp===n?'on':''}" data-a="p" data-v="${n}" type="button">${n}</button>`).join('')}</div>`;
+    h+=`<div class="fam"><span class="fam-k">Complexité</span>${[['leger','Légère'],['moyen','Moyenne'],['lourd','Lourde']].map(([v,l])=>`<button class="fchip ${ST.fw===v?'on':''}" data-a="w" data-v="${v}" type="button">${l}</button>`).join('')}</div>`;
+    h+=`<div class="fam"><span class="fam-k">Durée</span>${[['court','&lt; 30'],['moyen','30–60'],['long','60+']].map(([v,l])=>`<button class="fchip ${ST.fd===v?'on':''}" data-a="d" data-v="${v}" type="button">${l} min</button>`).join('')}</div>`;
+    if(false && ST.fp!==PLAYERS) h+=`<p class="suggest">Vous êtes <b>${PLAYERS}</b> à jouer ce soir · <button class="link-btn" data-a="p" data-v="${PLAYERS}" type="button" style="font-size:12px">Filtrer sur ${PLAYERS} joueurs</button></p>`;
+    h+=`<p class="shelf-count" role="status">${f.length} jeu${f.length>1?'x':''} sur ${G.length} disponibles pour la partie${act?` <button class="link-btn" data-a="clear" type="button">Tout afficher</button>`:''}</p></div>`; }
+  h+=`</div>`;
+  if(f.length===0) h+=`<p class="hint vide">Aucun jeu ne correspond à ces filtres.</p>`;
+  FMT.forEach(fm=>{const L=f.filter(g=>g.f===fm); if(!L.length)return;
+    h+=`<section class="shelf-block"><div class="row">`+L.map(g=>{const w=96*SCALE[fm], v=(ST.votes[g.id]||[]), vt=vetoed(g);
+      return `<button class="box ${SCALE[fm]<.7?'sm':''} ${vt?'veto':''}" style="width:${w}px;height:${w}px" data-a="open" data-v="${g.id}" type="button"><div class="art" style="background:${g.c}">${g.t}</div><span class="owner-badge">${g.o}</span>`+
+      (vt?`<span class="veto-badge" title="Veto de ${ST.vetos[g.id]}">❌ ${ST.vetos[g.id]}</span>`:`<span class="vote-badge ${ST.mine[g.id]?'vote-moi':''}" data-a="vote" data-v="${g.id}"><span class="emoji">👍</span>${v.length+(ST.mine[g.id]&&!v.includes(ME)?1:0)}</span>`)+`</button>`}).join('')+`</div><div class="rail"></div><p class="row-label">${FLAB[fm]} — on swipe ›</p></section>`;});
+  h+=`<div class="cta-zone"><div class="cta-row"><div class="choix-pool"><button class="${ST.pool==='tous'?'actif':''}" data-a="pool" data-v="tous" type="button">Tous<span class="n">${f.filter(g=>!vetoed(g)).length}</span></button><button class="${ST.pool==='votes'?'actif':''}" data-a="pool" data-v="votes" type="button">Votés 👍<span class="n">${jeuxVotes().length}</span></button></div><button class="btn-copper" data-a="go" type="button" ${P.length===0?'disabled':''}>Lancer · ${P.length}</button></div>`;
+  const notes=[]; if(act) notes.push(`Filtres actifs : <b>${[ST.fp!=null?ST.fp+' joueurs':'',ST.fw?{leger:'Légère',moyen:'Moyenne',lourd:'Lourde'}[ST.fw]:'',ST.fd?{court:'< 30 min',moyen:'30–60 min',long:'60+ min'}[ST.fd]:''].filter(Boolean).join(' · ')}</b>`);
+  const nv=G.filter(vetoed).length; if(CFG.veto&&nv) notes.push(`<b>${nv}</b> jeu${nv>1?'x':''} écarté${nv>1?'s':''} par veto`);
+  if(P.length===0) notes.push(f.length===0?'Aucun jeu ne correspond aux filtres':'Tous les jeux sont écartés');
+  if(notes.length) h+=`<p class="cta-statut">${notes.join(' — ')}</p>`;
+  h+=`</div>`;
+  if(ST.sheet){const g=G.find(x=>x.id===ST.sheet), by=ST.vetos[g.id], mv=myVeto();
+    h+=`<div class="backdrop" data-a="close"><div class="bsheet" data-stop role="dialog" aria-label="${g.t}"><button class="sheet-close" data-a="close" type="button">✕</button><div class="sheet-head"><div class="sheet-cover" style="background:${g.c}">${g.t.split(' ')[0]}</div><div class="sheet-titles"><h2>${g.t}</h2><p class="sheet-meta">Éditeur · 2019</p></div></div>
+    <div class="chips"><span class="chip">👥 ${g.a}–${g.b}</span><span class="chip">⏱ ${g.d} min</span><span class="chip">⚖ ${String(g.w).replace('.',',')} / 5</span></div>
+    <ul class="sheet-facts"><li><span>Parties jouées</span><strong>${g.id%4}</strong></li></ul><p class="hint">Apporté par <b>${g.o}</b> · ${FLAB[g.f]}</p>`;
+    if(CFG.veto){
+      if(by&&by!==ME) h+=`<button class="btn-veto2 off" disabled type="button">❌ Écarté par ${by}</button><p class="hint">Seul ${by} peut retirer ce veto.</p>`;
+      else if(by===ME) h+=`<button class="btn-veto2 off" data-a="unveto" data-v="${g.id}" type="button">❌ Retirer mon veto</button><p class="hint">Ton veto écarte ce jeu du tirage. Les 👍 reçus sont gardés.</p>`;
+      else if(mv) h+=`<button class="btn-veto2 off" disabled type="button">❌ Mettre un veto</button><p class="hint">Tu as déjà utilisé ton veto (${G.find(x=>x.id==mv).t}). Retire-le d’abord.</p>`;
+      else h+=`<button class="btn-veto2" data-a="veto" data-v="${g.id}" type="button">❌ Mettre un veto — pas ce soir</button><p class="hint">Écarte ce jeu du tirage pour <b>cette partie</b> (1 veto par joueur, révocable jusqu’au lancement).</p>`; }
+    h+=`<button class="btn-exclude" type="button">Retirer de la partie</button></div></div>`; }
+  if(ST.toast) h+=`<div class="toast2">${ST.toast}</div>`;
+  const el=$('#sp'), top=el.scrollTop; el.innerHTML=h; el.scrollTop=top;
+}
+document.addEventListener('click',(e)=>{const t=e.target.closest('#sp [data-a]'); if(!t){ if(e.target.closest('#sp .bsheet')) return; return;}
+  const a=t.dataset.a, v=t.dataset.v;
+  if(a==='close'&&t.classList.contains('backdrop')&&e.target.closest('.bsheet')) return;
+  if(a==='toggle')ST.open=!ST.open; if(a==='p')ST.fp=ST.fp==+v?null:+v; if(a==='w')ST.fw=ST.fw===v?null:v; if(a==='d')ST.fd=ST.fd===v?null:v;
+  if(a==='clear'){ST.fp=ST.fw=ST.fd=null} if(a==='pool')ST.pool=v;
+  if(a==='open'){ST.sheet=+v} if(a==='close')ST.sheet=null;
+  if(a==='vote'){e.stopPropagation(); ST.mine[v]=ST.mine[v]?0:1; const vs=ST.votes[v]||[]; if(!ST.mine[v]) ST.votes[v]=vs.filter(x=>x!==ME);} 
+  if(a==='veto'){ST.vetos[v]=ME;ST.sheet=null;draw();toast('❌ Veto posé sur '+G.find(x=>x.id==v).t);return}
+  if(a==='unveto'){delete ST.vetos[v];ST.sheet=null;draw();toast('Veto retiré');return}
+  if(a==='go'){draw();toast('→ /tirage : la roue tourne sur '+pool().length+' jeu'+(pool().length>1?'x':'')+' : '+pool().map(g=>g.t).slice(0,3).join(', ')+(pool().length>3?'…':''));return}
+  draw();});
+window.SCEN=(f)=>{Object.assign(ST,{open:false,fp:null,fw:null,fd:null,pool:'tous',sheet:null,vetos:{...(CFG.vetos||{})}},f);draw();};
+draw();
+</script>
