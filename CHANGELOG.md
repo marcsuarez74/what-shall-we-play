@@ -4,6 +4,19 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [4.11.0] — 2026-10-07
+
+### Ajouté
+Ajout au calendrier (maquette validée : `mockup/2026-10-07-v4110-calendrier.html`).
+- **📅 Ajouter à mon calendrier** sur chaque partie programmée (page Parties) : un fichier
+  `.ics` qui s'ouvre dans Calendar, Google Agenda ou Outlook. Titre, date, heure, joueurs et
+  lien vers l'étagère de la partie (jamais le lien d'invitation).
+- Avec une heure : événement de **3 h** à l'heure de l'app ; sans heure : **toute la journée**.
+  Rouvrir le fichier après un changement d'heure **met l'événement à jour** au lieu de le
+  dupliquer. Aucune alarme : le rappel du jour J reste celui de l'app (notifications).
+- Réservé à ceux qui jouent la partie (créateur, joueurs, invités par lien) ; pas de fichier
+  pour la partie du jour ni pour une partie terminée.
+
 ## [4.10.0] — 2026-10-07
 
 ### Ajouté

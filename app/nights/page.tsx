@@ -242,6 +242,10 @@ export default async function Page() {
                         pseudos={players.map((p) => p.pseudo)}
                         lien={createur ? lienInvitation(n) : undefined}
                       />
+                      {/* v4.11.0 : fichier .ics (lien simple, zéro JavaScript) */}
+                      <a className="btn-ghost as-link" href={`/api/nights/${n.id}/ics`} download>
+                        {t(lang, 'soiree.ajouterCalendrier')}
+                      </a>
                     </div>
                   </div>
                 </li>
