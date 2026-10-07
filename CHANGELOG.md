@@ -4,6 +4,27 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [4.10.0] — 2026-10-07
+
+### Ajouté
+Sondage de dates (maquette validée : `mockup/2026-10-07-v4100-sondage-dates.html`, v3).
+- **« Plusieurs dates »** : l'organisateur propose 2 à 6 soirs (heure facultative) à ses
+  amis et cercles. Chacun coche les soirs où il est dispo ; les réponses sont visibles de
+  tous les invités et restent modifiables jusqu'au choix.
+- **Retenir un ou plusieurs soirs** : l'organisateur voit le tableau des réponses (la
+  meilleure date est cochée d'avance) et retient autant de soirs qu'il veut. Chaque soir
+  retenu devient une partie programmée : ceux qui étaient dispo y jouent, ceux qui ont dit
+  non sont notés « Pas dispo », les autres reçoivent une invitation. Le sondage peut aussi
+  être supprimé (confirmé).
+- Notifications (type « Invitations ») à l'envoi du sondage et au choix des soirs ; la
+  pastille de Parties compte aussi les sondages sans réponse.
+
+### Modifié
+- **Un seul formulaire « Nouvelle partie »**, depuis l'étagère vide comme depuis Parties :
+  titre, **Quand ?** (Maintenant · Une date · Plusieurs dates) et **Qui ?** (cercles et
+  amis). La partie du jour gagne ainsi le titre et les cercles ; « ＋ Programmer une partie »
+  devient « ＋ Nouvelle partie ».
+
 ## [4.9.0] — 2026-10-07
 
 ### Ajouté

@@ -2460,3 +2460,28 @@ a.btn-go.as-link { display: flex; align-items: center; justify-content: center; 
 .propose-notifs .txt { flex: 1; }
 .propose-notifs .btn-copper.sm { min-height: 34px; font-size: 13px; padding: 5px 12px; border-radius: 11px; }
 .propose-notifs .x { background: none; border: 0; color: var(--doux); font-size: 16px; cursor: pointer; }
+
+/* ---------- v4.10.0 — Nouvelle partie unifiée, sondage de dates ---------- */
+.quand-seg { display: flex; background: var(--surface); border-radius: 12px; padding: 3px; gap: 3px; margin-bottom: 10px; }
+.quand-seg button { flex: 1; border: 0; background: none; border-radius: 9px; font: inherit; font-size: 13px; padding: 8px 0; color: var(--doux-clair); cursor: pointer; }
+.quand-seg button[aria-pressed='true'] { background: var(--surface-plus); color: var(--creme); font-weight: 700; }
+.dates-sondage { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+.date-sondage { display: grid; grid-template-columns: minmax(0, 1fr) 100px 32px; gap: 6px; align-items: center; }
+.date-sondage input { min-width: 0; background: var(--surface); border: 1px solid color-mix(in srgb, var(--doux) 50%, transparent); border-radius: 10px; color: var(--creme); font: inherit; font-size: 15px; padding: 8px 9px; }
+.vote-date { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 12px; background: var(--noyer); border: 1px solid var(--doux); }
+.vote-date .d { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.vote-date .d b { font-size: 14px; }
+.vote-date .d small { font-size: 11.5px; color: var(--doux-clair); }
+.btn-dispo-date { min-width: 84px; border-radius: 10px; font: inherit; font-size: 13px; padding: 7px 8px; border: 1px solid var(--doux); background: transparent; color: var(--creme); cursor: pointer; }
+.btn-dispo-date[aria-pressed='true'] { background: var(--vert); border-color: var(--vert); color: #fff; font-weight: 700; }
+.sondage-card { display: flex; flex-direction: column; gap: 10px; }
+.grille-wrap { overflow-x: auto; }
+.grille { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.grille th, .grille td { padding: 6px 4px; text-align: center; border-top: 1px solid color-mix(in srgb, var(--doux) 22%, transparent); font-weight: 400; }
+.grille th[scope='row'] { text-align: left; white-space: nowrap; }
+.grille thead th { color: var(--doux-clair); font-weight: 600; border-top: 0; }
+.grille .ok { color: #9BD8B7; font-weight: 700; }
+.grille .no { color: var(--doux); }
+.grille tfoot td, .grille tfoot th { font-weight: 700; }
+.grille .best { background: color-mix(in srgb, var(--cuivre) 16%, transparent); }
+.grille input[type='checkbox'] { accent-color: var(--cuivre); width: 18px; height: 18px; }

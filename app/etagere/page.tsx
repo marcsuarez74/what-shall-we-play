@@ -3,6 +3,7 @@ import { getSessionUser } from '@/lib/session';
 import { getActiveNight, getNightPlayers, getShelfGames, getNightGame, getTodayTermineeNight, getShelfVotes, getShelfNight, estFuture, lienInvitation } from '@/lib/nights';
 import { getPickCounts, listUserLibrary } from '@/lib/games';
 import { listRelations } from '@/lib/amis';
+import { mesCercles, membresCercle } from '@/lib/cercles';
 import NightPicker from '@/components/NightPicker';
 import ShelfClient from '@/components/ShelfClient';
 import TermineeCard from '@/components/TermineeCard';
@@ -41,7 +42,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ n
         <UserMenu me={user} />
       </div>
       {terminee && <TermineeCard nightId={terminee.id} gameTitle={terminee.game_title} lang={lang} />}
-      <NightPicker users={users} prechecked={[user.id]} meId={user.id} />
+      <NightPicker users={users} prechecked={[user.id]} meId={user.id} cercles={mesCercles(user.id).map((c) => ({
+        id: c.id, nom: c.nom, membres: membresCercle(c.id).filter((m) => m.etat === 'membre').map((m) => m.id),
+      }))} />
     </main>;
   }
   return <main className="page">

@@ -148,6 +148,31 @@ CREATE TABLE IF NOT EXISTS push_abonnements (
   auth TEXT NOT NULL,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
+-- v4.10.0 : sondage de dates (plusieurs soirs proposés, chacun coche ses dispos).
+CREATE TABLE IF NOT EXISTS sondages (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  creator_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  titre TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE TABLE IF NOT EXISTS sondage_dates (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  sondage_id INTEGER NOT NULL REFERENCES sondages(id) ON DELETE CASCADE,
+  played_at TEXT NOT NULL,
+  start_time TEXT
+);
+CREATE TABLE IF NOT EXISTS sondage_invites (
+  sondage_id INTEGER NOT NULL REFERENCES sondages(id) ON DELETE CASCADE,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  via_cercle INTEGER REFERENCES cercles(id) ON DELETE SET NULL,
+  UNIQUE (sondage_id, user_id)
+);
+CREATE TABLE IF NOT EXISTS sondage_reponses (
+  date_id INTEGER NOT NULL REFERENCES sondage_dates(id) ON DELETE CASCADE,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  dispo INTEGER NOT NULL DEFAULT 0 CHECK (dispo IN (0, 1)),
+  UNIQUE (date_id, user_id)
+);
 CREATE TABLE IF NOT EXISTS night_invites (
   night_id INTEGER NOT NULL REFERENCES nights(id) ON DELETE CASCADE,
   user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,

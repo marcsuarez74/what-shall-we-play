@@ -4,6 +4,8 @@ import { getActiveNight, getPlannedNights, getHistoryCards, getNightPlayers, get
 import { listRelations } from '@/lib/amis';
 import { mesCercles, membresCercle } from '@/lib/cercles';
 import { mesInvitations, invitesNuit } from '@/lib/invitations';
+import { sondagesInvite, sondagesOrganises } from '@/lib/sondages';
+import SondageOrganise from '@/components/SondageOrganise';
 import { coverSrc } from '@/lib/formats';
 import { t, type Lang } from '@/lib/i18n';
 import { formatDate, titrePartie } from '@/lib/i18n/format';
@@ -42,6 +44,13 @@ export default async function Page() {
     id: c.id, nom: c.nom, membres: membresCercle(c.id).filter((m) => m.etat === 'membre').map((m) => m.id),
   }));
   const invitations = mesInvitations(user.id);
+  // v4.10.0 : sondages de dates reçus (à cocher) et organisés (à trancher).
+  const sondagesRecus = sondagesInvite(user.id);
+  const sondagesMiens = sondagesOrganises(user.id);
+  const dateSondage = (d: { played_at: string; start_time: string | null }, court = false) =>
+    formatDate(lang, `${d.played_at}T${d.start_time ?? '12:00'}`, court
+      ? { weekday: 'short', day: 'numeric' }
+      : d.start_time ? { weekday: 'short', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' } : { weekday: 'short', day: 'numeric', month: 'long' });
   // Dates longues / heures des cartes programmées, dans la langue du cookie.
   const dateLongue = (playedAt: string) => formatDate(lang, `${playedAt}T12:00:00`, { dateStyle: 'long' });
   const heureCourte = (playedAt: string, start: string | null | undefined) =>
@@ -56,11 +65,40 @@ export default async function Page() {
         <UserMenu me={user} />
       </div>
 
-      {invitations.length > 0 && (
+      {(invitations.length > 0 || sondagesRecus.length > 0) && (
         <section className="qg-section" aria-label={t(lang, 'soiree.invitations')}>
           <BandeauNotifications />
           <h2>{t(lang, 'soiree.invitations')}</h2>
           <ul className="nights-list">
+            {sondagesRecus.map((sd) => {
+              const titre = sd.titre ?? t(lang, 'sondage.sansTitre');
+              return (
+                <li key={`s${sd.id}`} className="night-card rsvp sondage-card" aria-label={titre}>
+                  <div className="plan-top">
+                    <span className="plan-titre">{titre}</span>
+                    <span className="badge-etat b-prep"><span className="pt" />{t(lang, 'sondage.badge')}</span>
+                  </div>
+                  <p className="rsvp-qui">
+                    <PlayerChip u={sd.hote} />{' '}
+                    {[t(lang, 'sondage.demande'), sd.via_nom && t(lang, 'soiree.viaCercle', { nom: sd.via_nom }),
+                      t(lang, 'soiree.nbInvites', { n: sd.invites.length }),
+                      t(lang, 'sondage.nbRepondu', { r: sd.invites.filter((i) => i.repondu).length, n: sd.invites.length })].filter(Boolean).join(' · ')}
+                  </p>
+                  {sd.dates.map((d) => {
+                    const moi = sd.mesDispos.includes(d.id);
+                    return (
+                      <div key={d.id} className="vote-date">
+                        <span className="d"><b>{dateSondage(d)}</b>
+                          <small>{t(lang, 'sondage.qui', { noms: d.dispos.map((u) => u.pseudo).join(', ') })}</small></span>
+                        <BoutonAction url={`/api/sondages/${sd.id}/reponse`} body={{ dateId: d.id, dispo: !moi }} className="btn-dispo-date"
+                                      pressed={moi} label={t(lang, 'sondage.dispo')} ariaLabel={t(lang, 'sondage.dispoAria', { date: dateSondage(d) })} />
+                      </div>
+                    );
+                  })}
+                  <p className="hint">{sd.invites.find((i) => i.id === user.id)?.repondu ? t(lang, 'sondage.repondu') : t(lang, 'sondage.aideReponse')}</p>
+                </li>
+              );
+            })}
             {invitations.map((n) => (
               <li key={n.id} className="night-card rsvp">
                 <div className="plan-top">
@@ -83,6 +121,20 @@ export default async function Page() {
                 </div>
                 <p className="hint">{n.etat === 'absent' ? t(lang, 'soiree.reponduAbsent') : t(lang, 'soiree.pasRepondu')}</p>
               </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {sondagesMiens.length > 0 && (
+        <section className="qg-section" aria-label={t(lang, 'sondage.sondages')}>
+          <h2>{t(lang, 'sondage.sondages')}</h2>
+          <ul className="nights-list">
+            {sondagesMiens.map((sd) => (
+              <SondageOrganise key={sd.id} id={sd.id} titre={sd.titre ?? t(lang, 'sondage.sansTitre')}
+                dates={sd.dates.map((d) => ({ id: d.id, court: dateSondage(d, true), long: dateSondage(d), dispos: d.dispos.map((u) => u.id) }))}
+                gens={[{ id: sd.hote.id, pseudo: sd.hote.pseudo, sticker: sd.hote.sticker, repondu: true },
+                  ...sd.invites.map((i) => ({ id: i.id, pseudo: i.pseudo, sticker: i.sticker, repondu: i.repondu }))]} />
             ))}
           </ul>
         </section>
