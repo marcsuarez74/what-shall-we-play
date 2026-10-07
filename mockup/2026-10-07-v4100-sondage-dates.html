@@ -2,7 +2,7 @@
 <html lang="fr">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sondage de dates — v4.10</title>
+<title>Nouvelle partie et sondage — v4.10</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Space+Grotesk:wght@400;500;600;700&display=swap">
@@ -257,13 +257,15 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--cuivre); ou
 <div class="wrap">
   <section class="intro">
     <div>
-      <p class="eyebrow">Maquette fonctionnelle · version 1 · à valider</p>
-      <h1>Sondage de dates</h1>
-      <p class="lead">« Qui est dispo ? » : au lieu d'une date, l'organisateur en propose <b>plusieurs</b> à ses amis et cercles. Chacun coche celles où il est dispo. L'organisateur voit le tableau, <b>choisit la date</b> : la partie programmée se crée, ceux qui étaient dispo ce jour-là en sont <b>joueurs</b>, les autres reçoivent une invitation classique.</p>
+      <p class="eyebrow">Maquette fonctionnelle · version 2 · à valider</p>
+      <h1>Nouvelle partie &amp; sondage de dates</h1>
+      <p class="lead"><b>Un seul formulaire « Nouvelle partie »</b>, depuis l'étagère vide comme depuis Parties : titre, <b>Quand ?</b> (Maintenant · Une date · Plusieurs dates), puis <b>Qui ?</b> (cercles et amis). « Plusieurs dates », c'est le sondage « Qui est dispo ? » : au lieu d'une date, l'organisateur en propose <b>plusieurs</b> à ses amis et cercles. Chacun coche celles où il est dispo. L'organisateur voit le tableau, <b>choisit la date</b> : la partie programmée se crée, ceux qui étaient dispo ce jour-là en sont <b>joueurs</b>, les autres reçoivent une invitation classique.</p>
       <div class="bloc" style="margin-top:16px">
         <h2>Ce qui s'appuie sur l'existant</h2>
         <ul>
-          <li>Même formulaire « Programmer » : un choix <b>Une date / Plusieurs dates</b>, mêmes cercles et amis.</li>
+          <li><b>Maintenant</b> : la partie du jour, les cochés sont inscrits directement (ils sont autour de la table) — mais avec titre et cercles, comme les autres.</li>
+          <li><b>Une date</b> : la partie programmée actuelle (invitations Dispo / Pas dispo).</li>
+          <li><b>Plusieurs dates</b> : le sondage. Mêmes cercles, mêmes amis dans les trois cas.</li>
           <li>Le sondage arrive dans <b>Invitations</b> (pastille Parties) et en <b>notification</b> (type « Invitations »).</li>
           <li>Après le choix : une partie programmée ordinaire (étagère, Dispo / Pas dispo, rappel du jour J).</li>
         </ul>
@@ -272,6 +274,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--cuivre); ou
     <div class="bloc">
       <h2>Points à trancher</h2>
       <ul class="questions">
+        <li><b>Un seul formulaire</b> pour les trois cas ; « Maintenant » garde l'inscription directe (pas d'invitation pour une partie qui commence).</li>
         <li><b>2 à 6 dates</b> par sondage, heure facultative par date.</li>
         <li>Réponse simple : <b>dispo ou pas</b> par date (pas de « peut-être »). Modifiable jusqu'au choix de la date.</li>
         <li>Au choix de la date : les <b>dispo deviennent joueurs</b> d'office (ils ont déjà dit oui), les autres reçoivent une <b>invitation</b> Dispo / Pas dispo. Tous sont notifiés.</li>
@@ -285,31 +288,60 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--cuivre); ou
     <div class="cercle-head"><h2>Marc propose, Tom répond, Marc choisit</h2><p>Tous les boutons sont cliquables.</p></div>
     <div class="phones">
 
+      <div class="ecran" id="s0">
+        <div class="ecran-titre"><span class="id">S0</span><h3>Étagère vide : Nouvelle partie (Maintenant)</h3></div>
+        <div class="phone">
+          <div class="status"><span>19:30</span><span>●●● 5G</span></div>
+          <div class="scroll">
+            <div class="page-head"><h1>Étagère</h1><span class="user-chip">🎲 M ▾</span></div>
+            <h2 class="sec-h">Nouvelle partie</h2>
+            <div class="field"><label>Titre <small>(facultatif)</small></label><input placeholder="Soirée jeux 🎲"></div>
+            <span class="sous-label">Quand ?</span>
+            <div class="seg" role="group" aria-label="Quand"><button type="button" aria-pressed="true">Maintenant</button><button type="button" aria-pressed="false" data-goto="s1">Une date</button><button type="button" aria-pressed="false" data-goto="s1">Plusieurs dates</button></div>
+            <span class="sous-label">Qui joue ?</span>
+            <label class="picker-row"><input type="checkbox" data-cercle="s0"> 🎲 Les copains du jeudi <span class="meta">4 personnes</span></label>
+            <label class="picker-row"><input type="checkbox" checked disabled> 🎲 Marc <span class="meta">(toi)</span></label>
+            <label class="picker-row"><input type="checkbox" data-membre="s0"> 🐻 Tom</label>
+            <label class="picker-row"><input type="checkbox" data-membre="s0"> 🦊 Julie</label>
+            <label class="picker-row"><input type="checkbox"> 🐢 Léo</label>
+            <p class="meta">Seuls tes amis et ton foyer sont proposés. Les cochés jouent tout de suite.</p>
+            <button class="btn-copper" type="button">Créer la partie</button>
+          </div>
+          <div class="tabbar"><span class="on"><i>🗄️</i>Étagère</span><span><i>📚</i>Ludo</span><span><i>➕</i>Ajouter</span><span><i>🎲</i>Parties</span><span><i>👥</i>Amis</span></div>
+        </div>
+        <p class="note">Aujourd'hui l'écran n'a que la liste des joueurs : il gagne le titre, les cercles et le choix « Quand ? ». « Maintenant » est présélectionné depuis l'étagère.</p>
+      </div>
+
       <div class="ecran" id="s1">
-        <div class="ecran-titre"><span class="id">S1</span><h3>Programmer : plusieurs dates</h3></div>
+        <div class="ecran-titre"><span class="id">S1</span><h3>Le même formulaire, trois modes</h3></div>
         <div class="phone">
           <div class="status"><span>19:35</span><span>●●● 5G</span></div>
           <div class="scroll">
-            <h2 class="sec-h">Programmer une partie</h2>
+            <h2 class="sec-h">Nouvelle partie</h2>
             <div class="field"><label>Titre <small>(facultatif)</small></label><input value="Soirée Azul &amp; co"></div>
-            <div class="seg" role="group" aria-label="Date"><button type="button" aria-pressed="false">Une date</button><button type="button" aria-pressed="true">Plusieurs dates</button></div>
-            <div class="dates-edit" id="s1-dates">
-              <div class="date-row"><input value="ven. 9 oct."><input value="20:30"><button class="x" type="button" aria-label="Retirer" data-retirer>✕</button></div>
-              <div class="date-row"><input value="sam. 10 oct."><input value="20:00"><button class="x" type="button" aria-label="Retirer" data-retirer>✕</button></div>
-              <div class="date-row"><input value="jeu. 15 oct."><input placeholder="Heure"><button class="x" type="button" aria-label="Retirer" data-retirer>✕</button></div>
+            <span class="sous-label">Quand ?</span>
+            <div class="seg" role="group" aria-label="Quand" id="s1-mode"><button type="button" aria-pressed="false" data-mode="now">Maintenant</button><button type="button" aria-pressed="false" data-mode="une">Une date</button><button type="button" aria-pressed="true" data-mode="plus">Plusieurs dates</button></div>
+            <div data-pour="une" hidden>
+              <div class="date-row"><input value="ven. 9 oct."><input value="20:30"><span></span></div>
             </div>
-            <button class="link-btn" type="button" data-ajout-date>＋ Ajouter une date</button>
-            <span class="sous-label">Inviter un cercle</span>
+            <div data-pour="plus">
+              <div class="dates-edit" id="s1-dates">
+                <div class="date-row"><input value="ven. 9 oct."><input value="20:30"><button class="x" type="button" aria-label="Retirer" data-retirer>✕</button></div>
+                <div class="date-row"><input value="sam. 10 oct."><input value="20:00"><button class="x" type="button" aria-label="Retirer" data-retirer>✕</button></div>
+                <div class="date-row"><input value="jeu. 15 oct."><input placeholder="Heure"><button class="x" type="button" aria-label="Retirer" data-retirer>✕</button></div>
+              </div>
+              <button class="link-btn" type="button" data-ajout-date>＋ Ajouter une date</button>
+            </div>
+            <span class="sous-label">Qui ?</span>
             <label class="picker-row"><input type="checkbox" checked> 🎲 Les copains du jeudi <span class="meta">4 personnes</span></label>
-            <span class="sous-label">ou des amis</span>
-            <label class="picker-row"><input type="checkbox" checked disabled> 🎲 Marc <span class="meta">(toi)</span></label>
+            <label class="picker-row"><input type="checkbox" checked disabled> 🎲 Marc <span class="meta">(toi, joueur d'office)</span></label>
             <label class="picker-row"><input type="checkbox" checked> 🐢 Léo</label>
-            <p class="meta">3 dates proposées à 5 personnes.</p>
-            <button class="btn-copper" type="button" data-goto="s2">Envoyer le sondage</button>
+            <p class="meta" id="s1-aide">3 dates proposées à 5 personnes.</p>
+            <button class="btn-copper" type="button" id="s1-cta" data-goto="s2">Envoyer le sondage</button>
           </div>
           <div class="tabbar"><span><i>🗄️</i>Étagère</span><span><i>📚</i>Ludo</span><span><i>➕</i>Ajouter</span><span class="on"><i>🎲</i>Parties</span><span><i>👥</i>Amis</span></div>
         </div>
-        <p class="note">Le formulaire actuel est conservé : « Plusieurs dates » remplace le champ date par une liste (2 à 6).</p>
+        <p class="note">Bascule « Quand ? » pour voir les trois modes : les champs de date et le bouton s'adaptent, la liste « Qui ? » reste la même. Sur Parties, « ＋ Programmer une partie » devient « ＋ Nouvelle partie » (« Une date » présélectionné).</p>
       </div>
 
       <div class="ecran" id="s2">
@@ -402,6 +434,18 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--cuivre); ou
     d.innerHTML = '<input placeholder="Date"><input placeholder="Heure"><button class="x" type="button" aria-label="Retirer">✕</button>';
     d.querySelector('button').addEventListener('click', () => d.remove());
     document.getElementById('s1-dates').append(d); });
+  const MODES = {
+    now: ['Créer la partie', 'Les cochés jouent tout de suite.'],
+    une: ['Programmer et inviter', '5 invitations seront envoyées dans l’app.'],
+    plus: ['Envoyer le sondage', '3 dates proposées à 5 personnes.'],
+  };
+  document.querySelectorAll('[data-mode]').forEach((b) => b.addEventListener('click', () => {
+    document.querySelectorAll('[data-mode]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    document.querySelectorAll('[data-pour]').forEach((z) => (z.hidden = z.dataset.pour !== b.dataset.mode));
+    document.getElementById('s1-cta').textContent = MODES[b.dataset.mode][0];
+    document.getElementById('s1-aide').textContent = MODES[b.dataset.mode][1]; }));
+  document.querySelectorAll('[data-cercle]').forEach((c) => c.addEventListener('change', () => {
+    document.querySelectorAll(`[data-membre="${c.dataset.cercle}"]`).forEach((m) => (m.checked = c.checked)); }));
   document.querySelectorAll('[data-dispo]').forEach((b) => b.addEventListener('click', () => {
     b.setAttribute('aria-pressed', String(b.getAttribute('aria-pressed') !== 'true'));
     document.getElementById('s2-rep').textContent = '✓ Réponse enregistrée. Modifiable jusqu’au choix de Marc.';
