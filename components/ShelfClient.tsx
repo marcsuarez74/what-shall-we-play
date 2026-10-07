@@ -15,6 +15,7 @@ import PlayerChip from './PlayerChip';
 import RetirerInvite from './RetirerInvite';
 import ShelfControls from './ShelfControls';
 import ShelfRows, { grouperVotes } from './ShelfRows';
+import { votantsDe } from '@/lib/votants';
 import LienInvitation from './LienInvitation';
 import ShelfPicker from './ShelfPicker';
 import UserMenu from './UserMenu';
@@ -308,7 +309,8 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
                               par: vetoParJeu.get(detail.id) ?? null, moi: monVeto === detail.id,
                               ailleurs: monVeto != null && monVeto !== detail.id ? games.find((g) => g.id === monVeto)?.title ?? null : null,
                               onToggle: () => veto(detail.id),
-                            }} />}
+                            }}
+                            votants={enJeu ? undefined : { joueurs: votantsDe(votes, detail.id, players, me.id), moiId: me.id }} />}
       {addingGames && (
         <ShelfPicker nightId={night.id} myLibrary={myLibrary}
                      shelfIds={games.map((g) => g.id)} onClose={() => setAddingGames(false)} />

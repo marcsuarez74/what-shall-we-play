@@ -47,12 +47,16 @@ test('badge : visible à 0, tap = vote cuivré, re-tap retire, sans ouvrir la fi
   // la boîte hors badge ouvre toujours la fiche
   await page.locator('.box').first().click();
   await expect(page.locator('.sheet-backdrop')).toBeVisible();
+  await expect(page.locator('.bottom-sheet .votants')).toContainText('👍 1 vote'); // v4.17.0
+  await expect(page.locator('.bottom-sheet .votants')).toContainText('Toi');
   await page.locator('.sheet-close').click();
   await expect(page.locator('.sheet-backdrop')).toHaveCount(0);
 
   await badge.click(); // re-tap : retiré
   await expect(badge).toContainText('0');
   await expect(badge).not.toHaveClass(/vote-moi/);
+  await page.locator('.box').first().click();
+  await expect(page.locator('.bottom-sheet .votants')).toContainText('Aucun vote');
 });
 
 test('sync live : le vote de A monte le badge chez B sans rechargement', async ({ browser }) => {
@@ -76,6 +80,21 @@ test('sync live : le vote de A monte le badge chez B sans rechargement', async (
   await a.locator('.box .vote-badge').click();
   await expect(b.locator('.box .vote-badge')).toContainText('1', { timeout: 5_000 });
   await expect(b.locator('.box .vote-badge')).not.toHaveClass(/vote-moi/); // pas LE vote de B
+
+  // v4.17.0 — qui a voté : la fiche du jeu nomme A chez B, puis « Toi » en dernier
+  await b.locator('.box').first().click();
+  const votantsB = b.locator('.bottom-sheet .votants');
+  await expect(votantsB).toContainText('👍 1 vote');
+  await expect(votantsB).toContainText(`vt_a_${s}`);
+  await b.locator('.bottom-sheet .sheet-close').click();
+  await b.locator('.box .vote-badge').click();
+  await expect(b.locator('.box .vote-badge')).toContainText('2');
+  await b.locator('.box').first().click();
+  await expect(votantsB).toContainText('👍 2 votes');
+  await expect(votantsB.locator('.chip').last()).toContainText('Toi');
+  await expect(votantsB.locator('.votant-moi')).toHaveCount(1);
+  await ctxA.close();
+  await ctxB.close();
 });
 
 test('pool : segmenté seulement avec des votes, Votés → Lancer · M, tirage sur les votés', async ({ browser }) => {

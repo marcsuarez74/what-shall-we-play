@@ -4,6 +4,16 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [4.17.0] — 2026-10-07
+
+### Ajouté
+Qui a mis un 👍 ? (maquette validée : `mockup/2026-10-07-v4170-qui-a-vote.html`).
+- La **fiche du jeu** (toucher la boîte sur l'étagère) montre « 👍 N votes » et **qui** a voté :
+  un chip par joueur (sticker et prénom), **toi en dernier**, entouré cuivre. Jusqu'ici les
+  prénoms n'étaient qu'une info-bulle, invisible sur téléphone.
+- Aucun vote : « Aucun vote », avec l'astuce pour voter. Le badge 👍 garde son tap = voter.
+- Pareil pour les invités par lien ; mis à jour en direct avec le sync live.
+
 ## [4.16.0] — 2026-10-07
 
 ### Ajouté

@@ -2147,6 +2147,12 @@ input[type='file'] {
 .btn-veto.off { background: transparent; border: 1.5px solid var(--doux); color: var(--doux-clair); font-weight: 600; }
 .btn-veto:disabled { opacity: .65; cursor: not-allowed; }
 .vote-badge .emoji { font-size: 9.5px; }
+/* v4.17.0 — qui a voté 👍, dans la fiche du jeu ; mon chip entouré cuivre */
+.votants { margin: 12px 0 4px; padding: 10px 12px; border-radius: 12px; background: rgba(184, 115, 51, .08); }
+.votants .sous-label { margin: 0 0 6px; }
+.votants .chips { margin: 0; }
+.votants .hint { margin: 0; }
+.votant-moi .chip { outline: 2px solid var(--cuivre); }
 .choix-pool {
   display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3px;
   flex: 1; min-width: 0;

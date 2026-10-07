@@ -6,6 +6,7 @@ import type { ShelfVeto, ShelfVote } from '@/lib/nights';
 import { avatarSrc } from '@/lib/formats';
 import { medaille } from '@/lib/ranks';
 import ShelfRows, { grouperVotes } from './ShelfRows';
+import { votantsDe } from '@/lib/votants';
 import GameSheet from './GameSheet';
 import PlayerChip from './PlayerChip';
 import PinInput from './PinInput';
@@ -195,7 +196,8 @@ export default function InviteSoiree({ night, titre, dateLong, time, hote, playe
                               par: vetoParJeu.get(detail.id) ?? null, moi: monVeto === detail.id,
                               ailleurs: monVeto != null && monVeto !== detail.id ? games.find((g) => g.id === monVeto)?.title ?? null : null,
                               onToggle: () => veto(detail.id),
-                            } : undefined} />}
+                            } : undefined}
+                            votants={night.status === 'creation' ? { joueurs: votantsDe(votes, detail.id, players, me.id), moiId: me.id } : undefined} />}
       {erreur && <p role="alert" className="join-erreur">{erreur}</p>}
       {night.status !== 'termine' && (
         <button type="button" className={'btn-ghost' + (sur ? ' armed' : '')} disabled={busy} onClick={seRetirer}>
