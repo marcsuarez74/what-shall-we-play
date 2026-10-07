@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server';
 import { getSessionUser } from '@/lib/session';
 import { createNight, getActiveNight, getNightPlayers, validerPlanning, normaliserTitre, estFuture } from '@/lib/nights';
-import { filtrerJoueurs, inviter } from '@/lib/invitations';
+import { filtrerJoueurs, inviter, PLACES_MAX, PLACES_MIN } from '@/lib/invitations';
 import { viaCercles } from '@/lib/cercles';
 import { refuserInvite } from '@/lib/auth';
 import { creerSerie } from '@/lib/series';
@@ -33,13 +33,17 @@ export async function POST(req: Request) {
   const ids = Array.isArray(playerIds) ? playerIds : [];
   // v4.8.0 : une partie programmée invite (Dispo → joueur) ; celle du jour inscrit directement.
   // Seules mes relations (et les membres de mes cercles) peuvent y être mises.
+  // v4.14.1 : places max facultatives (partie programmée ou série), entre 2 et 30.
+  const placesMax = body.placesMax == null || body.placesMax === '' ? null : Number(body.placesMax);
+  if (placesMax !== null && (!Number.isInteger(placesMax) || placesMax < PLACES_MIN || placesMax > PLACES_MAX))
+    return NextResponse.json({ error: t(lang, 'liste.errPlaces', { min: PLACES_MIN, max: PLACES_MAX }) }, { status: 400 });
   if (playedAt && estFuture({ played_at: playedAt })) {
     // v4.14.0 : « Répéter » — chaque semaine (1) ou toutes les 2 semaines (2).
     if (body.repeter === 1 || body.repeter === 2) {
-      const serieId = creerSerie(user.id, { playedAt, startTime: startTime ?? null, titre: titre ?? null, pas: body.repeter }, ids, viaCercles(user.id, body.cercleIds));
+      const serieId = creerSerie(user.id, { playedAt, startTime: startTime ?? null, titre: titre ?? null, pas: body.repeter, placesMax }, ids, viaCercles(user.id, body.cercleIds));
       return NextResponse.json({ serieId });
     }
-    const nightId = createNight(user.id, [user.id], { playedAt, startTime, titre });
+    const nightId = createNight(user.id, [user.id], { playedAt, startTime, titre, placesMax });
     inviter(nightId, user.id, ids, viaCercles(user.id, body.cercleIds));
     return NextResponse.json({ nightId });
   }

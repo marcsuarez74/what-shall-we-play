@@ -4,6 +4,17 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [4.14.1] — 2026-10-07
+
+### Ajouté
+Places max et liste d'attente (maquette validée : `mockup/2026-10-07-v4140-parties-recurrentes.html`, écran S4).
+- **« Places max »** (facultatif, 2 à 30) en programmant une partie ou une série : chaque date
+  de la série en hérite.
+- Partie complète : **« Me mettre en attente »** ; la carte dit son rang (« Tu es 1ᵉʳ en
+  liste d'attente »). L'organisateur voit « 6/6 · complet » et le nombre en attente.
+- **Promotion automatique** : quand un joueur passe « Pas dispo », le premier de la liste joue
+  et reçoit « Une place s'est libérée — tu joues ! ».
+
 ## [4.14.0] — 2026-10-07
 
 ### Ajouté

@@ -5,7 +5,7 @@
 import { getDb } from './db';
 import { emitToUsers } from './events';
 import { conflitHoraire, createNight, getNight, getNightPlayers, modifierInfosNuit, supprimerNuit } from './nights';
-import { inviter, repondre, type EtatInvitation } from './invitations';
+import { inviter, listeAttente, repondre, type EtatInvitation } from './invitations';
 import { t, type Lang } from './i18n';
 import type { Night } from './types';
 
@@ -29,7 +29,7 @@ export function occurrencesAVenir(serieId: number): Night[] {
 
 // Ajoute une date à la série : mêmes titre, heure et invités que la date de base.
 function ajouterOccurrence(serieId: number, creatorId: number, base: Night, playedAt: string, push: boolean): number {
-  const nightId = createNight(creatorId, [creatorId], { playedAt, startTime: base.start_time ?? null, titre: base.titre ?? null });
+  const nightId = createNight(creatorId, [creatorId], { playedAt, startTime: base.start_time ?? null, titre: base.titre ?? null, placesMax: base.places_max ?? null });
   getDb().prepare('UPDATE nights SET serie_id = ? WHERE id = ?').run(serieId, nightId);
   const invites = getDb().prepare('SELECT user_id, via_cercle FROM night_invites WHERE night_id = ?')
     .all(base.id) as { user_id: number; via_cercle: number | null }[];
@@ -42,12 +42,12 @@ function ajouterOccurrence(serieId: number, creatorId: number, base: Night, play
 // suivantes reprennent ses invités sans nouvelle notification.
 export function creerSerie(
   creatorId: number,
-  opts: { playedAt: string; startTime: string | null; titre: string | null; pas: 1 | 2 },
+  opts: { playedAt: string; startTime: string | null; titre: string | null; pas: 1 | 2; placesMax?: number | null },
   ids: number[], viaCercle: Map<number, number> = new Map(),
 ): number {
   const db = getDb();
   const serieId = Number(db.prepare('INSERT INTO series (creator_id, pas) VALUES (?, ?)').run(creatorId, opts.pas).lastInsertRowid);
-  const premiere = createNight(creatorId, [creatorId], { playedAt: opts.playedAt, startTime: opts.startTime, titre: opts.titre });
+  const premiere = createNight(creatorId, [creatorId], { playedAt: opts.playedAt, startTime: opts.startTime, titre: opts.titre, placesMax: opts.placesMax ?? null });
   db.prepare('UPDATE nights SET serie_id = ? WHERE id = ?').run(serieId, premiere);
   inviter(premiere, creatorId, ids, viaCercle);
   const base = getNight(premiere)!;
@@ -78,6 +78,7 @@ export function completerSeries(): number {
 export type DateSerie = {
   id: number; played_at: string; start_time: string | null; nb_joueurs: number;
   etat: 'createur' | EtatInvitation; conflit: Night | null;
+  places_max: number | null; rang_liste: number | null; // v4.14.1
 };
 export type Serie = { id: number; creator_id: number; pas: number; hote_pseudo: string; titre: string | null; start_time: string | null; dates: DateSerie[] };
 
@@ -93,12 +94,14 @@ export function mesSeries(moi: number): Serie[] {
   return series.map((s) => {
     const occ = occurrencesAVenir(s.id);
     const dates = occ.map((n) => {
-      const inv = db.prepare('SELECT etat FROM night_invites WHERE night_id = ? AND user_id = ?').get(n.id, moi) as { etat: EtatInvitation } | undefined;
+      const inv = db.prepare('SELECT etat, en_liste FROM night_invites WHERE night_id = ? AND user_id = ?').get(n.id, moi) as { etat: EtatInvitation; en_liste: string | null } | undefined;
+      const rang = inv?.en_liste ? listeAttente(n.id).findIndex((u) => u.id === moi) + 1 : null;
       return {
         id: n.id, played_at: n.played_at, start_time: n.start_time ?? null,
         nb_joueurs: getNightPlayers(n.id).length,
         etat: s.creator_id === moi ? 'createur' as const : inv?.etat ?? 'attente',
         conflit: conflitHoraire(moi, n),
+        places_max: n.places_max ?? null, rang_liste: rang,
       };
     });
     return { ...s, titre: occ[0]?.titre ?? null, start_time: occ[0]?.start_time ?? null, dates };
