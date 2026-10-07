@@ -4,6 +4,22 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [4.14.0] — 2026-10-07
+
+### Ajouté
+Parties récurrentes et conflit d'horaire (maquette validée : `mockup/2026-10-07-v4140-parties-recurrentes.html`).
+- **« 🔁 Répéter »** dans « Nouvelle partie › Une date » : **chaque semaine** ou **toutes les
+  2 semaines**. Les 4 prochaines dates sont créées d'avance ; la suivante apparaît quand une
+  partie est jouée. Chaque date reste une partie programmée ordinaire (étagère, rappel,
+  calendrier).
+- **Carte de la série** dans Parties : chacun répond **date par date** ou **« Dispo à
+  toutes »** ; lien vers l'étagère de chaque date. Une seule notification à la création.
+- **Conflit d'horaire** : « ⚠ Tu joues déjà ce jour-là » quand une autre de tes parties tombe
+  le même jour à moins de 3 h (ou sans heure). On prévient, on n'empêche jamais.
+- **Gérer la série** (organisateur) : modifier le titre ou l'heure de toutes les dates à
+  venir ; **arrêter la série** — la confirmation liste les dates supprimées (étagère vide) et
+  celles gardées (étagère préparée, devenues parties ordinaires). Le passé n'est pas touché.
+
 ## [4.13.0] — 2026-10-07
 
 ### Ajouté
