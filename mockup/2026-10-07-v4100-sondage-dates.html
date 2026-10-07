@@ -257,9 +257,9 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--cuivre); ou
 <div class="wrap">
   <section class="intro">
     <div>
-      <p class="eyebrow">Maquette fonctionnelle · version 2 · à valider</p>
+      <p class="eyebrow">Maquette fonctionnelle · version 3 · à valider</p>
       <h1>Nouvelle partie &amp; sondage de dates</h1>
-      <p class="lead"><b>Un seul formulaire « Nouvelle partie »</b>, depuis l'étagère vide comme depuis Parties : titre, <b>Quand ?</b> (Maintenant · Une date · Plusieurs dates), puis <b>Qui ?</b> (cercles et amis). « Plusieurs dates », c'est le sondage « Qui est dispo ? » : au lieu d'une date, l'organisateur en propose <b>plusieurs</b> à ses amis et cercles. Chacun coche celles où il est dispo. L'organisateur voit le tableau, <b>choisit la date</b> : la partie programmée se crée, ceux qui étaient dispo ce jour-là en sont <b>joueurs</b>, les autres reçoivent une invitation classique.</p>
+      <p class="lead"><b>Un seul formulaire « Nouvelle partie »</b>, depuis l'étagère vide comme depuis Parties : titre, <b>Quand ?</b> (Maintenant · Une date · Plusieurs dates), puis <b>Qui ?</b> (cercles et amis). « Plusieurs dates », c'est le sondage « Qui est dispo ? » : au lieu d'une date, l'organisateur en propose <b>plusieurs</b> à ses amis et cercles. Chacun coche celles où il est dispo. L'organisateur voit le tableau, <b>retient une ou plusieurs dates</b> : chaque date retenue devient une partie programmée, ceux qui étaient dispo ce jour-là en sont <b>joueurs</b>, les autres reçoivent une invitation classique.</p>
       <div class="bloc" style="margin-top:16px">
         <h2>Ce qui s'appuie sur l'existant</h2>
         <ul>
@@ -277,7 +277,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--cuivre); ou
         <li><b>Un seul formulaire</b> pour les trois cas ; « Maintenant » garde l'inscription directe (pas d'invitation pour une partie qui commence).</li>
         <li><b>2 à 6 dates</b> par sondage, heure facultative par date.</li>
         <li>Réponse simple : <b>dispo ou pas</b> par date (pas de « peut-être »). Modifiable jusqu'au choix de la date.</li>
-        <li>Au choix de la date : les <b>dispo deviennent joueurs</b> d'office (ils ont déjà dit oui), les autres reçoivent une <b>invitation</b> Dispo / Pas dispo. Tous sont notifiés.</li>
+        <li>L'organisateur <b>retient une ou plusieurs dates</b> (ex. vendredi <i>et</i> samedi) : <b>une partie programmée par date retenue</b>, chacune avec ses joueurs (les dispo de ce jour-là), ses « Pas dispo » (ceux qui ont dit non à ce soir, modifiable) et ses invitations sans réponse (ceux qui n'ont pas répondu). Tous sont notifiés ; le sondage se ferme.</li>
         <li>Pas d'échéance automatique : l'organisateur choisit quand il veut ; il peut aussi <b>supprimer</b> le sondage (confirmé).</li>
         <li>Les réponses sont <b>visibles de tous les invités</b> (comme un sondage WhatsApp), pas seulement de l'organisateur.</li>
       </ul>
@@ -374,6 +374,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--cuivre); ou
             <h2 class="sec-h">Sondages</h2>
             <div class="card">
               <div class="card-head"><span class="plan-titre">Soirée Azul &amp; co</span><span class="badge b-prog"><span class="pt"></span>4 / 5 ont répondu</span></div>
+              <p class="meta">Coche les soirs à retenir — un ou plusieurs.</p>
               <table class="grille">
                 <thead><tr><th></th><th>Ven. 9</th><th>Sam. 10</th><th>Jeu. 15</th></tr></thead>
                 <tbody>
@@ -383,20 +384,21 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--cuivre); ou
                   <tr><td>🐙 Yanis</td><td class="ok">✓</td><td class="no">—</td><td class="no">—</td></tr>
                   <tr><td>🐢 Léo ⏳</td><td></td><td></td><td></td></tr>
                 </tbody>
-                <tfoot><tr><td>Dispo</td><td class="best">4</td><td>2</td><td>2</td></tr></tfoot>
+                <tfoot><tr><td>Dispo</td><td class="best">4</td><td>2</td><td>2</td></tr>
+                  <tr><td>Retenir</td><td><input type="checkbox" checked data-retenir="Ven. 9"></td><td><input type="checkbox" data-retenir="Sam. 10"></td><td><input type="checkbox" data-retenir="Jeu. 15"></td></tr></tfoot>
               </table>
-              <button class="btn-copper" type="button" id="s3-choisir" data-goto="s4">Choisir ven. 9 oct. (4 dispo)</button>
-              <p class="meta">Tom, Julie et Yanis deviennent joueurs ; Léo reçoit une invitation.</p>
-              <div class="row-btns"><button class="btn-ghost sm" type="button">Autre date…</button><button class="btn-ghost sm" type="button" data-armer="Sûr ? Supprimer">Supprimer le sondage</button></div>
+              <button class="btn-copper" type="button" id="s3-choisir" data-goto="s4">Programmer ven. 9</button>
+              <p class="meta" id="s3-aide">Pour chaque soir retenu : les dispo jouent, les « non » sont notés Pas dispo, Léo reçoit une invitation.</p>
+              <div class="row-btns"><button class="btn-ghost sm" type="button" data-armer="Sûr ? Supprimer">Supprimer le sondage</button></div>
             </div>
           </div>
           <div class="tabbar"><span><i>🗄️</i>Étagère</span><span><i>📚</i>Ludo</span><span><i>➕</i>Ajouter</span><span class="on"><i>🎲</i>Parties</span><span><i>👥</i>Amis</span></div>
         </div>
-        <p class="note">La meilleure date est mise en avant ; « Autre date… » ouvre le choix parmi les dates proposées. L'organisateur compte d'office comme dispo partout.</p>
+        <p class="note">La meilleure date est cochée d'avance ; on peut en cocher d'autres (essaie samedi). L'organisateur compte d'office comme dispo partout.</p>
       </div>
 
       <div class="ecran" id="s4">
-        <div class="ecran-titre"><span class="id">S4</span><h3>La partie est programmée</h3></div>
+        <div class="ecran-titre"><span class="id">S4</span><h3>Deux soirs retenus : deux parties</h3></div>
         <div class="phone">
           <div class="status"><span>19:51</span><span>●●● 5G</span></div>
           <div class="scroll">
@@ -414,10 +416,22 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--cuivre); ou
                 </div>
               </div>
             </div>
+            <div class="card">
+              <div class="plan">
+                <div class="plan-date"><b>10</b><span>oct</span></div>
+                <div class="plan-body">
+                  <span class="plan-titre">Soirée Azul &amp; co</span>
+                  <span class="plan-when">samedi 10 octobre <small>20:00</small></span>
+                  <div class="decompte"><span class="d">2 dispo</span><span class="a">2 absents</span><span>1 sans réponse</span></div>
+                  <div class="chips"><span class="chip">🎲 Marc</span><span class="chip">🦊 Julie</span><span class="chip barre">🐻 Tom</span><span class="chip barre">🐙 Yanis</span><span class="chip" style="border-style:dashed">🐢 Léo ⏳</span></div>
+                  <button class="btn-copper sm" type="button">Préparer l'étagère</button>
+                </div>
+              </div>
+            </div>
           </div>
           <div class="tabbar"><span><i>🗄️</i>Étagère</span><span><i>📚</i>Ludo</span><span><i>➕</i>Ajouter</span><span class="on"><i>🎲</i>Parties</span><span><i>👥</i>Amis</span></div>
         </div>
-        <p class="note">Notifications : « Marc a choisi ven. 9 oct. — tu joues » aux dispo, une invitation classique aux autres. Le sondage disparaît.</p>
+        <p class="note">Chaque soir retenu est une partie à part (étagère, joueurs, rappel). Notifications : « Marc a retenu ven. 9 oct. — tu joues » aux dispo, une invitation classique aux autres. Le sondage disparaît.</p>
       </div>
     </div>
   </section>
@@ -446,6 +460,12 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--cuivre); ou
     document.getElementById('s1-aide').textContent = MODES[b.dataset.mode][1]; }));
   document.querySelectorAll('[data-cercle]').forEach((c) => c.addEventListener('change', () => {
     document.querySelectorAll(`[data-membre="${c.dataset.cercle}"]`).forEach((m) => (m.checked = c.checked)); }));
+  const retenir = () => {
+    const j = [...document.querySelectorAll('[data-retenir]')].filter((c) => c.checked).map((c) => c.dataset.retenir);
+    const b = document.getElementById('s3-choisir');
+    b.disabled = j.length === 0;
+    b.textContent = j.length === 0 ? 'Coche au moins un soir' : j.length === 1 ? `Programmer ${j[0].toLowerCase()}` : `Programmer ${j.length} parties (${j.join(', ').toLowerCase()})`; };
+  document.querySelectorAll('[data-retenir]').forEach((c) => c.addEventListener('change', retenir));
   document.querySelectorAll('[data-dispo]').forEach((b) => b.addEventListener('click', () => {
     b.setAttribute('aria-pressed', String(b.getAttribute('aria-pressed') !== 'true'));
     document.getElementById('s2-rep').textContent = '✓ Réponse enregistrée. Modifiable jusqu’au choix de Marc.';
