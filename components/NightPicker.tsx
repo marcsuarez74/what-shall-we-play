@@ -10,7 +10,7 @@ export type CerclePicker = { id: number; nom: string; membres: number[] };
 export type Quand = 'now' | 'une' | 'plus';
 const DATES_MAX = 6;
 
-export default function NightPicker({ users, prechecked, night, quand = 'now', editInfos, onClose, meId, cercles = [], evenements = [], evenementId = null }: {
+export default function NightPicker({ users, prechecked, night, quand = 'now', editInfos, onClose, meId, cercles = [], evenements = [], evenementId = null, datesInit, cerclesInit = [] }: {
   users: UserLite[];
   /** v4.8.0 — moi : toujours joueur, case cochée et figée. */
   meId?: number;
@@ -26,13 +26,17 @@ export default function NightPicker({ users, prechecked, night, quand = 'now', e
   /** v4.15.0 — mes événements : la partie peut y être rattachée (création ou modification). */
   evenements?: { id: number; titre: string }[];
   evenementId?: number | null;
+  /** v4.16.0 — Kijoukan : sondage prérempli (dates du créneau) et cercle coché. */
+  datesInit?: { date: string; time: string }[];
+  cerclesInit?: number[];
 }) {
   const router = useRouter();
   const { t } = useI18n();
   const creation = !night;
   const [mode, setMode] = useState<Quand>(creation ? quand : editInfos?.futur ? 'une' : 'now');
-  const [checked, setChecked] = useState<Set<number>>(() => new Set(prechecked));
-  const [cerclesCoches, setCerclesCoches] = useState<Set<number>>(() => new Set());
+  const [checked, setChecked] = useState<Set<number>>(() => new Set([
+    ...prechecked, ...cercles.filter((c) => cerclesInit.includes(c.id)).flatMap((c) => c.membres)]));
+  const [cerclesCoches, setCerclesCoches] = useState<Set<number>>(() => new Set(cerclesInit));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const avecTitre = creation || !!editInfos;
@@ -40,7 +44,7 @@ export default function NightPicker({ users, prechecked, night, quand = 'now', e
   const [titre, setTitre] = useState(night?.titre ?? '');
   const [date, setDate] = useState(editInfos?.futur ? night?.played_at ?? '' : '');
   const [time, setTime] = useState(editInfos?.futur ? night?.start_time ?? '' : '');
-  const [dates, setDates] = useState<{ date: string; time: string }[]>([{ date: '', time: '' }, { date: '', time: '' }]);
+  const [dates, setDates] = useState<{ date: string; time: string }[]>(datesInit ?? [{ date: '', time: '' }, { date: '', time: '' }]);
   // v4.14.0 — « Répéter » une partie programmée : 0 = non, 1 = chaque semaine, 2 = toutes les 2 semaines.
   const [repeter, setRepeter] = useState<0 | 1 | 2>(0);
   const [places, setPlaces] = useState(''); // v4.14.1 : places max facultatives

@@ -4,6 +4,16 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [4.16.0] — 2026-10-07
+
+### Ajouté
+Kijoukan, « qui joue quand ? » (maquette validée : `mockup/2026-10-07-v4160-kijoukan.html`).
+- **Ma semaine type** au profil : 7 jours × midi / soir, on coche ses créneaux habituels.
+- **Sur chaque cercle**, une carte de chaleur : combien de membres sont dispo par créneau ;
+  toucher une case coche sa propre dispo et montre qui.
+- **Meilleur créneau** → **« Proposer une partie jeudi soir »** : le sondage de dates s'ouvre
+  prérempli (les 3 prochains jeudis à 20:00, le cercle coché). Rien n'est envoyé tout seul.
+
 ## [4.15.0] — 2026-10-07
 
 ### Ajouté

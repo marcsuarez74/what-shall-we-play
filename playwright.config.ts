@@ -12,6 +12,10 @@ const dataDir = path.join(os.tmpdir(), 'wsp-e2e-data');
 export default defineConfig({
   testDir: './tests/e2e',
   workers: 1, // les specs partagent un serveur dev et une base SQLite — l'exécution est sérialisée
+  // Une assertion après une action peut attendre plusieurs router.refresh() en file
+  // (celui de l'action + celui du sync live) : en CI, serveur dev chargé en fin de
+  // suite, 5 s ne suffisaient plus (votes / validation rouges par intermittence, v4.16).
+  expect: { timeout: 10_000 },
   use: {
     baseURL: 'http://localhost:3000',
     trace: 'retain-on-failure', // diagnostic des rouges CI (artefacts uploadés)
