@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { coverSrc } from '@/lib/formats';
 import { titrePartie, formatDate } from '@/lib/i18n/format';
 import type { Game, Night, UserLite } from '@/lib/types';
-import type { ShelfVote } from '@/lib/nights';
+import type { ShelfVeto, ShelfVote } from '@/lib/nights';
 import { filterShelf, filtresActifs, type ShelfFilters } from '@/lib/filters';
 import { DURATIONS } from './ShelfControls';
 import type { CléDict } from '@/lib/i18n';
@@ -34,9 +34,10 @@ const POIDS: Record<Exclude<ShelfFilters['weight'], 'all'>, CléDict> = {
   leger: 'etagere.poidsLeger', moyen: 'etagere.poidsMoyen', lourd: 'etagere.poidsLourd',
 };
 
-export default function ShelfClient({ night, partyGame, players, games, myLibrary, users, plays, votes, me, futur = false, lien }: {
+export default function ShelfClient({ night, partyGame, players, games, myLibrary, users, plays, votes, vetos = [], me, futur = false, lien }: {
   night: Night; partyGame: Game | null; players: UserLite[]; games: Game[]; myLibrary: Game[]; users: UserLite[]; plays: Record<number, number>;
   votes: ShelfVote[];
+  vetos?: ShelfVeto[]; // v4.13.0
   me: UserLite;
   futur?: boolean;
   lien?: string;
@@ -55,7 +56,11 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
   });
   const filtered = useMemo(() => filterShelf(games, filters), [games, filters]);
   // v4.12.0 — les filtres bornent la roue ; la recherche non (elle sert à retrouver une boîte).
-  const enLice = useMemo(() => filterShelf(games, { ...filters, q: '' }), [games, filters]);
+  // v4.13.0 — veto : jeu → prénom de qui l'a écarté ; un jeu vetoé sort du pool (Tous et Votés).
+  const vetoParJeu = useMemo(() => new Map(vetos.map((v) => [v.game_id, v.pseudo.split(' ')[0]])), [vetos]);
+  const monVeto = vetos.find((v) => v.user_id === me.id)?.game_id ?? null;
+  const enLice = useMemo(() => filterShelf(games, { ...filters, q: '' }).filter((g) => !vetoParJeu.has(g.id)),
+    [games, filters, vetoParJeu]);
   const nbFiltres = filtresActifs(filters);
   const enJeu = night.status === 'en_jeu';
   // En jeu : LA boîte de la partie a quitté l'étagère — elle ne revient pas dans les rangées.
@@ -84,9 +89,12 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
     filters.weight !== 'all' ? t(POIDS[filters.weight]) : null,
     filters.duration !== 'all' ? `${DURATIONS.find(([v]) => v === filters.duration)?.[1]} min` : null,
   ].filter(Boolean).join(' · ');
-  const statutFiltres = estCreateur && nbFiltres > 0 && (
+  const statutFiltres = estCreateur && (nbFiltres > 0 || vetoParJeu.size > 0) && (
     <p className="cta-statut">
-      {tirables.length === 0 ? t('etagere.aucunJeuFiltres') : t('etagere.filtresActifs', { f: resumeFiltres })}
+      {tirables.length === 0
+        ? t(nbFiltres > 0 ? 'etagere.aucunJeuFiltres' : 'veto.tousEcartes')
+        : [nbFiltres > 0 ? t('etagere.filtresActifs', { f: resumeFiltres }) : null,
+           vetoParJeu.size > 0 ? t('veto.nEcartes', { n: vetoParJeu.size }) : null].filter(Boolean).join(' — ')}
     </p>
   );
   const comptes = players.filter((p) => !p.est_invite);
@@ -126,6 +134,15 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ gameId }),
     });
+    router.refresh();
+  }
+
+  async function veto(gameId: number) {
+    await fetch(`/api/nights/${night.id}/veto`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ gameId }),
+    });
+    setDetail(null);
     router.refresh();
   }
 
@@ -221,7 +238,7 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
           </button>
         </div>
       ) : null}
-      <ShelfRows games={surEtagere} votes={enJeu ? null : votesParJeu} onVote={voter} onOpen={setDetail} />
+      <ShelfRows games={surEtagere} votes={enJeu ? null : votesParJeu} onVote={voter} onOpen={setDetail} vetos={enJeu ? null : vetoParJeu} />
       <div className="cta-zone">
         {futur ? (
           <p className="cta-jourj">{t('etagere.tirageJourJ')}</p>
@@ -285,7 +302,12 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
       </div>
       {detail && <GameSheet game={detail} players={players} playsCount={plays[detail.id] ?? 0}
                             onClose={() => setDetail(null)}
-                            onRemoveShelf={() => removeFromNight(detail)} />}
+                            onRemoveShelf={() => removeFromNight(detail)}
+                            veto={enJeu ? undefined : {
+                              par: vetoParJeu.get(detail.id) ?? null, moi: monVeto === detail.id,
+                              ailleurs: monVeto != null && monVeto !== detail.id ? games.find((g) => g.id === monVeto)?.title ?? null : null,
+                              onToggle: () => veto(detail.id),
+                            }} />}
       {addingGames && (
         <ShelfPicker nightId={night.id} myLibrary={myLibrary}
                      shelfIds={games.map((g) => g.id)} onClose={() => setAddingGames(false)} />

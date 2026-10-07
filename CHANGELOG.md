@@ -4,6 +4,18 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [4.13.0] — 2026-10-07
+
+### Ajouté
+Le veto ❌ (maquette validée : `mockup/2026-10-07-v4130-veto.html`).
+- **« ❌ Mettre un veto — pas ce soir »** dans la fiche du jeu (on touche la boîte) : le jeu
+  sort du tirage, pool « Tous » comme « Votés », quel que soit le nombre de 👍.
+- Sur l'étagère, la boîte est **grisée** et son badge devient **« ❌ prénom »**, visible de
+  tous ; sous « Lancer », « N jeu(x) écarté(s) par veto ».
+- **Un veto par joueur et par partie**, révocable par son auteur jusqu'au lancement. Les 👍
+  du jeu sont gardés et reviennent si le veto est retiré.
+- Les invités par lien vetoent comme les joueurs.
+
 ## [4.12.0] — 2026-10-07
 
 ### Ajouté

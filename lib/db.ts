@@ -84,6 +84,16 @@ CREATE TABLE IF NOT EXISTS game_votes (
   created_at TEXT NOT NULL DEFAULT (datetime('now','localtime')),
   UNIQUE(night_id, game_id, user_id)
 );
+-- v4.13.0 (veto) : « pas ce soir » — UN veto par joueur et par partie (UNIQUE), révocable
+-- jusqu'au lancement. Écarte le jeu du tirage ; les 👍 du jeu sont gardés. Une boîte retirée
+-- emporte son veto (lib/nights).
+CREATE TABLE IF NOT EXISTS game_vetos (
+  night_id INTEGER NOT NULL REFERENCES nights(id) ON DELETE CASCADE,
+  game_id INTEGER NOT NULL REFERENCES games(id) ON DELETE CASCADE,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TEXT NOT NULL DEFAULT (datetime('now','localtime')),
+  UNIQUE(night_id, user_id)
+);
 -- v3.7.0 (verdict du jeu) : le ressenti après la soirée — UNIQUE par (nuit, joueur),
 -- révocable (revoter remplace). game_id est copié de nights.game_id au moment du vote
 -- (mis à jour à chaque re-vote) pour que les agrégats évitent les jointures.

@@ -5,7 +5,7 @@ import { formatNombre } from '@/lib/i18n/format';
 import type { Game, UserLite } from '@/lib/types';
 import { useI18n } from './LanguageProvider';
 
-export default function GameSheet({ game, players, playsCount, verdicts, onClose, mode = 'shelf', onRemoveShelf }: {
+export default function GameSheet({ game, players, playsCount, verdicts, onClose, mode = 'shelf', onRemoveShelf, veto }: {
   game: Game;
   players: UserLite[];
   playsCount: number;
@@ -13,6 +13,8 @@ export default function GameSheet({ game, players, playsCount, verdicts, onClose
   onClose: () => void;
   mode?: 'shelf' | 'library';
   onRemoveShelf?: () => void;
+  /** v4.13.0 — veto ❌ : qui l'a posé (prénom), si c'est le mien, mon veto déjà posé ailleurs. */
+  veto?: { par: string | null; moi: boolean; ailleurs: string | null; onToggle: () => void };
 }) {
   const { lang, t } = useI18n();
   const fmt = (n: number) => formatNombre(lang, n, { maximumFractionDigits: 1 });
@@ -78,6 +80,27 @@ export default function GameSheet({ game, players, playsCount, verdicts, onClose
             <span>{t('fiche.voirBgg')}</span>
           </a>
         )}
+        {veto && (veto.par && !veto.moi ? (
+          <>
+            <button type="button" className="btn-veto off" disabled>{t('veto.ecartePar', { p: veto.par })}</button>
+            <p className="hint">{t('veto.aideAutre', { p: veto.par })}</p>
+          </>
+        ) : veto.moi ? (
+          <>
+            <button type="button" className="btn-veto off" onClick={veto.onToggle}>{t('veto.retirer')}</button>
+            <p className="hint">{t('veto.aideMien')}</p>
+          </>
+        ) : veto.ailleurs ? (
+          <>
+            <button type="button" className="btn-veto off" disabled>{t('veto.mettre')}</button>
+            <p className="hint">{t('veto.dejaUtilise', { j: veto.ailleurs })}</p>
+          </>
+        ) : (
+          <>
+            <button type="button" className="btn-veto" onClick={veto.onToggle}>{t('veto.mettre')}</button>
+            <p className="hint">{t('veto.aide')}</p>
+          </>
+        ))}
         {mode === 'shelf' && onRemoveShelf && (
           <button type="button" className="btn-exclude" onClick={onRemoveShelf}>
             {t('fiche.retirerPartie')}
