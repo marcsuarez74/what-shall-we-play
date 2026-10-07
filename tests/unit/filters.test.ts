@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { filterShelf } from '@/lib/filters';
+import { filterShelf, filtresActifs } from '@/lib/filters';
 import type { Game } from '@/lib/types';
 
 const g = (o: Partial<Game>): Game => ({
@@ -39,15 +39,24 @@ describe('filtres de l étagère', () => {
     expect(filterShelf(base, { ...all, weight: 'lourd' }).map((x) => x.id)).toEqual([2, 4]);
   });
 
-  it('durée : court < 30, moyen [30,60], long > 60 ; sans durée : toujours visible', () => {
-    expect(filterShelf(base, { ...all, duration: 'court' }).map((x) => x.id)).toEqual([4]);
-    expect(filterShelf(base, { ...all, duration: 'moyen' }).map((x) => x.id)).toEqual([1, 3, 4]);
-    expect(filterShelf(base, { ...all, duration: 'long' }).map((x) => x.id)).toEqual([2, 4]);
+  it('durée (v4.12) : court < 30, moyen [30,60], long ]60,90], tres > 90 ; sans durée : toujours visible', () => {
+    const avec75 = [...base, g({ id: 5, title: 'Wingspan', playtime_min: 75 }), g({ id: 6, title: 'Bornes', playtime_min: 90 })];
+    expect(filterShelf(avec75, { ...all, duration: 'court' }).map((x) => x.id)).toEqual([4]);
+    expect(filterShelf(avec75, { ...all, duration: 'moyen' }).map((x) => x.id)).toEqual([1, 3, 4]);
+    expect(filterShelf(avec75, { ...all, duration: 'long' }).map((x) => x.id)).toEqual([4, 5, 6]);
+    expect(filterShelf(avec75, { ...all, duration: 'tres' }).map((x) => x.id)).toEqual([2, 4]);
+  });
+
+  it('filtresActifs : compte les familles actives, jamais la recherche', () => {
+    expect(filtresActifs(all)).toBe(0);
+    expect(filtresActifs({ ...all, q: 'azul' })).toBe(0);
+    expect(filtresActifs({ ...all, players: 4, weight: 'leger' })).toBe(2);
+    expect(filtresActifs({ ...all, players: 4, weight: 'lourd', duration: 'tres', format: 'grand' })).toBe(4);
   });
 
   it('filtres combinés', () => {
     expect(filterShelf(base, { q: '', players: 2, weight: 'leger', duration: 'moyen', format: 'all' }).map((x) => x.id)).toEqual([1, 3, 4]);
-    expect(filterShelf(base, { q: 'mars', players: 2, weight: 'lourd', duration: 'long', format: 'all' }).map((x) => x.id)).toEqual([2]);
+    expect(filterShelf(base, { q: 'mars', players: 2, weight: 'lourd', duration: 'tres', format: 'all' }).map((x) => x.id)).toEqual([2]);
   });
 
   it('format de boîte (ludothèque) : filtre exact, all = tout', () => {

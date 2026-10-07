@@ -2,8 +2,9 @@ import { test, expect } from '@playwright/test';
 import { newGame, putOnShelf } from './helpers/shelf';
 
 // v3.0.0 — plus de sélection : l'étagère EST le pool. Le tirage se lance depuis
-// la barre fixe, sur TOUTES les boîtes (les filtres restent une vue de
-// navigation) ; le glisser ne déclenche jamais la fiche.
+// la barre fixe, sur TOUTES les boîtes (la recherche reste une vue de navigation ;
+// v4.12.0 : les filtres Joueurs / Complexité / Durée bornent la roue — filtres-tirage.spec) ;
+// le glisser ne déclenche jamais la fiche.
 
 async function registerAndStart(page: import('@playwright/test').Page, pseudo: string) {
   await page.goto('/register');
@@ -47,7 +48,7 @@ test('barre de lancement + validation visibles sans scroller (4 rangées)', asyn
   await page.waitForURL(/\/tirage\//);
 });
 
-test('les filtres réduisent la vue, jamais le pool du tirage', async ({ page }) => {
+test('la recherche réduit la vue, jamais le pool du tirage (v4.12 : les filtres, eux, le bornent)', async ({ page }) => {
   const nightId = await registerAndStart(page, `filtre_${Date.now()}`);
   await peuplerEtagere(page, nightId, [['Alpha', 'grand'], ['Bravo', 'moyen'], ['Charlie', 'petit'], ['Delta', 'mini']]);
   await page.locator('.box').first().waitFor();

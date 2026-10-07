@@ -4,6 +4,24 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [4.12.0] — 2026-10-07
+
+### Ajouté
+Filtres de contexte avant le tirage (maquette validée : `mockup/2026-10-07-v4120-filtres-contexte.html`).
+- **Les filtres de l'étagère bornent désormais la roue** : Joueurs, Complexité et Durée
+  réduisent le pool du tirage. « Tous », « Votés 👍 » et « Lancer · N » affichent le compte
+  filtré, et la roue ne tire que parmi ces jeux. La recherche, elle, reste une simple vue.
+- **« Vous êtes N à jouer ce soir · Filtrer sur N joueurs »** dans le panneau des filtres de
+  l'étagère : un tap, jamais appliqué d'office.
+- Sous « Lancer », un rappel des **filtres actifs** ; si aucun jeu ne passe, le bouton est
+  désactivé avec « Aucun jeu ne correspond aux filtres ».
+- Votés sans jeu compatible : « Lancer » prend tous les jeux filtrés.
+
+### Modifié
+- **Durée en 4 plages** : < 30 · 30–60 · 60–90 · 90+ (l'ancienne plage « 60+ » est scindée),
+  libellé « Durée (min) » pour que la ligne tienne sur un petit écran. Vaut aussi pour la
+  ludothèque et le sélecteur.
+
 ## [4.11.0] — 2026-10-07
 
 ### Ajouté
