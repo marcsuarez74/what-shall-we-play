@@ -4,8 +4,9 @@ import { formatLabel, coverSrc } from '@/lib/formats';
 import { formatNombre } from '@/lib/i18n/format';
 import type { Game, UserLite } from '@/lib/types';
 import { useI18n } from './LanguageProvider';
+import PlayerChip from './PlayerChip';
 
-export default function GameSheet({ game, players, playsCount, verdicts, onClose, mode = 'shelf', onRemoveShelf, veto }: {
+export default function GameSheet({ game, players, playsCount, verdicts, onClose, mode = 'shelf', onRemoveShelf, veto, votants }: {
   game: Game;
   players: UserLite[];
   playsCount: number;
@@ -15,6 +16,8 @@ export default function GameSheet({ game, players, playsCount, verdicts, onClose
   onRemoveShelf?: () => void;
   /** v4.13.0 — veto ❌ : qui l'a posé (prénom), si c'est le mien, mon veto déjà posé ailleurs. */
   veto?: { par: string | null; moi: boolean; ailleurs: string | null; onToggle: () => void };
+  /** v4.17.0 — qui a mis un 👍 (moi en dernier, « Toi ») ; absent = votes masqués. */
+  votants?: { joueurs: UserLite[]; moiId: number };
 }) {
   const { lang, t } = useI18n();
   const fmt = (n: number) => formatNombre(lang, n, { maximumFractionDigits: 1 });
@@ -54,6 +57,16 @@ export default function GameSheet({ game, players, playsCount, verdicts, onClose
           {game.weight != null && <span className="chip">⚖ {fmt(game.weight)} / 5</span>}
           {game.bgg_rating != null && <span className="chip">⭐ {fmt(game.bgg_rating)} / 10</span>}
         </div>
+        {votants && (
+          <div className="votants">
+            <p className="sous-label">{votants.joueurs.length > 0 ? t('votants.titre', { n: votants.joueurs.length }) : t('votants.aucun')}</p>
+            {votants.joueurs.length > 0
+              ? <div className="chips">{votants.joueurs.map((u) => u.id === votants.moiId
+                  ? <span key={u.id} className="votant-moi"><PlayerChip u={{ ...u, pseudo: t('votants.toi') }} /></span>
+                  : <PlayerChip key={u.id} u={u} />)}</div>
+              : <p className="hint">{t('votants.aide')}</p>}
+          </div>
+        )}
         <ul className="sheet-facts">
           {game.weight != null && (
             <li><span>{t('fiche.complexite')}</span><strong>⚖ {fmt(game.weight)} / 5</strong></li>

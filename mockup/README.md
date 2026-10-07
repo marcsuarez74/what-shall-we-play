@@ -17,4 +17,4 @@ Nommage : `AAAA-MM-JJ-v<version>-<sujet>.html` — la date de validation et la v
 | [2026-10-07-v4140-parties-recurrentes.html](2026-10-07-v4140-parties-recurrentes.html) | v4.14.0 | Parties récurrentes : « Répéter », série et dates, conflit d'horaire, places max et liste d'attente, arrêt de série (validée) |
 | [2026-10-07-v4150-evenements.html](2026-10-07-v4150-evenements.html) | v4.15.0 | Événements : sous-onglets Parties | Événements (B), période facultative, rattachement de la partie au démarrage avec ses seuls joueurs, jeux au programme, suppression (v5, validée) |
 | [2026-10-07-v4160-kijoukan.html](2026-10-07-v4160-kijoukan.html) | v4.16.0 | Kijoukan : grille de semaine type, carte de chaleur du cercle, proposition de partie (validée) |
-| [2026-10-07-v4170-qui-a-vote.html](2026-10-07-v4170-qui-a-vote.html) | v4.17.0 | Qui a voté 👍 : les votants (sticker + prénom) dans la fiche du jeu, toi en dernier (à valider) |
+| [2026-10-07-v4170-qui-a-vote.html](2026-10-07-v4170-qui-a-vote.html) | v4.17.0 | Qui a voté 👍 : les votants (sticker + prénom) dans la fiche du jeu, toi en dernier (validée) |
