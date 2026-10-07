@@ -2529,3 +2529,19 @@ a.btn-go.as-link { display: flex; align-items: center; justify-content: center; 
 .prog { height: 8px; border-radius: 99px; background: var(--noyer); overflow: hidden; margin-top: 6px; }
 .prog i { display: block; height: 100%; background: var(--cuivre); }
 .evt-page .lien-actions, .evt-page > .btn-ghost { margin-top: 10px; }
+
+/* ── v4.16.0 — Kijoukan ── */
+.kij { display: grid; gap: 8px; }
+.kij-grille { display: grid; grid-template-columns: 40px repeat(7, minmax(0, 1fr)); gap: 4px; align-items: center; }
+.kij-ligne { display: contents; }
+.kij-k { font-size: 11px; color: var(--doux-clair); text-align: center; font-weight: 600; }
+.kij-c { height: 36px; border-radius: 8px; border: 1px solid color-mix(in srgb, var(--doux) 30%, transparent); background: var(--noyer);
+  color: var(--creme); font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; padding: 0; }
+.kij-c.mien { outline: 2px solid var(--cuivre); outline-offset: -2px; }
+.kij-c.h1 { background: color-mix(in srgb, var(--cuivre) 20%, var(--noyer)); }
+.kij-c.h2 { background: color-mix(in srgb, var(--cuivre) 40%, var(--noyer)); }
+.kij-c.h3 { background: color-mix(in srgb, var(--cuivre) 62%, var(--noyer)); }
+.kij-c.h4 { background: color-mix(in srgb, var(--cuivre) 82%, var(--noyer)); }
+.kij-c.h5 { background: var(--cuivre); color: var(--noyer); }
+.kij-best { font-weight: 700; font-size: 14px; }
+.kij-profil { margin-top: 14px; }

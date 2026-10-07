@@ -12,6 +12,10 @@ import UserMenu from '@/components/UserMenu';
 import UserSync from '@/components/UserSync';
 import BoutonAction from '@/components/BoutonAction';
 import LienPartage from '@/components/LienPartage';
+import KijoukanGrille from '@/components/KijoukanGrille';
+import NightPlanner from '@/components/NightPlanner';
+import { mesCercles } from '@/lib/cercles';
+import { carteCercle, grilleDe, HEURE_CRENEAU, meilleurCreneau, prochainesDates } from '@/lib/kijoukan';
 
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {
   const lang = await getLang();
@@ -75,6 +79,32 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
               ))}
             </section>
           )}
+
+          {(() => {
+            // v4.16.0 — Kijoukan : la semaine type des membres, et le meilleur créneau en un geste.
+            const carte = carteCercle(id);
+            const best = meilleurCreneau(carte.compte);
+            const joursLongs = t(lang, 'kij.joursLongs').split(',');
+            const nomCase = (i: number) => `${joursLongs[i % 7]} ${t(lang, i < 7 ? 'kij.midiCourt' : 'kij.soirCourt')}`;
+            const users = [{ id: user.id, pseudo: user.pseudo, sticker: user.sticker, avatar_path: user.avatar_path }, ...listRelations(user.id)];
+            const cercles = mesCercles(user.id).map((c) => ({ id: c.id, nom: c.nom, membres: membresCercle(c.id).filter((m) => m.etat === 'membre').map((m) => m.id) }));
+            return (
+              <section className="night-card" aria-label={t(lang, 'kij.titre')}>
+                <p className="sous-label">{t(lang, 'kij.titre')}</p>
+                <KijoukanGrille grille={grilleDe(user.id)} compte={carte.compte} noms={carte.noms} membres={carte.membres} />
+                <p className="hint">{t(lang, 'kij.aide')}</p>
+                <p className="hint">{carte.repondu === 0 ? t(lang, 'kij.aucun') : t(lang, 'kij.repondu', { n: carte.repondu, total: carte.membres })}</p>
+                {best !== null && (
+                  <>
+                    <p className="kij-best">{t(lang, 'kij.meilleur', { c: nomCase(best), n: carte.compte[best], total: carte.membres })}</p>
+                    <NightPlanner users={users} meId={user.id} cercles={cercles} quand="plus" label={t(lang, 'kij.proposer', { c: nomCase(best) })}
+                                  datesInit={prochainesDates(best % 7, 3).map((date) => ({ date, time: HEURE_CRENEAU[best < 7 ? 0 : 1] }))}
+                                  cerclesInit={[id]} />
+                  </>
+                )}
+              </section>
+            );
+          })()}
 
           <section className="qg-section" aria-label={t(lang, 'cercles.membres')}>
             <p className="sous-label">{t(lang, 'cercles.membres')}</p>

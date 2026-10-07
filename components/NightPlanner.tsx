@@ -6,9 +6,11 @@ import { useI18n } from './LanguageProvider';
 
 // « ＋ Nouvelle partie » → bottom-sheet avec NightPicker (v4.10.0 : « Une date » présélectionné).
 // v4.15.0 : depuis un événement, « ▶ Démarrer une partie » (Maintenant, événement prérempli).
-export default function NightPlanner({ users, meId, cercles, evenements = [], evenementId = null, quand = 'une', label }: {
+export default function NightPlanner({ users, meId, cercles, evenements = [], evenementId = null, quand = 'une', label, datesInit, cerclesInit }: {
   users: UserLite[]; meId: number; cercles: CerclePicker[];
   evenements?: { id: number; titre: string }[]; evenementId?: number | null; quand?: Quand; label?: string;
+  /** v4.16.0 — Kijoukan : sondage prérempli. */
+  datesInit?: { date: string; time: string }[]; cerclesInit?: number[];
 }) {
   const [open, setOpen] = useState(false);
   const { t } = useI18n();
@@ -21,7 +23,8 @@ export default function NightPlanner({ users, meId, cercles, evenements = [], ev
         <div className="sheet-backdrop" onClick={() => setOpen(false)}>
           <div className="bottom-sheet" onClick={(e) => e.stopPropagation()}>
             <NightPicker users={users} prechecked={[meId]} meId={meId} cercles={cercles} quand={quand}
-                         evenements={evenements} evenementId={evenementId} onClose={() => setOpen(false)} />
+                         evenements={evenements} evenementId={evenementId} datesInit={datesInit} cerclesInit={cerclesInit}
+                         onClose={() => setOpen(false)} />
           </div>
         </div>
       )}

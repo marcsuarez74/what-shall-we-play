@@ -267,6 +267,8 @@ export function runMigrations(db: Database.Database): void {
     'ALTER TABLE night_invites ADD COLUMN en_liste TEXT',
     // v4.15.0 : l'événement d'une partie (NULL = aucun).
     'ALTER TABLE nights ADD COLUMN evenement_id INTEGER REFERENCES evenements(id)',
+    // v4.16.0 : Kijoukan — semaine type, 14 cases '0'/'1' (lundi → dimanche midi, puis soir).
+    "ALTER TABLE users ADD COLUMN kijoukan TEXT NOT NULL DEFAULT ''",
   ]) {
     try { db.exec(stmt); } catch { /* colonne déjà présente */ }
   }

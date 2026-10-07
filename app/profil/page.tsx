@@ -10,6 +10,8 @@ import { getFoyerForUser } from '@/lib/foyers';
 import { t } from '@/lib/i18n';
 import { getLang } from '@/lib/i18n/server';
 import ProfileClient from '@/components/ProfileClient';
+import KijoukanGrille from '@/components/KijoukanGrille';
+import { grilleDe } from '@/lib/kijoukan';
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: t(await getLang(), 'profil.metaTitre') };
@@ -18,6 +20,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function Page() {
   const user = await getSessionUser();
   if (!user) redirect('/login');
+  const lang = await getLang(); // v4.16.0 : carte Kijoukan
   // « Mes parties » : la médaille se calcule CÔTÉ SERVEUR (rankScores sur les
   // scores de chaque soirée, ≤ 6 requêtes) — le client reçoit un simple string.
   const parties = getMyParties(user.id).map((p) => {
@@ -39,6 +42,12 @@ export default async function Page() {
         jeux={listUserLibrary(user.id)}
         membres={membres}
       />
+      {/* v4.16.0 — Kijoukan : ma semaine type (une grille par compte, vue par mes cercles) */}
+      <section className="night-card kij-profil" aria-label={t(lang, 'kij.monTitre')}>
+        <p className="sous-label">{t(lang, 'kij.monTitre')}</p>
+        <KijoukanGrille grille={grilleDe(user.id)} />
+        <p className="hint">{t(lang, 'kij.monAide')}</p>
+      </section>
     </main>
   );
 }
