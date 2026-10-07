@@ -3,7 +3,7 @@
 // seule. Pas d'onglets ni de profil : toute autre page le renvoie ici (login).
 import { redirect } from 'next/navigation';
 import { getSessionInvite } from '@/lib/session';
-import { getInviteNight, getNightPlayers, getShelfGames, getShelfVotes, getNightGame, getNightScores } from '@/lib/nights';
+import { getInviteNight, getNightPlayers, getShelfGames, getShelfVotes, getShelfVetos, getNightGame, getNightScores } from '@/lib/nights';
 import { rankScores } from '@/lib/ranks';
 import { getPickCounts } from '@/lib/games';
 import { getDb } from '@/lib/db';
@@ -32,7 +32,7 @@ export default async function Page() {
         titre={titrePartie(lang, night)}
         dateLong={formatDate(lang, `${night.played_at}T12:00:00`, { weekday: 'long', day: 'numeric', month: 'long' })}
         time={night.start_time ? formatDate(lang, `${night.played_at}T${night.start_time}`, { timeStyle: 'short' }) : null}
-        hote={hote} players={getNightPlayers(night.id)} games={getShelfGames(night.id)} votes={getShelfVotes(night.id)}
+        hote={hote} players={getNightPlayers(night.id)} games={getShelfGames(night.id)} votes={getShelfVotes(night.id)} vetos={getShelfVetos(night.id)}
         partyGame={getNightGame(night.id)} plays={getPickCounts()} classement={classement}
         me={{ id: me.id, pseudo: me.pseudo }} />
     </main>

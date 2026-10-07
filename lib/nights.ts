@@ -459,6 +459,7 @@ export function removeNightGame(nightId: number, gameId: number, userId: number,
   getDb().prepare('DELETE FROM night_games WHERE night_id = ? AND game_id = ?').run(nightId, gameId);
   // une boîte retirée emporte ses votes (v3.5) — pas de vote fantôme dans « Votés 👍 »
   getDb().prepare('DELETE FROM game_votes WHERE night_id = ? AND game_id = ?').run(nightId, gameId);
+  getDb().prepare('DELETE FROM game_vetos WHERE night_id = ? AND game_id = ?').run(nightId, gameId); // v4.13.0
   // sa sélection a changé : sa validation saute (idiome v3.0.0, cf. addNightGame)
   getDb().prepare('UPDATE night_players SET validated_at = NULL WHERE night_id = ? AND user_id = ?').run(nightId, userId);
   notifyNight(nightId); // sync live : la boîte disparaît chez les autres joueurs
@@ -480,6 +481,34 @@ export function toggleNightVote(nightId: number, gameId: number, userId: number,
     db.prepare('INSERT OR IGNORE INTO game_votes (night_id, game_id, user_id) VALUES (?, ?, ?)').run(nightId, gameId, userId);
   }
   notifyNight(nightId); // sync live : le compteur bouge chez tout le monde
+  return { ok: true };
+}
+// v4.13.0 — le veto ❌ : un par joueur et par partie, nommé, révocable par son auteur
+// jusqu'au lancement. Mêmes gardes que le vote ; ne touche pas à la validation.
+export type ShelfVeto = { game_id: number; user_id: number; pseudo: string };
+export function getShelfVetos(nightId: number): ShelfVeto[] {
+  return getDb().prepare(`
+    SELECT gv.game_id, gv.user_id, u.pseudo FROM game_vetos gv
+    JOIN users u ON u.id = gv.user_id
+    WHERE gv.night_id = ? ORDER BY gv.created_at, gv.user_id`).all(nightId) as ShelfVeto[];
+}
+export function toggleNightVeto(nightId: number, gameId: number, userId: number, lang: Lang = 'fr'): NightGameResult {
+  const db = getDb();
+  const night = getNight(nightId);
+  if (!night) return { error: t(lang, 'soiree.errPartieIntrouvable'), status: 404 };
+  if (!isNightParticipant(nightId, userId)) return { error: t(lang, 'soiree.errSeulsJoueursVote'), status: 403 };
+  if (night.status !== 'creation') return { error: t(lang, night.status === 'en_jeu' ? 'soiree.errVotesFigesEnJeu' : 'soiree.errVotesFigesTermine'), status: 409 };
+  if (!isGameOnShelf(nightId, gameId)) return { error: t(lang, 'soiree.errJeuPasSurEtagere'), status: 403 };
+  const mien = db.prepare('SELECT game_id FROM game_vetos WHERE night_id = ? AND user_id = ?').get(nightId, userId) as { game_id: number } | undefined;
+  if (mien?.game_id === gameId) {
+    db.prepare('DELETE FROM game_vetos WHERE night_id = ? AND user_id = ?').run(nightId, userId);
+  } else {
+    if (mien) return { error: t(lang, 'soiree.errVetoDejaUtilise'), status: 409 };
+    if (db.prepare('SELECT 1 FROM game_vetos WHERE night_id = ? AND game_id = ?').get(nightId, gameId))
+      return { error: t(lang, 'soiree.errVetoDejaEcarte'), status: 409 };
+    db.prepare('INSERT INTO game_vetos (night_id, game_id, user_id) VALUES (?, ?, ?)').run(nightId, gameId, userId);
+  }
+  notifyNight(nightId); // sync live : la boîte se grise chez tout le monde
   return { ok: true };
 }
 export function isNightParticipant(nightId: number, userId: number): boolean {

@@ -23,9 +23,11 @@ export function grouperVotes(votes: { game_id: number; user_id: number; pseudo: 
 // Les rayons de l'étagère : une rangée par format de boîte (grand → mini), boîtes
 // à l'échelle, badge 👍 de vote, rond du propriétaire. Partagé par l'étagère des
 // joueurs (ShelfClient) et la vue invité (v4.7.0) : un seul rendu, un seul design.
-export default function ShelfRows({ games, votes, onVote, onOpen }: {
+export default function ShelfRows({ games, votes, onVote, onOpen, vetos }: {
   games: Game[];
   votes: VotesParJeu | null; // null : votes masqués (boîte sortie)
+  /** v4.13.0 — jeu → prénom de qui l'a écarté (❌ remplace le 👍, boîte grisée). */
+  vetos?: Map<number, string> | null;
   onVote: (gameId: number) => void;
   onOpen?: (g: Game) => void; // absent : la boîte ne s'ouvre pas (invité)
 }) {
@@ -39,14 +41,19 @@ export default function ShelfRows({ games, votes, onVote, onOpen }: {
           <section key={f} className="shelf-block">
             <div className="row" role="list">
               {list.map((g) => (
-                <button key={g.id} type="button" role="listitem" className={`box ${FORMAT_SCALE[f] < 0.7 ? 'sm' : ''}`}
+                <button key={g.id} type="button" role="listitem" className={`box ${FORMAT_SCALE[f] < 0.7 ? 'sm' : ''} ${vetos?.has(g.id) ? 'veto' : ''}`}
                         style={{ width: 96 * FORMAT_SCALE[f], height: 96 * FORMAT_SCALE[f], cursor: onOpen ? undefined : 'default' }}
                         onClick={onOpen ? () => onOpen(g) : undefined}>
                   <BoxImage game={g} />
                   {g.owner_pseudo && (
                     <OwnerBadge owner={{ pseudo: g.owner_pseudo, sticker: g.owner_sticker ?? null, avatar_path: g.owner_avatar_path ?? null }} />
                   )}
-                  {votes && (() => {
+                  {votes && vetos?.has(g.id) && (
+                    <span className="veto-badge" aria-label={t('veto.badgeAria', { j: g.title, p: vetos.get(g.id)! })}>
+                      ❌ {vetos.get(g.id)}
+                    </span>
+                  )}
+                  {votes && !vetos?.has(g.id) && (() => {
                     const v = votes.get(g.id);
                     return (
                       <span className={'vote-badge' + (v?.moi ? ' vote-moi' : '')} role="button"

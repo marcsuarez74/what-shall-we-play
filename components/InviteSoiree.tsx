@@ -2,7 +2,7 @@
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Game, UserLite } from '@/lib/types';
-import type { ShelfVote } from '@/lib/nights';
+import type { ShelfVeto, ShelfVote } from '@/lib/nights';
 import { avatarSrc } from '@/lib/formats';
 import { medaille } from '@/lib/ranks';
 import ShelfRows, { grouperVotes } from './ShelfRows';
@@ -22,10 +22,10 @@ function pseudoPropose(nom: string): string {
 
 // v4.7.0 — la vue de l'invité : sa soirée seulement. Il vote, crée un compte
 // (même identité, votes gardés) ou se retire (confirmé, ses votes partent avec lui).
-export default function InviteSoiree({ night, titre, dateLong, time, hote, players, games, votes, partyGame, plays, classement, me }: {
+export default function InviteSoiree({ night, titre, dateLong, time, hote, players, games, votes, vetos = [], partyGame, plays, classement, me }: {
   night: { id: number; status: 'creation' | 'en_jeu' | 'termine' };
   titre: string; dateLong: string; time: string | null;
-  hote: UserLite; players: UserLite[]; games: Game[]; votes: ShelfVote[]; partyGame: Game | null;
+  hote: UserLite; players: UserLite[]; games: Game[]; votes: ShelfVote[]; vetos?: ShelfVeto[]; partyGame: Game | null;
   plays: Record<number, number>;
   classement: { pseudo: string; score: number | null; rank: number }[];
   me: { id: number; pseudo: string };
@@ -40,6 +40,9 @@ export default function InviteSoiree({ night, titre, dateLong, time, hote, playe
   const [busy, setBusy] = useState(false);
   const [detail, setDetail] = useState<Game | null>(null); // fiche du jeu, en lecture seule
   const votesParJeu = useMemo(() => grouperVotes(votes, me.id), [votes, me.id]);
+  // v4.13.0 — l'invité voit les vetos et pose le sien, comme les autres joueurs.
+  const vetoParJeu = useMemo(() => new Map(vetos.map((v) => [v.game_id, v.pseudo.split(' ')[0]])), [vetos]);
+  const monVeto = vetos.find((v) => v.user_id === me.id)?.game_id ?? null;
   const cle = `wsp_night_${night.id}`;
   const hoteAvatar = avatarSrc(hote);
 
@@ -47,6 +50,14 @@ export default function InviteSoiree({ night, titre, dateLong, time, hote, playe
     await fetch(`/api/nights/${night.id}/votes`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ gameId }),
     });
+    router.refresh();
+  }
+
+  async function veto(gameId: number) {
+    await fetch(`/api/nights/${night.id}/veto`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ gameId }),
+    });
+    setDetail(null);
     router.refresh();
   }
 
@@ -146,7 +157,7 @@ export default function InviteSoiree({ night, titre, dateLong, time, hote, playe
         <>
           <div className="qg-head"><h2>{t('invite.jeuxProposes')}</h2>{games.length > 0 && <span className="hint">{t('invite.pourVoter')}</span>}</div>
           {games.length > 0
-            ? <ShelfRows games={games} votes={votesParJeu} onVote={voter} onOpen={setDetail} />
+            ? <ShelfRows games={games} votes={votesParJeu} onVote={voter} onOpen={setDetail} vetos={vetoParJeu} />
             : <p className="hint">{t('invite.aucunJeu', { hote: hote.pseudo })}</p>}
           {cta(t('invite.ctaTitre'), t('invite.ctaTexte'))}
         </>
@@ -179,7 +190,12 @@ export default function InviteSoiree({ night, titre, dateLong, time, hote, playe
       )}
 
       {/* la fiche existante, sans « retirer de l'étagère » : l'invité consulte, il ne modifie pas */}
-      {detail && <GameSheet game={detail} players={players} playsCount={plays[detail.id] ?? 0} onClose={() => setDetail(null)} />}
+      {detail && <GameSheet game={detail} players={players} playsCount={plays[detail.id] ?? 0} onClose={() => setDetail(null)}
+                            veto={night.status === 'creation' ? {
+                              par: vetoParJeu.get(detail.id) ?? null, moi: monVeto === detail.id,
+                              ailleurs: monVeto != null && monVeto !== detail.id ? games.find((g) => g.id === monVeto)?.title ?? null : null,
+                              onToggle: () => veto(detail.id),
+                            } : undefined} />}
       {erreur && <p role="alert" className="join-erreur">{erreur}</p>}
       {night.status !== 'termine' && (
         <button type="button" className={'btn-ghost' + (sur ? ' armed' : '')} disabled={busy} onClick={seRetirer}>

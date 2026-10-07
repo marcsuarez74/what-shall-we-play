@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { getSessionUser } from '@/lib/session';
-import { getActiveNight, getNightPlayers, getShelfGames, getNightGame, getTodayTermineeNight, getShelfVotes, getShelfNight, estFuture, lienInvitation } from '@/lib/nights';
+import { getActiveNight, getNightPlayers, getShelfGames, getNightGame, getTodayTermineeNight, getShelfVotes, getShelfVetos, getShelfNight, estFuture, lienInvitation } from '@/lib/nights';
 import { getPickCounts, listUserLibrary } from '@/lib/games';
 import { listRelations } from '@/lib/amis';
 import { mesCercles, membresCercle } from '@/lib/cercles';
@@ -51,7 +51,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ n
     <UserSync />
     <ShelfClient night={night} partyGame={getNightGame(night.id)} players={getNightPlayers(night.id)} games={getShelfGames(night.id)}
                  myLibrary={listUserLibrary(user.id)} users={avecJoueurs(users, getNightPlayers(night.id), user.id)}
-                 plays={getPickCounts()} votes={getShelfVotes(night.id)}
+                 plays={getPickCounts()} votes={getShelfVotes(night.id)} vetos={getShelfVetos(night.id)}
                  futur={estFuture(night)}
                  lien={night.creator_id === user.id ? lienInvitation(night) : undefined}
                  me={{ id: user.id, pseudo: user.pseudo, sticker: user.sticker, avatar_path: user.avatar_path }} />
