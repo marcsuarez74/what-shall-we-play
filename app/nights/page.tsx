@@ -1,8 +1,11 @@
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 import { getSessionUser } from '@/lib/session';
 import { getActiveNight, getPlannedNights, getHistoryCards, getNightPlayers, getNightGame, getShelfGames, lienInvitation, conflitHoraire } from '@/lib/nights';
 import { bilanArret, completerSeries, mesSeries } from '@/lib/series';
 import GererSerie from '@/components/GererSerie';
+import NouvelEvenement from '@/components/NouvelEvenement';
+import { mesEvenements } from '@/lib/evenements';
 import { listRelations } from '@/lib/amis';
 import { mesCercles, membresCercle } from '@/lib/cercles';
 import { mesInvitations, invitesNuit, listeAttente } from '@/lib/invitations';
@@ -30,10 +33,11 @@ function dayMonth(playedAt: string, lang: Lang): { day: string; month: string } 
   };
 }
 
-export default async function Page() {
+export default async function Page({ searchParams }: { searchParams: Promise<{ vue?: string }> }) {
   const lang = await getLang();
   const user = await getSessionUser();
   if (!user) redirect('/login');
+  const vueEvenements = (await searchParams).vue === 'evenements';
   completerSeries(); // v4.14.0 : 4 dates d'avance par série (idempotent, sans tâche dédiée)
   const active = getActiveNight(user.id);
   // v4.14.0 : les dates d'une série vivent dans la carte de la série, pas une à une.
@@ -49,6 +53,7 @@ export default async function Page() {
     id: c.id, nom: c.nom, membres: membresCercle(c.id).filter((m) => m.etat === 'membre').map((m) => m.id),
   }));
   const invitations = mesInvitations(user.id);
+  const evenements = mesEvenements(user.id); // v4.15.0
   // v4.10.0 : sondages de dates reçus (à cocher) et organisés (à trancher).
   const sondagesRecus = sondagesInvite(user.id);
   const sondagesMiens = sondagesOrganises(user.id);
@@ -74,6 +79,38 @@ export default async function Page() {
         <h1>{t(lang, 'soiree.titre')}</h1>
         <UserMenu me={user} />
       </div>
+      {/* v4.15.0 — sous-onglets : la barre du bas garde 5 onglets */}
+      <nav className="vue-seg" aria-label={t(lang, 'evt.titre')}>
+        <Link href="/nights" aria-current={vueEvenements ? undefined : 'page'}>{t(lang, 'evt.ongletParties')}</Link>
+        <Link href="/nights?vue=evenements" aria-current={vueEvenements ? 'page' : undefined}>
+          {t(lang, 'evt.titre')}{evenements.length > 0 ? ` · ${evenements.length}` : ''}
+        </Link>
+      </nav>
+      {vueEvenements ? (
+        <section className="qg-section" aria-label={t(lang, 'evt.titre')}>
+          <div className="qg-head">
+            <h2>{t(lang, 'evt.titre')}</h2>
+            <NouvelEvenement users={users} cercles={cercles} meId={user.id} />
+          </div>
+          {evenements.length === 0 ? <p className="empty">{t(lang, 'evt.vide')}</p> : (
+            <ul className="nights-list">
+              {evenements.map((e) => {
+                const jour = (d: string) => formatDate(lang, `${d}T12:00:00`, { day: 'numeric', month: 'short' });
+                return (
+                  <li key={e.id}>
+                    <Link className="night-card evt-card" href={`/evenements/${e.id}`}>
+                      <span className="plan-top"><span className="plan-titre">{e.titre}</span>
+                        <span className="badge-etat b-prep"><span className="pt" />{t(lang, e.nb_jeux > 0 && e.nb_joues === e.nb_jeux ? 'evt.badgeTermine' : 'evt.badgeEnCours')}</span></span>
+                      <span className="meta">{e.du && e.au ? `${jour(e.du)} – ${jour(e.au)}` : t(lang, 'evt.datesADefinir')} · {t(lang, 'evt.nParticipants', { n: e.nb_participants })} · {t(lang, 'evt.nParties', { n: e.nb_parties })}</span>
+                      {e.nb_jeux > 0 && <span className="prog"><i style={{ width: `${Math.round((100 * e.nb_joues) / e.nb_jeux)}%` }} /></span>}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+      ) : (<>
 
       {(invitations.length > 0 || sondagesRecus.length > 0) && (
         <section className="qg-section" aria-label={t(lang, 'soiree.invitations')}>
@@ -242,7 +279,7 @@ export default async function Page() {
       <section className="qg-section" aria-label={t(lang, 'soiree.programmees')}>
         <div className="qg-head">
           <h2>{t(lang, 'soiree.programmees')}</h2>
-          <NightPlanner users={users} meId={user.id} cercles={cercles} />
+          <NightPlanner users={users} meId={user.id} cercles={cercles} evenements={evenements.map((e) => ({ id: e.id, titre: e.titre }))} />
         </div>
         {planned.length === 0 ? (
           <p className="empty">{t(lang, 'soiree.aucuneProgrammee')}</p>
@@ -345,6 +382,7 @@ export default async function Page() {
           {cartes.length === 0 && <p className="hint">{t(lang, 'soiree.aucuneTerminee')}</p>}
         </div>
       </section>
+      </>)}
     </main>
   );
 }

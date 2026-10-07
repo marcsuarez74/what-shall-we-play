@@ -4,6 +4,20 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [4.15.0] — 2026-10-07
+
+### Ajouté
+Événements (maquette validée : `mockup/2026-10-07-v4150-evenements.html`).
+- **Sous-onglets « Parties | Événements »** en haut de l'onglet Parties.
+- **Un événement** (marathon, week-end de salon…) : titre, description, période facultative et
+  **participants** (cercles, amis) qui le voient — prévenus une fois, jamais invités aux parties.
+- **« ▶ Démarrer une partie dans l'événement »** : le formulaire habituel, événement prérempli ;
+  une partie déjà commencée se rattache depuis son étagère (« Modifier »). Seuls ses joueurs
+  comptent ; chaque participant rattache ses propres parties.
+- **Au programme** : les jeux visés, choisis dans la ludothèque de l'organisateur, **cochés
+  tout seuls** quand une partie de l'événement se termine dessus, avec une barre de progression.
+- Supprimer un événement (confirmé) garde ses parties, simplement détachées.
+
 ## [4.14.1] — 2026-10-07
 
 ### Ajouté

@@ -34,10 +34,11 @@ const POIDS: Record<Exclude<ShelfFilters['weight'], 'all'>, CléDict> = {
   leger: 'etagere.poidsLeger', moyen: 'etagere.poidsMoyen', lourd: 'etagere.poidsLourd',
 };
 
-export default function ShelfClient({ night, partyGame, players, games, myLibrary, users, plays, votes, vetos = [], me, futur = false, lien }: {
+export default function ShelfClient({ night, partyGame, players, games, myLibrary, users, plays, votes, vetos = [], me, futur = false, lien, evenements = [] }: {
   night: Night; partyGame: Game | null; players: UserLite[]; games: Game[]; myLibrary: Game[]; users: UserLite[]; plays: Record<number, number>;
   votes: ShelfVote[];
   vetos?: ShelfVeto[]; // v4.13.0
+  evenements?: { id: number; titre: string }[]; // v4.15.0 : rattacher la partie (Modifier)
   me: UserLite;
   futur?: boolean;
   lien?: string;
@@ -319,6 +320,7 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
             <button type="button" className="sheet-close" aria-label={t('etagere.fermer')} onClick={() => setEditingNight(false)}>✕</button>
             <NightPicker users={users} prechecked={players.map((p) => p.id)} night={night} meId={me.id}
                          editInfos={estCreateur ? { futur } : undefined}
+                         evenements={estCreateur ? evenements : []}
                          onClose={() => setEditingNight(false)} />
           </div>
         </div>
