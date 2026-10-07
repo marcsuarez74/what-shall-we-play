@@ -7,8 +7,9 @@
 
 - Un bouton **📅 Ajouter à mon calendrier** télécharge un fichier `.ics` généré par le serveur
   (une route de plus). Rien n'est stocké, aucune dépendance : le fichier est un texte.
-- **Où** : sur la carte d'une partie **programmée** (page Parties) et juste après la réponse
-  « Dispo » à une invitation. Pas de bouton sur la partie du jour (« Maintenant ») ni sur une
+- **Où** : sur la carte d'une partie **programmée** (page Parties). Répondre « Dispo » à une
+  invitation fait passer la partie dans « Programmées » : le lien y est aussitôt (écart assumé
+  avec l'écran S2 de la maquette, qui le montrait dans la carte d'invitation). Pas de bouton sur la partie du jour (« Maintenant ») ni sur une
   partie terminée.
 - **Contenu** : titre de la partie (repli sur la date, comme partout), date, heure, joueurs
   (comptes + invités), lien vers l'étagère de la partie (`/etagere?night=<id>`, qui exige d'être
@@ -37,10 +38,8 @@
 
 ## 3. Interface
 
-- Lien `<a href="/api/nights/<id>/ics" download>` : zéro JavaScript côté client (KISS, rien à
-  charger en plus). Composant serveur `AjoutCalendrier`.
-- Carte programmée : à côté de « Préparer l'étagère » / « Inviter ».
-- Carte d'invitation, état « Dispo » : phrase « Tu joues ! » + le lien.
+- Lien `<a href="/api/nights/<id>/ics" download>` dans la carte programmée, à côté de
+  « Préparer l'étagère » / « Inviter » : zéro JavaScript côté client (KISS, rien à charger).
 - Chaînes FR + EN dans `lib/i18n/`.
 
 ## 4. Tests
