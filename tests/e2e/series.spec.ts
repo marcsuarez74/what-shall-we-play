@@ -27,7 +27,7 @@ test('série : Répéter → 4 dates, Dispo à toutes, conflit, arrêt', async (
   // L'hôte programme « Jeudi jeux » et coche Répéter (chaque semaine).
   await a.goto('/nights');
   await a.getByRole('button', { name: /Nouvelle partie/ }).click();
-  await a.locator('.bottom-sheet .plan-titre-field input').fill('Jeudi jeux');
+  await a.locator('.bottom-sheet .plan-titre-field input[type="text"]').fill('Jeudi jeux');
   await a.getByLabel('Date', { exact: true }).fill(dansNJours(2));
   await a.getByLabel(/^Heure/).fill('20:00');
   await a.getByLabel('🔁 Répéter').check();

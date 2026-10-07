@@ -12,6 +12,6 @@ export interface Game {
   designer: string | null; artist: string | null; best_players: number | null;
   owner_pseudo?: string; owner_sticker?: string | null; owner_avatar_path?: string | null;
 }
-export interface Night { id: number; creator_id: number; played_at: string; start_time?: string | null; ended_at?: string | null; status: 'creation' | 'en_jeu' | 'termine'; game_id?: number | null; lien_token?: string | null; titre?: string | null; serie_id?: number | null; created_at: string; }
+export interface Night { id: number; creator_id: number; played_at: string; start_time?: string | null; ended_at?: string | null; status: 'creation' | 'en_jeu' | 'termine'; game_id?: number | null; lien_token?: string | null; titre?: string | null; serie_id?: number | null; places_max?: number | null; created_at: string; }
 export interface Foyer { id: number; name: string; invite_code: string; created_by: number; created_at: string; }
 export interface Pick { id: number; night_id: number; game_id: number; spinner_id: number; created_at: string; }

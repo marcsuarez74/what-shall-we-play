@@ -13,6 +13,10 @@ import { notifier } from './push';
 import type { Night, UserLite } from './types';
 
 type Res = { ok: true } | { error: string; status: number };
+// v4.14.1 : complet → « Dispo » met en liste d'attente (rang renvoyé).
+type ResReponse = { ok: true; liste?: number } | { error: string; status: number };
+export const PLACES_MIN = 2;
+export const PLACES_MAX = 30;
 export type EtatInvitation = 'attente' | 'dispo' | 'absent';
 
 // Qui je peux inscrire ou inviter : mes relations (amis + foyer) et les membres de mes cercles.
@@ -61,18 +65,45 @@ function ouverte(night: Night | null): night is Night {
 const pseudoDe = (id: number) => (getDb().prepare('SELECT pseudo FROM users WHERE id = ?').get(id) as { pseudo: string }).pseudo;
 
 function poser(nightId: number, userId: number, etat: EtatInvitation): void {
-  getDb().prepare('UPDATE night_invites SET etat = ? WHERE night_id = ? AND user_id = ?').run(etat, nightId, userId);
+  getDb().prepare('UPDATE night_invites SET etat = ?, en_liste = NULL WHERE night_id = ? AND user_id = ?').run(etat, nightId, userId);
   const joueurs = getNightPlayers(nightId).map((p) => p.id).filter((id) => id !== userId);
   setNightPlayers(nightId, etat === 'dispo' ? [...joueurs, userId] : joueurs); // prévient les joueurs
   emitToUsers([userId]);
 }
 
-export function repondre(nightId: number, moi: number, reponse: unknown, lang: Lang = 'fr'): Res {
+// v4.14.1 — la liste d'attente d'une partie complète, dans l'ordre d'arrivée.
+export function listeAttente(nightId: number): UserLite[] {
+  return getDb().prepare(`
+    SELECT u.id, u.pseudo, u.sticker, u.avatar_path FROM night_invites i JOIN users u ON u.id = i.user_id
+    WHERE i.night_id = ? AND i.en_liste IS NOT NULL ORDER BY i.en_liste, i.rowid`).all(nightId) as UserLite[];
+}
+const complete = (night: Night) => night.places_max != null && getNightPlayers(night.id).length >= night.places_max;
+
+// Une place s'est libérée : le premier de la liste joue (automatique) et en est prévenu.
+function promouvoir(night: Night): void {
+  while (!complete(night)) {
+    const premier = listeAttente(night.id)[0];
+    if (!premier) return;
+    poser(night.id, premier.id, 'dispo');
+    void notifier([premier.id], 'invitations', (lang) => ({
+      titre: t(lang, 'notif.placeLiberee'), corps: titrePartie(lang, night), url: '/nights', tag: `invitation-${night.id}`,
+    }));
+  }
+}
+
+export function repondre(nightId: number, moi: number, reponse: unknown, lang: Lang = 'fr'): ResReponse {
   if (reponse !== 'dispo' && reponse !== 'absent') return { error: t(lang, 'erreurs.requeteInvalide'), status: 400 };
   const night = getNight(nightId);
   const inv = getDb().prepare('SELECT 1 FROM night_invites WHERE night_id = ? AND user_id = ?').get(nightId, moi);
   if (!inv || !ouverte(night)) return { error: t(lang, 'soiree.errPasInvite'), status: 404 };
+  const jouait = getNightPlayers(nightId).some((p) => p.id === moi);
+  if (reponse === 'dispo' && !jouait && complete(night)) {
+    getDb().prepare("UPDATE night_invites SET en_liste = COALESCE(en_liste, datetime('now','localtime')) WHERE night_id = ? AND user_id = ?").run(nightId, moi);
+    emitToUsers([moi, night.creator_id]);
+    return { ok: true, liste: listeAttente(nightId).findIndex((u) => u.id === moi) + 1 };
+  }
   poser(nightId, moi, reponse);
+  if (jouait && reponse === 'absent') promouvoir(night);
   const qui = pseudoDe(moi);
   void notifier([night.creator_id], 'reponses', (lang) => ({
     titre: t(lang, reponse === 'dispo' ? 'notif.dispo' : 'notif.absent', { p: qui }),
@@ -101,11 +132,14 @@ export function oublierInvitations(nightId: number, ids: number[]): void {
 export type Invitation = Night & {
   etat: EtatInvitation; hote_pseudo: string; hote_sticker: string | null; hote_avatar: string | null;
   via_nom: string | null; nb_invites: number;
+  rang_liste: number | null; // v4.14.1 : rang en liste d'attente (null = pas en liste)
 };
 // Mes invitations sans réponse ou déclinées (une réponse « Dispo » fait passer la partie dans Programmées).
 export function mesInvitations(moi: number): Invitation[] {
   return getDb().prepare(`
     SELECT n.*, i.etat, u.pseudo AS hote_pseudo, u.sticker AS hote_sticker, u.avatar_path AS hote_avatar, c.nom AS via_nom,
+      CASE WHEN i.en_liste IS NULL THEN NULL ELSE (SELECT COUNT(*) FROM night_invites x WHERE x.night_id = n.id AND x.en_liste IS NOT NULL
+        AND (x.en_liste < i.en_liste OR (x.en_liste = i.en_liste AND x.rowid <= i.rowid))) END AS rang_liste,
       (SELECT COUNT(*) FROM night_invites x WHERE x.night_id = n.id) AS nb_invites
     FROM night_invites i JOIN nights n ON n.id = i.night_id JOIN users u ON u.id = n.creator_id
     LEFT JOIN cercles c ON c.id = i.via_cercle

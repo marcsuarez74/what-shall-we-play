@@ -5,7 +5,7 @@ import { bilanArret, completerSeries, mesSeries } from '@/lib/series';
 import GererSerie from '@/components/GererSerie';
 import { listRelations } from '@/lib/amis';
 import { mesCercles, membresCercle } from '@/lib/cercles';
-import { mesInvitations, invitesNuit } from '@/lib/invitations';
+import { mesInvitations, invitesNuit, listeAttente } from '@/lib/invitations';
 import { sondagesInvite, sondagesOrganises } from '@/lib/sondages';
 import SondageOrganise from '@/components/SondageOrganise';
 import { coverSrc } from '@/lib/formats';
@@ -125,8 +125,20 @@ export default async function Page() {
                     t(lang, 'soiree.nbInvites', { n: n.nb_invites })].filter(Boolean).join(' · ')}
                 </p>
                 {alerteConflit(n)}
+                {(() => {
+                  // v4.14.1 : partie complète → « Dispo » met en liste d'attente.
+                  const pris = n.places_max != null ? getNightPlayers(n.id).length : 0;
+                  return n.rang_liste != null
+                    ? <p className="liste-info">{t(lang, 'liste.rang', { n: n.rang_liste })}</p>
+                    : n.places_max != null && pris >= n.places_max
+                      ? <p className="liste-info">{t(lang, 'liste.complet', { p: pris, max: n.places_max })}</p>
+                      : null;
+                })()}
                 <div className="rsvp-btns">
-                  <BoutonAction url={`/api/nights/${n.id}/invitation`} body={{ reponse: 'dispo' }} className="btn-dispo" label={t(lang, 'soiree.dispo')} />
+                  <BoutonAction url={`/api/nights/${n.id}/invitation`} body={{ reponse: 'dispo' }} className="btn-dispo"
+                                pressed={n.rang_liste != null}
+                                label={n.rang_liste != null ? t(lang, 'liste.enListe')
+                                  : n.places_max != null && getNightPlayers(n.id).length >= n.places_max ? t(lang, 'liste.mettreEnAttente') : t(lang, 'soiree.dispo')} />
                   <BoutonAction url={`/api/nights/${n.id}/invitation`} body={{ reponse: 'absent' }} className="btn-absent"
                                 label={t(lang, 'soiree.pasDispo')} pressed={n.etat === 'absent'} />
                 </div>
@@ -200,7 +212,8 @@ export default async function Page() {
                     {s.dates.map((d) => (
                       <li key={d.id} className="serie-date">
                         <span className="d"><b>{dateSondage(d)}</b>
-                          <small>{t(lang, 'etagere.nbJoueurs', { n: d.nb_joueurs })}</small></span>
+                          <small>{d.places_max != null ? t(lang, 'liste.places', { p: d.nb_joueurs, max: d.places_max }) : t(lang, 'etagere.nbJoueurs', { n: d.nb_joueurs })}
+                            {d.rang_liste != null && ` · ${t(lang, 'liste.rangCourt', { n: d.rang_liste })}`}</small></span>
                         {d.etat !== 'createur' && (
                           <BoutonAction url={`/api/nights/${d.id}/invitation`} body={{ reponse: d.etat === 'dispo' ? 'absent' : 'dispo' }}
                                         className="btn-dispo-date" pressed={d.etat === 'dispo'}
@@ -271,6 +284,8 @@ export default async function Page() {
                           <span className="d">{t(lang, 'soiree.decDispo', { n: nb('dispo') })}</span>
                           {nb('absent') > 0 && <span className="a">{t(lang, 'soiree.decAbsent', { n: nb('absent') })}</span>}
                           {nb('attente') > 0 && <span>{t(lang, 'soiree.decAttente', { n: nb('attente') })}</span>}
+                          {n.places_max != null && <span>{t(lang, 'liste.places', { p: players.length, max: n.places_max })}</span>}
+                          {listeAttente(n.id).length > 0 && <span>{t(lang, 'liste.decListe', { n: listeAttente(n.id).length })}</span>}
                         </div>
                       );
                     })()}

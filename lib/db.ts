@@ -239,6 +239,9 @@ export function runMigrations(db: Database.Database): void {
     'ALTER TABLE nights ADD COLUMN rappel_envoye INTEGER NOT NULL DEFAULT 0',
     // v4.14.0 : la série d'une partie récurrente (NULL = partie ordinaire).
     'ALTER TABLE nights ADD COLUMN serie_id INTEGER REFERENCES series(id)',
+    // v4.14.1 : places max facultatives ; entrée en liste d'attente (NULL = pas en liste).
+    'ALTER TABLE nights ADD COLUMN places_max INTEGER',
+    'ALTER TABLE night_invites ADD COLUMN en_liste TEXT',
   ]) {
     try { db.exec(stmt); } catch { /* colonne déjà présente */ }
   }

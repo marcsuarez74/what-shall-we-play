@@ -58,10 +58,10 @@ export function normaliserTitre(v: unknown): string | null | undefined | false {
   return s || null;
 }
 
-export function createNight(creatorId: number, playerIds: number[], opts?: { playedAt?: string; startTime?: string | null; titre?: string | null }): number {
+export function createNight(creatorId: number, playerIds: number[], opts?: { playedAt?: string; startTime?: string | null; titre?: string | null; placesMax?: number | null }): number {
   const info = getDb()
-    .prepare("INSERT INTO nights (creator_id, played_at, start_time, lien_token, titre) VALUES (?, COALESCE(?, date('now','localtime')), ?, ?, ?)")
-    .run(creatorId, opts?.playedAt ?? null, opts?.startTime ?? null, crypto.randomBytes(16).toString('hex'), opts?.titre ?? null);
+    .prepare("INSERT INTO nights (creator_id, played_at, start_time, lien_token, titre, places_max) VALUES (?, COALESCE(?, date('now','localtime')), ?, ?, ?, ?)")
+    .run(creatorId, opts?.playedAt ?? null, opts?.startTime ?? null, crypto.randomBytes(16).toString('hex'), opts?.titre ?? null, opts?.placesMax ?? null);
   const nightId = Number(info.lastInsertRowid);
   setNightPlayers(nightId, playerIds.includes(creatorId) ? playerIds : [...playerIds, creatorId]);
   return nightId;

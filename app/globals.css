@@ -2510,3 +2510,4 @@ a.btn-go.as-link { display: flex; align-items: center; justify-content: center; 
 .serie-date .btn-dispo-date { min-width: 84px; }
 .conflit { font-size: 12.5px; color: var(--creme); background: color-mix(in srgb, var(--ambre) 14%, transparent); border: 1px solid color-mix(in srgb, var(--ambre) 55%, transparent); border-radius: 10px; padding: 6px 9px; }
 .serie-gerer { display: grid; gap: 8px; }
+.liste-info { font-size: 12.5px; color: var(--doux-clair); } /* v4.14.1 : complet / rang en liste d'attente */
