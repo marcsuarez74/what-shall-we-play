@@ -38,6 +38,8 @@ export default function NightPicker({ users, prechecked, night, quand = 'now', e
   const [date, setDate] = useState(editInfos?.futur ? night?.played_at ?? '' : '');
   const [time, setTime] = useState(editInfos?.futur ? night?.start_time ?? '' : '');
   const [dates, setDates] = useState<{ date: string; time: string }[]>([{ date: '', time: '' }, { date: '', time: '' }]);
+  // v4.14.0 — « Répéter » une partie programmée : 0 = non, 1 = chaque semaine, 2 = toutes les 2 semaines.
+  const [repeter, setRepeter] = useState<0 | 1 | 2>(0);
   // La programmation se fait au plus tôt demain ; le jour J, la partie se crée sans date.
   // Arithmétique calendaire (setDate) et non +24 h : sûr pendant le passage à l'heure d'été.
   const d = new Date();
@@ -79,6 +81,7 @@ export default function NightPicker({ users, prechecked, night, quand = 'now', e
         ...(creation ? { cercleIds: [...cerclesCoches] } : {}),
         ...(avecTitre ? { titre } : {}),
         ...(avecDate ? { playedAt: date, startTime: time || null } : {}),
+        ...(creation && mode === 'une' && repeter ? { repeter } : {}),
         ...(sondage ? { dates: dates.map((x) => ({ playedAt: x.date, startTime: x.time || null })) } : {}),
       }),
     });
@@ -123,6 +126,23 @@ export default function NightPicker({ users, prechecked, night, quand = 'now', e
             {t('soiree.heure')} <span className="opt">{t('soiree.facultatif')}</span>
             <input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
           </label>
+        </div>
+      )}
+      {creation && mode === 'une' && (
+        <div className="repeter">
+          <label className="repeter-case">
+            <input type="checkbox" checked={repeter > 0} onChange={(e) => setRepeter(e.target.checked ? 1 : 0)} />
+            {t('serie.repeter')}
+          </label>
+          {repeter > 0 && (
+            <>
+              <div className="quand-seg" role="group" aria-label={t('serie.frequence')}>
+                <button type="button" aria-pressed={repeter === 1} onClick={() => setRepeter(1)}>{t('serie.chaqueSemaine')}</button>
+                <button type="button" aria-pressed={repeter === 2} onClick={() => setRepeter(2)}>{t('serie.deuxSemaines')}</button>
+              </div>
+              <p className="hint">{t('serie.aideCreation')}</p>
+            </>
+          )}
         </div>
       )}
       {creation && mode === 'plus' && (

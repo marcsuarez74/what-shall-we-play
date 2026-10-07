@@ -5,6 +5,7 @@ import { createNight, getActiveNight, getNightPlayers, validerPlanning, normalis
 import { filtrerJoueurs, inviter } from '@/lib/invitations';
 import { viaCercles } from '@/lib/cercles';
 import { refuserInvite } from '@/lib/auth';
+import { creerSerie } from '@/lib/series';
 import { t } from '@/lib/i18n';
 import { getLang } from '@/lib/i18n/server';
 
@@ -33,6 +34,11 @@ export async function POST(req: Request) {
   // v4.8.0 : une partie programmée invite (Dispo → joueur) ; celle du jour inscrit directement.
   // Seules mes relations (et les membres de mes cercles) peuvent y être mises.
   if (playedAt && estFuture({ played_at: playedAt })) {
+    // v4.14.0 : « Répéter » — chaque semaine (1) ou toutes les 2 semaines (2).
+    if (body.repeter === 1 || body.repeter === 2) {
+      const serieId = creerSerie(user.id, { playedAt, startTime: startTime ?? null, titre: titre ?? null, pas: body.repeter }, ids, viaCercles(user.id, body.cercleIds));
+      return NextResponse.json({ serieId });
+    }
     const nightId = createNight(user.id, [user.id], { playedAt, startTime, titre });
     inviter(nightId, user.id, ids, viaCercles(user.id, body.cercleIds));
     return NextResponse.json({ nightId });

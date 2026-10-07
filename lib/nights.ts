@@ -511,6 +511,19 @@ export function toggleNightVeto(nightId: number, gameId: number, userId: number,
   notifyNight(nightId); // sync live : la boîte se grise chez tout le monde
   return { ok: true };
 }
+// v4.14.0 — conflit d'horaire : une autre partie non terminée le même jour où je joue
+// (créateur ou joueur), à moins de 3 h d'écart — ou sans heure d'un côté. On alerte, on
+// n'empêche jamais (le groupe décide).
+export const CONFLIT_MIN = 180;
+export function conflitHoraire(userId: number, night: { id: number; played_at: string; start_time?: string | null }): Night | null {
+  const autres = getDb().prepare(`
+    SELECT n.* FROM nights n WHERE n.id != ? AND n.played_at = ? AND n.status != 'termine'
+      AND (n.creator_id = ? OR EXISTS (SELECT 1 FROM night_players np WHERE np.night_id = n.id AND np.user_id = ?))
+    ORDER BY n.start_time, n.id`).all(night.id, night.played_at, userId, userId) as Night[];
+  const minutes = (h: string) => Number(h.slice(0, 2)) * 60 + Number(h.slice(3, 5));
+  return autres.find((a) => !a.start_time || !night.start_time
+    || Math.abs(minutes(a.start_time) - minutes(night.start_time)) < CONFLIT_MIN) ?? null;
+}
 export function isNightParticipant(nightId: number, userId: number): boolean {
   return !!getDb().prepare('SELECT 1 FROM night_players WHERE night_id = ? AND user_id = ?').get(nightId, userId);
 }

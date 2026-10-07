@@ -2496,3 +2496,17 @@ a.btn-go.as-link { display: flex; align-items: center; justify-content: center; 
 .grille tfoot td, .grille tfoot th { font-weight: 700; }
 .grille .best { background: color-mix(in srgb, var(--cuivre) 16%, transparent); }
 .grille input[type='checkbox'] { accent-color: var(--cuivre); width: 18px; height: 18px; }
+
+/* ── v4.14.0 — parties récurrentes ── */
+.repeter { display: grid; gap: 8px; margin: 4px 0 8px; }
+.repeter-case { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+.repeter-case input { accent-color: var(--cuivre); width: 17px; height: 17px; }
+.serie-card { border-left: 3px solid var(--cuivre); }
+.serie-dates { list-style: none; display: grid; gap: 0; margin: 4px 0; }
+.serie-date { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 8px 0; border-top: 1px solid color-mix(in srgb, var(--doux) 22%, transparent); font-size: 13.5px; }
+.serie-date:first-child { border-top: 0; }
+.serie-date .d { flex: 1; min-width: 0; }
+.serie-date .d small { display: block; color: var(--doux-clair); font-size: 12px; }
+.serie-date .btn-dispo-date { min-width: 84px; }
+.conflit { font-size: 12.5px; color: var(--creme); background: color-mix(in srgb, var(--ambre) 14%, transparent); border: 1px solid color-mix(in srgb, var(--ambre) 55%, transparent); border-radius: 10px; padding: 6px 9px; }
+.serie-gerer { display: grid; gap: 8px; }

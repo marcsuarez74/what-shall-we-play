@@ -28,7 +28,8 @@ export function filtrerJoueurs(moi: number, ids: unknown[], deja: number[] = [])
 }
 
 // Inviter à une partie programmée. viaCercle : id → cercle par lequel la personne est invitée.
-export function inviter(nightId: number, moi: number, ids: number[], viaCercle: Map<number, number> = new Map()): number[] {
+// v4.14.0 : push = false pour les dates suivantes d'une série (une seule notification à la création).
+export function inviter(nightId: number, moi: number, ids: number[], viaCercle: Map<number, number> = new Map(), push = true): number[] {
   const night = getNight(nightId);
   if (!night) return [];
   const joueurs = getNightPlayers(nightId).map((p) => p.id);
@@ -36,6 +37,7 @@ export function inviter(nightId: number, moi: number, ids: number[], viaCercle: 
   const ins = getDb().prepare('INSERT OR IGNORE INTO night_invites (night_id, user_id, via_cercle) VALUES (?, ?, ?)');
   for (const id of cibles) ins.run(nightId, id, viaCercle.get(id) ?? null);
   emitToUsers(cibles);
+  if (!push) return cibles;
   const hote = pseudoDe(night.creator_id);
   void notifier(cibles, 'invitations', (lang) => ({
     titre: t(lang, 'notif.invitation', { p: hote }),
@@ -108,6 +110,7 @@ export function mesInvitations(moi: number): Invitation[] {
     FROM night_invites i JOIN nights n ON n.id = i.night_id JOIN users u ON u.id = n.creator_id
     LEFT JOIN cercles c ON c.id = i.via_cercle
     WHERE i.user_id = ? AND i.etat != 'dispo' AND n.status = 'creation' AND n.played_at >= date('now','localtime')
+      AND n.serie_id IS NULL -- v4.14.0 : les dates d'une série se répondent dans la carte de la série
     ORDER BY n.played_at, n.id`).all(moi) as Invitation[];
 }
 export function nbInvitationsEnAttente(moi: number): number {

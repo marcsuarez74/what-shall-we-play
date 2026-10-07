@@ -84,6 +84,16 @@ CREATE TABLE IF NOT EXISTS game_votes (
   created_at TEXT NOT NULL DEFAULT (datetime('now','localtime')),
   UNIQUE(night_id, game_id, user_id)
 );
+-- v4.14.0 (parties récurrentes) : une série relie des parties programmées ordinaires
+-- (nights.serie_id). Titre, heure et invités vivent sur les parties ; la série ne garde que
+-- le pas (1 ou 2 semaines) et son arrêt. Jamais supprimée : arrêtée.
+CREATE TABLE IF NOT EXISTS series (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  creator_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  pas INTEGER NOT NULL CHECK (pas IN (1, 2)),
+  arretee INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
 -- v4.13.0 (veto) : « pas ce soir » — UN veto par joueur et par partie (UNIQUE), révocable
 -- jusqu'au lancement. Écarte le jeu du tirage ; les 👍 du jeu sont gardés. Une boîte retirée
 -- emporte son veto (lib/nights).
@@ -227,6 +237,8 @@ export function runMigrations(db: Database.Database): void {
     // v4.9.0 : types de notifications coupés (« reponses,amis ») ; rappel du jour J envoyé.
     "ALTER TABLE users ADD COLUMN notif_off TEXT NOT NULL DEFAULT ''",
     'ALTER TABLE nights ADD COLUMN rappel_envoye INTEGER NOT NULL DEFAULT 0',
+    // v4.14.0 : la série d'une partie récurrente (NULL = partie ordinaire).
+    'ALTER TABLE nights ADD COLUMN serie_id INTEGER REFERENCES series(id)',
   ]) {
     try { db.exec(stmt); } catch { /* colonne déjà présente */ }
   }

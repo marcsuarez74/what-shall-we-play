@@ -1,6 +1,8 @@
 import { redirect } from 'next/navigation';
 import { getSessionUser } from '@/lib/session';
-import { getActiveNight, getPlannedNights, getHistoryCards, getNightPlayers, getNightGame, getShelfGames, lienInvitation } from '@/lib/nights';
+import { getActiveNight, getPlannedNights, getHistoryCards, getNightPlayers, getNightGame, getShelfGames, lienInvitation, conflitHoraire } from '@/lib/nights';
+import { bilanArret, completerSeries, mesSeries } from '@/lib/series';
+import GererSerie from '@/components/GererSerie';
 import { listRelations } from '@/lib/amis';
 import { mesCercles, membresCercle } from '@/lib/cercles';
 import { mesInvitations, invitesNuit } from '@/lib/invitations';
@@ -32,8 +34,11 @@ export default async function Page() {
   const lang = await getLang();
   const user = await getSessionUser();
   if (!user) redirect('/login');
+  completerSeries(); // v4.14.0 : 4 dates d'avance par série (idempotent, sans tâche dédiée)
   const active = getActiveNight(user.id);
-  const planned = getPlannedNights(user.id);
+  // v4.14.0 : les dates d'une série vivent dans la carte de la série, pas une à une.
+  const planned = getPlannedNights(user.id).filter((n) => n.serie_id == null);
+  const series = mesSeries(user.id);
   // Historique : une carte par partie terminée (gagnant 👑 · score, date) → détail.
   const cartes = getHistoryCards(user.id);
   // Le jeu de la partie (boîte sortie) — les picks cumulés ne s'affichent plus (v3.3.0).
@@ -55,6 +60,11 @@ export default async function Page() {
   const dateLongue = (playedAt: string) => formatDate(lang, `${playedAt}T12:00:00`, { dateStyle: 'long' });
   const heureCourte = (playedAt: string, start: string | null | undefined) =>
     start ? formatDate(lang, `${playedAt}T${start}`, { timeStyle: 'short' }) : null;
+  // v4.14.0 — conflit d'horaire : on alerte, on n'empêche jamais.
+  const alerteConflit = (n: { id: number; played_at: string; start_time?: string | null }) => {
+    const c = conflitHoraire(user.id, n);
+    return c && <p className="conflit">{t(lang, 'serie.conflit', { t: titrePartie(lang, c), h: heureCourte(c.played_at, c.start_time) ?? '' })}</p>;
+  };
 
   return (
     <main className="page">
@@ -114,6 +124,7 @@ export default async function Page() {
                   {' '}{[t(lang, 'invite.tInvite', { hote: '' }).trim(), n.via_nom && t(lang, 'soiree.viaCercle', { nom: n.via_nom }),
                     t(lang, 'soiree.nbInvites', { n: n.nb_invites })].filter(Boolean).join(' · ')}
                 </p>
+                {alerteConflit(n)}
                 <div className="rsvp-btns">
                   <BoutonAction url={`/api/nights/${n.id}/invitation`} body={{ reponse: 'dispo' }} className="btn-dispo" label={t(lang, 'soiree.dispo')} />
                   <BoutonAction url={`/api/nights/${n.id}/invitation`} body={{ reponse: 'absent' }} className="btn-absent"
@@ -171,6 +182,50 @@ export default async function Page() {
         )}
       </section>
 
+      {series.length > 0 && (
+        <section className="qg-section" aria-label={t(lang, 'serie.titre')}>
+          <h2>{t(lang, 'serie.titre')}</h2>
+          <ul className="nights-list">
+            {series.map((s) => {
+              const createur = s.creator_id === user.id;
+              const titre = s.titre ?? t(lang, 'serie.sansTitre');
+              return (
+                <li key={s.id} className="night-card serie-card" aria-label={titre}>
+                  <div className="plan-top">
+                    <span className="plan-titre">🔁 {titre}</span>
+                    <span className="badge-etat b-prog"><span className="pt" />{t(lang, s.pas === 1 ? 'serie.chaqueSemaine' : 'serie.deuxSemaines')}{s.start_time ? ` · ${heureCourte(s.dates[0].played_at, s.start_time)}` : ''}</span>
+                  </div>
+                  {!createur && <p className="rsvp-qui">{t(lang, 'serie.par', { p: s.hote_pseudo })}</p>}
+                  <ul className="serie-dates">
+                    {s.dates.map((d) => (
+                      <li key={d.id} className="serie-date">
+                        <span className="d"><b>{dateSondage(d)}</b>
+                          <small>{t(lang, 'etagere.nbJoueurs', { n: d.nb_joueurs })}</small></span>
+                        {d.etat !== 'createur' && (
+                          <BoutonAction url={`/api/nights/${d.id}/invitation`} body={{ reponse: d.etat === 'dispo' ? 'absent' : 'dispo' }}
+                                        className="btn-dispo-date" pressed={d.etat === 'dispo'}
+                                        label={t(lang, d.etat === 'dispo' ? 'serie.dispo' : d.etat === 'absent' ? 'serie.absent' : 'serie.dispoQ')}
+                                        ariaLabel={t(lang, 'sondage.dispoAria', { date: dateSondage(d) })} />
+                        )}
+                        {(createur || d.etat === 'dispo') && (
+                          <a className="link-btn" href={`/etagere?night=${d.id}`}>{t(lang, 'serie.etagere')}</a>
+                        )}
+                        {d.conflit && <p className="conflit">{t(lang, 'serie.conflit', { t: titrePartie(lang, d.conflit), h: heureCourte(d.conflit.played_at, d.conflit.start_time) ?? '' })}</p>}
+                      </li>
+                    ))}
+                  </ul>
+                  {createur
+                    ? <GererSerie serieId={s.id} titre={s.titre} heure={s.start_time} {...bilanArret(s.id)} />
+                    : s.dates.some((d) => d.etat !== 'dispo') && (
+                        <BoutonAction url={`/api/series/${s.id}/dispo`} className="btn-ghost" label={t(lang, 'serie.dispoToutes')} />
+                      )}
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
+
       <section className="qg-section" aria-label={t(lang, 'soiree.programmees')}>
         <div className="qg-head">
           <h2>{t(lang, 'soiree.programmees')}</h2>
@@ -208,6 +263,7 @@ export default async function Page() {
                         <span className="plan-time">{heureCourte(n.played_at, n.start_time)}</span>
                       )}
                     </div>
+                    {alerteConflit(n)}
                     {invites.length > 0 && createur && (() => {
                       const nb = (e: string) => invites.filter((i) => i.etat === e).length;
                       return (
