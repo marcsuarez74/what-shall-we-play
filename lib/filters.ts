@@ -6,7 +6,8 @@ export interface ShelfFilters {
   q: string;
   players: number | null;
   weight: 'all' | 'leger' | 'moyen' | 'lourd';
-  duration: 'all' | 'court' | 'moyen' | 'long';
+  // v4.12.0 : 4 plages (l'ancienne « 60+ » est scindée en 60–90 et 90+).
+  duration: 'all' | 'court' | 'moyen' | 'long' | 'tres';
   /** Boîte : dimension propre à la ludothèque (l'étagère groupe déjà par format). */
   format: 'all' | Game['box_format'];
 }
@@ -33,9 +34,17 @@ export function filterShelf(games: Game[], f: ShelfFilters): Game[] {
     if (f.duration !== 'all' && g.playtime_min != null) {
       if (f.duration === 'court' && g.playtime_min >= 30) return false;
       if (f.duration === 'moyen' && (g.playtime_min < 30 || g.playtime_min > 60)) return false;
-      if (f.duration === 'long' && g.playtime_min <= 60) return false;
+      if (f.duration === 'long' && (g.playtime_min <= 60 || g.playtime_min > 90)) return false;
+      if (f.duration === 'tres' && g.playtime_min <= 90) return false;
     }
     if (f.format !== 'all' && g.box_format !== f.format) return false;
     return true;
   });
+}
+
+// Nombre de familles de filtres actives (badge « Filtres », ligne d'état du tirage).
+// La recherche n'en est pas une : elle sert à retrouver une boîte, pas à borner la roue.
+export function filtresActifs(f: ShelfFilters): number {
+  return (f.players != null ? 1 : 0) + (f.weight !== 'all' ? 1 : 0)
+    + (f.duration !== 'all' ? 1 : 0) + (f.format !== 'all' ? 1 : 0);
 }

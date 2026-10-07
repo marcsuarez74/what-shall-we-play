@@ -1,13 +1,14 @@
 'use client';
 import { useState } from 'react';
-import type { ShelfFilters } from '@/lib/filters';
+import { filtresActifs, type ShelfFilters } from '@/lib/filters';
 import { FORMATS, formatShort } from '@/lib/formats';
 import type { CléDict } from '@/lib/i18n';
 import { useI18n } from './LanguageProvider';
 
 const WEIGHTS: Exclude<ShelfFilters['weight'], 'all'>[] = ['leger', 'moyen', 'lourd'];
-// Étiquettes de durée : plages numériques (données, pas de prose — « min » vaut en FR et EN).
-const DURATIONS: [Exclude<ShelfFilters['duration'], 'all'>, string][] = [['court', '< 30'], ['moyen', '30–60'], ['long', '60+']];
+// Étiquettes de durée : plages numériques (données, pas de prose). v4.12.0 : 4 plages, l'unité
+// passe dans le libellé de la famille (« Durée (min) ») pour que la ligne tienne à 360 px.
+export const DURATIONS: [Exclude<ShelfFilters['duration'], 'all'>, string][] = [['court', '< 30'], ['moyen', '30–60'], ['long', '60–90'], ['tres', '90+']];
 // Complexité : clés i18n par valeur de filtre (valeur SQL jamais traduite).
 const POIDS: Record<Exclude<ShelfFilters['weight'], 'all'>, CléDict> = {
   leger: 'etagere.poidsLeger', moyen: 'etagere.poidsMoyen', lourd: 'etagere.poidsLourd',
@@ -17,7 +18,7 @@ const NEUTRAL: ShelfFilters = { q: '', players: null, weight: 'all', duration: '
 
 // Recherche + filtres partagés (étagère, ludothèque). Par défaut, repliés en une
 // rangée : la liste est le héros. Le badge compte les familles de filtres actives.
-export default function ShelfControls({ filters, setFilters, visible, total, withFormat = false, countHint }: {
+export default function ShelfControls({ filters, setFilters, visible, total, withFormat = false, countHint, suggestJoueurs }: {
   filters: ShelfFilters;
   setFilters: (f: ShelfFilters) => void;
   visible: number;
@@ -26,15 +27,13 @@ export default function ShelfControls({ filters, setFilters, visible, total, wit
   withFormat?: boolean;
   /** Complément du compteur ; absent → « disponibles pour la partie », chaîne vide → rien. */
   countHint?: string;
+  /** v4.12.0 — étagère : nombre de joueurs de la partie, proposé en un tap (jamais appliqué d'office). */
+  suggestJoueurs?: number;
 }) {
   const { lang, t } = useI18n();
   const [open, setOpen] = useState(false);
   const hint = countHint === undefined ? t('etagere.disponiblesCeSoir') : countHint;
-  const activeCount =
-    (filters.players != null ? 1 : 0) +
-    (filters.weight !== 'all' ? 1 : 0) +
-    (filters.duration !== 'all' ? 1 : 0) +
-    (filters.format !== 'all' ? 1 : 0);
+  const activeCount = filtresActifs(filters);
   return (
     <div className="collection-controls">
       <div className="controls-row">
@@ -63,10 +62,10 @@ export default function ShelfControls({ filters, setFilters, visible, total, wit
             ))}
           </div>
           <div className="fam" role="group" aria-label={t('etagere.filtreDuree')}>
-            <span className="fam-k">{t('etagere.duree')}</span>
+            <span className="fam-k">{t('etagere.dureeMin')}</span>
             {DURATIONS.map(([v, label]) => (
               <button key={v} type="button" className={`fchip ${filters.duration === v ? 'on' : ''}`}
-                      onClick={() => setFilters({ ...filters, duration: filters.duration === v ? 'all' : v })}>{label} min</button>
+                      onClick={() => setFilters({ ...filters, duration: filters.duration === v ? 'all' : v })}>{label}</button>
             ))}
           </div>
           {withFormat && (
@@ -77,6 +76,14 @@ export default function ShelfControls({ filters, setFilters, visible, total, wit
                         onClick={() => setFilters({ ...filters, format: filters.format === f ? 'all' : f })}>{formatShort(f, lang)}</button>
               ))}
             </div>
+          )}
+          {suggestJoueurs != null && suggestJoueurs > 0 && filters.players !== suggestJoueurs && (
+            <p className="suggest-joueurs">
+              {t('etagere.vousEtes', { n: suggestJoueurs })} ·{' '}
+              <button type="button" className="link-btn" onClick={() => setFilters({ ...filters, players: suggestJoueurs })}>
+                {t('etagere.filtrerSurN', { n: suggestJoueurs })}
+              </button>
+            </p>
           )}
           <p className="shelf-count" role="status">
             {t('etagere.nbSur', { v: visible, total })}{hint ? ` ${hint}` : ''}

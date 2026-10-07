@@ -250,8 +250,8 @@ test('étagère : recherche et filtres (joueurs pré-rempli, complexité, durée
   await expect(page.locator('.shelf-block .box')).toHaveCount(1);
   await page.getByRole('button', { name: 'Lourde' }).click();
 
-  // Durée 60+ → Mars
-  await page.getByRole('button', { name: /60\+ min/ }).click();
+  // Durée 90+ → Mars (v4.12.0 : 4 plages, l'unité est dans le libellé « Durée (min) »)
+  await page.getByRole('button', { name: '90+', exact: true }).click();
   await expect(page.locator('.shelf-block .box')).toHaveCount(1);
 });
 

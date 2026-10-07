@@ -6,7 +6,9 @@ import { coverSrc } from '@/lib/formats';
 import { titrePartie, formatDate } from '@/lib/i18n/format';
 import type { Game, Night, UserLite } from '@/lib/types';
 import type { ShelfVote } from '@/lib/nights';
-import { filterShelf, type ShelfFilters } from '@/lib/filters';
+import { filterShelf, filtresActifs, type ShelfFilters } from '@/lib/filters';
+import { DURATIONS } from './ShelfControls';
+import type { CléDict } from '@/lib/i18n';
 import GameSheet from './GameSheet';
 import NightPicker from './NightPicker';
 import PlayerChip from './PlayerChip';
@@ -27,6 +29,11 @@ import { useI18n } from './LanguageProvider';
 // v4.7.0 — l'étagère s'ouvre aussi sur une partie programmée (futur) : ajouts et
 // votes à l'avance, tirage fermé jusqu'au jour J. Les invités sont un groupe à part
 // (ils ne valident pas de sélection) ; le créateur partage le lien d'invitation.
+// v4.12.0 — libellés de complexité pour la ligne « Filtres actifs ».
+const POIDS: Record<Exclude<ShelfFilters['weight'], 'all'>, CléDict> = {
+  leger: 'etagere.poidsLeger', moyen: 'etagere.poidsMoyen', lourd: 'etagere.poidsLourd',
+};
+
 export default function ShelfClient({ night, partyGame, players, games, myLibrary, users, plays, votes, me, futur = false, lien }: {
   night: Night; partyGame: Game | null; players: UserLite[]; games: Game[]; myLibrary: Game[]; users: UserLite[]; plays: Record<number, number>;
   votes: ShelfVote[];
@@ -47,6 +54,9 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
     q: '', players: null, weight: 'all', duration: 'all', format: 'all',
   });
   const filtered = useMemo(() => filterShelf(games, filters), [games, filters]);
+  // v4.12.0 — les filtres bornent la roue ; la recherche non (elle sert à retrouver une boîte).
+  const enLice = useMemo(() => filterShelf(games, { ...filters, q: '' }), [games, filters]);
+  const nbFiltres = filtresActifs(filters);
   const enJeu = night.status === 'en_jeu';
   // En jeu : LA boîte de la partie a quitté l'étagère — elle ne revient pas dans les rangées.
   const surEtagere = useMemo(() => filtered.filter((g) => g.id !== partyGame?.id), [filtered, partyGame]);
@@ -59,6 +69,7 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
     () => games.filter((g) => (votesParJeu.get(g.id)?.total ?? 0) > 0),
     [games, votesParJeu],
   );
+  const votesEnLice = useMemo(() => enLice.filter((g) => (votesParJeu.get(g.id)?.total ?? 0) > 0), [enLice, votesParJeu]);
   const cover = partyGame ? coverSrc(partyGame) : null;
 
   const estCreateur = night.creator_id === me.id;
@@ -66,6 +77,18 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
   const jAiValide = !!monEtat?.validated_at;
   // hors branche du créateur validé, le pool vaut toujours « tous » (garde anti-état fantôme)
   const poolActif = jAiValide ? pool : 'tous';
+  // v4.12.0 — ce que la roue tirera : jeux filtrés, votés si « Votés 👍 » (sinon tous les filtrés).
+  const tirables = poolActif === 'votes' && votesEnLice.length > 0 ? votesEnLice : enLice;
+  const resumeFiltres = [
+    filters.players != null ? t('etagere.nbJoueurs', { n: filters.players }) : null,
+    filters.weight !== 'all' ? t(POIDS[filters.weight]) : null,
+    filters.duration !== 'all' ? `${DURATIONS.find(([v]) => v === filters.duration)?.[1]} min` : null,
+  ].filter(Boolean).join(' · ');
+  const statutFiltres = estCreateur && nbFiltres > 0 && (
+    <p className="cta-statut">
+      {tirables.length === 0 ? t('etagere.aucunJeuFiltres') : t('etagere.filtresActifs', { f: resumeFiltres })}
+    </p>
+  );
   const comptes = players.filter((p) => !p.est_invite);
   const invites = players.filter((p) => p.est_invite);
   // les invités ne valident pas de sélection : seuls les comptes comptent pour « prêts »
@@ -81,12 +104,10 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
     router.refresh();
   }
   function lancer() {
-    if (games.length === 0) return;
-    // La liste du pool est recalculée ICI : une boîte votée retirée ou dé-votée
+    if (tirables.length === 0) return;
+    // La liste du pool est recalculée à chaque rendu : une boîte votée retirée ou dé-votée
     // au même moment (sync live) ne peut pas glisser un id fantôme dans ?games=.
-    const ids = poolActif === 'votes' && jeuxVotes.length > 0
-      ? jeuxVotes.map((g) => g.id)
-      : games.map((g) => g.id);
+    const ids = tirables.map((g) => g.id);
     // Navigation document (et non router.push) : le refresh du sync live qui
     // tombe au même moment pouvait annuler le push doux — on restait sur
     // l'étagère, bouton armé, sans erreur (flake CI v3.3). Le tirage est un
@@ -180,7 +201,8 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
         )}
       </section>
       {games.length > 0 && (
-        <ShelfControls filters={filters} setFilters={setFilters} visible={filtered.length} total={games.length} />
+        <ShelfControls filters={filters} setFilters={setFilters} visible={filtered.length} total={games.length}
+                       suggestJoueurs={enJeu ? undefined : players.length} />
       )}
       {games.length === 0 ? (
         <section className="empty-shelf">
@@ -218,18 +240,19 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
               {estCreateur && jeuxVotes.length > 0 ? (
                 <div className="choix-pool" role="radiogroup" aria-label={t('etagere.poolLabel')}>
                   <button type="button" className={poolActif === 'tous' ? 'actif' : ''} onClick={() => setPool('tous')}>
-                    {t('etagere.tous')}<span className="n">{games.length}</span>
+                    {t('etagere.tous')}<span className="n">{enLice.length}</span>
                   </button>
                   <button type="button" className={poolActif === 'votes' ? 'actif' : ''} onClick={() => setPool('votes')}>
-                    {t('etagere.votesPool')}<span className="n">{jeuxVotes.length}</span>
+                    {t('etagere.votesPool')}<span className="n">{votesEnLice.length}</span>
                   </button>
                 </div>
               ) : (
                 <span className="pill-ok" aria-label={t('etagere.selectionOk')}>{t('etagere.validee')}</span>
               )}
               {estCreateur && games.length > 0 ? (
-                <button type="button" className={`btn-copper ${tousPrets ? 'pret' : ''}`} onClick={clicLancer}>
-                  {surAffiche ? t('etagere.surLancer') : t('etagere.lancer', { n: poolActif === 'votes' && jeuxVotes.length > 0 ? jeuxVotes.length : games.length })}
+                <button type="button" className={`btn-copper ${tousPrets ? 'pret' : ''}`} onClick={clicLancer}
+                        disabled={tirables.length === 0}>
+                  {surAffiche ? t('etagere.surLancer') : t('etagere.lancer', { n: tirables.length })}
                 </button>
               ) : (
                 !estCreateur && (
@@ -242,18 +265,22 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
                 {t('etagere.prets', { ok: players.length - enAttente.length, total: players.length })} — <b>{enAttente.map((p) => prenom(p)).join(', ')}</b> {t('etagere.pasEncoreValide', { n: enAttente.length })}
               </p>
             )}
+            {statutFiltres}
           </>
         ) : (
-          <div className="cta-row">
-            <button type="button" className="btn-copper" disabled={busy} onClick={valider}>
-              {busy ? t('etagere.enregistrement') : t('etagere.valider')}
-            </button>
-            {estCreateur && games.length > 0 && (
-              <button type="button" className="btn-ghost lancer-sec" onClick={clicLancer}>
-                {surAffiche ? t('etagere.surLancer') : t('etagere.lancer', { n: games.length })}
+          <>
+            <div className="cta-row">
+              <button type="button" className="btn-copper" disabled={busy} onClick={valider}>
+                {busy ? t('etagere.enregistrement') : t('etagere.valider')}
               </button>
-            )}
-          </div>
+              {estCreateur && games.length > 0 && (
+                <button type="button" className="btn-ghost lancer-sec" onClick={clicLancer} disabled={tirables.length === 0}>
+                  {surAffiche ? t('etagere.surLancer') : t('etagere.lancer', { n: tirables.length })}
+                </button>
+              )}
+            </div>
+            {statutFiltres}
+          </>
         )}
       </div>
       {detail && <GameSheet game={detail} players={players} playsCount={plays[detail.id] ?? 0}

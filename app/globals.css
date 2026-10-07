@@ -1887,6 +1887,8 @@ input[type='file'] {
 .fchip:not(.on):hover { color: var(--creme); }
 .shelf-count { color: var(--doux-clair); font-size: 12px; display: flex; align-items: center; gap: 10px; }
 .shelf-count .link-btn { font-size: 12px; }
+.suggest-joueurs { color: var(--doux-clair); font-size: 12px; } /* v4.12.0 : « Vous êtes N » */
+.suggest-joueurs .link-btn { font-size: 12px; }
 .lib-empty { color: var(--doux-clair); padding: 18px 0; }
 
 /* Badge « apporté par » — petit rond en coin de boîte */
