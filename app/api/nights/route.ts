@@ -6,6 +6,7 @@ import { filtrerJoueurs, inviter, PLACES_MAX, PLACES_MIN } from '@/lib/invitatio
 import { viaCercles } from '@/lib/cercles';
 import { refuserInvite } from '@/lib/auth';
 import { creerSerie } from '@/lib/series';
+import { rattacher } from '@/lib/evenements';
 import { t } from '@/lib/i18n';
 import { getLang } from '@/lib/i18n/server';
 
@@ -44,9 +45,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ serieId });
     }
     const nightId = createNight(user.id, [user.id], { playedAt, startTime, titre, placesMax });
+    if (Number.isInteger(body.evenementId)) rattacher(nightId, user.id, body.evenementId as number, lang);
     inviter(nightId, user.id, ids, viaCercles(user.id, body.cercleIds));
     return NextResponse.json({ nightId });
   }
   const nightId = createNight(user.id, filtrerJoueurs(user.id, ids), { playedAt, startTime, titre });
+  // v4.15.0 : partie démarrée dans un événement (participant) — rattachée avec ses seuls joueurs.
+  if (Number.isInteger(body.evenementId)) rattacher(nightId, user.id, body.evenementId as number, lang);
   return NextResponse.json({ nightId });
 }

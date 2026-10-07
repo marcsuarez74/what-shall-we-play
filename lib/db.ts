@@ -94,6 +94,29 @@ CREATE TABLE IF NOT EXISTS series (
   arretee INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
+-- v4.15.0 (événements) : au-dessus des parties. Les participants VOIENT l'événement (pas
+-- d'invitation par partie) ; une partie y est rattachée au démarrage (nights.evenement_id),
+-- avec ses seuls joueurs. « Au programme » : les jeux visés (joué = une partie de l'événement
+-- terminée dessus, calculé). Supprimer détache les parties, jamais ne les efface.
+CREATE TABLE IF NOT EXISTS evenements (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  creator_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  titre TEXT NOT NULL,
+  description TEXT,
+  du TEXT,
+  au TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE TABLE IF NOT EXISTS evenement_membres (
+  evenement_id INTEGER NOT NULL REFERENCES evenements(id) ON DELETE CASCADE,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  UNIQUE (evenement_id, user_id)
+);
+CREATE TABLE IF NOT EXISTS evenement_jeux (
+  evenement_id INTEGER NOT NULL REFERENCES evenements(id) ON DELETE CASCADE,
+  game_id INTEGER NOT NULL REFERENCES games(id) ON DELETE CASCADE,
+  UNIQUE (evenement_id, game_id)
+);
 -- v4.13.0 (veto) : « pas ce soir » — UN veto par joueur et par partie (UNIQUE), révocable
 -- jusqu'au lancement. Écarte le jeu du tirage ; les 👍 du jeu sont gardés. Une boîte retirée
 -- emporte son veto (lib/nights).
@@ -242,6 +265,8 @@ export function runMigrations(db: Database.Database): void {
     // v4.14.1 : places max facultatives ; entrée en liste d'attente (NULL = pas en liste).
     'ALTER TABLE nights ADD COLUMN places_max INTEGER',
     'ALTER TABLE night_invites ADD COLUMN en_liste TEXT',
+    // v4.15.0 : l'événement d'une partie (NULL = aucun).
+    'ALTER TABLE nights ADD COLUMN evenement_id INTEGER REFERENCES evenements(id)',
   ]) {
     try { db.exec(stmt); } catch { /* colonne déjà présente */ }
   }

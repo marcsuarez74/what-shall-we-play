@@ -10,7 +10,7 @@ export type CerclePicker = { id: number; nom: string; membres: number[] };
 export type Quand = 'now' | 'une' | 'plus';
 const DATES_MAX = 6;
 
-export default function NightPicker({ users, prechecked, night, quand = 'now', editInfos, onClose, meId, cercles = [] }: {
+export default function NightPicker({ users, prechecked, night, quand = 'now', editInfos, onClose, meId, cercles = [], evenements = [], evenementId = null }: {
   users: UserLite[];
   /** v4.8.0 — moi : toujours joueur, case cochée et figée. */
   meId?: number;
@@ -23,6 +23,9 @@ export default function NightPicker({ users, prechecked, night, quand = 'now', e
   /** v4.7.0 — modification par le créateur : titre, et date + heure si la partie est programmée. */
   editInfos?: { futur: boolean };
   onClose?: () => void;
+  /** v4.15.0 — mes événements : la partie peut y être rattachée (création ou modification). */
+  evenements?: { id: number; titre: string }[];
+  evenementId?: number | null;
 }) {
   const router = useRouter();
   const { t } = useI18n();
@@ -41,6 +44,8 @@ export default function NightPicker({ users, prechecked, night, quand = 'now', e
   // v4.14.0 — « Répéter » une partie programmée : 0 = non, 1 = chaque semaine, 2 = toutes les 2 semaines.
   const [repeter, setRepeter] = useState<0 | 1 | 2>(0);
   const [places, setPlaces] = useState(''); // v4.14.1 : places max facultatives
+  const [evt, setEvt] = useState<number | null>(night ? night.evenement_id ?? null : evenementId);
+  const avecEvt = evenements.length > 0 && (creation || !!editInfos) && mode !== 'plus';
   // La programmation se fait au plus tôt demain ; le jour J, la partie se crée sans date.
   // Arithmétique calendaire (setDate) et non +24 h : sûr pendant le passage à l'heure d'été.
   const d = new Date();
@@ -84,6 +89,7 @@ export default function NightPicker({ users, prechecked, night, quand = 'now', e
         ...(avecDate ? { playedAt: date, startTime: time || null } : {}),
         ...(creation && mode === 'une' && repeter ? { repeter } : {}),
         ...(creation && mode === 'une' && places ? { placesMax: Number(places) } : {}),
+        ...(avecEvt && (evt !== null || !creation) ? { evenementId: evt } : {}),
         ...(sondage ? { dates: dates.map((x) => ({ playedAt: x.date, startTime: x.time || null })) } : {}),
       }),
     });
@@ -129,6 +135,16 @@ export default function NightPicker({ users, prechecked, night, quand = 'now', e
             <input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
           </label>
         </div>
+      )}
+      {avecEvt && (
+        <label className="plan-titre-field">
+          {t('evt.champ')} <span className="opt">{t('soiree.facultatif')}</span>
+          <select value={evt ?? ''} onChange={(e) => setEvt(e.target.value ? Number(e.target.value) : null)}>
+            <option value="">{t('evt.aucun')}</option>
+            {evenements.map((x) => <option key={x.id} value={x.id}>🎪 {x.titre}</option>)}
+          </select>
+          {evt !== null && <span className="opt">{t('evt.aideRattache')}</span>}
+        </label>
       )}
       {creation && mode === 'une' && (
         <label className="plan-titre-field">
