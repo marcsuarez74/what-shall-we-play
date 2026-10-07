@@ -8,6 +8,8 @@ import { listAmis, listRelations } from './amis';
 import { coMembres } from './cercles';
 import { getNight, getNightPlayers, setNightPlayers } from './nights';
 import { t, type Lang } from './i18n';
+import { formatDate, titrePartie } from './i18n/format';
+import { notifier } from './push';
 import type { Night, UserLite } from './types';
 
 type Res = { ok: true } | { error: string; status: number };
@@ -34,6 +36,17 @@ export function inviter(nightId: number, moi: number, ids: number[], viaCercle: 
   const ins = getDb().prepare('INSERT OR IGNORE INTO night_invites (night_id, user_id, via_cercle) VALUES (?, ?, ?)');
   for (const id of cibles) ins.run(nightId, id, viaCercle.get(id) ?? null);
   emitToUsers(cibles);
+  const hote = pseudoDe(night.creator_id);
+  void notifier(cibles, 'invitations', (lang) => ({
+    titre: t(lang, 'notif.invitation', { p: hote }),
+    corps: t(lang, 'notif.invitationCorps', {
+      titre: titrePartie(lang, night),
+      date: formatDate(lang, `${night.played_at}T${night.start_time ?? '12:00'}`, night.start_time
+        ? { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }
+        : { weekday: 'short', day: 'numeric', month: 'short' }),
+    }),
+    url: '/nights', tag: `invitation-${nightId}`,
+  }));
   return cibles;
 }
 
@@ -42,6 +55,8 @@ function ouverte(night: Night | null): night is Night {
   return !!night && night.status === 'creation'
     && (getDb().prepare("SELECT ? >= date('now','localtime') AS o").get(night.played_at) as { o: number }).o === 1;
 }
+
+const pseudoDe = (id: number) => (getDb().prepare('SELECT pseudo FROM users WHERE id = ?').get(id) as { pseudo: string }).pseudo;
 
 function poser(nightId: number, userId: number, etat: EtatInvitation): void {
   getDb().prepare('UPDATE night_invites SET etat = ? WHERE night_id = ? AND user_id = ?').run(etat, nightId, userId);
@@ -56,6 +71,11 @@ export function repondre(nightId: number, moi: number, reponse: unknown, lang: L
   const inv = getDb().prepare('SELECT 1 FROM night_invites WHERE night_id = ? AND user_id = ?').get(nightId, moi);
   if (!inv || !ouverte(night)) return { error: t(lang, 'soiree.errPasInvite'), status: 404 };
   poser(nightId, moi, reponse);
+  const qui = pseudoDe(moi);
+  void notifier([night.creator_id], 'reponses', (lang) => ({
+    titre: t(lang, reponse === 'dispo' ? 'notif.dispo' : 'notif.absent', { p: qui }),
+    corps: titrePartie(lang, night), url: '/nights', tag: `reponses-${nightId}`,
+  }));
   return { ok: true };
 }
 

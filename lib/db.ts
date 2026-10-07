@@ -140,6 +140,14 @@ CREATE TABLE IF NOT EXISTS cercle_membres (
   ajoute_par INTEGER,
   UNIQUE (cercle_id, user_id)
 );
+-- v4.9.0 : un abonnement push par appareil.
+CREATE TABLE IF NOT EXISTS push_abonnements (
+  endpoint TEXT PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  p256dh TEXT NOT NULL,
+  auth TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
 CREATE TABLE IF NOT EXISTS night_invites (
   night_id INTEGER NOT NULL REFERENCES nights(id) ON DELETE CASCADE,
   user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -181,6 +189,9 @@ export function runMigrations(db: Database.Database): void {
     'ALTER TABLE nights ADD COLUMN titre TEXT',
     // v4.8.0 : lien d'ami personnel (créé à la demande ; unicité par index plus bas).
     'ALTER TABLE users ADD COLUMN lien_ami TEXT',
+    // v4.9.0 : types de notifications coupés (« reponses,amis ») ; rappel du jour J envoyé.
+    "ALTER TABLE users ADD COLUMN notif_off TEXT NOT NULL DEFAULT ''",
+    'ALTER TABLE nights ADD COLUMN rappel_envoye INTEGER NOT NULL DEFAULT 0',
   ]) {
     try { db.exec(stmt); } catch { /* colonne déjà présente */ }
   }

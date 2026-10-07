@@ -6,6 +6,7 @@ import { getDb } from './db';
 import { emitToUsers } from './events';
 import { t, type Lang } from './i18n';
 import type { UserLite } from './types';
+import { notifier } from './push';
 
 type Res = { ok: true } | { error: string; status: number };
 const paire = (x: number, y: number): [number, number] => (x < y ? [x, y] : [y, x]);
@@ -43,6 +44,8 @@ export function demanderAmi(moi: number, pseudo: unknown, lang: Lang = 'fr'): Re
   const [a, b] = paire(moi, cible.id);
   getDb().prepare("INSERT INTO amities (user_a, user_b, etat, demandeur) VALUES (?, ?, 'demande', ?)").run(a, b, moi);
   emitToUsers([cible.id]);
+  const qui = (getDb().prepare('SELECT pseudo FROM users WHERE id = ?').get(moi) as { pseudo: string }).pseudo;
+  void notifier([cible.id], 'amis', (lang) => ({ titre: t(lang, 'notif.demandeAmi', { p: qui }), url: '/amis', tag: `ami-${moi}` }));
   return { ok: true, etat: 'demande' };
 }
 
