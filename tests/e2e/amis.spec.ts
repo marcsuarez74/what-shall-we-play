@@ -52,7 +52,7 @@ test('lien d’ami → cercle → partie programmée → Dispo → joueur', asyn
 
   // A programme une partie en invitant le cercle.
   await a.goto('/nights');
-  await a.getByRole('button', { name: '＋ Programmer une partie' }).click();
+  await a.getByRole('button', { name: '＋ Nouvelle partie' }).click();
   const d = new Date(); d.setDate(d.getDate() + 3);
   await a.getByLabel('Date').fill(d.toLocaleDateString('sv-SE'));
   await a.locator('.player-list label', { hasText: 'Jeudi' }).locator('input').check();

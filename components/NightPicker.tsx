@@ -6,34 +6,40 @@ import PlayerChip from './PlayerChip';
 import { useI18n } from './LanguageProvider';
 
 export type CerclePicker = { id: number; nom: string; membres: number[] };
+// v4.10.0 — « Quand ? » : la partie du jour, une partie programmée, ou un sondage de dates.
+export type Quand = 'now' | 'une' | 'plus';
+const DATES_MAX = 6;
 
-export default function NightPicker({ users, prechecked, night, withDate = false, editInfos, onClose, meId, cercles = [] }: {
+export default function NightPicker({ users, prechecked, night, quand = 'now', editInfos, onClose, meId, cercles = [] }: {
   users: UserLite[];
   /** v4.8.0 — moi : toujours joueur, case cochée et figée. */
   meId?: number;
-  /** v4.8.0 — programmer : cocher un cercle coche ses membres (puis on ajuste à la main). */
+  /** v4.8.0 — cocher un cercle coche ses membres (puis on ajuste à la main). */
   cercles?: CerclePicker[];
   prechecked: number[];
   night?: Night | null;
-  /** QG Parties : ajoute les champs titre + date + heure (programmation). */
-  withDate?: boolean;
+  /** v4.10.0 — création : le mode présélectionné (étagère : maintenant ; Parties : une date). */
+  quand?: Quand;
   /** v4.7.0 — modification par le créateur : titre, et date + heure si la partie est programmée. */
   editInfos?: { futur: boolean };
   onClose?: () => void;
 }) {
   const router = useRouter();
   const { t } = useI18n();
+  const creation = !night;
+  const [mode, setMode] = useState<Quand>(creation ? quand : editInfos?.futur ? 'une' : 'now');
   const [checked, setChecked] = useState<Set<number>>(() => new Set(prechecked));
   const [cerclesCoches, setCerclesCoches] = useState<Set<number>>(() => new Set());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const avecTitre = withDate || !!editInfos;
-  const avecDate = withDate || !!editInfos?.futur;
+  const avecTitre = creation || !!editInfos;
+  const avecDate = mode === 'une' && (creation || !!editInfos?.futur);
   const [titre, setTitre] = useState(night?.titre ?? '');
   const [date, setDate] = useState(editInfos?.futur ? night?.played_at ?? '' : '');
   const [time, setTime] = useState(editInfos?.futur ? night?.start_time ?? '' : '');
+  const [dates, setDates] = useState<{ date: string; time: string }[]>([{ date: '', time: '' }, { date: '', time: '' }]);
   // La programmation se fait au plus tôt demain ; le jour J, la partie se crée sans date.
-  // Arithmétique calendaire ( setDate) et non +24 h : sûr pendant le passage à l'heure d'été.
+  // Arithmétique calendaire (setDate) et non +24 h : sûr pendant le passage à l'heure d'été.
   const d = new Date();
   d.setDate(d.getDate() + 1);
   const demain = d.toLocaleDateString('sv-SE');
@@ -55,37 +61,57 @@ export default function NightPicker({ users, prechecked, night, withDate = false
       return n;
     });
   }
-  const nbInvitations = [...checked].filter((id) => id !== meId).length;
+  const nbAutres = [...checked].filter((id) => id !== meId).length;
+  const majDate = (i: number, champ: 'date' | 'time', v: string) =>
+    setDates((ds) => ds.map((x, j) => (j === i ? { ...x, [champ]: v } : x)));
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (avecDate && !date) { setError(t('soiree.choisirDate')); return; }
+    if (creation && mode === 'plus' && dates.some((x) => !x.date)) { setError(t('soiree.choisirDate')); return; }
     setBusy(true); setError(null);
-    const res = await fetch(night ? `/api/nights/${night.id}` : '/api/nights', {
+    const sondage = creation && mode === 'plus';
+    const res = await fetch(night ? `/api/nights/${night.id}` : sondage ? '/api/sondages' : '/api/nights', {
       method: night ? 'PATCH' : 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         playerIds: [...checked],
-        ...(withDate ? { cercleIds: [...cerclesCoches] } : {}),
+        ...(creation ? { cercleIds: [...cerclesCoches] } : {}),
         ...(avecTitre ? { titre } : {}),
         ...(avecDate ? { playedAt: date, startTime: time || null } : {}),
+        ...(sondage ? { dates: dates.map((x) => ({ playedAt: x.date, startTime: x.time || null })) } : {}),
       }),
     });
     setBusy(false);
     if (!res.ok) { setError((await res.json()).error); return; }
     onClose?.();
-    router.refresh();
+    // Depuis l'étagère, une partie programmée ou un sondage se retrouvent dans Parties.
+    if (creation && mode !== 'now' && !onClose) router.push('/nights');
+    else router.refresh();
   }
 
+  const modes: { m: Quand; label: 'quand.maintenant' | 'quand.uneDate' | 'quand.plusieurs' }[] = [
+    { m: 'now', label: 'quand.maintenant' }, { m: 'une', label: 'quand.uneDate' }, { m: 'plus', label: 'quand.plusieurs' },
+  ];
   return (
     <form className="night-picker" onSubmit={submit}>
-      <h2>{night ? t('etagere.modifierPartie') : withDate ? t('soiree.programmer') : t('soiree.nouvellePartie')}</h2>
+      <h2>{night ? t('etagere.modifierPartie') : t('soiree.nouvellePartie')}</h2>
       {avecTitre && (
         <label className="plan-titre-field">
           {t('soiree.titreLabel')} <span className="opt">{t('soiree.facultatif')}</span>
           <input type="text" value={titre} maxLength={40} placeholder={t('soiree.titrePlaceholder')}
                  onChange={(e) => setTitre(e.target.value)} />
         </label>
+      )}
+      {creation && (
+        <>
+          <p className="hint">{t('quand.label')}</p>
+          <div className="quand-seg" role="group" aria-label={t('quand.label')}>
+            {modes.map(({ m, label }) => (
+              <button key={m} type="button" aria-pressed={mode === m} onClick={() => { setMode(m); setError(null); }}>{t(label)}</button>
+            ))}
+          </div>
+        </>
       )}
       {avecDate && (
         <div className="plan-fields">
@@ -99,7 +125,26 @@ export default function NightPicker({ users, prechecked, night, withDate = false
           </label>
         </div>
       )}
-      {withDate && cercles.length > 0 && (
+      {creation && mode === 'plus' && (
+        <div className="dates-sondage">
+          {dates.map((x, i) => (
+            <div key={i} className="date-sondage">
+              <input type="date" min={demain} value={x.date} aria-label={t('sondage.dateN', { n: i + 1 })} required
+                     onChange={(e) => majDate(i, 'date', e.target.value)} />
+              <input type="time" value={x.time} aria-label={t('sondage.heureN', { n: i + 1 })}
+                     onChange={(e) => majDate(i, 'time', e.target.value)} />
+              {dates.length > 2 && (
+                <button type="button" className="retirer" aria-label={t('sondage.retirerDate', { n: i + 1 })}
+                        onClick={() => setDates((ds) => ds.filter((_, j) => j !== i))}>✕</button>
+              )}
+            </div>
+          ))}
+          {dates.length < DATES_MAX && (
+            <button type="button" className="link-btn" onClick={() => setDates((ds) => [...ds, { date: '', time: '' }])}>{t('sondage.ajouterDate')}</button>
+          )}
+        </div>
+      )}
+      {creation && cercles.length > 0 && (
         <>
           <p className="hint">{t('soiree.inviterCercle')}</p>
           <ul className="player-list">
@@ -114,7 +159,7 @@ export default function NightPicker({ users, prechecked, night, withDate = false
           </ul>
         </>
       )}
-      <p className="hint">{withDate && cercles.length > 0 ? t('soiree.ouDesAmis') : t('soiree.quiJoue')}</p>
+      <p className="hint">{creation && cercles.length > 0 ? t('soiree.ouDesAmis') : t('soiree.quiJoue')}</p>
       <ul className="player-list">
         {users.map((u) => (
           <li key={u.id}>
@@ -126,12 +171,18 @@ export default function NightPicker({ users, prechecked, night, withDate = false
           </li>
         ))}
       </ul>
-      <p className="hint">{t('soiree.seulsAmis')}{withDate && <> {t('soiree.nbInvitations', { n: nbInvitations })}</>}</p>
+      <p className="hint">
+        {t('soiree.seulsAmis')}{' '}
+        {creation && mode === 'now' && t('soiree.inscritsDirect')}
+        {creation && mode === 'une' && t('soiree.nbInvitations', { n: nbAutres })}
+        {creation && mode === 'plus' && t('sondage.aide', { d: dates.length, n: nbAutres })}
+      </p>
       {error && <p className="error" role="alert">{error}</p>}
       <div className="night-actions">
         {onClose && <button type="button" className="btn-ghost" onClick={onClose}>{t('soiree.annuler')}</button>}
         <button className="btn-copper" disabled={busy}>
-          {busy ? t('etagere.enregistrement') : night ? t('soiree.enregistrer') : withDate ? t('soiree.programmerInviter') : t('soiree.creerPartie')}
+          {busy ? t('etagere.enregistrement') : night ? t('soiree.enregistrer')
+            : mode === 'une' ? t('soiree.programmerInviter') : mode === 'plus' ? t('sondage.envoyer') : t('soiree.creerPartie')}
         </button>
       </div>
     </form>

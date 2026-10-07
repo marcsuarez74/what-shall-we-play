@@ -35,7 +35,7 @@ test('soirées : programmer pour demain → carte dans Programmées, étagère i
   await devenirAmiDe(page, `inv_${s}`); // v4.8.0 : seuls les amis sont proposés
 
   await page.goto('/nights');
-  await page.getByRole('button', { name: 'Programmer une partie' }).click();
+  await page.getByRole('button', { name: '＋ Nouvelle partie' }).click();
   await page.getByLabel('Date').fill(demain());
   await page.getByLabel('Heure').fill('20:00');
   await page.locator('.player-list label', { hasText: `inv_${s}` }).locator('input').check();
@@ -169,7 +169,7 @@ test('programmée : « 🔗 Inviter » (créateur) avec date longue, heure, joue
   await devenirAmiDe(page, `thib_${s}`); // v4.8.0 : seuls les amis sont proposés
 
   await page.goto('/nights');
-  await page.getByRole('button', { name: 'Programmer une partie' }).click();
+  await page.getByRole('button', { name: '＋ Nouvelle partie' }).click();
   const d = new Date();
   d.setDate(d.getDate() + 1);
   const dateLong = d.toLocaleDateString('fr-FR', { dateStyle: 'long' });

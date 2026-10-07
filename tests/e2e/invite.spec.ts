@@ -41,7 +41,7 @@ test('invité v4.7.0 : partie programmée → lien → vue restreinte → vote �
   await inscrire(pageH, hotePseudo);
   await newGame(pageH, titreJeu, 'moyen');
   await pageH.goto('/nights');
-  await pageH.getByRole('button', { name: 'Programmer une partie' }).click();
+  await pageH.getByRole('button', { name: '＋ Nouvelle partie' }).click();
   await pageH.getByLabel('Titre').fill(titrePartie);
   await pageH.getByLabel('Date').fill(demain());
   await pageH.getByLabel('Heure').fill('20:30');
@@ -98,7 +98,7 @@ test('invité v4.7.0 : partie programmée → lien → vue restreinte → vote �
 
   // ── un invité n'est jamais proposé dans une nouvelle partie ──
   await pageH.goto('/nights');
-  await pageH.getByRole('button', { name: 'Programmer une partie' }).click();
+  await pageH.getByRole('button', { name: '＋ Nouvelle partie' }).click();
   await expect(pageH.locator('.player-list')).not.toContainText(nomI);
   await pageH.getByRole('button', { name: 'Annuler' }).click();
 

@@ -6,6 +6,7 @@ import { LanguageProvider } from "@/components/LanguageProvider";
 import { getLang } from "@/lib/i18n/server";
 import { getSessionUser } from "@/lib/session";
 import { nbInvitationsEnAttente } from "@/lib/invitations";
+import { nbSondagesSansReponse } from "@/lib/sondages";
 import { t } from "@/lib/i18n";
 import "./globals.css";
 
@@ -64,7 +65,7 @@ export default async function RootLayout({
       <body>
         <LanguageProvider lang={lang}>
           {children}
-          <TabBar invitations={user ? nbInvitationsEnAttente(user.id) : 0} />
+          <TabBar invitations={user ? nbInvitationsEnAttente(user.id) + nbSondagesSansReponse(user.id) : 0} />
           <RegisterSW />
         </LanguageProvider>
       </body>
