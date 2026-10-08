@@ -115,7 +115,9 @@ export type JeuProgramme = { game_id: number; title: string; joue: boolean };
 export function jeuxProgramme(evtId: number): JeuProgramme[] {
   return (getDb().prepare(`
     SELECT j.game_id, g.title, EXISTS (SELECT 1 FROM nights n WHERE n.evenement_id = j.evenement_id
-      AND n.status = 'termine' AND n.game_id = j.game_id) AS joue
+      AND n.status = 'termine' AND n.game_id = j.game_id)
+      OR EXISTS (SELECT 1 FROM night_plays p JOIN nights n ON n.id = p.night_id
+        WHERE n.evenement_id = j.evenement_id AND n.status = 'termine' AND p.game_id = j.game_id) AS joue
     FROM evenement_jeux j JOIN games g ON g.id = j.game_id
     WHERE j.evenement_id = ? ORDER BY g.title COLLATE NOCASE`).all(evtId) as { game_id: number; title: string; joue: number }[])
     .map((j) => ({ ...j, joue: j.joue === 1 }));

@@ -21,7 +21,7 @@ type VerdictStat = { game_id: number; jeu: string; adore: number; total: number 
 type Partie = {
   id: number; played_at: string; game_title: string | null;
   cover_path: string | null; cover_url: string | null; score: number | null; med: string;
-  mon_verdict: string | null; a_scores: number;
+  mon_verdict: string | null; a_scores: number; libre: boolean;
 };
 
 export default function ProfileClient({ me, stats, verdictStats, foyer, parties, jeux, membres }: { me: Me; stats: Stats; verdictStats: VerdictStat[]; foyer: FoyerData | null; parties: Partie[]; jeux: Game[]; membres: UserLite[] }) {
@@ -197,8 +197,8 @@ export default function ProfileClient({ me, stats, verdictStats, foyer, parties,
               <span className="mpd">
                 <b>{p.game_title ?? t('soiree.sansJeu')}</b>
                 <span>{formatDate(lang, `${p.played_at}T12:00:00`, { dateStyle: 'long' })}</span>
-                {p.mon_verdict === null && <span className="mp-verdict">{t('profil.donneVerdict')}</span>}
-                {!p.a_scores && <span className="mp-pastille">{t('parties.pastilleScores')}</span>}
+                {!p.libre && p.mon_verdict === null && <span className="mp-verdict">{t('profil.donneVerdict')}</span>}
+                {!p.libre && !p.a_scores && <span className="mp-pastille">{t('parties.pastilleScores')}</span>}
               </span>
               <span className="dt"><b>{p.score ?? '—'}</b><span className="med">{p.med}</span></span>
             </Link>

@@ -24,6 +24,7 @@ import UserSync from '@/components/UserSync';
 import SupprimerPartie from '@/components/SupprimerPartie';
 import BoutonAction from '@/components/BoutonAction';
 import BandeauNotifications from '@/components/BandeauNotifications';
+import { resumeLibre } from '@/lib/libre';
 
 // « 2026-10-02 » → jour « 2 » + mois « oct. » — la date est le héros d'une carte programmée.
 function dayMonth(playedAt: string, lang: Lang): { day: string; month: string } {
@@ -373,8 +374,13 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ v
                 {cover
                   ? <span className="cov hist-cov"><img src={cover} alt="" loading="lazy" decoding="async" /></span>
                   : <span className="cov hist-cov">🎲</span>}
-                <span className="hc"><b>{n.game_title ?? t(lang, 'soiree.sansJeu')}</b>
-                  <span className="gagnant">{n.gagnant_pseudo ? t(lang, 'soiree.gagnant', { p: n.gagnant_pseudo, s: n.gagnant_score as number }) : t(lang, 'soiree.pasDeScores')}</span></span>
+                {n.mode === 'libre' ? (() => { // v4.19.0 : « N jeux · M manches » + gagnant(s) de la partie
+                  const r = resumeLibre(n.id);
+                  const tete = r.podium.filter((x) => x.rank === 1);
+                  return <span className="hc"><b>{t(lang, 'libre.libre')} · {t(lang, 'libre.resume', { j: r.jeux, m: r.manches })}</b>
+                    <span className="gagnant">{tete.length ? t(lang, 'libre.gagnant', { p: tete.map((x) => x.pseudo).join(' & '), v: tete[0].victoires }) : t(lang, 'soiree.pasDeScores')}</span></span>;
+                })() : <span className="hc"><b>{n.game_title ?? t(lang, 'soiree.sansJeu')}</b>
+                  <span className="gagnant">{n.gagnant_pseudo ? t(lang, 'soiree.gagnant', { p: n.gagnant_pseudo, s: n.gagnant_score as number }) : t(lang, 'soiree.pasDeScores')}</span></span>}
                 <span className="dt"><span>{dateLongue(n.played_at)}</span></span>
               </a>
             );

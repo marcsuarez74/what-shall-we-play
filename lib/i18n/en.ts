@@ -399,6 +399,7 @@ export const en: Record<CléDict, ValeurDict> = {
   'libre.sansScoreGagnant': '🤝 no score',
   'libre.termineeBadge': 'Free choice · over',
   'libre.resume': ({ j, m }: Record<string, string | number>) => `${j} game${Number(j) > 1 ? 's' : ''} · ${m} round${Number(m) > 1 ? 's' : ''}`,
+  'libre.gagnant': ({ p, v }: Record<string, string | number>) => `👑 ${p} · ${v} round${Number(v) > 1 ? 's' : ''} won`,
   'libre.errPasLibre': 'This game night is not in free choice',
   'libre.errVeto': 'This game was vetoed',
   'libre.errManche': 'Invalid round',

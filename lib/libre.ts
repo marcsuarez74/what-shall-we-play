@@ -1,7 +1,7 @@
 import { getDb } from './db';
 import { t, type Lang } from './i18n';
 import { estFuture, getNight, isGameOnShelf, isNightParticipant, notifyNight, type NightStateError } from './nights';
-import type { Declaration } from './manches';
+import { grouperManches, podiumPartie, type Declaration } from './manches';
 
 // v4.19.0 (choix libre / marathon) : chacun déclare « j'ai joué » une manche, avec un
 // score facultatif. Une ligne par joueur et par manche ; on ne touche qu'à la sienne.
@@ -16,6 +16,27 @@ export function jeuJoue(nightId: number, gameId: number): boolean {
 }
 export function aDesDeclarations(nightId: number): boolean {
   return !!getDb().prepare('SELECT 1 FROM night_plays WHERE night_id = ? LIMIT 1').get(nightId);
+}
+
+// Résumé d'une partie libre (historique, profil) : « N jeux · M manches » + podium de la partie.
+export function resumeLibre(nightId: number) {
+  const plays = getNightPlays(nightId);
+  return {
+    jeux: new Set(plays.map((p) => p.game_id)).size,
+    manches: grouperManches(plays).length,
+    podium: podiumPartie(plays),
+  };
+}
+// Mes médailles sur les parties libres terminées dont je suis participant (profil).
+export function podiumsLibres(userId: number): { un: number; deux: number; trois: number } {
+  const ids = getDb().prepare(`SELECT n.id FROM nights n JOIN night_players np ON np.night_id = n.id
+    WHERE np.user_id = ? AND n.mode = 'libre' AND n.status = 'termine'`).all(userId) as { id: number }[];
+  const pod = { un: 0, deux: 0, trois: 0 };
+  for (const { id } of ids) {
+    const r = resumeLibre(id).podium.find((x) => x.user_id === userId)?.rank;
+    if (r === 1) pod.un += 1; else if (r === 2) pod.deux += 1; else if (r === 3) pod.trois += 1;
+  }
+  return pod;
 }
 
 function gardes(nightId: number, userId: number, lang: Lang): NightStateError | null {

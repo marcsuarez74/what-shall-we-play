@@ -6,6 +6,8 @@ import {
 } from '@/lib/nights';
 import { declarerManche, retirerDeclaration, getNightPlays, changerMode } from '@/lib/libre';
 import { classerManche, podiumPartie } from '@/lib/manches';
+import { creerEvenement, ajouterJeuProgramme, jeuxProgramme, rattacher } from '@/lib/evenements';
+import { getProfileStats, getMyParties } from '@/lib/users';
 
 const uid = (p: string) => (registerUser(p, '1234') as { id: number }).id;
 const statut = (r: { ok: true } | { error: string; status: number }) => ('error' in r ? r.status : 'ok');
@@ -92,6 +94,31 @@ describe('choix libre — déclarer une manche (v4.19.0)', () => {
     declarerManche(n, marc, g, 1, 3);
     expect(statut(changerMode(n, marc, 'tirage'))).toBe(409);
     expect(changerMode(n, marc, 'libre')).toEqual({ ok: true }); // inchangé : pas d'erreur
+  });
+});
+
+describe('lectures : programme, profil, mes parties', () => {
+  it('un jeu déclaré dans une partie libre terminée compte comme joué au programme', () => {
+    const { marc, g, n } = partieLibre('lp');
+    const eid = creerEvenement(marc, { titre: 'Marathon lp', description: null, du: null, au: null }, []) as number;
+    expect(ajouterJeuProgramme(eid, marc, g)).toEqual({ ok: true });
+    expect(rattacher(n, marc, eid)).toEqual({ ok: true });
+    declarerManche(n, marc, g, 1, null);
+    expect(jeuxProgramme(eid)[0].joue).toBe(false); // pas encore terminée
+    endNight(n, marc);
+    expect(jeuxProgramme(eid)[0].joue).toBe(true);
+  });
+
+  it('profil : un podium par partie libre terminée ; mes parties portent le mode', () => {
+    const { marc, lea, g, n } = partieLibre('lpr');
+    declarerManche(n, marc, g, 1, 10); declarerManche(n, lea, g, 1, 5);
+    declarerManche(n, marc, g, 2, 3); declarerManche(n, lea, g, 2, 8);
+    declarerManche(n, marc, g, 3, 9); declarerManche(n, lea, g, 3, 1);
+    expect(getProfileStats(marc).podiums).toEqual({ un: 0, deux: 0, trois: 0 }); // en cours
+    endNight(n, marc);
+    expect(getProfileStats(marc).podiums).toEqual({ un: 1, deux: 0, trois: 0 });
+    expect(getProfileStats(lea).podiums).toEqual({ un: 0, deux: 1, trois: 0 });
+    expect(getMyParties(lea).find((p) => p.id === n)?.mode).toBe('libre');
   });
 });
 
