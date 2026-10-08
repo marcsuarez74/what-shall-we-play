@@ -115,18 +115,35 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--cuivre); ou
 .box.grand { width: 82px; height: 82px; } .box.moyen { width: 70px; height: 70px; } .box.petit { width: 58px; height: 58px; } .box.mini { width: 46px; height: 46px; font-size: 9px; }
 .bienvenue { border-radius: 12px; padding: 10px 12px; background: color-mix(in srgb, var(--vert) 12%, transparent); border: 1px solid color-mix(in srgb, var(--vert) 45%, transparent); font-size: 13px; color: var(--doux-clair); }
 .bienvenue b { color: var(--creme); }
-.titre .nb { font-family: var(--ui); font-size: 13px; font-weight: 500; color: var(--doux-clair); }
-.lib { list-style: none; display: flex; flex-direction: column; gap: 8px; }
-.lib-card { display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: var(--surface); border-radius: 12px; }
-.lib-info { flex: 1; min-width: 0; display: flex; flex-direction: column; font-size: 14px; }
-.lib-info .meta { font-size: 12px; color: var(--doux-clair); }
-.fmt-ro { color: var(--creme); }
+.page-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+.page-head h1 { font-family: var(--display); font-size: 24px; margin: 0; }
+.page-head h1 small { font-family: var(--ui); font-size: 13px; font-weight: 500; color: var(--doux-clair); }
+.user-chip { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--surface); font-size: 16px; }
+.filtres-actuels { font-size: 12px; color: var(--doux-clair); border: 1px dashed color-mix(in srgb, var(--doux) 50%, transparent); border-radius: 10px; padding: 8px 10px; margin-bottom: 10px; text-align: center; }
+.alerte-once { position: relative; border-radius: 12px; padding: 10px 34px 10px 12px; margin-bottom: 12px; background: color-mix(in srgb, var(--vert) 12%, transparent); border: 1px solid color-mix(in srgb, var(--vert) 45%, transparent); font-size: 13px; color: var(--doux-clair); }
+.alerte-once b { color: var(--creme); }
+.alerte-once button { position: absolute; top: 6px; right: 6px; appearance: none; border: 0; background: none; color: var(--doux); font-size: 14px; cursor: pointer; padding: 2px 6px; }
+.empty { color: var(--doux-clair); font-size: 14px; }
+.lib { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.lib-card { background: var(--surface); border: 1px solid rgba(185, 165, 140, 0.3); border-radius: 14px; padding: 10px 12px; }
+.lib-top { display: flex; gap: 12px; min-width: 0; }
+.lib-main { flex: 1; display: flex; align-items: center; gap: 12px; min-width: 0; color: var(--creme); }
+.lib-cover { width: 64px; height: 64px; border-radius: 10px; overflow: hidden; flex: 0 0 auto; }
+.lib-info { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.lib-info strong { font-size: 15px; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lib-meta { color: var(--doux-clair); font-size: 12px; }
+.traits { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 2px; }
+.traits span { font-size: 11px; font-weight: 500; color: var(--doux-clair); background: color-mix(in srgb, var(--noyer) 55%, transparent); border: 1px solid color-mix(in srgb, var(--doux) 25%, transparent); border-radius: 999px; padding: 2px 8px; }
+.traits span.fmt { color: var(--cuivre); border-color: color-mix(in srgb, var(--cuivre) 40%, transparent); }
+.lib-rm { appearance: none; border: none; background: none; color: var(--doux); font-size: 14px; cursor: pointer; padding: 2px 4px; align-self: start; }
+.lib-act { display: flex; align-items: center; gap: 10px; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(185, 165, 140, 0.22); }
+.lib-fmt { width: auto; padding: 6px 8px; font-size: 12px; background: var(--noyer); border: 1px solid var(--doux); border-radius: 8px; color: var(--doux-clair); }
 .note code { font-size: 11.5px; background: var(--surface); padding: 1px 5px; border-radius: 5px; color: var(--creme); }
 </style>
 
 <div class="wrap">
   <section class="intro">
-    <p class="eyebrow">Maquette fonctionnelle · v2 · à valider</p>
+    <p class="eyebrow">Maquette fonctionnelle · v3 · à valider</p>
     <h1>Onboarding : ajouter ses jeux dès la création du compte</h1>
     <p class="lead">Juste après « Créer mon compte », une deuxième étape <b>Tes jeux</b> propose de remplir sa ludothèque tout de suite : recherche BGG (un tap, un jeu), import de toute la collection BGG ou saisie à la main. Tout se passe sans quitter le flux, et l'étape se passe en un clic.</p>
   </section>
@@ -188,7 +205,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--cuivre); ou
       <div class="ecran">
         <div class="ecran-titre"><span class="id">③</span><h3>Arrivée sur « Ma ludothèque »</h3></div>
         <div class="phone" id="p3"></div>
-        <p class="note">Redirection vers <code>/library</code>, la vraie collection du joueur. L'étagère reste le pool d'une partie ou d'un événement. Avec « Passer pour l'instant », on arrive sur une ludothèque vide.</p>
+        <p class="note">Redirection vers <code>/library</code> : la ludothèque <b>actuelle, sans aucun changement de design</b>. Seul ajout : une petite alerte affichée <b>une seule fois</b>, à l'arrivée depuis l'onboarding (<code>/library?bienvenue=1</code>, paramètre retiré de l'URL dès l'affichage), fermable par ✕. Avec « Passer pour l'instant », on arrive sur la ludothèque vide habituelle.</p>
       </div>
     </div>
   </section>
@@ -204,7 +221,7 @@ const BGG = [
   ['Splendor', 2014], ['Les Aventuriers du Rail', 2004], ['7 Wonders Duel', 2015], ['Skull', 2011], ['Wingspan', 2019],
 ];
 const COLLECTION = ['Wingspan', 'Dixit', 'Skull', 'Splendor', 'Les Aventuriers du Rail', '7 Wonders Duel'];
-const ST = { onglet: 'rech', q: '', jeux: [], manTitre: '', manFmt: 'grand', bggPseudo: '', bggEtape: 'pseudo', toast: '', fini: false };
+const ST = { onglet: 'rech', q: '', jeux: [], manTitre: '', manFmt: 'grand', bggPseudo: '', bggEtape: 'pseudo', toast: '', fini: false, alerteVue: false };
 const coul = (t) => COULEURS[[...t].reduce((a, c) => a + c.charCodeAt(0), 0) % COULEURS.length];
 const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const a = (t) => ST.jeux.some((j) => j.titre === t);
@@ -262,21 +279,25 @@ function p2() {
 
 function p3() {
   let h = `<div class="status"><span>9:41</span><span>●●● 🔋</span></div><div class="scroll">`;
-  if (!ST.fini) {
-    h += `<h1 class="titre">Ma ludothèque</h1><div class="vide">Termine l'étape ② pour arriver ici.</div>`;
-  } else {
-    h += `<h1 class="titre">Ma ludothèque <small class="nb">${ST.jeux.length} jeu${ST.jeux.length > 1 ? 'x' : ''}</small></h1>`;
-    if (!ST.jeux.length) {
-      h += `<p class="sous">Aucun jeu pour l'instant. Onglet « Ajouter » pour commencer.</p>`;
-    } else {
-      h += `<div class="bienvenue">🎉 Ta ludothèque est prête. Tu proposeras ces jeux sur l'<b>étagère</b> d'une partie ou d'un événement.</div><ul class="lib">`;
-      h += ST.jeux.map((j) => `<li class="lib-card"><span class="mini-cov" style="background:${coul(j.titre)}"></span><span class="lib-info"><b>${esc(j.titre)}</b><span class="meta">${j.man ? 'Saisi à la main' : 'BoardGameGeek'} · <span class="fmt-ro">${FMT_L[j.fmt]}</span></span></span><span class="retirer">✕</span></li>`).join('');
-      h += `</ul>`;
-    }
+  h += `<div class="page-head"><h1>Ma ludothèque <small>${ST.jeux.length} jeu${ST.jeux.length > 1 ? 'x' : ''}</small></h1><span class="user-chip">🦊</span></div>`;
+  if (!ST.fini) return h + `<div class="vide">Termine l'étape ② pour arriver ici.</div></div>` + TABBAR;
+  if (!ST.alerteVue) {
+    h += `<div class="alerte-once" role="status">🎉 ${ST.jeux.length ? 'Ta ludothèque est prête.' : 'Bienvenue !'} Tu proposeras tes jeux sur l'<b>étagère</b> d'une partie ou d'un événement.<button data-a="alerteOk" aria-label="Fermer">✕</button></div>`;
   }
-  h += `</div><div class="tabbar"><span><i>📚</i>Étagère</span><span class="on"><i>🗂️</i>Ludothèque</span><span><i>➕</i>Ajouter</span><span><i>🎲</i>Parties</span></div>`;
-  return h;
+  if (!ST.jeux.length) {
+    h += `<p class="empty">Aucun jeu pour l'instant. Onglet « Ajouter » pour commencer votre étagère.</p>`;
+  } else {
+    h += `<div class="filtres-actuels">barre de filtres actuelle (inchangée)</div><ul class="lib">`;
+    h += ST.jeux.map((j, i) => {
+      const y = (BGG.find(([t]) => t === j.titre) || [])[1];
+      return `<li class="lib-card"><div class="lib-top"><span class="lib-main"><span class="lib-cover" style="background:${coul(j.titre)}"></span><span class="lib-info"><strong>${esc(j.titre)}</strong>${y ? `<span class="lib-meta">${y} · —</span>` : ''}<span class="traits"><span class="fmt">${FMT_L[j.fmt]}</span></span></span></span><button class="lib-rm" data-a="del" data-i="${i}" aria-label="Retirer ${esc(j.titre)}">✕</button></div>
+        <div class="lib-act"><select class="lib-fmt" data-i="${i}" aria-label="Format de ${esc(j.titre)}">${FMT.map((f) => `<option value="${f}"${f === j.fmt ? ' selected' : ''}>${FMT_L[f]}</option>`).join('')}</select></div></li>`;
+    }).join('');
+    h += `</ul>`;
+  }
+  return h + `</div>` + TABBAR;
 }
+const TABBAR = `<div class="tabbar"><span><i>📚</i>Étagère</span><span class="on"><i>🗂️</i>Ludothèque</span><span><i>➕</i>Ajouter</span><span><i>🎲</i>Parties</span></div>`;
 
 function rendre(focus) {
   document.getElementById('p2').innerHTML = p2();
@@ -284,6 +305,9 @@ function rendre(focus) {
   if (focus) { const el = document.getElementById(focus); if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); } }
 }
 
+document.addEventListener('change', (e) => {
+  if (e.target.matches('select.lib-fmt')) { ST.jeux[+e.target.dataset.i].fmt = e.target.value; rendre(); }
+});
 document.addEventListener('input', (e) => {
   const id = e.target.id;
   if (id === 'q') ST.q = e.target.value;
@@ -304,10 +328,11 @@ document.addEventListener('click', (e) => {
   if (act === 'fmt') { const j = ST.jeux[+i]; j.fmt = FMT[(FMT.indexOf(j.fmt) + 1) % FMT.length]; }
   if (act === 'del') { const [j] = ST.jeux.splice(+i, 1); ST.toast = `${j.titre} retiré`; }
   if (act === 'manFmt') ST.manFmt = f;
-  if (act === 'manAdd') { const tt = ST.manTitre.trim(); ajouter(tt, ST.manFmt); ST.jeux[0].man = true; ST.toast = `✓ ${tt} ajouté`; ST.manTitre = ''; }
+  if (act === 'manAdd') { const tt = ST.manTitre.trim(); ajouter(tt, ST.manFmt); ST.toast = `✓ ${tt} ajouté`; ST.manTitre = ''; }
   if (act === 'bggVoir') ST.bggEtape = 'apercu';
   if (act === 'bggRetour') ST.bggEtape = 'pseudo';
   if (act === 'bggImport') { const n = COLLECTION.filter((x) => !a(x)); n.forEach((x) => ajouter(x, ST.manFmt)); ST.bggEtape = 'fini'; ST.toast = `✓ ${n.length} jeux importés`; }
+  if (act === 'alerteOk') ST.alerteVue = true;
   if (act === 'fin') { ST.fini = true; document.getElementById('p3').scrollIntoView({ behavior: 'smooth', block: 'center' }); }
   rendre();
 });
