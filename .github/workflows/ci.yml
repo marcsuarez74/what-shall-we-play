@@ -105,9 +105,11 @@ jobs:
       - name: Installer Chromium (Playwright)
         if: needs.changes.outputs.docs != 'true'
         run: npx playwright install --with-deps chromium
-      - name: Tests E2E (Playwright, dev server auto)
+      - name: Tests E2E (Playwright, build de production)
         if: needs.changes.outputs.docs != 'true'
         run: npm run test:e2e
+        env:
+          E2E_PROD: '1' # next build + next start : ~21 min en serveur dev, quelques minutes ainsi
       - name: Artefacts d'échec (snapshots, traces)
         if: failure()
         uses: actions/upload-artifact@v4

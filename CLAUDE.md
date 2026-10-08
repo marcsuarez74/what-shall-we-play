@@ -35,7 +35,8 @@ vérifications et les pièges déjà payés une fois.
 | `npx vitest run` (250 tests) | ~45 s | avant chaque commit |
 | `npx tsc --noEmit` | ~10 s | avant chaque commit |
 | `npx playwright test tests/e2e/<spec>.spec.ts` | 1-2 min | pendant le dev, specs ciblées |
-| `npx playwright test` (97 tests) | ~6 min local, ~14 min CI | **une fois** avant la PR |
+| `npx playwright test` (113 tests, serveur dev) | ~6 min local | à éviter pour la suite complète |
+| `E2E_PROD=1 npx playwright test` (build de prod) | ~2 min local | **une fois** avant la PR (c'est le mode de la CI) |
 
 Ne lance jamais la suite E2E complète en boucle : c'est la ressource la plus chère du projet,
 et c'est la **CI GitHub qui arbitre** (environnement propre).
@@ -47,6 +48,9 @@ et c'est la **CI GitHub qui arbitre** (environnement propre).
 - `reuseExistingServer: true` : un serveur **orphelin** sur :3000 est adopté **avec sa base
   périmée** (échecs incompréhensibles garantis). Avant un run :
   `lsof -nP -iTCP:3000 -sTCP:LISTEN` et tue l'orphelin.
+- `E2E_PROD=1` lance `next build` puis `next start` : un orphelin sur :3000 serait adopté
+  tel quel (dev ou ancien build, donc code périmé) — même règle, tue-le avant. Le build
+  réécrit `.next/` : n'enchaîne pas pendant qu'un `npm run dev` du même dossier tourne.
 - Le port **3000 est réservé aux E2E**. Un serveur de démo/manip : `npm run dev -- -p 3100`
   (voire avec `DATA_DIR` temporaire pour isoler).
 - Un test échoue en suite complète ? **Relance sa spec seule.** Si verte → flake de charge

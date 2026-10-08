@@ -8,6 +8,10 @@ import { defineConfig } from '@playwright/test';
 // (biblio échouait aléatoirement sur « Ma ludothèque » invisible). Purgée à
 // chaque démarrage à froid du serveur de test : comptes toujours neufs.
 const dataDir = path.join(os.tmpdir(), 'wsp-e2e-data');
+// E2E_PROD=1 : la suite tourne sur un build de production (next build + next start).
+// Pages précompilées, pas de compilation à la demande ni de Fast Refresh : c'est le
+// mode de la CI (2-3× plus rapide). Sans la variable : serveur dev, pour itérer.
+const prod = !!process.env.E2E_PROD;
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -22,10 +26,10 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: `rm -rf ${dataDir} && npm run dev`,
+      command: `rm -rf ${dataDir} && ${prod ? 'npm run build && npm run start' : 'npm run dev'}`,
       url: 'http://localhost:3000',
       reuseExistingServer: true,
-      timeout: 120_000,
+      timeout: prod ? 300_000 : 120_000, // le build de production passe avant le démarrage
       // GITHUB_BUG_TOKEN forcé à vide : un jeton hérité du shell ouvrirait une
       // vraie issue GitHub (et ferait échouer la suite, qui attend un 503 sans jeton).
       // BGG_BASE : XMLAPI2 branché sur le stub local (récupération de pochettes bout-en-bout).
