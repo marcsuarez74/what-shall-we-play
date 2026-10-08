@@ -1,4 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
+import { passerBienvenue } from './helpers/inscription';
 
 // v4.11.0 — « Ajouter à mon calendrier » : fichier .ics d'une partie programmée,
 // réservé à ceux qui y jouent ; rien sur la partie du jour.
@@ -10,7 +11,7 @@ async function register(page: Page, pseudo: string) {
   const reg = page.waitForResponse((r) => r.url().endsWith('/api/auth/register'));
   await page.getByRole('button', { name: 'Créer mon compte' }).click();
   await reg;
-  await page.waitForURL('/etagere');
+  await passerBienvenue(page);
 }
 const dansNJours = (n: number) => { const d = new Date(); d.setDate(d.getDate() + n); return d.toLocaleDateString('sv-SE'); };
 

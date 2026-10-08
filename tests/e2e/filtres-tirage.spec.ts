@@ -1,5 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
 import { newGame, putOnShelf } from './helpers/shelf';
+import { passerBienvenue } from './helpers/inscription';
 
 // v4.12.0 — filtres de contexte : Joueurs / Complexité / Durée bornent la roue.
 // « Lancer · N » et l'URL du tirage ne portent que les jeux filtrés ; zéro → bouton désactivé.
@@ -11,6 +12,7 @@ async function registerAndStart(page: Page, pseudo: string) {
   const reg = page.waitForResponse((r) => r.url().endsWith('/api/auth/register'));
   await page.getByRole('button', { name: 'Créer mon compte' }).click();
   await reg;
+  await passerBienvenue(page);
   const nightDone = page.waitForResponse((r) => r.url().endsWith('/api/nights') && r.request().method() === 'POST');
   await page.getByRole('button', { name: 'Créer la partie' }).click();
   const { nightId } = await (await nightDone).json() as { nightId: number };

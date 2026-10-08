@@ -1,6 +1,7 @@
 import { test, expect, Page } from '@playwright/test';
 import { devenirAmiDe } from './helpers/amis';
 import { newGame, gameIdByTitle, nightIdOf, putOnShelf } from './helpers/shelf';
+import { passerBienvenue } from './helpers/inscription';
 
 // v3.3 — la soirée a un ÉTAT visible : badge « En préparation » puis « En jeu »
 // (bandeau vert, étagère gelée) ; la soirée terminée laisse place à la carte
@@ -14,6 +15,7 @@ async function registerAndStart(page: Page, pseudo: string) {
   const reg = page.waitForResponse((r) => r.url().endsWith('/api/auth/register'));
   await page.getByRole('button', { name: 'Créer mon compte' }).click();
   await reg;
+  await passerBienvenue(page);
   await page.getByRole('button', { name: 'Créer la partie' }).click();
 }
 
@@ -50,7 +52,7 @@ async function registerAndStart2Joueurs(page: Page, pseudo: string, invitePseudo
   const reg = page.waitForResponse((r) => r.url().endsWith('/api/auth/register'));
   await page.getByRole('button', { name: 'Créer mon compte' }).click();
   await reg;
-  await page.waitForURL('/etagere');
+  await passerBienvenue(page);
   await page.reload(); // la liste des joueurs est rendue côté serveur
   await devenirAmiDe(page, invitePseudo); await page.reload();
   await page.locator('.player-list label', { hasText: invitePseudo }).locator('input').check();
@@ -69,7 +71,7 @@ test('carnet des scores : créateur seulement, médailles en direct, égalité, 
   await p2.getByLabel('Pseudo').fill(`inv_${s}`);
   await p2.getByLabel('Code secret').fill('1234');
   await p2.getByRole('button', { name: 'Créer mon compte' }).click();
-  await p2.waitForURL('**/etagere');
+  await passerBienvenue(p2);
 
   await registerAndStart2Joueurs(page, `car_${s}`, `inv_${s}`); // reload + check invité + Créer la partie
   const g = await newGame(page, 'Azul', 'petit');
@@ -113,7 +115,7 @@ test('historique : une carte par partie, détail avec podium et partage', async 
   await p2.getByLabel('Pseudo').fill(`his_${s}`);
   await p2.getByLabel('Code secret').fill('1234');
   await p2.getByRole('button', { name: 'Créer mon compte' }).click();
-  await p2.waitForURL('**/etagere');
+  await passerBienvenue(p2);
 
   await registerAndStart2Joueurs(page, `pod_${s}`, `his_${s}`);
   const g = await newGame(page, 'Cascadia', 'moyen');

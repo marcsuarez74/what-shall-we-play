@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { passerBienvenue } from './helpers/inscription';
 
 test('la FAQ est publique, avec accordéons fonctionnels', async ({ page }) => {
   await page.goto('/faq');
@@ -35,7 +36,7 @@ test('menu profil → FAQ (connecté)', async ({ page }) => {
   await page.getByLabel('Pseudo').fill(`faq_${Date.now().toString(36)}`);
   await page.getByLabel('Code secret').fill('1234');
   await page.getByRole('button', { name: 'Créer mon compte' }).click();
-  await page.waitForURL('/etagere');
+  await passerBienvenue(page);
   // hook d ouverture de UserMenu : <summary aria-label="Menu utilisateur">
   await page.getByLabel('Menu utilisateur').click();
   await page.getByRole('link', { name: /FAQ/ }).click();

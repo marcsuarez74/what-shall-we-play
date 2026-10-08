@@ -1,6 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import { devenirAmis } from './helpers/amis';
 import { newGame, putOnShelf } from './helpers/shelf';
+import { passerBienvenue } from './helpers/inscription';
 
 const hier = new Date(Date.now() - 86400000).toLocaleDateString('sv-SE');
 const demain = new Date(Date.now() + 86400000).toLocaleDateString('sv-SE');
@@ -12,7 +13,7 @@ async function register(page: Page, pseudo: string) {
   const done = page.waitForResponse((r) => r.url().endsWith('/api/auth/register'));
   await page.getByRole('button', { name: 'Créer mon compte' }).click();
   await done;
-  await page.waitForURL('/etagere');
+  await passerBienvenue(page);
 }
 
 async function monId(page: Page): Promise<number> {

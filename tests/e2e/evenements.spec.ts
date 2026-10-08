@@ -1,6 +1,7 @@
 import { test, expect, Page } from '@playwright/test';
 import { devenirAmis } from './helpers/amis';
 import { newGame, putOnShelf } from './helpers/shelf';
+import { passerBienvenue } from './helpers/inscription';
 
 // v4.15.0 — événements : sous-onglet, création avec participants, jeu au programme,
 // partie démarrée dans l'événement (ses seuls joueurs), coche automatique, suppression.
@@ -12,7 +13,7 @@ async function register(page: Page, pseudo: string) {
   const reg = page.waitForResponse((r) => r.url().endsWith('/api/auth/register'));
   await page.getByRole('button', { name: 'Créer mon compte' }).click();
   await reg;
-  await page.waitForURL('/etagere');
+  await passerBienvenue(page);
 }
 
 test('événement : création, programme, partie rattachée, coche automatique, suppression', async ({ browser }) => {

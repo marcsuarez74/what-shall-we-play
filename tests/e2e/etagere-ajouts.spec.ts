@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import { devenirAmiDe } from './helpers/amis';
 import { makePng } from './helpers/png';
 import { newGame, putOnShelf } from './helpers/shelf';
+import { passerBienvenue } from './helpers/inscription';
 
 // v2.0.0 — Étagère vide à la création : chacun ajoute depuis SA ludothèque
 // (sélecteur), et « Pas ce soir » a laissé place au « Retirer de la partie ».
@@ -14,6 +15,7 @@ async function registerAndStart(page: import('@playwright/test').Page, pseudo: s
   const reg = page.waitForResponse((r) => r.url().endsWith('/api/auth/register'));
   await page.getByRole('button', { name: 'Créer mon compte' }).click();
   await reg;
+  await passerBienvenue(page);
   const nightDone = page.waitForResponse((r) => r.url().endsWith('/api/nights') && r.request().method() === 'POST');
   await page.getByRole('button', { name: 'Créer la partie' }).click();
   const { nightId } = await (await nightDone).json() as { nightId: number };
@@ -73,7 +75,7 @@ test('sync live : le jeu ajouté par un joueur apparaît chez les autres sans re
   const reg = a.waitForResponse((r) => r.url().endsWith('/api/auth/register'));
   await a.getByRole('button', { name: 'Créer mon compte' }).click();
   await reg;
-  await a.waitForURL('/etagere'); await devenirAmiDe(a, `sync_l_${s}`); await a.reload();
+  await passerBienvenue(a); await devenirAmiDe(a, `sync_l_${s}`); await a.reload();
   await a.getByLabel(new RegExp(`sync_l_${s}`)).check();
   const nightDone = a.waitForResponse((r) => r.url().endsWith('/api/nights') && r.request().method() === 'POST');
   await a.getByRole('button', { name: 'Créer la partie' }).click();
@@ -110,7 +112,7 @@ test('ajouter un joueur : sa page ouverte bascule sur la partie en cours (sync)'
   const regB = b.waitForResponse((r) => r.url().endsWith('/api/auth/register'));
   await b.getByRole('button', { name: 'Créer mon compte' }).click();
   await regB;
-  await b.waitForURL('/etagere');
+  await passerBienvenue(b);
   await expect(b.locator('.player-list')).toBeVisible(); // elle n'a pas de partie
   // Son flux SSE est connecté avant que Marc ne crée la partie
   await expect(b.locator('body')).toHaveAttribute('data-sync', 'on', { timeout: 15_000 });
@@ -124,7 +126,7 @@ test('ajouter un joueur : sa page ouverte bascule sur la partie en cours (sync)'
   const regA = a.waitForResponse((r) => r.url().endsWith('/api/auth/register'));
   await a.getByRole('button', { name: 'Créer mon compte' }).click();
   await regA;
-  await a.waitForURL('/etagere'); await devenirAmiDe(a, `add_l_${s}`); await a.reload();
+  await passerBienvenue(a); await devenirAmiDe(a, `add_l_${s}`); await a.reload();
   await a.getByLabel(new RegExp(`add_l_${s}`)).check();
   const nightDone = a.waitForResponse((r) => r.url().endsWith('/api/nights') && r.request().method() === 'POST');
   await a.getByRole('button', { name: 'Créer la partie' }).click();
@@ -331,7 +333,7 @@ test('joueur ajouté ensuite via modifier : elle voit la partie et les jeux déj
   const regB = b.waitForResponse((r) => r.url().endsWith('/api/auth/register'));
   await b.getByRole('button', { name: 'Créer mon compte' }).click();
   await regB;
-  await b.waitForURL('/etagere');
+  await passerBienvenue(b);
   await expect(b.locator('.player-list')).toBeVisible();
   await expect(b.locator('body')).toHaveAttribute('data-sync', 'on', { timeout: 15_000 });
 
@@ -344,6 +346,7 @@ test('joueur ajouté ensuite via modifier : elle voit la partie et les jeux déj
   const regA = a.waitForResponse((r) => r.url().endsWith('/api/auth/register'));
   await a.getByRole('button', { name: 'Créer mon compte' }).click();
   await regA;
+  await passerBienvenue(a);
   const nightDone = a.waitForResponse((r) => r.url().endsWith('/api/nights') && r.request().method() === 'POST');
   await a.getByRole('button', { name: 'Créer la partie' }).click();
   const { nightId } = await (await nightDone).json() as { nightId: number };

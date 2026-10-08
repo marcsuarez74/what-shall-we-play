@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { newGame, putOnShelf } from './helpers/shelf';
+import { passerBienvenue } from './helpers/inscription';
 
 // v3.0.0 — plus de sélection : l'étagère EST le pool. Le tirage se lance depuis
 // la barre fixe, sur TOUTES les boîtes (la recherche reste une vue de navigation ;
@@ -13,6 +14,7 @@ async function registerAndStart(page: import('@playwright/test').Page, pseudo: s
   const reg = page.waitForResponse((r) => r.url().endsWith('/api/auth/register'));
   await page.getByRole('button', { name: 'Créer mon compte' }).click();
   await reg;
+  await passerBienvenue(page);
   const nightDone = page.waitForResponse((r) => r.url().endsWith('/api/nights') && r.request().method() === 'POST');
   await page.getByRole('button', { name: 'Créer la partie' }).click();
   const { nightId } = await (await nightDone).json() as { nightId: number }; // v3 : étagère vide à la création

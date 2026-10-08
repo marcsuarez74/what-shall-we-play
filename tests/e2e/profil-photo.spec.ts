@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import zlib from 'node:zlib';
+import { passerBienvenue } from './helpers/inscription';
 
 // PNG 1200×1600 (portrait, comme une photo de téléphone) — dégradé R=x, G=y, B=128.
 // Le dégradé permet de vérifier QUELLE partie de l'image a été recadrée.
@@ -48,6 +49,7 @@ async function registerAndStart(page: import('@playwright/test').Page, pseudo: s
   const reg = page.waitForResponse((r) => r.url().endsWith('/api/auth/register'));
   await page.getByRole('button', { name: 'Créer mon compte' }).click();
   await reg;
+  await passerBienvenue(page);
   const nightDone = page.waitForResponse((r) => r.url().endsWith('/api/nights') && r.request().method() === 'POST');
   await page.getByRole('button', { name: 'Créer la partie' }).click();
   await nightDone;

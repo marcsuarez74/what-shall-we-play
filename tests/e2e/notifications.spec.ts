@@ -1,4 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
+import { passerBienvenue } from './helpers/inscription';
 
 // v4.9.0 — notifications push : la carte du profil, les préférences par type, le service worker.
 // (L'abonnement réel exige un service de push joignable : couvert en unitaire, envoi simulé.)
@@ -10,7 +11,7 @@ async function register(page: Page, pseudo: string) {
   const reg = page.waitForResponse((r) => r.url().endsWith('/api/auth/register'));
   await page.getByRole('button', { name: 'Créer mon compte' }).click();
   await reg;
-  await page.waitForURL('/etagere');
+  await passerBienvenue(page);
 }
 
 test('profil : proposer d’activer ; bloquées par le navigateur → explication', async ({ browser }) => {

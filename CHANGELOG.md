@@ -4,6 +4,17 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [4.18.0] — 2026-10-08
+
+### Ajouté
+Ajouter ses jeux dès la création du compte (maquette validée : `mockup/2026-10-08-v4180-onboarding-jeux.html`).
+- Après « Créer mon compte », une **étape ② « Tes jeux »** propose trois façons de remplir sa
+  ludothèque : **rechercher** sur BoardGameGeek (un tap = ajouté), **importer sa collection BGG**
+  (seuls les jeux absents sont ajoutés, rien n'est écrasé) ou **saisir à la main**.
+- Chaque jeu ajouté arrive en format **Grand** ; une puce permet de changer le format, ✕ le retire.
+- « Terminer » (ou « Passer pour l'instant ») mène à **Ma ludothèque**, où une petite alerte
+  s'affiche **une seule fois**. Une inscription depuis un lien d'invitation y revient ensuite.
+
 ## [4.17.0] — 2026-10-07
 
 ### Ajouté

@@ -14,7 +14,7 @@ const TABS: { href: string; icon: string; label: CléDict }[] = [
 
 // La roue, les écrans de connexion et la jointure invité restent hors navigation
 // (moment plein écran / pas de session).
-const HIDDEN = ['/login', '/register', '/tirage', '/ami'];
+const HIDDEN = ['/login', '/register', '/bienvenue', '/tirage', '/ami'];
 // v4.8.0 : pastille cuivre sur « Parties » = invitations sans réponse.
 export default function TabBar({ invitations = 0 }: { invitations?: number }) {
   const path = usePathname();
