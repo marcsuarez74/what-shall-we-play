@@ -385,32 +385,45 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--cuivre); ou
 .prog li:first-child { border-top:0; }
 .ok { color:#9fd8b8; font-weight:700; }
 </style>
-<div class="wrap"><section class="intro"><div><p class="eyebrow">Maquette fonctionnelle · v1 · à valider</p><h1>Choix libre 🎲 — le mode marathon</h1><p class="lead">La roue reste le mode <b>par défaut</b>. Pour un marathon ou une soirée où chacun sait ce qu'il veut, le créateur choisit <b>Choix libre</b> : pas de tirage, on <b>enchaîne les jeux</b> dans la même partie et chacun déclare depuis son téléphone « <b>J'ai joué</b> » et son score.</p>
+<style>
+.manche { background:color-mix(in srgb, var(--surface) 60%, transparent); border-radius:14px; padding:10px; display:flex; flex-direction:column; gap:6px; }
+.manche-h { display:flex; justify-content:space-between; align-items:baseline; font-size:12px; color:var(--doux-clair); text-transform:uppercase; letter-spacing:.06em; font-weight:700; }
+.sans-score { font-size:12.5px; color:var(--doux-clair); padding:2px 4px; }
+.podium-nuit { display:flex; gap:6px; flex-wrap:wrap; }
+.podium-nuit span { background:var(--noyer); border-radius:999px; padding:4px 9px; font-size:12.5px; }
+.hist-jeux .manche-n { color:var(--doux-clair); font-size:11.5px; }
+</style>
+<div class="wrap"><section class="intro"><div><p class="eyebrow">Maquette fonctionnelle · v2 · à valider</p><h1>Choix libre 🎲 — le mode marathon</h1><p class="lead">La roue reste le mode <b>par défaut</b>. Pour un marathon ou une soirée où chacun sait ce qu'il veut, le créateur choisit <b>Choix libre</b> : pas de tirage, on <b>enchaîne les jeux</b> dans la même partie et chacun déclare depuis son téléphone « <b>J'ai joué</b> » et son score.</p>
 <div class="bloc" style="margin-top:16px"><h2>Règles</h2><ul>
 <li><b>Le réglage</b> « Choix du jeu » : à la création et dans « Modifier la partie » (créateur). Tirage au sort par défaut. Changer de mode ne détruit rien.</li>
 <li><b>L'étagère</b> : pas de roue ni de « Lancer ». Dans chaque rangée, <b>les plus votés 👍 à gauche</b> (à égalité : l'ordre actuel). Votes et vetos restent ouverts toute la partie, et on peut encore ajouter des jeux.</li>
-<li><b>Le veto</b> garde sa place : la boîte est grisée, « J'ai joué » y est désactivé (un jeu déjà joué ne peut plus être vetoé).</li>
-<li><b>J'ai joué</b> : touche une boîte → fiche → « J'ai joué » → score <i>facultatif</i> (coopératif = vide). <b>Une déclaration par joueur et par jeu</b> ; si tu rejoues, mets ton score à jour. Tu modifies ou retires la tienne, jamais celle des autres.</li>
-<li><b>Classement par jeu</b> : tous ceux qui ont déclaré ce jeu dans la partie, sans notion de table. La boîte affiche « ✓ N » joueurs.</li>
-<li><b>Terminer</b> : le créateur termine la partie ; l'historique liste les jeux joués avec leur gagnant. Chaque jeu compte comme <b>joué</b> dans les stats du profil (parties, podiums) et dans le programme d'un événement.</li>
-</ul></div></div><div class="bloc"><h2>Questions ouvertes</h2><ul class="questions">
-<li><b>Tri par votes</b> : à l'intérieur de chaque rangée (les rangées restent par taille de boîte, comme une vraie étagère) — proposé ici. Alternative : une seule rangée « Les plus votés » en tête.</li>
-<li><b>Podium du profil</b> : chaque jeu d'un marathon compte comme un podium à part entière (proposé), ou un seul par partie ?</li>
-<li><b>Avis 😍/👍/😐</b> : pas dans ce lot pour le Choix libre (KISS).</li>
+<li><b>Le veto</b> garde sa place : la boîte est grisée, on ne peut pas la déclarer jouée (un jeu déjà joué ne peut plus être vetoé).</li>
+<li><b>J'ai joué</b> : touche une boîte → fiche → « J'ai joué » → score <i>facultatif</i> (coopératif = vide). Tu modifies ou retires ta déclaration, jamais celle des autres.</li>
+<li><b>Manches</b> : un même jeu peut être joué plusieurs fois dans la soirée. « 🔁 Nouvelle manche » ouvre une manche vierge ; les autres rejoignent la manche à laquelle ils ont joué (« J'ai joué cette manche »). Un joueur = une déclaration par manche.</li>
+<li><b>Classement d'une manche</b> : seuls ceux qui ont saisi un score sont classés. Les joueurs sans score sont listés à part, « a joué, sans score ».</li>
+<li><b>Podium de la partie</b> : <b>un seul par partie</b>, comme aujourd'hui. Il classe les joueurs au <b>nombre de manches gagnées</b> (égalité = même marche). C'est ce podium qui compte dans le profil.</li>
+<li><b>Terminer</b> : le créateur termine la partie ; l'historique liste les manches jouées avec leur gagnant, et le podium de la partie. Un jeu joué au moins une fois est coché « joué » dans le programme d'un événement.</li>
+</ul></div></div><div class="bloc"><h2>Tes décisions (v1 → v2)</h2><ul class="questions">
+<li>Tri : <b>les plus votés à gauche</b> dans chaque rangée, pas de rangée en plus.</li>
+<li><b>Un podium par partie</b> (pas un par jeu).</li>
+<li>Sans score = hors classement.</li>
+<li>Pas de notification après la saisie du score.</li>
+<li>Rejouer le même jeu : géré par les manches.</li>
+<li>Avis 😍/👍/😐 : pas en Choix libre dans ce lot.</li>
 </ul></div></section>
 <section><div class="cercle-head"><h2>Le parcours</h2><p>Les mêmes composants que l'app : tout est cliquable. Tu es <b>Marc</b>, créateur de la partie.</p></div><div class="phones"><div class="ecran" style="max-width:380px"><div class="ecran-titre"><span class="id">▶</span><h3>Parcours interactif</h3></div>
 <div class="phone sp"><div class="status"><span>19:30</span><span>●●● 5G</span></div><div class="scroll" id="sp"></div><div class="tabbar" id="tb"></div></div>
 <div class="scen"></div></div>
 <div class="ecran" style="max-width:520px"><div class="ecran-titre"><span class="id">1</span><h3>À essayer, dans l'ordre</h3></div>
 <div class="bloc"><ul class="questions">
-<li><b>Nouvelle partie</b> : sous « Qui joue ? », le choix <b>🎡 Tirage au sort</b> (coché par défaut) ou <b>🎲 Choix libre</b>. Choisis Choix libre puis « Créer la partie ».</li>
-<li><b>L'étagère</b> : badge « Choix libre », pas de bouton Lancer. Azul (2 👍) est à gauche de sa rangée ; mets un 👍 sur Splendor : il passe devant Kingdomino.</li>
-<li><b>Touche Azul</b> → « 🎲 J'ai joué » → tape 42 → Valider : tu apparais dans le classement, la boîte prend « ✓ ».</li>
-<li>Scénario « Léa et Julie ont joué à Azul » : rouvre Azul, le classement se remplit (Julie en coopératif sans score).</li>
-<li>Rouvre ta déclaration : « Modifier mon score » ou « Retirer ».</li>
+<li><b>Nouvelle partie</b> : sous « Qui joue ? », choisis <b>🎲 Choix libre</b> puis « Créer la partie ».</li>
+<li><b>L'étagère</b> : Azul (2 👍) est à gauche de sa rangée ; mets un 👍 sur Splendor : il passe devant Codenames.</li>
+<li><b>Touche Azul</b> → « 🎲 J'ai joué » → 42 → Valider : manche 1 créée, tu es classé.</li>
+<li>Scénario « Azul : 2 manches » : la manche 1 a un joueur sans score (hors classement) ; la manche 2 attend ta déclaration (« J'ai joué cette manche »).</li>
+<li>« 🔁 Nouvelle manche » pour rejouer Azul.</li>
 <li>Gloomhaven vetoé par Léa : « J'ai joué » est désactivé.</li>
-<li><b>Terminer la partie</b> (zone basse) : la carte d'historique liste les jeux et leurs gagnants, puis le profil et le programme d'un événement les comptent.</li></ul></div>
-<div class="scen"><button type="button" onclick="SCEN({screen:'creer'})">1 · Nouvelle partie</button><button type="button" onclick="SCEN({screen:'etagere'})">2 · Étagère Choix libre</button><button type="button" onclick="SCEN({screen:'etagere',plays:{4:{'Léa':51,'Julie':null},8:{'Tom':17,'Léa':21}}})">Léa et Julie ont joué à Azul</button><button type="button" onclick="SCEN({screen:'etagere',sheet:4,plays:{4:{'Marc':42,'Léa':51,'Julie':null}}})">Fiche d'Azul après 3 déclarations</button><button type="button" onclick="SCEN({screen:'histo',plays:DEMO})">3 · Historique</button><button type="button" onclick="SCEN({screen:'profil',plays:DEMO})">4 · Profil &amp; événement</button></div></div></div></section></div><script>
+<li><b>Terminer la partie</b> : l'historique liste les manches, leurs gagnants et le podium de la partie.</li></ul></div>
+<div class="scen"><button type="button" onclick="SCEN({screen:'creer'})">1 · Nouvelle partie</button><button type="button" onclick="SCEN({screen:'etagere'})">2 · Étagère Choix libre</button><button type="button" onclick="SCEN({screen:'etagere',sheet:4,plays:{4:[{'Léa':51,'Tom':38,'Julie':null},{'Julie':44}]}})">Azul : 2 manches</button><button type="button" onclick="SCEN({screen:'histo',plays:DEMO})">3 · Historique</button></div></div></div></section></div><script>
 const SCALE = {grand:1, moyen:.78, petit:.62, mini:.45}, FMT = ['grand','moyen','petit','mini'], FLAB = {grand:'Grande boîte', moyen:'Boîte moyenne', petit:'Petite boîte', mini:'Mini boîte'};
 const G = [
  [1,'Terraforming Mars','grand',1,5,120,3.2,'#8a4b2b','🦊'],[2,'Gloomhaven','grand',1,4,120,3.9,'#4a5d7a','🎲'],[3,'Wingspan','grand',1,5,70,2.4,'#5E8A3E','🎲'],
@@ -418,16 +431,22 @@ const G = [
  [8,'Kingdomino','petit',2,4,20,1.2,'#3e6a9b','🦊'],[9,'Splendor','petit',2,4,30,1.8,'#8a3e5a','🎲'],[10,'Love Letter','mini',2,4,20,1.1,'#9b3e3e','🐻'],
  [11,'Codenames','petit',2,8,15,1.3,'#3e8a6a','🎲'],[13,'Dixit','moyen',3,8,30,1.2,'#9b7a3e','🐻'],[14,'Carcassonne','petit',2,5,35,1.9,'#5a7a3e','🎲'],
 ].map(([id,t,f,a,b,d,w,c,o])=>({id,t,f,a,b,d,w,c,o}));
-const DEMO={4:{'Marc':42,'Léa':51,'Julie':null},8:{'Tom':17,'Léa':21,'Marc':24},3:{'Marc':88,'Julie':92,'Tom':71},11:{'Marc':null,'Julie':null,'Tom':null,'Léa':null}};
+// plays : { gameId: [ manche, manche… ] }, manche = { joueur: score | null }
+const DEMO={4:[{'Marc':42,'Léa':51,'Tom':38},{'Marc':47,'Julie':44}],8:[{'Tom':17,'Léa':21,'Marc':24}],3:[{'Marc':88,'Julie':92,'Tom':71,'Léa':null}],11:[{'Marc':null,'Julie':null,'Tom':null,'Léa':null}]};
 const AV={Marc:'🎲',Julie:'🦊',Tom:'🐻',Léa:'🐙'};
 const ME='Marc';
-const base=()=>({screen:'creer', mode:'tirage', sheet:null, saisie:false, score:'', votes:{4:['Léa','Tom'],5:['Léa'],7:['Julie'],3:['Tom'],8:['Julie']}, vetos:{2:'Léa'}, plays:{}, toast:'', fin:false});
+const base=()=>({screen:'creer', mode:'tirage', sheet:null, saisie:null, score:'', votes:{4:['Léa','Tom'],5:['Léa'],7:['Julie'],3:['Tom'],8:['Julie'],11:['Tom']}, vetos:{2:'Léa'}, plays:{}, toast:'', fin:false});
 let ST=base();
 const $=(s)=>document.querySelector(s);
-const nv=(g)=>(ST.votes[g.id]||[]).length, vetoed=(g)=>!!ST.vetos[g.id], joueurs=(g)=>Object.keys(ST.plays[g.id]||{});
-const medal=(i)=>['🥇','🥈','🥉'][i]||`${i+1}`;
-function rang(id){const p=ST.plays[id]||{}, k=Object.keys(p);
-  return k.sort((a,b)=>(p[b]==null)-(p[a]==null)||(p[b]??0)-(p[a]??0));}
+const nv=(g)=>(ST.votes[g.id]||[]).length, vetoed=(g)=>!!ST.vetos[g.id], manches=(id)=>(ST.plays[id]||[]).filter(m=>Object.keys(m).length);
+const medal=(r)=>['🥇','🥈','🥉'][r]||`${r+1}ᵉ`;
+// classés (score saisi, rang dense : égalité = même marche) et sans score
+function classe(m){const S=Object.keys(m).filter(n=>m[n]!=null).sort((a,b)=>m[b]-m[a]), vals=[...new Set(S.map(n=>m[n]))];
+  return {S:S.map(n=>({n,pts:m[n],r:vals.indexOf(m[n])})), sans:Object.keys(m).filter(n=>m[n]==null)};}
+function gagnants(m){return classe(m).S.filter(x=>x.r===0).map(x=>x.n);}
+function podiumNuit(){const v={}; Object.keys(ST.plays).forEach(id=>manches(id).forEach(m=>gagnants(m).forEach(n=>v[n]=(v[n]||0)+1)));
+  const N=Object.keys(v).sort((a,b)=>v[b]-v[a]), vals=[...new Set(N.map(n=>v[n]))]; return N.map(n=>({n,v:v[n],r:vals.indexOf(v[n])})).filter(x=>x.r<3);}
+const nbManches=()=>Object.keys(ST.plays).reduce((s,id)=>s+manches(id).length,0);
 function toast(m){ST.toast=m;draw();setTimeout(()=>{ST.toast='';draw()},2200)}
 function tab(on){$('#tb').innerHTML=[['etagere','🗄️','Étagère'],['ludo','📚','Ludo'],['add','➕','Ajouter'],['parties','🎲','Parties'],['amis','👥','Amis']].map(([k,i,l])=>`<span class="${k===on?'on':''}"><i>${i}</i>${l}</span>`).join('');}
 function creer(){tab('parties');
@@ -439,54 +458,58 @@ function creer(){tab('parties');
   <span class="sous-label">Choix du jeu</span><div class="mode-cards">${m('tirage','🎡','Tirage au sort','La roue choisit parmi les jeux de l’étagère. Une partie, un jeu.')}${m('libre','🎲','Choix libre','Pas de roue : on enchaîne les jeux, chacun déclare « J’ai joué » et son score. Idéal pour un marathon.')}</div>
   <p class="hint">Modifiable ensuite dans « Modifier la partie ».</p>
   <button class="btn-copper" data-a="creer" type="button">Créer la partie</button>`;}
-function fiche(){const g=G.find(x=>x.id===ST.sheet), by=ST.vetos[g.id], p=ST.plays[g.id]||{}, moi=ME in p, R=rang(g.id);
-  let h=`<div class="backdrop" data-a="close"><div class="bsheet" data-stop role="dialog" aria-label="${g.t}"><button class="sheet-close" data-a="close" type="button">✕</button><div class="sheet-head"><div class="sheet-cover" style="background:${g.c}">${g.t.split(' ')[0]}</div><div class="sheet-titles"><h2>${g.t}</h2><p class="sheet-meta">Éditeur · 2019</p></div></div>
+function form(gid,k){return `<div class="joue-form"><label class="sous-label" for="sc">Mon score <small style="text-transform:none;letter-spacing:0">— facultatif (coopératif : laisse vide)</small></label><div class="ligne"><input id="sc" inputmode="numeric" placeholder="Ex. 42" value="${ST.score}"><button class="btn-copper sm" data-a="valider" data-v="${gid}" data-k="${k}" type="button">Valider</button></div><button class="link-btn" data-a="annul" type="button">Annuler</button></div>`;}
+function blocManche(g,m,k,total){const {S,sans}=classe(m), moi=ME in m;
+  let h=`<div class="manche"><div class="manche-h"><span>${total>1?`Manche ${k+1}`:'Classement'}</span><span>${Object.keys(m).length} joueur${Object.keys(m).length>1?'s':''}</span></div>`;
+  if(S.length) h+=`<ul class="classement">`+S.map(x=>`<li class="${x.n===ME?'moi':''}"><span class="rang">${medal(x.r)}</span>${AV[x.n]} ${x.n}${x.n===ME?' <small class="opt">toi</small>':''}<span class="pts">${x.pts} pts</span></li>`).join('')+`</ul>`;
+  if(sans.length) h+=`<p class="sans-score">A joué, sans score : ${sans.map(n=>`${AV[n]} ${n}${n===ME?' (toi)':''}`).join(', ')}</p>`;
+  if(ST.saisie===k) h+=form(g.id,k);
+  else if(moi) h+=`<div class="mini-actions"><button class="link-btn" data-a="joue" data-k="${k}" type="button">Modifier mon score</button><button class="link-btn" data-a="retirer" data-v="${g.id}" data-k="${k}" type="button">Retirer</button></div>`;
+  else h+=`<button class="btn-ghost sm" data-a="joue" data-k="${k}" type="button">🎲 J’ai joué cette manche</button>`;
+  return h+`</div>`;}
+function fiche(){const g=G.find(x=>x.id===ST.sheet), by=ST.vetos[g.id], M=ST.plays[g.id]||[];
+  let h=`<div class="backdrop" data-a="close"><div class="bsheet" role="dialog" aria-label="${g.t}"><button class="sheet-close" data-a="close" type="button">✕</button><div class="sheet-head"><div class="sheet-cover" style="background:${g.c}">${g.t.split(' ')[0]}</div><div class="sheet-titles"><h2>${g.t}</h2><p class="sheet-meta">Éditeur · 2019</p></div></div>
   <div class="chips"><span class="chip">👥 ${g.a}–${g.b}</span><span class="chip">⏱ ${g.d} min</span><span class="chip">⚖ ${String(g.w).replace('.',',')} / 5</span><span class="chip">👍 ${nv(g)}</span></div>`;
   if(by) h+=`<button class="btn-joue" disabled type="button">🎲 J’ai joué</button><p class="hint">Écarté par ${by} : on ne le sort pas.</p>`;
-  else if(ST.saisie) h+=`<div class="joue-form"><label class="sous-label" for="sc">Mon score <small style="text-transform:none;letter-spacing:0">— facultatif (coopératif : laisse vide)</small></label><div class="ligne"><input id="sc" inputmode="numeric" placeholder="Ex. 42" value="${ST.score}"><button class="btn-copper sm" data-a="valider" data-v="${g.id}" type="button">Valider</button></div><button class="link-btn" data-a="annul" type="button">Annuler</button></div>`;
-  else if(!moi) h+=`<button class="btn-joue" data-a="joue" type="button">🎲 J’ai joué</button>`;
-  if(R.length){h+=`<span class="sous-label">Classement de la partie · ${R.length} joueur${R.length>1?'s':''}</span><ul class="classement">`+R.map((n,i)=>`<li class="${n===ME?'moi':''}"><span class="rang">${p[n]==null?'·':medal(i)}</span>${AV[n]} ${n}${n===ME?' <small class="opt">toi</small>':''}<span class="pts ${p[n]==null?'vide':''}">${p[n]==null?'sans score':p[n]+' pts'}</span></li>`).join('')+`</ul>`;
-    if(moi&&!ST.saisie) h+=`<div class="mini-actions"><button class="link-btn" data-a="joue" type="button">Modifier mon score</button><button class="link-btn" data-a="retirer" data-v="${g.id}" type="button">Retirer ma déclaration</button></div>`;}
-  if(!by&&!R.length&&ST.vetos&&!Object.values(ST.vetos).includes(ME)) h+=`<button class="btn-veto2" type="button" data-a="veto" data-v="${g.id}">❌ Mettre un veto — pas ce soir</button>`;
+  else if(!M.length) h+= ST.saisie===0 ? form(g.id,0) : `<button class="btn-joue" data-a="joue" data-k="0" type="button">🎲 J’ai joué</button>`;
+  else { M.forEach((m,k)=>h+=blocManche(g,m,k,M.length+(ST.saisie===M.length?1:0)));
+    h+= ST.saisie===M.length ? `<div class="manche"><div class="manche-h"><span>Manche ${M.length+1}</span><span>nouvelle</span></div>${form(g.id,M.length)}</div>` : `<button class="btn-joue" data-a="joue" data-k="${M.length}" type="button" style="background:var(--surface-plus)">🔁 Nouvelle manche</button>`; }
+  if(!by&&!M.length&&!Object.values(ST.vetos).includes(ME)) h+=`<button class="btn-veto2" type="button" data-a="veto" data-v="${g.id}">❌ Mettre un veto — pas ce soir</button>`;
   h+=`<button class="btn-exclude" type="button">Retirer de la partie</button></div></div>`; return h;}
-function etagere(){tab('etagere'); const nj=Object.keys(ST.plays).filter(k=>joueurs({id:+k}).length).length;
+function etagere(){tab('etagere'); const nm=nbManches();
   let h=`<div class="page-head"><h1>Étagère</h1><span class="user-chip">🎲 M ▾</span></div>`;
-  h+=`<div class="night-card"><div class="card-head"><span class="badge b-libre"><span class="pt"></span>Choix libre · ${nj} jeu${nj>1?'x':''} joué${nj>1?'s':''}</span><button class="link-btn" type="button">Modifier</button></div><p class="titre-soiree">Marathon du samedi</p><div class="chips"><span class="chip">🎲 Marc</span><span class="chip">🦊 Julie</span><span class="chip">🐻 Tom</span><span class="chip">🐙 Léa</span></div></div>`;
+  h+=`<div class="night-card"><div class="card-head"><span class="badge b-libre"><span class="pt"></span>Choix libre · ${nm} jeu${nm>1?'x':''} joué${nm>1?'s':''}</span><button class="link-btn" type="button">Modifier</button></div><p class="titre-soiree">Marathon du samedi</p><div class="chips"><span class="chip">🎲 Marc</span><span class="chip">🦊 Julie</span><span class="chip">🐻 Tom</span><span class="chip">🐙 Léa</span></div></div>`;
   h+=`<div class="collection-controls"><div class="controls-row"><input class="shelf-search" placeholder="Rechercher un jeu…"><button class="fbtn" type="button">Filtres</button></div></div>`;
   FMT.forEach(fm=>{const L=G.filter(g=>g.f===fm).map((g,i)=>[g,i]).sort((a,b)=>nv(b[0])-nv(a[0])||a[1]-b[1]).map(x=>x[0]); if(!L.length)return;
-    h+=`<section class="shelf-block"><div class="row">`+L.map(g=>{const w=96*SCALE[fm], vt=vetoed(g), j=joueurs(g), mine=(ST.votes[g.id]||[]).includes(ME);
-      return `<button class="box ${SCALE[fm]<.7?'sm':''} ${vt?'veto':''} ${j.includes(ME)?'moi-joue':''}" style="width:${w}px;height:${w}px" data-a="open" data-v="${g.id}" type="button"><div class="art" style="background:${g.c}">${g.t}</div><span class="owner-badge">${g.o}</span>`+
-      (j.length?`<span class="joue-badge" title="${j.join(', ')}">✓ ${j.length}</span>`:'')+
+    h+=`<section class="shelf-block"><div class="row">`+L.map(g=>{const w=96*SCALE[fm], vt=vetoed(g), M=manches(g.id), mine=(ST.votes[g.id]||[]).includes(ME), moi=M.some(m=>ME in m);
+      return `<button class="box ${SCALE[fm]<.7?'sm':''} ${vt?'veto':''} ${moi?'moi-joue':''}" style="width:${w}px;height:${w}px" data-a="open" data-v="${g.id}" type="button"><div class="art" style="background:${g.c}">${g.t}</div><span class="owner-badge">${g.o}</span>`+
+      (M.length?`<span class="joue-badge">${M.length>1?`✓ ×${M.length}`:'✓'}</span>`:'')+
       (vt?`<span class="veto-badge">❌ ${ST.vetos[g.id]}</span>`:`<span class="vote-badge ${mine?'vote-moi':''}" data-a="vote" data-v="${g.id}"><span class="emoji">👍</span>${nv(g)}</span>`)+`</button>`}).join('')+`</div><div class="rail"></div><p class="row-label">${FLAB[fm]} — on swipe ›</p></section>`;});
-  h+=`<div class="cta-zone"><p class="cta-statut">Touche une boîte puis <b>J’ai joué</b> · les plus votés à gauche</p><button class="btn-ghost" data-a="fin" type="button" style="width:100%">Terminer la partie · ${nj} jeu${nj>1?'x':''}</button>${ST.fin?`<div class="info">Terminer « Marathon du samedi » ? Les déclarations sont gardées, l’étagère est figée. <div class="mini-actions" style="margin-top:6px"><button class="btn-copper sm" data-a="terminer" type="button">Terminer</button><button class="btn-ghost sm" data-a="nofin" type="button">Annuler</button></div></div>`:''}</div>`;
+  h+=`<div class="cta-zone"><p class="cta-statut">Touche une boîte puis <b>J’ai joué</b> · les plus votés à gauche</p><button class="btn-ghost" data-a="fin" type="button" style="width:100%">Terminer la partie</button>${ST.fin?`<div class="info">Terminer « Marathon du samedi » ? Les déclarations sont gardées, l’étagère est figée. <div class="mini-actions" style="margin-top:6px"><button class="btn-copper sm" data-a="terminer" type="button">Terminer</button><button class="btn-ghost sm" data-a="nofin" type="button">Annuler</button></div></div>`:''}</div>`;
   if(ST.sheet) h+=fiche(); return h;}
-function histo(){tab('parties'); const L=Object.keys(ST.plays).map(Number).filter(id=>joueurs({id}).length);
+function histo(){tab('parties'); const L=[]; Object.keys(ST.plays).map(Number).forEach(id=>{const M=manches(id); M.forEach((m,k)=>L.push([id,m,k,M.length]))});
+  const P=podiumNuit();
   return `<div class="page-head"><h1>Parties</h1><span class="user-chip">🎲 M ▾</span></div><div class="seg"><button aria-pressed="false" type="button">À venir</button><button aria-pressed="true" type="button">Historique</button></div>
   <div class="hist-card2"><div class="card-head"><span class="badge b-libre"><span class="pt"></span>Choix libre · terminée</span><span class="meta">sam. 10 oct.</span></div><h3>Marathon du samedi</h3><p class="meta">4 joueurs · ${L.length} jeux joués</p>
-  <ul class="hist-jeux">${L.map(id=>{const g=G.find(x=>x.id===id), R=rang(id), p=ST.plays[id], w=R[0];
-    return `<li><span class="pastille-jeu" style="background:${g.c}"></span>${g.t} <small class="opt">${R.length} j.</small><span class="gagnant">${p[w]==null?'🤝 coopératif':`🥇 ${AV[w]} ${w} · ${p[w]}`}</span></li>`}).join('')}</ul></div>
+  ${P.length?`<span class="sous-label">Podium de la partie · manches gagnées</span><div class="podium-nuit">${P.map(x=>`<span>${medal(x.r)} ${AV[x.n]} ${x.n} · ${x.v}</span>`).join('')}</div>`:''}
+  <span class="sous-label">Jeux joués</span><ul class="hist-jeux">${L.map(([id,m,k,t])=>{const g=G.find(x=>x.id===id), W=gagnants(m), first=classe(m).S[0];
+    return `<li><span class="pastille-jeu" style="background:${g.c}"></span>${g.t}${t>1?` <span class="manche-n">· manche ${k+1}</span>`:''}<span class="gagnant">${W.length?`🥇 ${W.map(n=>AV[n]+' '+n).join(', ')} · ${first.pts}`:'🤝 sans score'}</span></li>`}).join('')}</ul></div>
   <div class="hist-card2" style="opacity:.75"><div class="card-head"><span class="badge b-prep" style="opacity:.8"><span class="pt"></span>Terminée</span><span class="meta">jeu. 8 oct.</span></div><h3>Soirée Azul &amp; co</h3><p class="meta">Tirage au sort · Azul · 🥇 🐙 Léa</p></div>
-  <p class="hint">Une partie classique garde sa carte actuelle. En touchant la carte du marathon, le détail montre le podium de chaque jeu.</p>`;}
-function profil(){tab('');
-  return `<div class="page-head"><h1>Profil</h1><span class="user-chip">🎲 M ▾</span></div><span class="sous-label">Mes stats</span>
-  <div class="stat-row"><div><b>27</b>jeux joués <span class="ok">+4</span></div><div><b>9</b>🥇 <span class="ok">+1</span></div><div><b>6</b>🥈 🥉 <span class="ok">+2</span></div></div>
-  <p class="hint">Le marathon compte <b>4 jeux joués</b> (Azul, Wingspan, Kingdomino, Codenames) : 🥇 à Kingdomino, 🥈 à Azul et Wingspan. Codenames est coopératif : compté comme joué, sans podium.</p>
-  <span class="sous-label">Événement « Week-end jeux »</span><div class="hist-card2"><h3>Au programme</h3><ul class="prog"><li>Azul <span class="ok">✓ joué</span></li><li>Wingspan <span class="ok">✓ joué</span></li><li>Gloomhaven <span class="opt">pas encore</span></li><li>Kingdomino <span class="ok">✓ joué</span></li></ul></div>
-  <p class="hint">Un jeu déclaré dans une partie Choix libre rattachée à l’événement est coché « joué », comme une partie classique.</p>`;}
-function draw(){const s=ST.screen; let h=s==='creer'?creer():s==='etagere'?etagere():s==='histo'?histo():profil();
+  <p class="hint">Une partie classique garde sa carte actuelle. Dans le profil, le marathon compte comme <b>une</b> partie, avec ce podium.</p>`;}
+function draw(){const s=ST.screen; let h=s==='creer'?creer():s==='etagere'?etagere():histo();
   if(ST.toast) h+=`<div class="toast2">${ST.toast}</div>`;
-  const el=$('#sp'), top=el.scrollTop; el.innerHTML=h; el.scrollTop=top; if(ST.saisie){const i=$('#sc'); if(i){i.focus(); i.oninput=()=>ST.score=i.value;}}}
+  const el=$('#sp'), top=el.scrollTop; el.innerHTML=h; el.scrollTop=top; if(ST.saisie!=null){const i=$('#sc'); if(i){i.focus(); i.oninput=()=>ST.score=i.value;}}}
 document.addEventListener('click',(e)=>{const t=e.target.closest('#sp [data-a]'); if(!t) return;
-  const a=t.dataset.a, v=t.dataset.v;
+  const a=t.dataset.a, v=t.dataset.v, k=+t.dataset.k;
   if(a==='close'&&t.classList.contains('backdrop')&&e.target!==t) return;
   if(a==='mode')ST.mode=v;
-  if(a==='creer'){ if(ST.mode!=='libre'){toast('→ étagère classique, avec la roue');return} ST.screen='etagere'; draw(); toast('Partie créée · Choix libre'); return;}
-  if(a==='open'){ST.sheet=+v;ST.saisie=false} if(a==='close'){ST.sheet=null;ST.saisie=false}
+  if(a==='creer'){ if(ST.mode!=='libre'){toast('→ étagère classique, avec la roue');return} ST.screen='etagere'; draw(); return;}
+  if(a==='open'){ST.sheet=+v;ST.saisie=null} if(a==='close'){ST.sheet=null;ST.saisie=null}
   if(a==='vote'){e.stopPropagation(); const vs=ST.votes[v]||[]; ST.votes[v]=vs.includes(ME)?vs.filter(x=>x!==ME):[...vs,ME];}
-  if(a==='joue'){ST.saisie=true; ST.score=(ST.plays[ST.sheet]||{})[ME]??'';}
-  if(a==='annul')ST.saisie=false;
-  if(a==='valider'){const s=ST.score.trim(); ST.plays[v]={...(ST.plays[v]||{}),[ME]:s===''?null:+s}; ST.saisie=false; draw(); toast(s===''?'Joué · sans score':'Joué · '+s+' pts'); return;}
-  if(a==='retirer'){const p={...ST.plays[v]}; delete p[ME]; ST.plays[v]=p; draw(); toast('Déclaration retirée'); return;}
+  if(a==='joue'){ST.saisie=k; ST.score=((ST.plays[ST.sheet]||[])[k]||{})[ME]??'';}
+  if(a==='annul')ST.saisie=null;
+  if(a==='valider'){const s=ST.score.trim(), M=[...(ST.plays[v]||[])]; M[k]={...(M[k]||{}),[ME]:s===''?null:+s}; ST.plays[v]=M; ST.saisie=null;}
+  if(a==='retirer'){const M=[...ST.plays[v]], m={...M[k]}; delete m[ME]; M[k]=m; ST.plays[v]=M.filter(x=>Object.keys(x).length);}
   if(a==='veto'){ST.vetos[v]=ME; ST.sheet=null; draw(); toast('❌ Veto posé'); return;}
   if(a==='fin')ST.fin=true; if(a==='nofin')ST.fin=false;
   if(a==='terminer'){ST.fin=false; ST.screen='histo';}
