@@ -7,6 +7,7 @@ import { filtrerJoueurs, inviter, oublierInvitations } from '@/lib/invitations';
 import { t } from '@/lib/i18n';
 import { getLang } from '@/lib/i18n/server';
 import { rattacher } from '@/lib/evenements';
+import { changerMode } from '@/lib/libre';
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const lang = await getLang();
@@ -28,6 +29,11 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     const { playerIds } = body;
     if (playerIds !== undefined && (!Array.isArray(playerIds) || !playerIds.includes(user.id)))
       return NextResponse.json({ error: t(lang, 'soiree.errDoitEtreDansSoiree') }, { status: 400 });
+    // v4.19.0 : choix du jeu (créateur, tant qu'aucune manche n'est déclarée) — vérifié avant toute autre écriture.
+    if (body.mode !== undefined) {
+      const r = changerMode(nightId, user.id, body.mode, lang);
+      if ('error' in r) return NextResponse.json({ error: r.error }, { status: r.status });
+    }
     // v4.15.0 : rattacher / détacher la partie d'un événement (créateur, participant de l'événement).
     if (body.evenementId !== undefined) {
       const r = rattacher(nightId, user.id, body.evenementId === null ? null : Number(body.evenementId), lang);

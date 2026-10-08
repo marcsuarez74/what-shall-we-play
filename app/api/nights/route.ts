@@ -38,18 +38,22 @@ export async function POST(req: Request) {
   const placesMax = body.placesMax == null || body.placesMax === '' ? null : Number(body.placesMax);
   if (placesMax !== null && (!Number.isInteger(placesMax) || placesMax < PLACES_MIN || placesMax > PLACES_MAX))
     return NextResponse.json({ error: t(lang, 'liste.errPlaces', { min: PLACES_MIN, max: PLACES_MAX }) }, { status: 400 });
+  // v4.19.0 : choix du jeu — tirage au sort (défaut) ou choix libre.
+  if (body.mode !== undefined && body.mode !== 'tirage' && body.mode !== 'libre')
+    return NextResponse.json({ error: t(lang, 'erreurs.requeteInvalide') }, { status: 400 });
+  const mode: 'tirage' | 'libre' = body.mode ?? 'tirage';
   if (playedAt && estFuture({ played_at: playedAt })) {
     // v4.14.0 : « Répéter » — chaque semaine (1) ou toutes les 2 semaines (2).
     if (body.repeter === 1 || body.repeter === 2) {
-      const serieId = creerSerie(user.id, { playedAt, startTime: startTime ?? null, titre: titre ?? null, pas: body.repeter, placesMax }, ids, viaCercles(user.id, body.cercleIds));
+      const serieId = creerSerie(user.id, { playedAt, startTime: startTime ?? null, titre: titre ?? null, pas: body.repeter, placesMax, mode }, ids, viaCercles(user.id, body.cercleIds));
       return NextResponse.json({ serieId });
     }
-    const nightId = createNight(user.id, [user.id], { playedAt, startTime, titre, placesMax });
+    const nightId = createNight(user.id, [user.id], { playedAt, startTime, titre, placesMax, mode });
     if (Number.isInteger(body.evenementId)) rattacher(nightId, user.id, body.evenementId as number, lang);
     inviter(nightId, user.id, ids, viaCercles(user.id, body.cercleIds));
     return NextResponse.json({ nightId });
   }
-  const nightId = createNight(user.id, filtrerJoueurs(user.id, ids), { playedAt, startTime, titre });
+  const nightId = createNight(user.id, filtrerJoueurs(user.id, ids), { playedAt, startTime, titre, mode });
   // v4.15.0 : partie démarrée dans un événement (participant) — rattachée avec ses seuls joueurs.
   if (Number.isInteger(body.evenementId)) rattacher(nightId, user.id, body.evenementId as number, lang);
   return NextResponse.json({ nightId });
