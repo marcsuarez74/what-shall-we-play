@@ -7,6 +7,7 @@ import { ALLOWED_STICKERS } from './stickers';
 import { t, type Lang } from './i18n';
 import type { UserRow } from './types';
 import type { Verdict } from './verdicts';
+import { podiumsLibres } from './libre';
 
 export { ALLOWED_STICKERS };
 
@@ -32,11 +33,12 @@ export function getProfileStats(userId: number): {
             FROM night_scores WHERE score IS NOT NULL)
           WHERE user_id = ?)`)
     .get(userId) as { un: number | null; deux: number | null; trois: number | null };
+  const libres = podiumsLibres(userId); // v4.19.0 : un podium par partie libre
   return {
     plays: one('SELECT COUNT(*) AS n FROM picks WHERE spinner_id = ?'),
     nights: one('SELECT COUNT(*) AS n FROM night_players WHERE user_id = ?'),
     games,
-    podiums: { un: pod.un ?? 0, deux: pod.deux ?? 0, trois: pod.trois ?? 0 },
+    podiums: { un: (pod.un ?? 0) + libres.un, deux: (pod.deux ?? 0) + libres.deux, trois: (pod.trois ?? 0) + libres.trois },
   };
 }
 
@@ -50,7 +52,7 @@ export function getMyParties(userId: number, limit = 6) {
   // « Scores à saisir »). Le filtre créateur/participant remplace celui qu'imposait
   // l'ancien INNER JOIN night_scores — sans lui, les nuits d'autrui fuieraient.
   return getDb().prepare(`
-    SELECT n.id, n.played_at, g.title AS game_title, g.cover_path, g.cover_url, ns.score, nv.verdict AS mon_verdict,
+    SELECT n.id, n.played_at, n.mode, g.title AS game_title, g.cover_path, g.cover_url, ns.score, nv.verdict AS mon_verdict,
       EXISTS(SELECT 1 FROM night_scores x WHERE x.night_id = n.id) AS a_scores
     FROM nights n
     LEFT JOIN night_scores ns ON ns.night_id = n.id AND ns.user_id = ?
@@ -58,7 +60,7 @@ export function getMyParties(userId: number, limit = 6) {
     LEFT JOIN night_verdicts nv ON nv.night_id = n.id AND nv.user_id = ?
     WHERE n.status = 'termine' AND (n.creator_id = ? OR EXISTS (SELECT 1 FROM night_players np WHERE np.night_id = n.id AND np.user_id = ?))
     ORDER BY n.played_at DESC, n.id DESC LIMIT ?`)
-    .all(userId, userId, userId, userId, limit) as { id: number; played_at: string; game_title: string | null; cover_path: string | null; cover_url: string | null; score: number | null; mon_verdict: Verdict | null; a_scores: number }[];
+    .all(userId, userId, userId, userId, limit) as { id: number; played_at: string; mode: 'tirage' | 'libre'; game_title: string | null; cover_path: string | null; cover_url: string | null; score: number | null; mon_verdict: Verdict | null; a_scores: number }[];
 }
 
 export function setSticker(userId: number, sticker: unknown, lang: Lang = 'fr'): { ok: true } | { error: string; status: number } {

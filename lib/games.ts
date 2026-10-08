@@ -79,7 +79,8 @@ export function canManageGame(userId: number, g: Game): boolean {
 export function deleteGame(userId: number, id: number, lang: Lang = 'fr'): { ok: true } | { error: string; status: number } {
   const g = getGame(id);
   if (!g || !canManageGame(userId, g)) return { error: t(lang, 'jeu.errIntrouvable'), status: 404 };
-  const picked = getDb().prepare('SELECT 1 FROM picks WHERE game_id = ? LIMIT 1').get(id);
+  // v4.19.0 : une manche déclarée en choix libre protège le jeu comme un tirage.
+  const picked = getDb().prepare('SELECT 1 FROM picks WHERE game_id = ? UNION ALL SELECT 1 FROM night_plays WHERE game_id = ? LIMIT 1').get(id, id);
   if (picked) return { error: t(lang, 'jeu.errDejaTire'), status: 409 };
   getDb().prepare('DELETE FROM games WHERE id = ?').run(id);
   return { ok: true };

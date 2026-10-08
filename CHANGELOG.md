@@ -4,6 +4,22 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [4.19.0] — 2026-10-09
+
+### Ajouté
+Le **choix du jeu** devient un réglage de la partie (maquette validée : `mockup/2026-10-08-v4190-choix-libre.html`).
+- 🎡 **Tirage au sort** : par défaut, rien ne change.
+- 🎲 **Choix libre** (marathon) : pas de roue. L'étagère reste ouverte toute la partie, les jeux
+  les plus votés 👍 à gauche de chaque rangée ; chacun touche une boîte et déclare « J'ai joué »,
+  avec un **score facultatif**.
+- **Manches** : un même jeu se rejoue (« 🔁 Nouvelle manche ») ; chaque manche a son classement,
+  les joueurs sans score sont listés à part. Chacun ne modifie ou ne retire que sa déclaration.
+- Un jeu vetoé ❌ n'est pas déclarable ; un jeu déjà joué ne peut plus être vetoé ni retiré.
+- Le créateur **termine la partie** (double appui) : l'historique montre le **podium de la partie**
+  (manches gagnées ; égalité = même médaille, manche gagnée par chacun) puis chaque manche et son gagnant.
+- Les jeux joués comptent dans le programme de l'événement et dans le profil.
+- Le mode se choisit à la création et reste modifiable par le créateur tant que la partie n'a pas commencé ni reçu de déclaration.
+
 ## [4.18.0] — 2026-10-08
 
 ### Ajouté

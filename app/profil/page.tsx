@@ -6,6 +6,7 @@ import { listUserLibrary } from '@/lib/games';
 import { verdictPersoStats } from '@/lib/verdicts';
 import { getNightScores } from '@/lib/nights';
 import { rankScores, medaille } from '@/lib/ranks';
+import { resumeLibre } from '@/lib/libre';
 import { getFoyerForUser } from '@/lib/foyers';
 import { t } from '@/lib/i18n';
 import { getLang } from '@/lib/i18n/server';
@@ -24,8 +25,14 @@ export default async function Page() {
   // « Mes parties » : la médaille se calcule CÔTÉ SERVEUR (rankScores sur les
   // scores de chaque soirée, ≤ 6 requêtes) — le client reçoit un simple string.
   const parties = getMyParties(user.id).map((p) => {
+    if (p.mode === 'libre') { // v4.19.0 : podium de la partie (manches gagnées), pas d'avis ni de carnet
+      const r = resumeLibre(p.id);
+      const moi = r.podium.find((x) => x.user_id === user.id);
+      return { ...p, libre: true, game_title: `${t(lang, 'libre.libre')} · ${t(lang, 'libre.resume', { j: r.jeux, m: r.manches })}`,
+        score: moi?.victoires ?? null, med: moi ? medaille(moi.rank) : '' };
+    }
     const moi = rankScores(getNightScores(p.id)).find((r) => r.user_id === user.id);
-    return { ...p, med: moi ? medaille(moi.rank) : '' };
+    return { ...p, libre: false, med: moi ? medaille(moi.rank) : '' };
   });
   // Le formulaire « partie passée » liste le foyer ; sans foyer, moi seul —
   // le composant suppose que moiId est dans la liste (chips + ligne de score).

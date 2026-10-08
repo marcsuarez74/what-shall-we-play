@@ -29,7 +29,7 @@ export function occurrencesAVenir(serieId: number): Night[] {
 
 // Ajoute une date à la série : mêmes titre, heure et invités que la date de base.
 function ajouterOccurrence(serieId: number, creatorId: number, base: Night, playedAt: string, push: boolean): number {
-  const nightId = createNight(creatorId, [creatorId], { playedAt, startTime: base.start_time ?? null, titre: base.titre ?? null, placesMax: base.places_max ?? null });
+  const nightId = createNight(creatorId, [creatorId], { playedAt, startTime: base.start_time ?? null, titre: base.titre ?? null, placesMax: base.places_max ?? null, mode: base.mode });
   getDb().prepare('UPDATE nights SET serie_id = ? WHERE id = ?').run(serieId, nightId);
   const invites = getDb().prepare('SELECT user_id, via_cercle FROM night_invites WHERE night_id = ?')
     .all(base.id) as { user_id: number; via_cercle: number | null }[];
@@ -42,12 +42,12 @@ function ajouterOccurrence(serieId: number, creatorId: number, base: Night, play
 // suivantes reprennent ses invités sans nouvelle notification.
 export function creerSerie(
   creatorId: number,
-  opts: { playedAt: string; startTime: string | null; titre: string | null; pas: 1 | 2; placesMax?: number | null },
+  opts: { playedAt: string; startTime: string | null; titre: string | null; pas: 1 | 2; placesMax?: number | null; mode?: 'tirage' | 'libre' },
   ids: number[], viaCercle: Map<number, number> = new Map(),
 ): number {
   const db = getDb();
   const serieId = Number(db.prepare('INSERT INTO series (creator_id, pas) VALUES (?, ?)').run(creatorId, opts.pas).lastInsertRowid);
-  const premiere = createNight(creatorId, [creatorId], { playedAt: opts.playedAt, startTime: opts.startTime, titre: opts.titre, placesMax: opts.placesMax ?? null });
+  const premiere = createNight(creatorId, [creatorId], { playedAt: opts.playedAt, startTime: opts.startTime, titre: opts.titre, placesMax: opts.placesMax ?? null, mode: opts.mode });
   db.prepare('UPDATE nights SET serie_id = ? WHERE id = ?').run(serieId, premiere);
   inviter(premiere, creatorId, ids, viaCercle);
   const base = getNight(premiere)!;

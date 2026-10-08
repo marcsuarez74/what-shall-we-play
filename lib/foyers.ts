@@ -104,6 +104,7 @@ export function resolveDupe(keepId: number, removeId: number, lang: Lang = 'fr')
     throw new Error(t(lang, 'foyer.errMemeFoyer'));
   db.transaction(() => {
     db.prepare('UPDATE picks SET game_id = ? WHERE game_id = ?').run(keepId, removeId);
+    db.prepare('UPDATE night_plays SET game_id = ? WHERE game_id = ?').run(keepId, removeId);
     db.prepare('DELETE FROM night_excludes WHERE game_id = ?').run(removeId);
     db.prepare('DELETE FROM games WHERE id = ?').run(removeId);
   })();

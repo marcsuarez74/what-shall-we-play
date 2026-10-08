@@ -58,10 +58,10 @@ export function normaliserTitre(v: unknown): string | null | undefined | false {
   return s || null;
 }
 
-export function createNight(creatorId: number, playerIds: number[], opts?: { playedAt?: string; startTime?: string | null; titre?: string | null; placesMax?: number | null }): number {
+export function createNight(creatorId: number, playerIds: number[], opts?: { playedAt?: string; startTime?: string | null; titre?: string | null; placesMax?: number | null; mode?: 'tirage' | 'libre' }): number {
   const info = getDb()
-    .prepare("INSERT INTO nights (creator_id, played_at, start_time, lien_token, titre, places_max) VALUES (?, COALESCE(?, date('now','localtime')), ?, ?, ?, ?)")
-    .run(creatorId, opts?.playedAt ?? null, opts?.startTime ?? null, crypto.randomBytes(16).toString('hex'), opts?.titre ?? null, opts?.placesMax ?? null);
+    .prepare("INSERT INTO nights (creator_id, played_at, start_time, lien_token, titre, places_max, mode) VALUES (?, COALESCE(?, date('now','localtime')), ?, ?, ?, ?, ?)")
+    .run(creatorId, opts?.playedAt ?? null, opts?.startTime ?? null, crypto.randomBytes(16).toString('hex'), opts?.titre ?? null, opts?.placesMax ?? null, opts?.mode ?? 'tirage');
   const nightId = Number(info.lastInsertRowid);
   setNightPlayers(nightId, playerIds.includes(creatorId) ? playerIds : [...playerIds, creatorId]);
   return nightId;
@@ -203,6 +203,7 @@ export function boxOutNight(nightId: number, userId: number, gameId: number, lan
   const night = getNight(nightId);
   if (!night) return { error: t(lang, 'erreurs.soireeIntrouvable'), status: 404 };
   if (!userCanAccessNight(userId, nightId)) return { error: t(lang, 'soiree.errSeulsJoueursBoite'), status: 403 };
+  if (night.mode === 'libre') return { error: t(lang, 'libre.errPasDeTirage'), status: 409 }; // v4.19.0
   if (night.status === 'en_jeu') return { error: t(lang, 'soiree.errBoiteDejaSortie'), status: 409 };
   if (night.status === 'termine') return { error: t(lang, 'soiree.errPartieTerminee'), status: 409 };
   if (estFuture(night)) return { error: t(lang, 'soiree.errPasAujourdhui'), status: 409 };
@@ -216,6 +217,7 @@ export function boxOutNight(nightId: number, userId: number, gameId: number, lan
 export function drawAllowed(nightId: number, lang: Lang = 'fr'): { ok: true } | NightStateError {
   const night = getNight(nightId);
   if (!night) return { error: t(lang, 'erreurs.soireeIntrouvable'), status: 404 };
+  if (night.mode === 'libre') return { error: t(lang, 'libre.errPasDeTirage'), status: 409 }; // v4.19.0
   if (night.status === 'en_jeu') return { error: t(lang, 'soiree.errBoiteVerrouille'), status: 409 };
   if (night.status === 'termine') return { error: t(lang, 'soiree.errPartieTerminee'), status: 409 };
   if (estFuture(night)) return { error: t(lang, 'soiree.errPasAujourdhui'), status: 409 }; // v4.7.0 : tirage le jour J
@@ -233,7 +235,7 @@ export function endNight(nightId: number, userId: number, scores?: Record<string
   const db = getDb();
   const joueurs = new Set((db.prepare('SELECT user_id FROM night_players WHERE night_id = ?').all(nightId) as { user_id: number }[]).map((r) => r.user_id));
   const lignes: [number, number][] = [];
-  if (scores) {
+  if (scores && night.mode !== 'libre') { // v4.19.0 : en choix libre, les scores sont par manche
     for (const [k, v] of Object.entries(scores)) {
       const uid = Number(k);
       if (!joueurs.has(uid) || !Number.isFinite(v)) return { error: t(lang, 'soiree.errScoreInvalide'), status: 400 };
@@ -456,6 +458,9 @@ export function addNightGame(nightId: number, gameId: number, userId: number, la
 // Retirer un jeu de la partie : n'importe quel joueur présent peut le faire.
 export function removeNightGame(nightId: number, gameId: number, userId: number, lang: Lang = 'fr'): NightGameResult {
   if (!isNightParticipant(nightId, userId)) return { error: t(lang, 'soiree.errSeulsJoueursRetrait'), status: 403 };
+  // v4.19.0 : une boîte jouée (manche déclarée) reste — jamais de perte implicite.
+  if (getDb().prepare('SELECT 1 FROM night_plays WHERE night_id = ? AND game_id = ? LIMIT 1').get(nightId, gameId))
+    return { error: t(lang, 'libre.errJeuJoue'), status: 409 };
   getDb().prepare('DELETE FROM night_games WHERE night_id = ? AND game_id = ?').run(nightId, gameId);
   // une boîte retirée emporte ses votes (v3.5) — pas de vote fantôme dans « Votés 👍 »
   getDb().prepare('DELETE FROM game_votes WHERE night_id = ? AND game_id = ?').run(nightId, gameId);
@@ -504,6 +509,9 @@ export function toggleNightVeto(nightId: number, gameId: number, userId: number,
     db.prepare('DELETE FROM game_vetos WHERE night_id = ? AND user_id = ?').run(nightId, userId);
   } else {
     if (mien) return { error: t(lang, 'soiree.errVetoDejaUtilise'), status: 409 };
+    // v4.19.0 : un jeu déjà joué ne peut plus être écarté
+    if (db.prepare('SELECT 1 FROM night_plays WHERE night_id = ? AND game_id = ? LIMIT 1').get(nightId, gameId))
+      return { error: t(lang, 'libre.errDejaJoue'), status: 409 };
     if (db.prepare('SELECT 1 FROM game_vetos WHERE night_id = ? AND game_id = ?').get(nightId, gameId))
       return { error: t(lang, 'soiree.errVetoDejaEcarte'), status: 409 };
     db.prepare('INSERT INTO game_vetos (night_id, game_id, user_id) VALUES (?, ?, ?)').run(nightId, gameId, userId);

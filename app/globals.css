@@ -2608,3 +2608,40 @@ a.btn-go.as-link { display: flex; align-items: center; justify-content: center; 
   border: 1px solid color-mix(in srgb, var(--vert) 45%, transparent); font-size: 13px; }
 .alerte-once button { position: absolute; top: 4px; right: 4px; width: 28px; height: 28px; border: 0;
   background: transparent; color: var(--doux-clair); cursor: pointer; }
+
+/* v4.19.0 — choix libre : cartes de mode, badges ✓ joué, manches et classements, terminer. */
+.b-libre { background: color-mix(in srgb, var(--vert) 20%, transparent); color: #BFE3CF; }
+.box.moi-joue { border-color: var(--vert); }
+.joue-badge { position: absolute; top: -7px; left: -5px; z-index: 3; background: var(--vert); color: #fff; border-radius: 999px;
+  font-size: 10.5px; font-weight: 800; padding: 3px 7px; box-shadow: 0 3px 8px rgba(0,0,0,.55); }
+.mode-cards { display: grid; gap: 8px; }
+.mode-card { display: flex; gap: 10px; align-items: flex-start; text-align: left; background: var(--surface); border: 2px solid transparent;
+  border-radius: 14px; padding: 11px 12px; color: var(--creme); font: inherit; cursor: pointer; }
+.mode-card[aria-pressed="true"] { border-color: var(--cuivre); }
+.mode-card .ico { font-size: 22px; line-height: 1; }
+.mode-card b { display: block; font-family: var(--display); font-size: 15px; }
+.mode-card small { color: var(--doux-clair); font-size: 12px; line-height: 1.35; }
+.joue-form { background: var(--surface); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.joue-form .ligne { display: flex; gap: 8px; }
+.joue-form input { flex: 1; min-width: 0; background: var(--noyer); border: 1px solid color-mix(in srgb, var(--doux) 50%, transparent);
+  border-radius: 12px; color: var(--creme); font: inherit; font-size: 16px; padding: 10px 12px; }
+.btn-joue { appearance: none; border: 0; border-radius: 14px; background: var(--vert); color: #fff; font-weight: 700; font-size: 15px; min-height: 46px; width: 100%; }
+.btn-joue:disabled { background: var(--surface); color: var(--doux-clair); border: 1px solid var(--doux); }
+.classement { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.classement li { display: flex; align-items: center; gap: 8px; background: var(--surface); border-radius: 10px; padding: 7px 10px; font-size: 13.5px; }
+.classement li.moi { outline: 1px solid var(--vert); }
+.classement .rang { width: 22px; text-align: center; }
+.classement .pts { margin-left: auto; font-weight: 700; }
+.mini-actions { display: flex; gap: 14px; justify-content: center; }
+.manche { background: color-mix(in srgb, var(--surface) 60%, transparent); border-radius: 14px; padding: 10px; display: flex; flex-direction: column; gap: 6px; }
+.manche-h { display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; color: var(--doux-clair);
+  text-transform: uppercase; letter-spacing: .06em; font-weight: 700; }
+.sans-score { font-size: 12.5px; color: var(--doux-clair); padding: 2px 4px; margin: 0; }
+.terminer-confirme { display: flex; flex-direction: column; gap: 8px; }
+.terminer-confirme p { margin: 0; font-size: 13.5px; }
+.podium-nuit { display: flex; gap: 6px; flex-wrap: wrap; }
+.podium-nuit span { background: var(--noyer); border-radius: 999px; padding: 4px 9px; font-size: 12.5px; }
+.hist-jeux { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+.hist-jeux li { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.hist-jeux .gagnant { margin-left: auto; font-size: 12px; color: var(--doux-clair); }
+.hist-jeux .manche-n { color: var(--doux-clair); font-size: 11.5px; }

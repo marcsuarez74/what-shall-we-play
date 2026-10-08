@@ -224,6 +224,18 @@ CREATE TABLE IF NOT EXISTS night_invites (
   created_at TEXT NOT NULL DEFAULT (datetime('now','localtime')),
   UNIQUE (night_id, user_id)
 );
+-- v4.19.0 (choix libre) : « j'ai joué » — UNE déclaration par joueur et par manche d'un jeu,
+-- score facultatif (NULL = hors classement). Un même jeu peut avoir plusieurs manches.
+CREATE TABLE IF NOT EXISTS night_plays (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  night_id INTEGER NOT NULL REFERENCES nights(id) ON DELETE CASCADE,
+  game_id INTEGER NOT NULL REFERENCES games(id),
+  manche INTEGER NOT NULL,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  score REAL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now','localtime')),
+  UNIQUE (night_id, game_id, manche, user_id)
+);
 `;
 
 let db: Database.Database | null = null;
@@ -269,6 +281,8 @@ export function runMigrations(db: Database.Database): void {
     'ALTER TABLE nights ADD COLUMN evenement_id INTEGER REFERENCES evenements(id)',
     // v4.16.0 : Kijoukan — semaine type, 14 cases '0'/'1' (lundi → dimanche midi, puis soir).
     "ALTER TABLE users ADD COLUMN kijoukan TEXT NOT NULL DEFAULT ''",
+    // v4.19.0 : choix du jeu — 'tirage' (roue, défaut) ou 'libre' (marathon, manches déclarées).
+    "ALTER TABLE nights ADD COLUMN mode TEXT NOT NULL DEFAULT 'tirage'",
   ]) {
     try { db.exec(stmt); } catch { /* colonne déjà présente */ }
   }
