@@ -121,6 +121,11 @@ jobs:
   deploy:
     name: Déploiement VPS
     needs: changes
+    # Deux fusions rapprochées = deux runs sur main : on les enchaîne (jamais deux
+    # rebuilds en même temps sur le VPS, ni deux poses du même tag en concurrence).
+    concurrency:
+      group: deploiement-main
+      cancel-in-progress: false
     if: github.ref == 'refs/heads/main' && github.event_name == 'push' && needs.changes.outputs.docs != 'true'
     runs-on: ubuntu-latest
     steps:
@@ -166,7 +171,14 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git tag -a "$TAG" -m "$TAG"
-          git push origin "$TAG"
+          if ! git push origin "$TAG"; then
+            # Un run voisin l'a posé entre notre checkout et notre push : rien à publier.
+            if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null; then
+              echo "::notice::$TAG posé entre-temps par un autre run — rien à publier."
+              exit 0
+            fi
+            exit 1
+          fi
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
   release:
