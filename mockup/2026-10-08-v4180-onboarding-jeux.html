@@ -115,13 +115,20 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--cuivre); ou
 .box.grand { width: 82px; height: 82px; } .box.moyen { width: 70px; height: 70px; } .box.petit { width: 58px; height: 58px; } .box.mini { width: 46px; height: 46px; font-size: 9px; }
 .bienvenue { border-radius: 12px; padding: 10px 12px; background: color-mix(in srgb, var(--vert) 12%, transparent); border: 1px solid color-mix(in srgb, var(--vert) 45%, transparent); font-size: 13px; color: var(--doux-clair); }
 .bienvenue b { color: var(--creme); }
+.titre .nb { font-family: var(--ui); font-size: 13px; font-weight: 500; color: var(--doux-clair); }
+.lib { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.lib-card { display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: var(--surface); border-radius: 12px; }
+.lib-info { flex: 1; min-width: 0; display: flex; flex-direction: column; font-size: 14px; }
+.lib-info .meta { font-size: 12px; color: var(--doux-clair); }
+.fmt-ro { color: var(--creme); }
+.note code { font-size: 11.5px; background: var(--surface); padding: 1px 5px; border-radius: 5px; color: var(--creme); }
 </style>
 
 <div class="wrap">
   <section class="intro">
-    <p class="eyebrow">Maquette fonctionnelle · v1 · à valider</p>
+    <p class="eyebrow">Maquette fonctionnelle · v2 · à valider</p>
     <h1>Onboarding : ajouter ses jeux dès la création du compte</h1>
-    <p class="lead">Juste après « Créer mon compte », une deuxième étape <b>Tes jeux</b> propose de remplir l'étagère tout de suite : recherche BGG (un tap, un jeu), import de toute la collection BGG ou saisie à la main. Tout se passe sans quitter le flux, et l'étape se passe en un clic.</p>
+    <p class="lead">Juste après « Créer mon compte », une deuxième étape <b>Tes jeux</b> propose de remplir sa ludothèque tout de suite : recherche BGG (un tap, un jeu), import de toute la collection BGG ou saisie à la main. Tout se passe sans quitter le flux, et l'étape se passe en un clic.</p>
   </section>
 
   <section class="regles">
@@ -133,7 +140,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--cuivre); ou
         <li><b>Rechercher</b> : un tap sur une suggestion ajoute le jeu avec ses infos BGG (joueurs, durée, complexité, pochette). Un jeu déjà ajouté est marqué ✓.</li>
         <li>Format de boîte : <b>Grand</b> par défaut, puce modifiable d'un tap dans la liste (Grand → Moyen → Petit → Mini).</li>
         <li><b>✕</b> retire un jeu qu'on vient d'ajouter (geste explicite, comme dans la ludothèque).</li>
-        <li><b>Passer pour l'instant</b> (tant que rien n'est ajouté), puis <b>Terminer · n jeux</b> : arrivée sur l'étagère. Rien n'est perdu, tout se refait plus tard via « Ajouter ».</li>
+        <li><b>Passer pour l'instant</b> (tant que rien n'est ajouté), puis <b>Terminer · n jeux</b> : arrivée sur <b>Ma ludothèque</b> (<code>/library</code>). Rien n'est perdu, tout se refait plus tard via « Ajouter ».</li>
       </ul>
     </div>
     <div class="bloc">
@@ -141,7 +148,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--cuivre); ou
       <ul>
         <li>Réutilisation : <code>/api/bgg/*</code> et <code>POST /api/games</code> existants, sans nouvelle route ; l'import réutilise le parcours de <code>ImportBggClient</code> en mode « embarqué ».</li>
         <li>Chaque ajout est enregistré tout de suite : fermer l'appli en cours de route ne perd rien.</li>
-        <li>Un lien d'invitation (<code>?next=…</code>) passe aussi par l'étape, puis rejoint sa destination.</li>
+        <li>Un lien d'invitation (<code>?next=…</code>) passe aussi par l'étape, puis rejoint sa destination (et non la ludothèque).</li>
         <li class="q"><b>À trancher :</b> faut-il sauter l'étape pour un compte créé depuis une invitation, pour qu'il rejoigne la partie plus vite ?</li>
         <li>Version <b>v4.18.0</b> (MINOR, nouvelle fonctionnalité).</li>
       </ul>
@@ -151,7 +158,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--cuivre); ou
   <section>
     <div class="cercle-head">
       <h2>Le parcours</h2>
-      <p>Les trois écrans partagent le même état : ce que tu ajoutes en ② apparaît sur l'étagère en ③.</p>
+      <p>Les trois écrans partagent le même état : ce que tu ajoutes en ② apparaît dans « Ma ludothèque » en ③.</p>
     </div>
     <div class="phones">
       <div class="ecran">
@@ -179,9 +186,9 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--cuivre); ou
       </div>
 
       <div class="ecran">
-        <div class="ecran-titre"><span class="id">③</span><h3>Arrivée sur l'étagère</h3></div>
+        <div class="ecran-titre"><span class="id">③</span><h3>Arrivée sur « Ma ludothèque »</h3></div>
         <div class="phone" id="p3"></div>
-        <p class="note">Avec « Passer pour l'instant », on retrouve l'étagère vide d'aujourd'hui et son bouton « Ajouter ma ludothèque ».</p>
+        <p class="note">Redirection vers <code>/library</code>, la vraie collection du joueur. L'étagère reste le pool d'une partie ou d'un événement. Avec « Passer pour l'instant », on arrive sur une ludothèque vide.</p>
       </div>
     </div>
   </section>
@@ -209,7 +216,7 @@ function p2() {
     <p class="marque">What Shall We Play?</p>
     <div class="etapes"><span class="pt on"></span><span class="pt on"></span><span>Étape 2 sur 2</span></div>
     <h1 class="titre">Bienvenue Marco 🎲</h1>
-    <p class="sous">Ajoute les jeux que tu possèdes : ils rempliront ton étagère et pourront être tirés au sort.</p>
+    <p class="sous">Ajoute les jeux que tu possèdes : ils formeront ta ludothèque, d'où tu les proposeras aux parties.</p>
     <div class="seg" role="group" aria-label="Façon d'ajouter">
       ${[['rech', '🔍 Rechercher'], ['bgg', '📥 Collection BGG'], ['main', '✍️ À la main']].map(([k, l]) => `<button data-a="onglet" data-k="${k}" aria-pressed="${ST.onglet === k}">${l}</button>`).join('')}
     </div>`;
@@ -245,7 +252,7 @@ function p2() {
     <div class="ajoutes-h"><span class="sous-label">Ajoutés · ${ST.jeux.length}</span></div>`;
   h += ST.jeux.length
     ? ST.jeux.map((j, i) => `<div class="ajoute"><span class="mini-cov" style="background:${coul(j.titre)}"></span><span class="t">${esc(j.titre)}</span><button class="fmt" data-a="fmt" data-i="${i}" aria-label="Format de boîte : ${FMT_L[j.fmt]}">${FMT_L[j.fmt]}</button><button class="retirer" data-a="del" data-i="${i}" aria-label="Retirer ${esc(j.titre)}">✕</button></div>`).join('')
-    : `<div class="vide">Aucun jeu pour l'instant.<br>Ton étagère t'attend 📦</div>`;
+    : `<div class="vide">Aucun jeu pour l'instant.<br>Ta ludothèque t'attend 📦</div>`;
   h += `</div><div class="pied">
     ${ST.jeux.length
       ? `<button class="btn-copper" data-a="fin">Terminer · ${ST.jeux.length} jeu${ST.jeux.length > 1 ? 'x' : ''}</button>`
@@ -254,22 +261,20 @@ function p2() {
 }
 
 function p3() {
-  let h = `<div class="status"><span>9:41</span><span>●●● 🔋</span></div><div class="scroll">
-    <h1 class="titre">Étagère</h1>`;
+  let h = `<div class="status"><span>9:41</span><span>●●● 🔋</span></div><div class="scroll">`;
   if (!ST.fini) {
-    h += `<div class="vide">Termine l'étape ② pour voir ton étagère.</div>`;
-  } else if (!ST.jeux.length) {
-    h += `<div class="vide">Ton étagère est vide.<br><br><button class="btn-copper sm">Ajouter ma ludothèque</button></div>`;
+    h += `<h1 class="titre">Ma ludothèque</h1><div class="vide">Termine l'étape ② pour arriver ici.</div>`;
   } else {
-    h += `<div class="bienvenue">🎉 <b>${ST.jeux.length} jeu${ST.jeux.length > 1 ? 'x' : ''}</b> sur ton étagère. Invite tes amis pour lancer une partie !</div><div class="etagere">`;
-    for (const f of FMT) {
-      const l = ST.jeux.filter((j) => j.fmt === f);
-      if (!l.length) continue;
-      h += `<div class="row-label">${FMT_L[f]}</div><div class="shelf-row">${l.map((j) => `<span class="box ${f}" style="background:${coul(j.titre)}">${esc(j.titre)}</span>`).join('')}</div><div class="rail"></div>`;
+    h += `<h1 class="titre">Ma ludothèque <small class="nb">${ST.jeux.length} jeu${ST.jeux.length > 1 ? 'x' : ''}</small></h1>`;
+    if (!ST.jeux.length) {
+      h += `<p class="sous">Aucun jeu pour l'instant. Onglet « Ajouter » pour commencer.</p>`;
+    } else {
+      h += `<div class="bienvenue">🎉 Ta ludothèque est prête. Tu proposeras ces jeux sur l'<b>étagère</b> d'une partie ou d'un événement.</div><ul class="lib">`;
+      h += ST.jeux.map((j) => `<li class="lib-card"><span class="mini-cov" style="background:${coul(j.titre)}"></span><span class="lib-info"><b>${esc(j.titre)}</b><span class="meta">${j.man ? 'Saisi à la main' : 'BoardGameGeek'} · <span class="fmt-ro">${FMT_L[j.fmt]}</span></span></span><span class="retirer">✕</span></li>`).join('');
+      h += `</ul>`;
     }
-    h += `</div>`;
   }
-  h += `</div><div class="tabbar"><span class="on"><i>📚</i>Étagère</span><span><i>🎲</i>Parties</span><span><i>➕</i>Ajouter</span><span><i>👥</i>Amis</span></div>`;
+  h += `</div><div class="tabbar"><span><i>📚</i>Étagère</span><span class="on"><i>🗂️</i>Ludothèque</span><span><i>➕</i>Ajouter</span><span><i>🎲</i>Parties</span></div>`;
   return h;
 }
 
@@ -299,7 +304,7 @@ document.addEventListener('click', (e) => {
   if (act === 'fmt') { const j = ST.jeux[+i]; j.fmt = FMT[(FMT.indexOf(j.fmt) + 1) % FMT.length]; }
   if (act === 'del') { const [j] = ST.jeux.splice(+i, 1); ST.toast = `${j.titre} retiré`; }
   if (act === 'manFmt') ST.manFmt = f;
-  if (act === 'manAdd') { const tt = ST.manTitre.trim(); ajouter(tt, ST.manFmt); ST.toast = `✓ ${tt} ajouté`; ST.manTitre = ''; }
+  if (act === 'manAdd') { const tt = ST.manTitre.trim(); ajouter(tt, ST.manFmt); ST.jeux[0].man = true; ST.toast = `✓ ${tt} ajouté`; ST.manTitre = ''; }
   if (act === 'bggVoir') ST.bggEtape = 'apercu';
   if (act === 'bggRetour') ST.bggEtape = 'pseudo';
   if (act === 'bggImport') { const n = COLLECTION.filter((x) => !a(x)); n.forEach((x) => ajouter(x, ST.manFmt)); ST.bggEtape = 'fini'; ST.toast = `✓ ${n.length} jeux importés`; }
