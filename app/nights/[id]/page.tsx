@@ -15,6 +15,9 @@ import VerdictBloc from '@/components/VerdictBloc';
 import CorrigerPartie from '@/components/CorrigerPartie';
 import UserSync from '@/components/UserSync';
 import { verdictsDeNuit, monVerdict } from '@/lib/verdicts';
+import { getNightPlays } from '@/lib/libre';
+import { classerManche, grouperManches, podiumPartie } from '@/lib/manches';
+import { medaille } from '@/lib/ranks';
 
 // Le détail d'une soirée terminée : héros (cover + titre + date), badge « Terminée »,
 // podium (1ʳᵉ carte bordée cuivre, rangs 2/3 en duo, autres en lignes), verdict du
@@ -26,6 +29,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   if (!user) redirect('/login');
   const night = getNight(Number((await params).id));
   if (!night || !userCanAccessNight(user.id, night.id)) notFound();
+  if (night.mode === 'libre') return <DetailLibre lang={lang} nightId={night.id} playedAt={night.played_at} />;
   const game = getNightGame(night.id);
   const scores = getNightScores(night.id);
   const joueurs = getNightPlayers(night.id);
@@ -80,6 +84,51 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
           compteurs={verdictsDeNuit(night.id)} nbTirages={nbTirages} />
       )}
       <PartagerResultats titre={game?.title ?? t(lang, 'soiree.sansJeu')} classement={classe.map((c) => ({ pseudo: c.pseudo, score: c.score as number, rank: c.rank }))} />
+    </main>
+  );
+}
+
+// v4.19.0 — choix libre : le podium de la partie (manches gagnées), puis chaque manche et
+// son gagnant. Pas de carnet ni de correction : chacun gère ses déclarations sur l'étagère.
+function DetailLibre({ lang, nightId, playedAt }: { lang: Awaited<ReturnType<typeof getLang>>; nightId: number; playedAt: string }) {
+  const plays = getNightPlays(nightId);
+  const manches = grouperManches(plays);
+  const titres = new Map([...new Set(plays.map((p) => p.game_id))].map((id) => [id, getGame(id)?.title ?? '?']));
+  const podium = podiumPartie(plays).filter((l) => l.victoires > 0);
+  return (
+    <main className="page detail-page">
+      <UserSync />
+      <Link className="retour-btn" href="/nights">{t(lang, 'soiree.retour')}</Link>
+      <div className="dt-hero">
+        <div><h3>{t(lang, 'libre.resume', { j: titres.size, m: manches.length })}</h3>
+          <p>{formatDate(lang, `${playedAt}T12:00:00`, { dateStyle: 'long' })}</p></div>
+      </div>
+      <span className="badge-etat b-libre"><span className="pt" />{t(lang, 'libre.termineeBadge')}</span>
+      {podium.length > 0 && (
+        <>
+          <p className="pod-lb">{t(lang, 'libre.podiumPartie')}</p>
+          <div className="podium-nuit">
+            {podium.map((l) => <span key={l.user_id}>{medaille(l.rank) || l.rank} {l.pseudo} · {l.victoires}</span>)}
+          </div>
+        </>
+      )}
+      {manches.length > 0 && (
+        <>
+          <p className="pod-lb">{t(lang, 'libre.jeuxJoues')}</p>
+          <ul className="hist-jeux">
+            {manches.map(({ game_id, manche, lignes }) => {
+              const { gagnants } = classerManche(lignes);
+              return (
+                <li key={`${game_id}-${manche}`}>
+                  <span>{titres.get(game_id)}</span>
+                  {manche > 1 && <span className="manche-n">{t(lang, 'libre.mancheN', { n: manche })}</span>}
+                  <span className="gagnant">{gagnants.length ? `👑 ${lignes.filter((l) => gagnants.includes(l.user_id)).map((l) => l.pseudo).join(' & ')}` : t(lang, 'libre.sansScoreGagnant')}</span>
+                </li>
+              );
+            })}
+          </ul>
+        </>
+      )}
     </main>
   );
 }

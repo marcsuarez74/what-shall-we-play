@@ -19,7 +19,7 @@ describe('games', () => {
     db.prepare(`INSERT INTO nights (creator_id) VALUES (?)`).run(uid);
     db.prepare(`INSERT INTO picks (night_id, game_id, spinner_id) VALUES (1, ?, ?)`).run(gid, uid);
     const res = deleteGame(uid, gid);
-    expect(res).toEqual({ error: 'Ce jeu a déjà été tiré lors d\'une partie', status: 409 });
+    expect(res).toEqual({ error: 'Ce jeu a déjà été tiré ou joué lors d\'une partie', status: 409 });
     expect(listUserLibrary(uid)).toHaveLength(1);
   });
   it('supprime un jeu jamais tiré', () => {

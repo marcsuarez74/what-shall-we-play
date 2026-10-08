@@ -5,8 +5,10 @@ import { formatNombre } from '@/lib/i18n/format';
 import type { Game, UserLite } from '@/lib/types';
 import { useI18n } from './LanguageProvider';
 import PlayerChip from './PlayerChip';
+import MancheBlocs from './MancheBlocs';
+import type { Declaration } from '@/lib/manches';
 
-export default function GameSheet({ game, players, playsCount, verdicts, onClose, mode = 'shelf', onRemoveShelf, veto, votants }: {
+export default function GameSheet({ game, players, playsCount, verdicts, onClose, mode = 'shelf', onRemoveShelf, veto, votants, libre }: {
   game: Game;
   players: UserLite[];
   playsCount: number;
@@ -18,6 +20,8 @@ export default function GameSheet({ game, players, playsCount, verdicts, onClose
   veto?: { par: string | null; moi: boolean; ailleurs: string | null; onToggle: () => void };
   /** v4.17.0 — qui a mis un 👍 (moi en dernier, « Toi ») ; absent = votes masqués. */
   votants?: { joueurs: UserLite[]; moiId: number };
+  /** v4.19.0 — choix libre : les manches de ce jeu et ma déclaration. */
+  libre?: { nightId: number; plays: Declaration[]; meId: number; vetoPar: string | null };
 }) {
   const { lang, t } = useI18n();
   const fmt = (n: number) => formatNombre(lang, n, { maximumFractionDigits: 1 });
@@ -67,6 +71,7 @@ export default function GameSheet({ game, players, playsCount, verdicts, onClose
               : <p className="hint">{t('votants.aide')}</p>}
           </div>
         )}
+        {libre && <MancheBlocs nightId={libre.nightId} gameId={game.id} plays={libre.plays} meId={libre.meId} vetoPar={libre.vetoPar} />}
         <ul className="sheet-facts">
           {game.weight != null && (
             <li><span>{t('fiche.complexite')}</span><strong>⚖ {fmt(game.weight)} / 5</strong></li>

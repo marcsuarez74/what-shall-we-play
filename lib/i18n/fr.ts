@@ -403,6 +403,7 @@ export const fr = {
   'libre.termineeBadge': 'Choix libre · terminée',
   'libre.resume': ({ j, m }: Record<string, string | number>) => `${j} jeu${Number(j) > 1 ? 'x' : ''} · ${m} manche${Number(m) > 1 ? 's' : ''}`,
   'libre.gagnant': ({ p, v }: Record<string, string | number>) => `👑 ${p} · ${v} manche${Number(v) > 1 ? 's' : ''} gagnée${Number(v) > 1 ? 's' : ''}`,
+  'libre.joueAria': ({ j, n }: Record<string, string | number>) => `${j} : joué ${n} fois`,
   'libre.errPasLibre': 'Cette partie n’est pas en choix libre',
   'libre.errVeto': 'Ce jeu est écarté par un veto',
   'libre.errManche': 'Manche invalide',

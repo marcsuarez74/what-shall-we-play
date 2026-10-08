@@ -14,7 +14,8 @@ import NightPicker from './NightPicker';
 import PlayerChip from './PlayerChip';
 import RetirerInvite from './RetirerInvite';
 import ShelfControls from './ShelfControls';
-import ShelfRows, { grouperVotes } from './ShelfRows';
+import ShelfRows, { grouperVotes, type JouesParJeu } from './ShelfRows';
+import type { Declaration } from '@/lib/manches';
 import { votantsDe } from '@/lib/votants';
 import LienInvitation from './LienInvitation';
 import ShelfPicker from './ShelfPicker';
@@ -35,10 +36,11 @@ const POIDS: Record<Exclude<ShelfFilters['weight'], 'all'>, CléDict> = {
   leger: 'etagere.poidsLeger', moyen: 'etagere.poidsMoyen', lourd: 'etagere.poidsLourd',
 };
 
-export default function ShelfClient({ night, partyGame, players, games, myLibrary, users, plays, votes, vetos = [], me, futur = false, lien, evenements = [] }: {
+export default function ShelfClient({ night, partyGame, players, games, myLibrary, users, plays, votes, vetos = [], me, futur = false, lien, evenements = [], declarations = [] }: {
   night: Night; partyGame: Game | null; players: UserLite[]; games: Game[]; myLibrary: Game[]; users: UserLite[]; plays: Record<number, number>;
   votes: ShelfVote[];
   vetos?: ShelfVeto[]; // v4.13.0
+  declarations?: Declaration[]; // v4.19.0 : choix libre, les manches déclarées
   evenements?: { id: number; titre: string }[]; // v4.15.0 : rattacher la partie (Modifier)
   me: UserLite;
   futur?: boolean;
@@ -80,6 +82,25 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
   const cover = partyGame ? coverSrc(partyGame) : null;
 
   const estCreateur = night.creator_id === me.id;
+  // v4.19.0 — choix libre : pas de roue ni de validation ; on déclare ses manches, le créateur termine.
+  const libre = night.mode === 'libre';
+  const joues = useMemo(() => {
+    const m: JouesParJeu = new Map();
+    for (const { game_id, manche, user_id } of declarations) {
+      const e = m.get(game_id) ?? { n: 0, moi: false };
+      e.n = Math.max(e.n, manche);
+      if (user_id === me.id) e.moi = true;
+      m.set(game_id, e);
+    }
+    return m;
+  }, [declarations, me.id]);
+  const [surTerminer, setSurTerminer] = useState(false);
+  async function terminer() {
+    setBusy(true);
+    const res = await fetch(`/api/nights/${night.id}/end`, { method: 'POST' });
+    setBusy(false);
+    if (res.ok) window.location.assign(`/nights/${night.id}`);
+  }
   const monEtat = players.find((p) => p.id === me.id);
   const jAiValide = !!monEtat?.validated_at;
   // hors branche du créateur validé, le pool vaut toujours « tous » (garde anti-état fantôme)
@@ -170,7 +191,9 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
             ? <span className="badge-etat b-enjeu"><span className="pt" />{t('etagere.enJeu')}</span>
             : futur
               ? <span className="badge-etat b-prog"><span className="pt" />{t('soiree.badgeProgrammee')}</span>
-              : <span className="badge-etat b-prep"><span className="pt" />{t('etagere.enPrep')}</span>}
+              : libre
+                ? <span className="badge-etat b-libre"><span className="pt" />{t('libre.badge', { n: joues.size })}</span>
+                : <span className="badge-etat b-prep"><span className="pt" />{t('etagere.enPrep')}</span>}
           {!enJeu && <button type="button" className="link-btn" onClick={() => setEditingNight(true)}>{t('etagere.modifier')}</button>}
         </div>
         {(night.titre || futur) && <p className="nc-titre">{titrePartie(lang, night)}</p>}
@@ -185,7 +208,7 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
             {invites.length > 0 && <p className="sous-label">{t('etagere.joueursN', { n: comptes.length })}</p>}
             <div className="chips">
               {/* programmée : pas de tirage, donc pas de « prêt » à signaler */}
-              {comptes.map((p) => <PlayerChip key={p.id} u={p} etat={futur ? undefined : p.validated_at ? 'ok' : 'attente'} />)}
+              {comptes.map((p) => <PlayerChip key={p.id} u={p} etat={futur || libre ? undefined : p.validated_at ? 'ok' : 'attente'} />)}
             </div>
             {invites.length > 0 && (
               <>
@@ -200,7 +223,7 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
                 </div>
               </>
             )}
-            {!futur && <div className="etats">
+            {!futur && !libre && <div className="etats">
               {comptes.map((p) => (
                 <p key={p.id} className={p.validated_at ? 'ok' : ''}>
                   {p.validated_at
@@ -236,14 +259,30 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
       ) : !enJeu ? (
         <div className="add-more">
           <button type="button" className="link-btn" onClick={() => setAddingGames(true)}>
-            {t('etagere.ajouterAutres')}{jAiValide ? <span className="revalide"> {t('etagere.revalider')}</span> : null}
+            {t('etagere.ajouterAutres')}{jAiValide && !libre ? <span className="revalide"> {t('etagere.revalider')}</span> : null}
           </button>
         </div>
       ) : null}
-      <ShelfRows games={surEtagere} votes={enJeu ? null : votesParJeu} onVote={voter} onOpen={setDetail} vetos={enJeu ? null : vetoParJeu} />
+      <ShelfRows games={surEtagere} votes={enJeu ? null : votesParJeu} onVote={voter} onOpen={setDetail} vetos={enJeu ? null : vetoParJeu}
+                 triVotes={libre} joues={libre ? joues : null} />
       <div className="cta-zone">
         {futur ? (
           <p className="cta-jourj">{t('etagere.tirageJourJ')}</p>
+        ) : libre ? (
+          <>
+            <p className="cta-statut">{t('libre.ctaStatut')}</p>
+            {estCreateur && (surTerminer ? (
+              <div className="terminer-confirme" role="alertdialog" aria-label={t('libre.terminer')}>
+                <p>{t('libre.terminerConfirme', { t: titrePartie(lang, night) })}</p>
+                <div className="cta-row">
+                  <button type="button" className="btn-copper" disabled={busy} onClick={terminer}>{t('libre.terminerOk')}</button>
+                  <button type="button" className="btn-ghost" onClick={() => setSurTerminer(false)}>{t('libre.annuler')}</button>
+                </div>
+              </div>
+            ) : (
+              <button type="button" className="btn-ghost" onClick={() => setSurTerminer(true)}>{t('libre.terminer')}</button>
+            ))}
+          </>
         ) : enJeu ? (
           <>
             <div className="cta-row">
@@ -304,8 +343,9 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
       </div>
       {detail && <GameSheet game={detail} players={players} playsCount={plays[detail.id] ?? 0}
                             onClose={() => setDetail(null)}
-                            onRemoveShelf={() => removeFromNight(detail)}
-                            veto={enJeu ? undefined : {
+                            onRemoveShelf={joues.has(detail.id) ? undefined : () => removeFromNight(detail)}
+                            libre={libre && !futur ? { nightId: night.id, plays: declarations, meId: me.id, vetoPar: vetoParJeu.get(detail.id) ?? null } : undefined}
+                            veto={enJeu || joues.has(detail.id) ? undefined : {
                               par: vetoParJeu.get(detail.id) ?? null, moi: monVeto === detail.id,
                               ailleurs: monVeto != null && monVeto !== detail.id ? games.find((g) => g.id === monVeto)?.title ?? null : null,
                               onToggle: () => veto(detail.id),

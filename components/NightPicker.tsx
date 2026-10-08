@@ -50,6 +50,9 @@ export default function NightPicker({ users, prechecked, night, quand = 'now', e
   const [places, setPlaces] = useState(''); // v4.14.1 : places max facultatives
   const [evt, setEvt] = useState<number | null>(night ? night.evenement_id ?? null : evenementId);
   const avecEvt = evenements.length > 0 && (creation || !!editInfos) && mode !== 'plus';
+  // v4.19.0 — « Choix du jeu » : à la création (hors sondage) et tant que la partie n'est pas lancée.
+  const [choix, setChoix] = useState<'tirage' | 'libre'>(night?.mode ?? 'tirage');
+  const avecChoix = creation ? mode !== 'plus' : !!editInfos && night?.status === 'creation';
   // La programmation se fait au plus tôt demain ; le jour J, la partie se crée sans date.
   // Arithmétique calendaire (setDate) et non +24 h : sûr pendant le passage à l'heure d'été.
   const d = new Date();
@@ -94,6 +97,7 @@ export default function NightPicker({ users, prechecked, night, quand = 'now', e
         ...(creation && mode === 'une' && repeter ? { repeter } : {}),
         ...(creation && mode === 'une' && places ? { placesMax: Number(places) } : {}),
         ...(avecEvt && (evt !== null || !creation) ? { evenementId: evt } : {}),
+        ...(avecChoix && (creation || choix !== night?.mode) ? { mode: choix } : {}),
         ...(sondage ? { dates: dates.map((x) => ({ playedAt: x.date, startTime: x.time || null })) } : {}),
       }),
     });
@@ -226,6 +230,19 @@ export default function NightPicker({ users, prechecked, night, quand = 'now', e
         {creation && mode === 'une' && t('soiree.nbInvitations', { n: nbAutres })}
         {creation && mode === 'plus' && t('sondage.aide', { d: dates.length, n: nbAutres })}
       </p>
+      {avecChoix && (
+        <>
+          <span className="sous-label">{t('libre.choixDuJeu')}</span>
+          <div className="mode-cards">
+            {([['tirage', '🎡', 'libre.tirage', 'libre.tirageAide'], ['libre', '🎲', 'libre.libre', 'libre.libreAide']] as const).map(([v, ico, titre, aide]) => (
+              <button key={v} type="button" className="mode-card" aria-pressed={choix === v} onClick={() => setChoix(v)}>
+                <span className="ico">{ico}</span><span><b>{t(titre)}</b><small>{t(aide)}</small></span>
+              </button>
+            ))}
+          </div>
+          {creation && <p className="hint">{t('libre.modifiableEnsuite')}</p>}
+        </>
+      )}
       {error && <p className="error" role="alert">{error}</p>}
       <div className="night-actions">
         {onClose && <button type="button" className="btn-ghost" onClick={onClose}>{t('soiree.annuler')}</button>}

@@ -20,31 +20,43 @@ export function grouperVotes(votes: { game_id: number; user_id: number; pseudo: 
   return m;
 }
 
+// v4.19.0 — choix libre : jeu → nombre de manches jouées, et si j'en ai joué une.
+export type JouesParJeu = Map<number, { n: number; moi: boolean }>;
+
 // Les rayons de l'étagère : une rangée par format de boîte (grand → mini), boîtes
 // à l'échelle, badge 👍 de vote, rond du propriétaire. Partagé par l'étagère des
 // joueurs (ShelfClient) et la vue invité (v4.7.0) : un seul rendu, un seul design.
-export default function ShelfRows({ games, votes, onVote, onOpen, vetos }: {
+export default function ShelfRows({ games, votes, onVote, onOpen, vetos, triVotes = false, joues }: {
   games: Game[];
   votes: VotesParJeu | null; // null : votes masqués (boîte sortie)
   /** v4.13.0 — jeu → prénom de qui l'a écarté (❌ remplace le 👍, boîte grisée). */
   vetos?: Map<number, string> | null;
   onVote: (gameId: number) => void;
   onOpen?: (g: Game) => void; // absent : la boîte ne s'ouvre pas (invité)
+  /** v4.19.0 — choix libre : les plus votés 👍 à gauche dans chaque rangée (tri stable). */
+  triVotes?: boolean;
+  joues?: JouesParJeu | null;
 }) {
   const { lang, t } = useI18n();
   return (
     <>
       {FORMATS.map((f) => {
         const list = games.filter((g) => g.box_format === f);
+        if (triVotes && votes) list.sort((a, b) => (votes.get(b.id)?.total ?? 0) - (votes.get(a.id)?.total ?? 0));
         if (list.length === 0) return null;
         return (
           <section key={f} className="shelf-block">
             <div className="row" role="list">
               {list.map((g) => (
-                <button key={g.id} type="button" role="listitem" className={`box ${FORMAT_SCALE[f] < 0.7 ? 'sm' : ''} ${vetos?.has(g.id) ? 'veto' : ''}`}
+                <button key={g.id} type="button" role="listitem" className={`box ${FORMAT_SCALE[f] < 0.7 ? 'sm' : ''} ${vetos?.has(g.id) ? 'veto' : ''} ${joues?.get(g.id)?.moi ? 'moi-joue' : ''}`}
                         style={{ width: 96 * FORMAT_SCALE[f], height: 96 * FORMAT_SCALE[f], cursor: onOpen ? undefined : 'default' }}
                         onClick={onOpen ? () => onOpen(g) : undefined}>
                   <BoxImage game={g} />
+                  {joues?.has(g.id) && (
+                    <span className="joue-badge" aria-label={t('libre.joueAria', { j: g.title, n: joues.get(g.id)!.n })}>
+                      {joues.get(g.id)!.n > 1 ? `✓ ×${joues.get(g.id)!.n}` : '✓'}
+                    </span>
+                  )}
                   {g.owner_pseudo && (
                     <OwnerBadge owner={{ pseudo: g.owner_pseudo, sticker: g.owner_sticker ?? null, avatar_path: g.owner_avatar_path ?? null }} />
                   )}
