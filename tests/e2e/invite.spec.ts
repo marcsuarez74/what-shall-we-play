@@ -1,5 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import { newGame } from './helpers/shelf';
+import { passerBienvenue } from './helpers/inscription';
 
 // Parcours invité v4.7.0 (maquette mockup/2026-10-06-v470-invites-refonte.html) :
 // l'hôte programme une partie titrée, prépare l'étagère à l'avance et partage le lien ;
@@ -18,7 +19,7 @@ async function inscrire(page: Page, pseudo: string) {
   await page.getByLabel('Pseudo').fill(pseudo);
   await page.getByLabel('Code secret').fill('1234');
   await page.getByRole('button', { name: 'Créer mon compte' }).click();
-  await page.waitForURL('**/etagere');
+  await passerBienvenue(page);
 }
 
 async function rejoindre(page: Page, lien: string, nom: string) {

@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { devenirAmis } from './helpers/amis';
+import { passerBienvenue } from './helpers/inscription';
 
 // v3.0.0 — « chacun dit quand il est prêt » : valider sa sélection est un
 // signal partagé (pas un verrou). L'état apparaît chez tous en direct, un
@@ -13,7 +14,7 @@ async function register(page: import('@playwright/test').Page, pseudo: string) {
   const reg = page.waitForResponse((r) => r.url().endsWith('/api/auth/register'));
   await page.getByRole('button', { name: 'Créer mon compte' }).click();
   await reg;
-  await page.waitForURL('/etagere');
+  await passerBienvenue(page);
 }
 
 /** Pose une boîte sur l'étagère de la soirée via l'API (ludothèque du joueur). */

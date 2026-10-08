@@ -1,5 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
 import { devenirAmis } from './helpers/amis';
+import { passerBienvenue } from './helpers/inscription';
 
 // v4.14.0 — parties récurrentes : « Répéter » crée 4 dates, l'invité répond « Dispo à
 // toutes », un conflit d'horaire s'affiche sans bloquer, l'arrêt liste ce qui part.
@@ -11,7 +12,7 @@ async function register(page: Page, pseudo: string) {
   const reg = page.waitForResponse((r) => r.url().endsWith('/api/auth/register'));
   await page.getByRole('button', { name: 'Créer mon compte' }).click();
   await reg;
-  await page.waitForURL('/etagere');
+  await passerBienvenue(page);
 }
 const dansNJours = (n: number) => { const d = new Date(); d.setDate(d.getDate() + n); return d.toLocaleDateString('sv-SE'); };
 

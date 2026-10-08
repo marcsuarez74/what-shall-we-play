@@ -1,5 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
 import { devenirAmis } from './helpers/amis';
+import { passerBienvenue } from './helpers/inscription';
 
 // v4.16.0 — Kijoukan : ma semaine type au profil, carte de chaleur du cercle, meilleur
 // créneau → sondage prérempli (le cercle coché, les 3 prochaines dates du créneau).
@@ -11,7 +12,7 @@ async function register(page: Page, pseudo: string) {
   const reg = page.waitForResponse((r) => r.url().endsWith('/api/auth/register'));
   await page.getByRole('button', { name: 'Créer mon compte' }).click();
   await reg;
-  await page.waitForURL('/etagere');
+  await passerBienvenue(page);
 }
 const idDe = async (p: Page) => ((await (await p.request.get('/api/me')).json()) as { id: number }).id;
 

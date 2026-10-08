@@ -4,16 +4,12 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { FORMATS, FORMAT_SCALE, formatShort } from '@/lib/formats';
 import { planifierImport, type LigneImport } from '@/lib/import-bgg';
+import { ficheBggFormData, type FicheBgg } from '@/lib/bgg-ajout';
 import type { BoxFormat, UserLite } from '@/lib/types';
 import { useI18n } from './LanguageProvider';
 import UserMenu from './UserMenu';
 
-type Thing = {
-  bggId: number; title: string; year: number | null; publisher: string | null;
-  minPlayers: number | null; maxPlayers: number | null; playtimeMin: number | null;
-  weight: number | null; rating: number | null; designer: string | null;
-  artist: string | null; bestPlayers: number | null; coverName: string | null;
-};
+type Thing = FicheBgg;
 type Stage = 'pseudo' | 'preview' | 'import' | 'recap';
 type Fait = { bggId: number; titre: string; resultat: 'importe' | 'enrichi' | 'echec' };
 const CYCLE: Record<BoxFormat, BoxFormat> = { mini: 'petit', petit: 'moyen', moyen: 'grand', grand: 'mini' };
@@ -82,16 +78,7 @@ export default function ImportBggClient({ me }: { me: UserLite }) {
           if (!r.ok) throw new Error('enrichir');
           resultats.push({ bggId: l.jeu.bggId, titre: l.jeu.titre, resultat: 'enrichi' });
         } else {
-          const fd = new FormData();
-          fd.append('title', t.title || l.jeu.titre);
-          fd.append('box_format', formats[l.jeu.bggId] ?? global);
-          fd.append('bgg_id', String(t.bggId));
-          const vals: Record<string, unknown> = { year: t.year, publisher: t.publisher,
-            min_players: t.minPlayers, max_players: t.maxPlayers, playtime_min: t.playtimeMin,
-            weight: t.weight, bgg_rating: t.rating, designer: t.designer, artist: t.artist,
-            best_players: t.bestPlayers };
-          for (const [k, v] of Object.entries(vals)) if (v !== null && v !== '') fd.append(k, String(v));
-          if (t.coverName) fd.append('cover_name', t.coverName);
+          const fd = ficheBggFormData(t, formats[l.jeu.bggId] ?? global, t.title || l.jeu.titre);
           const r = await fetch('/api/games', { method: 'POST', body: fd });
           if (!r.ok) throw new Error('post');
           resultats.push({ bggId: l.jeu.bggId, titre: l.jeu.titre, resultat: 'importe' });

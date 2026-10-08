@@ -5,6 +5,7 @@ import PinInput from './PinInput';
 import LanguageSwitch from './LanguageSwitch';
 import { useI18n } from './LanguageProvider';
 import { ALLOWED_STICKERS } from '@/lib/stickers';
+import Etapes from './Etapes';
 
 // Jeton d'appareil « Se souvenir de moi » (v4.5.0) : gardé en localStorage pour
 // restaurer la session quand la PWA perd son cookie (constaté sur Android).
@@ -53,11 +54,16 @@ export default function AuthForm({ mode, next }: { mode: 'login' | 'register'; n
     if (!res.ok) { setError((await res.json()).error); return; }
     const data = await res.json().catch(() => ({})) as { device_token?: string };
     if (data.device_token) localStorage.setItem(DEVICE_KEY, data.device_token);
-    router.push(next ?? '/etagere'); router.refresh(); // next : retour au lien d'invitation (v4.7.0)
+    // Inscription → étape 2 « Tes jeux » (v4.18.0), qui renverra ensuite vers next.
+    const suite = mode === 'register'
+      ? `/bienvenue${next ? `?next=${encodeURIComponent(next)}` : ''}`
+      : next ?? '/etagere'; // next : retour au lien d'invitation (v4.7.0)
+    router.push(suite); router.refresh();
   }
 
   return (
     <form onSubmit={submit} className="auth-form">
+      {mode === 'register' && <Etapes n={1} />}
       <h1>{t(mode === 'login' ? 'auth.titreLogin' : 'auth.titreRegister')}</h1>
       <label>{t('auth.pseudo')}
         <input value={pseudo} onChange={(e) => setPseudo(e.target.value)} autoComplete="username" required />

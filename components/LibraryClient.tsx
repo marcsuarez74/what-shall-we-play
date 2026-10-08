@@ -1,5 +1,5 @@
 'use client';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FORMATS, formatLabel, formatShort, coverSrc } from '@/lib/formats';
 import { formatNombre } from '@/lib/i18n/format';
@@ -10,12 +10,13 @@ import GameSheet from './GameSheet';
 import ShelfControls from './ShelfControls';
 import UserMenu from './UserMenu';
 
-export default function LibraryClient({ games: initial, plays, verdicts, me, foyer = null }: {
+export default function LibraryClient({ games: initial, plays, verdicts, me, foyer = null, bienvenue = false }: {
   games: Game[];
   plays: Record<number, number>;
   verdicts: Record<number, { adore: number; bien: number; neutre: number }>;
   me: UserLite;
   foyer?: { name: string; members: number } | null;
+  bienvenue?: boolean;
 }) {
   const router = useRouter();
   const { lang, t } = useI18n();
@@ -25,6 +26,10 @@ export default function LibraryClient({ games: initial, plays, verdicts, me, foy
   const [detail, setDetail] = useState<Game | null>(null);
   const [filters, setFilters] = useState<ShelfFilters>({ q: '', players: null, weight: 'all', duration: 'all', format: 'all' });
   const filtered = useMemo(() => filterShelf(games, filters), [games, filters]);
+  // Alerte d'arrivée depuis l'onboarding (v4.18.0), affichée une seule fois :
+  // ?bienvenue=1 est retiré de l'URL sans re-rendu serveur (router.replace l'effacerait).
+  const [alerte, setAlerte] = useState(bienvenue);
+  useEffect(() => { if (bienvenue) window.history.replaceState(null, '', '/library'); }, [bienvenue]);
 
   async function remove(id: number) {
     const res = await fetch(`/api/games/${id}`, { method: 'DELETE' });
@@ -73,6 +78,12 @@ export default function LibraryClient({ games: initial, plays, verdicts, me, foy
       )}
       {foyer && (
         <div className="foyer-line">{t('ludotheque.foyerAvant')}<b>{foyer.name}</b>{t('ludotheque.foyerApres', { n: foyer.members })}</div>
+      )}
+      {alerte && (
+        <div className="alerte-once" role="status">
+          {t(games.length ? 'ludotheque.alertePrete' : 'ludotheque.alerteBienvenue')} {t('ludotheque.alerteSuite')}
+          <button type="button" aria-label={t('ludotheque.alerteFermer')} onClick={() => setAlerte(false)}>✕</button>
+        </div>
       )}
       {notice && <p className="hint" role="alert">{notice}</p>}
       {games.length === 0 && (

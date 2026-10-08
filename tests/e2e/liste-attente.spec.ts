@@ -1,5 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
 import { devenirAmis } from './helpers/amis';
+import { passerBienvenue } from './helpers/inscription';
 
 // v4.14.1 — places max : complet → « Me mettre en attente » ; une place libérée promeut
 // automatiquement le premier de la liste.
@@ -11,7 +12,7 @@ async function register(page: Page, pseudo: string) {
   const reg = page.waitForResponse((r) => r.url().endsWith('/api/auth/register'));
   await page.getByRole('button', { name: 'Créer mon compte' }).click();
   await reg;
-  await page.waitForURL('/etagere');
+  await passerBienvenue(page);
 }
 const dansNJours = (n: number) => { const d = new Date(); d.setDate(d.getDate() + n); return d.toLocaleDateString('sv-SE'); };
 const idDe = async (p: Page) => ((await (await p.request.get('/api/me')).json()) as { id: number }).id;

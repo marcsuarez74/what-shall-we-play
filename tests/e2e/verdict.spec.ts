@@ -1,6 +1,7 @@
 import { test, expect, Page } from '@playwright/test';
 import { devenirAmis } from './helpers/amis';
 import { newGame, putOnShelf } from './helpers/shelf';
+import { passerBienvenue } from './helpers/inscription';
 
 // v3.7 — le verdict 😍🙂😐 : trois pastilles sur la nuit terminée, révocables,
 // compteurs du groupe (sans attribution) rafraîchis en direct via UserSync.
@@ -13,7 +14,7 @@ async function register(page: Page, pseudo: string) {
   const reg = page.waitForResponse((r) => r.url().endsWith('/api/auth/register'));
   await page.getByRole('button', { name: 'Créer mon compte' }).click();
   await reg;
-  await page.waitForURL('/etagere');
+  await passerBienvenue(page);
 }
 
 async function creerPartieSolo(page: Page) {

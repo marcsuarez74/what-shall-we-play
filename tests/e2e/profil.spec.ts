@@ -1,6 +1,7 @@
 import { test, expect, Page } from '@playwright/test';
 import { devenirAmiDe } from './helpers/amis';
 import { newGame, gameIdByTitle, nightIdOf, putOnShelf } from './helpers/shelf';
+import { passerBienvenue } from './helpers/inscription';
 
 async function registerAndStart(page: import('@playwright/test').Page, pseudo: string) {
   await page.goto('/register');
@@ -9,6 +10,7 @@ async function registerAndStart(page: import('@playwright/test').Page, pseudo: s
   const reg = page.waitForResponse((r) => r.url().endsWith('/api/auth/register'));
   await page.getByRole('button', { name: 'Créer mon compte' }).click();
   await reg;
+  await passerBienvenue(page);
   // Première connexion : on crée la soirée (pré-cochée) — on attend la fin du POST
   const nightDone = page.waitForResponse((r) => r.url().endsWith('/api/nights') && r.request().method() === 'POST');
   await page.getByRole('button', { name: 'Créer la partie' }).click();
@@ -101,7 +103,7 @@ test('onboarding : l\'emoji choisi à l\'inscription est porté partout', async 
   const reg = page.waitForResponse((r) => r.url().endsWith('/api/auth/register'));
   await page.getByRole('button', { name: 'Créer mon compte' }).click();
   await reg;
-  await page.waitForURL('/etagere');
+  await passerBienvenue(page);
   // La pastille utilisateur (présente sur toutes les pages) porte l'emoji choisi
   await expect(page.locator('.user-chip summary').first()).toContainText('🦊');
   // Et l'avatar du profil porte le même emoji choisi à l'inscription
@@ -142,7 +144,7 @@ test('profil : podiums dans les stats et mes parties médailles', async ({ page,
   await p2.getByLabel('Pseudo').fill(`inv_${s}`);
   await p2.getByLabel('Code secret').fill('1234');
   await p2.getByRole('button', { name: 'Créer mon compte' }).click();
-  await p2.waitForURL('**/etagere');
+  await passerBienvenue(p2);
 
   await page.goto('/register');
   await page.getByLabel('Pseudo').fill(`pod_${s}`);
@@ -150,7 +152,7 @@ test('profil : podiums dans les stats et mes parties médailles', async ({ page,
   const reg = page.waitForResponse((r) => r.url().endsWith('/api/auth/register'));
   await page.getByRole('button', { name: 'Créer mon compte' }).click();
   await reg;
-  await page.waitForURL('/etagere');
+  await passerBienvenue(page);
   await page.reload(); // la liste des joueurs est rendue côté serveur
   await devenirAmiDe(page, `inv_${s}`); await page.reload();
   await page.locator('.player-list label', { hasText: `inv_${s}` }).locator('input').check();

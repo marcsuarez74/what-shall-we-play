@@ -4,17 +4,13 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FORMATS, FORMAT_SCALE, formatShort } from '@/lib/formats';
 import { formatNombre } from '@/lib/i18n/format';
+import { ficheBggFormData, type FicheBgg } from '@/lib/bgg-ajout';
 import type { UserLite } from '@/lib/types';
 import { useI18n } from './LanguageProvider';
 import UserMenu from './UserMenu';
 
 interface Suggestion { bggId: number; name: string; annee: number | null; }
-interface Thing {
-  bggId: number; title: string; year: number | null; publisher: string | null;
-  minPlayers: number | null; maxPlayers: number | null; playtimeMin: number | null;
-  weight: number | null; rating: number | null; designer: string | null;
-  artist: string | null; bestPlayers: number | null; coverName: string | null;
-}
+type Thing = FicheBgg;
 type Stage = 'etiquette' | 'fiche';
 type Mode = 'bgg' | 'manuel';
 
@@ -103,20 +99,13 @@ export default function AddGameForm({ me }: { me: UserLite }) {
 
   async function submit() {
     setBusy(true); setError(null);
-    const fd = new FormData();
-    fd.append('title', title.trim());
-    fd.append('box_format', format);
+    let fd: FormData;
     if (mode === 'bgg' && thing) {
-      fd.append('bgg_id', String(thing.bggId));
-      const vals: Record<string, string | number | null> = {
-        year: thing.year, publisher: thing.publisher, min_players: thing.minPlayers,
-        max_players: thing.maxPlayers, playtime_min: thing.playtimeMin,
-        weight: thing.weight, bgg_rating: thing.rating, designer: thing.designer,
-        artist: thing.artist, best_players: thing.bestPlayers,
-      };
-      for (const [k, v] of Object.entries(vals)) if (v !== null && v !== '') fd.append(k, String(v));
-      if (thing.coverName) fd.append('cover_name', thing.coverName);
+      fd = ficheBggFormData(thing, format, title);
     } else {
+      fd = new FormData();
+      fd.append('title', title.trim());
+      fd.append('box_format', format);
       for (const [k, v] of Object.entries(manual)) if (v !== '') fd.append(k, v);
     }
     if (photo) fd.append('cover', photo);

@@ -2551,3 +2551,60 @@ a.btn-go.as-link { display: flex; align-items: center; justify-content: center; 
 .kij-c.h5 { background: var(--cuivre); color: var(--noyer); }
 .kij-best { font-weight: 700; font-size: 14px; }
 .kij-profil { margin-top: 14px; }
+
+/* ===== v4.18.0 — onboarding : étape ② « Tes jeux » (/bienvenue) ===== */
+.onb { display: flex; flex-direction: column; gap: 10px; max-width: 480px; margin: 0 auto; padding-bottom: 24px; }
+.onb-marque { margin: 0; font-size: 12px; font-weight: 700; letter-spacing: .04em; color: var(--doux-clair); }
+.onb-etapes { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--doux-clair); margin-bottom: 8px; }
+.onb-etapes .pt { width: 22px; height: 4px; border-radius: 2px; background: var(--doux); }
+.onb-etapes .pt.on { background: var(--cuivre); }
+.onb-titre { margin: 0; font-size: 26px; font-weight: 800; line-height: 1.15; }
+.onb-sous { margin: 0; font-size: 13.5px; color: var(--doux-clair); }
+.onb-seg { display: flex; gap: 4px; padding: 4px; border-radius: 12px; background: var(--surface); }
+.onb-seg button { flex: 1; min-height: 40px; border: 0; border-radius: 9px; background: transparent;
+  color: var(--doux-clair); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.onb-seg button[aria-pressed="true"] { background: var(--surface-plus); color: var(--creme); }
+.onb-input { width: 100%; min-height: 44px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--doux);
+  background: var(--noyer); color: var(--creme); font: inherit; font-size: 16px; box-sizing: border-box; }
+.onb-suggs { display: flex; flex-direction: column; border-radius: 12px; overflow: hidden; background: var(--surface); }
+.onb-sugg { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 8px 12px; border: 0;
+  border-top: 1px solid color-mix(in srgb, var(--doux) 35%, transparent); background: transparent;
+  color: var(--creme); font: inherit; text-align: left; cursor: pointer; }
+.onb-sugg:first-child { border-top: 0; }
+.onb-sugg small { margin-left: 6px; color: var(--doux-clair); font-size: 12px; }
+.onb-t { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
+.onb-plus { font-size: 13px; font-weight: 700; color: var(--cuivre); white-space: nowrap; }
+.onb-sugg.deja .onb-plus { color: #9BD8B7; }
+.onb-sugg:disabled { cursor: default; }
+.onb-carte { display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: 14px; background: var(--surface); }
+.onb-carte p { margin: 0; font-size: 13px; color: var(--doux-clair); }
+.onb-carte label { font-size: 13px; font-weight: 600; }
+.onb-sm { min-height: 44px; }
+.onb-label { margin-top: 6px; font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--doux-clair); }
+.onb-formats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.onb-formats button { min-height: 40px; border-radius: 10px; border: 1px solid var(--doux); background: transparent;
+  color: var(--creme); font: inherit; font-size: 13px; cursor: pointer; }
+.onb-formats button[aria-pressed="true"] { border-color: var(--cuivre); background: color-mix(in srgb, var(--cuivre) 18%, transparent); }
+.onb-toast { margin: 0; min-height: 1em; font-size: 12.5px; color: #9BD8B7; }
+.onb-liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.onb-ajoute { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 12px; background: var(--surface); }
+.onb-cov { width: 30px; height: 40px; flex: none; border-radius: 4px; object-fit: cover;
+  display: inline-flex; align-items: center; justify-content: center; background: var(--surface-plus); }
+.onb-fmt { min-height: 32px; padding: 0 10px; border-radius: 999px; border: 1px solid var(--doux); background: transparent;
+  color: var(--creme); font: inherit; font-size: 12px; cursor: pointer; white-space: nowrap; }
+.onb-fmt::after { content: " ▾"; color: var(--doux-clair); }
+.onb-retirer { width: 36px; height: 36px; flex: none; border: 0; border-radius: 50%; background: transparent;
+  color: var(--doux-clair); font-size: 15px; cursor: pointer; }
+.onb-vide { padding: 16px; border-radius: 12px; border: 1px dashed var(--doux); text-align: center;
+  font-size: 13px; color: var(--doux-clair); }
+.onb-pied { display: flex; flex-direction: column; margin-top: 12px; }
+.onb-pied .btn-copper { width: 100%; }
+.onb-lien { align-self: center; min-height: 44px; border: 0; background: transparent; color: var(--doux-clair);
+  font: inherit; font-size: 13.5px; text-decoration: underline; cursor: pointer; }
+
+/* v4.18.0 — alerte d'arrivée sur Ma ludothèque, affichée une seule fois */
+.alerte-once { position: relative; margin-bottom: 12px; padding: 10px 34px 10px 12px; border-radius: 12px;
+  background: color-mix(in srgb, var(--vert) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--vert) 45%, transparent); font-size: 13px; }
+.alerte-once button { position: absolute; top: 4px; right: 4px; width: 28px; height: 28px; border: 0;
+  background: transparent; color: var(--doux-clair); cursor: pointer; }

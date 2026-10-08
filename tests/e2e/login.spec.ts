@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { passerBienvenue } from './helpers/inscription';
 
 // Page de connexion publique — attribution BGG demandée par le client (v4.4.0).
 test('login : attribution « Powered by BoardGameGeek » visible', async ({ page }) => {
@@ -16,7 +17,7 @@ test('login : la session survit à la perte du cookie (jeton d\'appareil)', asyn
   await page.getByLabel('Pseudo').fill(`souviens${stamp}`);
   await page.getByLabel('Code secret').fill('1234');
   await page.getByRole('button', { name: 'Créer mon compte' }).click();
-  await page.waitForURL('**/etagere');
+  await passerBienvenue(page);
 
   // Déconnexion explicite : session ET jeton purgés
   await page.locator('.user-chip summary').click();

@@ -1,6 +1,7 @@
 import { test, expect, Page } from '@playwright/test';
 import { devenirAmis } from './helpers/amis';
 import { lancerTirage, newGame, putOnShelf } from './helpers/shelf';
+import { passerBienvenue } from './helpers/inscription';
 
 // v3.5 — le vote s'incruste sur l'étagère : badge 👍 haut-droite de chaque boîte,
 // cuivré quand c'est mon vote, révocable, partagé en direct. Le rituel ne change pas.
@@ -12,7 +13,7 @@ async function register(page: Page, pseudo: string) {
   const reg = page.waitForResponse((r) => r.url().endsWith('/api/auth/register'));
   await page.getByRole('button', { name: 'Créer mon compte' }).click();
   await reg;
-  await page.waitForURL('/etagere');
+  await passerBienvenue(page);
 }
 
 async function creerPartie(a: Page, pseudoInvite: string) {

@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { gameIdByTitle, putOnShelf } from './helpers/shelf';
+import { passerBienvenue } from './helpers/inscription';
 
 // Barre d'onglets + bibliothèque détaillée : cartes riches, fiche au toucher, format modifiable.
 const stamp = Date.now().toString(36);
@@ -78,7 +79,7 @@ test('ludothèque : récupérer les pochettes manquantes', async ({ page }) => {
   await page.getByLabel('Pseudo').fill(`covers_${stamp}`);
   await page.getByLabel('Code secret').fill('1234');
   await page.getByRole('button', { name: 'Créer mon compte' }).click();
-  await page.waitForURL('**/etagere');
+  await passerBienvenue(page);
 
   await page.goto('/games/add');
   await page.getByLabel('Titre du jeu').fill('Through the Desert');
