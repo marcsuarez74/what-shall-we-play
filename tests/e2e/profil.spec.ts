@@ -43,12 +43,23 @@ test('profil : changement de code effectif', async ({ page }) => {
   await page.goto('/profil');
   await page.getByRole('button', { name: /Changer mon code/ }).click();
   const dlg = page.getByRole('dialog', { name: 'Changer mon code' });
+  // Validation automatique au 4e chiffre : plus de bouton « Continuer ».
+  await expect(dlg.getByRole('button', { name: 'Continuer' })).toHaveCount(0);
+  // Fermer remet à zéro : à la réouverture, rien n'est resté saisi.
+  await dlg.getByLabel('Code actuel').fill('12');
+  await dlg.getByRole('button', { name: 'Fermer' }).click();
+  await page.getByRole('button', { name: /Changer mon code/ }).click();
+  await expect(dlg.getByLabel('Code actuel')).toHaveValue('');
+  // Mauvais code actuel : vérifié dès l'étape 1, on y reste et on peut ressaisir.
+  await dlg.getByLabel('Code actuel').fill('9999');
+  await expect(dlg.getByRole('alert')).toHaveText('Code actuel incorrect');
+  await expect(dlg.getByLabel('Code actuel')).toHaveValue('');
   await dlg.getByLabel('Code actuel').fill('1234');
-  await dlg.getByRole('button', { name: 'Continuer' }).click();
   await dlg.getByLabel('Nouveau code').fill('5678');
-  await dlg.getByRole('button', { name: 'Continuer' }).click();
+  // Confirmation différente : effacée, on ressaisit à l'étape 3.
+  await dlg.getByLabel('Confirmer le nouveau code').fill('5679');
+  await expect(dlg.getByRole('alert')).toHaveText('Les deux nouveaux codes diffèrent');
   await dlg.getByLabel('Confirmer le nouveau code').fill('5678');
-  await dlg.getByRole('button', { name: 'Enregistrer le nouveau code' }).click();
   await expect(dlg.getByText('Code enregistré ✓')).toBeVisible();
 
   // Reconnexion avec le nouveau code

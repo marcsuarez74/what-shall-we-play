@@ -16,7 +16,7 @@ type Mode = 'bgg' | 'manuel';
 
 // Taille du plus grand carré (grand = 30×30) ; les autres suivent FORMAT_SCALE.
 const BOX_PX = 76;
-const DEBOUNCE_MS = 500;   // l'autocomplete attend la fin de frappe
+const DEBOUNCE_MS = 350;   // l'autocomplete attend la fin de frappe
 const MAX_SUGGESTIONS = 8; // et précharge au plus 8 fiches (garde 1 req/s côté serveur)
 
 export default function AddGameForm({ me }: { me: UserLite }) {
@@ -33,6 +33,11 @@ export default function AddGameForm({ me }: { me: UserLite }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const debounce = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Fluidité : seule la DERNIÈRE requête lancée a le droit d'afficher son résultat
+  // (une réponse lente d'une frappe précédente écrasait la liste), et les requêtes
+  // déjà faites sont servies depuis la mémoire (effacer une lettre = instantané).
+  const derniere = useRef(0);
+  const cache = useRef(new Map<string, Suggestion[]>());
 
   function clearDebounce() {
     if (debounce.current) { clearTimeout(debounce.current); debounce.current = null; }
@@ -45,22 +50,33 @@ export default function AddGameForm({ me }: { me: UserLite }) {
   // state du rendu (closure stale sinon).
   async function chercher(q: string) {
     if (q.length < 2) return;
+    const n = ++derniere.current;
+    const afficher = (results: Suggestion[]) => {
+      if (results.length === 0) { setSuggestions([]); setError(t('ajout.errAucunJeu', { q })); return; }
+      setSuggestions(results.slice(0, MAX_SUGGESTIONS));
+    };
+    const connu = cache.current.get(q.toLowerCase());
+    if (connu) { setError(null); afficher(connu); return; }
     setBusy(true); setError(null);
     try {
       const res = await fetch(`/api/bgg/search?q=${encodeURIComponent(q)}`);
       if (!res.ok) throw new Error();
       const results: Suggestion[] = (await res.json()).results;
-      if (results.length === 0) { setSuggestions([]); setError(t('ajout.errAucunJeu', { q })); return; }
-      setSuggestions(results.slice(0, MAX_SUGGESTIONS));
+      cache.current.set(q.toLowerCase(), results);
+      if (n === derniere.current) afficher(results);
     } catch {
-      setSuggestions([]); setError(t('ajout.errBggToken'));
-    } finally { setBusy(false); }
+      if (n === derniere.current) { setSuggestions([]); setError(t('ajout.errBggToken')); }
+    } finally { if (n === derniere.current) setBusy(false); }
   }
 
   function onTitre(v: string) {
     setTitle(v);
     clearDebounce();
-    setSuggestions([]); setError(null); // nouvelle frappe : la liste repart de zéro
+    derniere.current++; setBusy(false); // toute requête en vol est périmée
+    // La liste reste affichée pendant la frappe (pas de clignotement) jusqu'aux
+    // nouveaux résultats ; elle disparaît sous 2 caractères.
+    setError(null);
+    if (v.trim().length < 2) setSuggestions([]);
     if (stage === 'etiquette' && v.trim().length >= 2) {
       debounce.current = setTimeout(() => { void chercher(v.trim()); }, DEBOUNCE_MS);
     }

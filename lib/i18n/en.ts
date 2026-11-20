@@ -694,8 +694,6 @@ export const en: Record<CléDict, ValeurDict> = {
   'profil.codeActuel': 'Current code',
   'profil.nouveauCode': 'New code',
   'profil.confirmCode': 'Confirm the new code',
-  'profil.continuer': 'Continue',
-  'profil.enregistrerCode': 'Save the new code',
   'profil.supprimerTitre': 'Delete your profile?',
   'profil.delAvant': 'Your profile, your ',
   'profil.delMilieu': " and your draws leave the app. Other people's games stay, without you. ",

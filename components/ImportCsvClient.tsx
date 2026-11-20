@@ -66,6 +66,9 @@ export default function ImportCsvClient({ me }: { me: UserLite }) {
   const ref = useRef<Ligne[]>([]);
   const ludo = useRef<Game[]>([]);
   const boucle = useRef(false);
+  // Lu à chaque tour de boucle : cocher « extensions » pendant une recherche en cours
+  // doit les inclure (sinon elles restaient « en attente » et « Ajouter » ne s'activait jamais).
+  const extRef = useRef(false);
   const vivant = useRef(true);
   // StrictMode (dev) démonte puis remonte : le drapeau doit revenir à vrai au remontage.
   useEffect(() => { vivant.current = true; return () => { vivant.current = false; }; }, []);
@@ -84,12 +87,12 @@ export default function ImportCsvClient({ me }: { me: UserLite }) {
     return { fiche: f, etat: 'ok' };
   }
 
-  async function rechercher(avecExt: boolean) {
+  async function rechercher() {
     if (boucle.current) return;
     boucle.current = true;
     try {
       for (;;) {
-        const l = ref.current.find((x) => x.etat === 'att' && (avecExt || !x.csv.extension));
+        const l = ref.current.find((x) => x.etat === 'att' && (extRef.current || !x.csv.extension));
         if (!l || !vivant.current) break;
         try {
           const r = rapprocher(l.csv.titre, l.csv.annee, await chercher(requeteBgg(l.csv.titre), l.csv.extension));
@@ -115,14 +118,15 @@ export default function ImportCsvClient({ me }: { me: UserLite }) {
       return { i, csv: c, etat, coche: etat === 'att' && !c.extension, fiche: null, candidats: [], dejaId: null, resolu: false };
     });
     setLignes(ref.current); setNomFichier(file.name); setFiltre('tous'); setStage('verif');
-    void rechercher(ext);
+    extRef.current = ext;
+    void rechercher();
   }
 
   function basculerExt() {
     const v = !ext;
-    setExt(v);
+    setExt(v); extRef.current = v;
     for (const l of ref.current) if (l.csv.extension && ['att', 'ok', 'multi', 'none', 'echec', 'enrichir'].includes(l.etat)) maj(l.i, { coche: v });
-    if (v) void rechercher(true);
+    if (v) void rechercher();
   }
 
   const visibles = lignes.filter((l) => ext || !l.csv.extension);

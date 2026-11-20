@@ -87,6 +87,12 @@ function sansAccents(s: string): string {
   return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 }
 
+// Forme de comparaison de la recherche : sans accents ni ponctuation (« Hanabi: Deluxe »,
+// « King’s » vs « King's »), espaces réduits — « hanabi deluxe » doit trouver « Hanabi: Deluxe ».
+function cle(s: string): string {
+  return sansAccents(s).replace(/['’`]/g, '').replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+}
+
 export function parseThingXml(xml: string): ThingParsed | null {
   const root = parser.parse(xml)?.items;
   const item = Array.isArray(root?.item) ? root.item.find((i: Record<string, unknown>) => i['@_type'] === 'boardgame') : root?.item;
@@ -139,13 +145,20 @@ export async function searchBoardgames(q: string, extensions = false): Promise<{
   // Aucune image dans les réponses — les pochettes viennent de /thing, côté UI.
   // L'autocomplete promet « contient ce que je tape » : /search BGG est flou
   // (préfixes, mots voisins) → post-filtre insensible casse + accents.
-  const q2 = sansAccents(q);
+  // Chaque mot tapé doit figurer dans le nom (« dilemme roi » trouve « Le Dilemme du Roi »),
+  // puis tri par pertinence : titre exact, puis « commence par », puis le reste (ordre BGG).
+  const mots = cle(q).split(' ').filter(Boolean);
+  const q2 = mots.join(' ');
   const parsed: { bggId: number; name: string; annee: number | null }[] = items.map((i: Record<string, unknown>) => ({
     bggId: Number(i['@_id']),
-    name: texteOuAttribut(i.name) ?? '',
+    // Un item peut porter plusieurs <name> (tableau) : on garde le premier.
+    name: texteOuAttribut(Array.isArray(i.name) ? i.name[0] : i.name) ?? '',
     annee: n((i.yearpublished as Record<string, unknown> | undefined)?.['@_value']),
   }));
-  return parsed.filter((r) => sansAccents(r.name).includes(q2));
+  const rang = (name: string) => { const c = cle(name); return c === q2 ? 0 : c.startsWith(q2) ? 1 : 2; };
+  return parsed
+    .filter((r) => { const c = cle(r.name); return mots.every((m) => c.includes(m)); })
+    .sort((a, b) => rang(a.name) - rang(b.name));
 }
 
 export async function getThing(bggId: number): Promise<ThingResult | null> {
