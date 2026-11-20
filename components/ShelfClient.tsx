@@ -196,7 +196,7 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
               : libre
                 ? <span className="badge-etat b-libre"><span className="pt" />{t('libre.badge', { n: joues.size })}</span>
                 : <span className="badge-etat b-prep"><span className="pt" />{t('etagere.enPrep')}</span>}
-          {!enJeu && <button type="button" className="link-btn" onClick={() => setEditingNight(true)}>{t('etagere.modifier')}</button>}
+          {!enJeu && estCreateur && <button type="button" className="link-btn" onClick={() => setEditingNight(true)}>{t('etagere.modifier')}</button>}
         </div>
         {(night.titre || futur) && <p className="nc-titre">{titrePartie(lang, night)}</p>}
         {enJeu && partyGame && (

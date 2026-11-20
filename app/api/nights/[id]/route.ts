@@ -29,6 +29,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     const { playerIds } = body;
     if (playerIds !== undefined && (!Array.isArray(playerIds) || !playerIds.includes(user.id)))
       return NextResponse.json({ error: t(lang, 'soiree.errDoitEtreDansSoiree') }, { status: 400 });
+    // v4.21.1 : seul le créateur change les joueurs (un invité ne peut plus retirer l'initiateur).
+    if (playerIds !== undefined && night.creator_id !== user.id)
+      return NextResponse.json({ error: t(lang, 'soiree.errSeulCreateurJoueurs') }, { status: 403 });
     // v4.19.0 : choix du jeu (créateur, tant qu'aucune manche n'est déclarée) — vérifié avant toute autre écriture.
     if (body.mode !== undefined) {
       const r = changerMode(nightId, user.id, body.mode, lang);
