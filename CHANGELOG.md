@@ -14,6 +14,12 @@ versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 - Le message de l'étagère annonce l'ouverture (« La partie s'ouvre à 20:30 ») ; en choix libre,
   il ne parle plus de tirage.
 
+## [4.21.3] — 2026-11-21
+
+### Corrigé
+🎲 **Détail d'un cercle aéré** : les blocs « Adhésion », « Demandes » et « Kijoukan » ne sont
+plus collés les uns aux autres.
+
 ## [4.21.2] — 2026-11-20
 
 ### Corrigé
