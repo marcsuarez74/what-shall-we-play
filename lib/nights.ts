@@ -23,6 +23,18 @@ export function getPlannedNights(userId: number): Night[] {
     ORDER BY n.played_at ASC, n.id ASC`).all(userId, userId) as Night[];
 }
 
+// v4.21.0 — Parties à venir hors séries : « Programmées » et le bloc « À venir » de l'étagère
+// (les dates d'une série vivent dans la carte de la série).
+export function getAVenir(userId: number): Night[] {
+  return getPlannedNights(userId).filter((n) => n.serie_id == null);
+}
+
+// v4.21.0 — Jours avant une date (« Demain » = 1), sur le calendrier local comme estFuture.
+export function joursAvant(playedAt: string): number {
+  return (getDb().prepare("SELECT CAST(julianday(?) - julianday(date('now','localtime')) AS INTEGER) AS j")
+    .get(playedAt) as { j: number }).j;
+}
+
 // Sync live : chaque participant de la partie est prévenu (son /etagere se rafraîchit).
 export function notifyNight(nightId: number): void {
   emitToUsers((getDb().prepare('SELECT user_id FROM night_players WHERE night_id = ?')
