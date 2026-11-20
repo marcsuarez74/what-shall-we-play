@@ -39,7 +39,7 @@ export const fr = {
   'soiree.retirerInviteSur': 'Sûr ?',
   'annonce.lienSoiree': ({ lien }: Record<string, string | number>) => `Rejoins-nous : ${lien}`,
   // v4.7.0 — refonte des invités, parties programmées (titre, étagère, suppression)
-  'soiree.errPasAujourdhui': 'Le tirage s’ouvre le jour de la partie.',
+  'soiree.errPasAujourdhui': 'La partie n’a pas encore commencé.',
   'soiree.errTitre': 'Titre : 40 caractères au plus.',
   'soiree.titreLabel': 'Titre',
   'soiree.titrePlaceholder': 'Soirée jeux 🎲',
@@ -67,6 +67,8 @@ export const fr = {
   'etagere.joueursN': ({ n }: Record<string, string | number>) => `Joueurs · ${n}`,
   'etagere.invitesN': ({ n }: Record<string, string | number>) => `Invités · ${n}`,
   'etagere.tirageJourJ': '🎡 Le tirage s’ouvre le jour de la partie. D’ici là, chacun ajoute ses jeux et vote.',
+  'etagere.ouvreA': ({ h }: Record<string, string | number>) => `🕗 La partie s’ouvre à ${h}. D’ici là, chacun ajoute ses jeux et vote.`,
+  'libre.ouvreJourJ': '🎲 La partie s’ouvre le jour J. D’ici là, chacun ajoute ses jeux et vote.',
   'etagere.retourParties': '← Parties',
   'invite.tInvite': ({ hote }: Record<string, string | number>) => `${hote} t’invite`,
   'invite.aUneSoiree': 'à une soirée jeux',

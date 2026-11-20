@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { getSessionUser } from '@/lib/session';
-import { getActiveNight, getNightPlayers, getShelfGames, getNightGame, getTodayTermineeNight, getShelfVotes, getShelfVetos, getShelfNight, estFuture, lienInvitation, getAVenir } from '@/lib/nights';
+import { getActiveNight, getNightPlayers, getShelfGames, getNightGame, getTodayTermineeNight, getShelfVotes, getShelfVetos, getShelfNight, estFuture, pasCommencee, lienInvitation, getAVenir } from '@/lib/nights';
 import { mesEvenements } from '@/lib/evenements';
 import { getNightPlays } from '@/lib/libre';
 import { getPickCounts, listUserLibrary } from '@/lib/games';
@@ -61,7 +61,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ n
                  plays={getPickCounts()} votes={getShelfVotes(night.id)} vetos={getShelfVetos(night.id)}
                  declarations={night.mode === 'libre' ? getNightPlays(night.id) : []}
                  evenements={mesEvenements(user.id).map((e) => ({ id: e.id, titre: e.titre }))}
-                 futur={estFuture(night)}
+                 futur={pasCommencee(night)} programmee={estFuture(night)}
                  lien={night.creator_id === user.id ? lienInvitation(night) : undefined}
                  me={{ id: user.id, pseudo: user.pseudo, sticker: user.sticker, avatar_path: user.avatar_path }} />
   </main>;

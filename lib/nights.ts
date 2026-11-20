@@ -85,6 +85,15 @@ export function getNight(nightId: number): Night | null {
 export function estFuture(night: { played_at: string }): boolean {
   return (getDb().prepare("SELECT ? > date('now','localtime') AS f").get(night.played_at) as { f: number }).f === 1;
 }
+// v4.21.4 — pas encore commencée : jour à venir, ou aujourd'hui avant l'heure de début
+// quand elle est renseignée. D'ici là, l'étagère ne sert qu'à ajouter des jeux et voter :
+// ni tirage, ni « J'ai joué », ni « Terminer ».
+export function pasCommencee(night: { played_at: string; start_time?: string | null }): boolean {
+  const heure = night.start_time ?? null;
+  return (getDb().prepare(`SELECT ? > date('now','localtime')
+    OR (? = date('now','localtime') AND ? IS NOT NULL AND substr(?, 1, 5) > strftime('%H:%M','now','localtime')) AS f`)
+    .get(night.played_at, night.played_at, heure, heure) as { f: number }).f === 1;
+}
 // v4.7.0 — l'étagère d'une partie précise (?night=) : une partie non terminée
 // dont on est joueur ou créateur. Sinon null (la page retombe sur « ce soir »).
 export function getShelfNight(userId: number, nightId: number): Night | null {
@@ -218,7 +227,7 @@ export function boxOutNight(nightId: number, userId: number, gameId: number, lan
   if (night.mode === 'libre') return { error: t(lang, 'libre.errPasDeTirage'), status: 409 }; // v4.19.0
   if (night.status === 'en_jeu') return { error: t(lang, 'soiree.errBoiteDejaSortie'), status: 409 };
   if (night.status === 'termine') return { error: t(lang, 'soiree.errPartieTerminee'), status: 409 };
-  if (estFuture(night)) return { error: t(lang, 'soiree.errPasAujourdhui'), status: 409 };
+  if (pasCommencee(night)) return { error: t(lang, 'soiree.errPasAujourdhui'), status: 409 };
   if (!getShelfGames(nightId).some((g) => g.id === gameId)) return { error: t(lang, 'soiree.errJeuPasSurEtagere'), status: 400 };
   getDb().prepare(`UPDATE nights SET game_id = ?, status = 'en_jeu' WHERE id = ?`).run(gameId, nightId);
   notifyNight(nightId);
@@ -232,7 +241,7 @@ export function drawAllowed(nightId: number, lang: Lang = 'fr'): { ok: true } | 
   if (night.mode === 'libre') return { error: t(lang, 'libre.errPasDeTirage'), status: 409 }; // v4.19.0
   if (night.status === 'en_jeu') return { error: t(lang, 'soiree.errBoiteVerrouille'), status: 409 };
   if (night.status === 'termine') return { error: t(lang, 'soiree.errPartieTerminee'), status: 409 };
-  if (estFuture(night)) return { error: t(lang, 'soiree.errPasAujourdhui'), status: 409 }; // v4.7.0 : tirage le jour J
+  if (pasCommencee(night)) return { error: t(lang, 'soiree.errPasAujourdhui'), status: 409 }; // tirage le jour J, à l'heure
   return { ok: true };
 }
 
