@@ -129,17 +129,52 @@ export default function ProfileClient({ me, stats, verdictStats, foyer, parties,
     router.refresh();
   }
 
-  async function submitCode() {
-    if (c2 !== c3) { setCodeMsg(t('profil.errCodesDifferents')); return; }
+  // Changement de code : chaque étape se valide toute seule au 4e chiffre (plus de
+  // bouton « Continuer »). Étape 1 : le code actuel est vérifié tout de suite par le
+  // serveur — faux, on efface et on reste à l'étape 1 avec le message.
+  // Fermer (✕, fond, ou après succès) remet tout à zéro : rien ne reste saisi.
+  function fermerCode() {
+    setCodeOpen(false); setCodeStep(1); setC1(''); setC2(''); setC3(''); setCodeMsg(null);
+  }
+
+  async function verifierActuel(code: string) {
     setBusy(true); setCodeMsg(null);
     const res = await fetch('/api/me/code', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ current: c1, next: c2 }),
+      body: JSON.stringify({ current: code }),
     });
     setBusy(false);
-    if (!res.ok) { setCodeMsg((await res.json()).error); return; }
+    if (!res.ok) { setC1(''); setCodeMsg((await res.json().catch(() => ({}))).error ?? t('compte.errCodeActuel')); return; }
+    setCodeStep(2);
+  }
+
+  function saisirActuel(v: string) {
+    setC1(v); setCodeMsg(null);
+    if (v.length === 4 && !busy) void verifierActuel(v);
+  }
+
+  function saisirNouveau(v: string) {
+    setC2(v); setCodeMsg(null);
+    if (v.length === 4) setCodeStep(3);
+  }
+
+  function saisirConfirmation(v: string) {
+    setC3(v); setCodeMsg(null);
+    if (v.length !== 4 || busy) return;
+    if (v !== c2) { setC3(''); setCodeMsg(t('profil.errCodesDifferents')); return; }
+    void submitCode(v);
+  }
+
+  async function submitCode(confirme: string) {
+    setBusy(true); setCodeMsg(null);
+    const res = await fetch('/api/me/code', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ current: c1, next: confirme }),
+    });
+    setBusy(false);
+    if (!res.ok) { setC3(''); setCodeMsg((await res.json().catch(() => ({}))).error ?? t('compte.errCodeActuel')); return; }
     setCodeMsg(t('profil.codeEnregistre'));
-    setTimeout(() => { setCodeOpen(false); setCodeStep(1); setC1(''); setC2(''); setC3(''); setCodeMsg(null); }, 900);
+    setTimeout(fermerCode, 900);
   }
 
   async function deleteMe() {
@@ -207,7 +242,7 @@ export default function ProfileClient({ me, stats, verdictStats, foyer, parties,
       )}
 
       <div className="actions">
-        <button type="button" className="action" onClick={() => { setCodeOpen(true); setCodeStep(1); }}>
+        <button type="button" className="action" onClick={() => setCodeOpen(true)}>
           {t('profil.changerCode')} <span className="n">{t('profil.quatreChiffres')}</span>
         </button>
         <button type="button" className="action danger" onClick={() => { setDelOpen(true); setDelCode(''); }}>
@@ -270,35 +305,30 @@ export default function ProfileClient({ me, stats, verdictStats, foyer, parties,
 
       {/* Changer le code — 3 étapes */}
       {codeOpen && (
-        <div className="sheet-backdrop" onClick={() => setCodeOpen(false)}>
+        <div className="sheet-backdrop" onClick={fermerCode}>
           <div className="bottom-sheet" role="dialog" aria-modal="true" aria-label={t('profil.changerCode')}
                onClick={(e) => e.stopPropagation()}>
-            <button type="button" className="sheet-close" aria-label={t('etagere.fermer')} onClick={() => setCodeOpen(false)}>✕</button>
+            <button type="button" className="sheet-close" aria-label={t('etagere.fermer')} onClick={fermerCode}>✕</button>
             <h2>{t('profil.changerCode')}</h2>
             <div className="steps" aria-hidden="true"><i className={codeStep >= 1 ? 'on' : ''} /><i className={codeStep >= 2 ? 'on' : ''} /><i className={codeStep >= 3 ? 'on' : ''} /></div>
             {codeStep === 1 && (
               <>
                 <p className="pin-label">{t('profil.etape1')}</p>
-                <PinInput label={t('profil.codeActuel')} value={c1} onChange={setC1} autoComplete="current-password" />
-                <button type="button" className="btn-go" disabled={c1.length !== 4}
-                        onClick={() => setCodeStep(2)}>{t('profil.continuer')}</button>
+                <PinInput label={t('profil.codeActuel')} value={c1} onChange={saisirActuel} autoComplete="current-password" autoFocus />
+                {codeMsg && <p className="error" role="alert">{codeMsg}</p>}
               </>
             )}
             {codeStep === 2 && (
               <>
                 <p className="pin-label">{t('profil.etape2')}</p>
-                <PinInput label={t('profil.nouveauCode')} value={c2} onChange={setC2} autoComplete="new-password" />
-                <button type="button" className="btn-go" disabled={c2.length !== 4}
-                        onClick={() => setCodeStep(3)}>{t('profil.continuer')}</button>
+                <PinInput label={t('profil.nouveauCode')} value={c2} onChange={saisirNouveau} autoComplete="new-password" autoFocus />
               </>
             )}
             {codeStep === 3 && (
               <>
                 <p className="pin-label">{t('profil.etape3')}</p>
-                <PinInput label={t('profil.confirmCode')} value={c3} onChange={setC3} autoComplete="new-password" />
+                <PinInput label={t('profil.confirmCode')} value={c3} onChange={saisirConfirmation} autoComplete="new-password" autoFocus />
                 {codeMsg && <p className={codeMsg.includes('✓') ? 'ok-msg' : 'error'} role="alert">{codeMsg}</p>}
-                <button type="button" className="btn-go" disabled={busy || c3.length !== 4}
-                        onClick={submitCode}>{t('profil.enregistrerCode')}</button>
               </>
             )}
           </div>

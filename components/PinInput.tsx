@@ -4,8 +4,8 @@ import { useI18n } from './LanguageProvider';
 
 // Code secret = 4 chiffres (saisie type PIN, clavier numérique, avance automatique).
 // Le 1er champ porte aria-label={label} : getByLabel('Code secret') reste unique (compat E2E existante).
-export default function PinInput({ label, value, onChange, autoComplete }: {
-  label: string; value: string; onChange: (v: string) => void; autoComplete?: string;
+export default function PinInput({ label, value, onChange, autoComplete, autoFocus }: {
+  label: string; value: string; onChange: (v: string) => void; autoComplete?: string; autoFocus?: boolean;
 }) {
   const { t } = useI18n();
   const refs = useRef<(HTMLInputElement | null)[]>([]);
@@ -38,6 +38,7 @@ export default function PinInput({ label, value, onChange, autoComplete }: {
                inputMode="numeric" pattern="[0-9]*" maxLength={4}
                aria-label={i === 0 ? label : t('auth.chiffre', { n: i + 1 })}
                autoComplete={i === 0 ? autoComplete : 'off'}
+               autoFocus={i === 0 && autoFocus}
                value={value[i] ?? ''}
                onChange={(e) => setDigit(i, e.target.value)}
                onKeyDown={(e) => {

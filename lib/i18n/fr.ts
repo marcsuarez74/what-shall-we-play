@@ -697,8 +697,6 @@ export const fr = {
   'profil.codeActuel': 'Code actuel',
   'profil.nouveauCode': 'Nouveau code',
   'profil.confirmCode': 'Confirmer le nouveau code',
-  'profil.continuer': 'Continuer',
-  'profil.enregistrerCode': 'Enregistrer le nouveau code',
   'profil.supprimerTitre': 'Supprimer mon profil ?',
   'profil.delAvant': 'Ton profil, tes ',
   'profil.delMilieu': " et tes tirages quittent l'app. Les parties des autres restent, sans toi. ",

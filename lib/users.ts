@@ -72,9 +72,15 @@ export function setSticker(userId: number, sticker: unknown, lang: Lang = 'fr'):
   return { ok: true };
 }
 
-export function changeCode(userId: number, current: unknown, next: unknown, lang: Lang = 'fr'): { ok: true } | { error: string; status: number } {
+// Étape 1 du changement de code : le code actuel est vérifié tout de suite (avant, une
+// erreur n'apparaissait qu'à l'étape 3, sans retour possible).
+export function codeCorrect(userId: number, code: unknown): boolean {
   const row = getDb().prepare('SELECT code_hash FROM users WHERE id = ?').get(userId) as UserRow | undefined;
-  if (!row || !bcrypt.compareSync(String(current ?? ''), row.code_hash))
+  return !!row && bcrypt.compareSync(String(code ?? ''), row.code_hash);
+}
+
+export function changeCode(userId: number, current: unknown, next: unknown, lang: Lang = 'fr'): { ok: true } | { error: string; status: number } {
+  if (!codeCorrect(userId, current))
     return { error: t(lang, 'compte.errCodeActuel'), status: 401 };
   const err = validateCode(next);
   if (err) return { error: t(lang, 'compte.errNouveauCode'), status: 400 };
