@@ -35,7 +35,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   const lien = urlPublique(`/cercles/rejoindre?k=${cercle.lien_token}`);
 
   return (
-    <main className="page">
+    <main className="page cercle-page">
       <UserSync />
       <div className="page-head">
         <a className="link-btn" href="/amis?s=cercles">{t(lang, 'cercles.retour')}</a>

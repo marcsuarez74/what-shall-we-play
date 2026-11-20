@@ -2509,6 +2509,8 @@ a.btn-go.as-link { display: flex; align-items: center; justify-content: center; 
 .adhesion-opt[aria-pressed='true'] { border-color: var(--cuivre); color: var(--creme); font-weight: 600; }
 .ajout-membres { margin: 12px 0; }
 .ajout-membres summary { cursor: pointer; list-style: none; padding: 6px 0; }
+/* Détail d'un cercle : les cartes (Adhésion, Demandes, Kijoukan) ne sont plus collées. */
+.cercle-page > .night-card { margin-top: 16px; }
 .cercle-fin { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
 .btn-ghost.sm { min-height: 34px; font-size: 13px; padding: 5px 11px; border-radius: 11px; }
 .btn-ghost.danger { color: #E08A76; border-color: color-mix(in srgb, #b5533c 60%, transparent); }
