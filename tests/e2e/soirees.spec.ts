@@ -85,8 +85,13 @@ async function setupTirage(page: import('@playwright/test').Page, s: string) {
   await page.goto('/games/add');
   await page.getByLabel('Titre du jeu').fill('Cascadia');
   await page.getByRole('button', { name: 'Saisir à la main' }).click();
+  const ajout = page.waitForResponse((r) => r.url().endsWith('/api/games') && r.request().method() === 'POST');
   await page.getByRole('button', { name: 'Ajouter à la ludothèque' }).click();
-  await devenirAmiDe(page, `lea_${s}`); await page.reload();
+  await ajout;
+  await devenirAmiDe(page, `lea_${s}`);
+  // Flake CI (v4.21.0) : un reload pouvait partir avant la redirection client vers
+  // l'étagère et recharger « Ajouter un jeu » — on va sur l'étagère explicitement.
+  await page.goto('/etagere');
   await page.locator('.player-list label', { hasText: `lea_${s}` }).locator('input').check();
   const post = page.waitForResponse((r) => r.url().endsWith('/api/nights') && r.request().method() === 'POST');
   await page.getByRole('button', { name: 'Créer la partie' }).click();
