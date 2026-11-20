@@ -110,6 +110,18 @@ describe('collection BGG (import)', () => {
 </items>`, { status: 200 }));
     expect(await searchBoardgames("king's")).toEqual([{ bggId: 244529, name: "The King's Dilemma", annee: 2019 }]);
   });
+  it('recherche : ignore la ponctuation et l\'ordre des mots, trie exact > commence par > contient', async () => {
+    global.fetch = vi.fn().mockImplementation(async () => new Response(`<?xml version="1.0" encoding="utf-8"?>
+<items total="4" termsofuse="https://boardgamegeek.com/xmlapi/termsofuse">
+  <item type="boardgame" id="1"><name type="alternate" value="Le Dilemme du Roi : Les Secrets"/></item>
+  <item type="boardgame" id="2"><name type="alternate" value="Hanabi: Deluxe"/></item>
+  <item type="boardgame" id="3"><name type="alternate" value="Le Dilemme du Roi"/></item>
+  <item type="boardgame" id="4"><name type="primary" value="Roi"/></item>
+</items>`, { status: 200 }));
+    expect((await searchBoardgames('le dilemme du roi')).map((r) => r.bggId)).toEqual([3, 1]);
+    expect((await searchBoardgames('hanabi deluxe')).map((r) => r.bggId)).toEqual([2]);
+    expect((await searchBoardgames('dilemme roi')).map((r) => r.bggId)).toEqual([1, 3]);
+  });
   it('épingles Review Focus n°2 : <errors> BGG -> 404 (pas une collection vide)', async () => {
     global.fetch = vi.fn().mockResolvedValue(new Response(COLLECTION_ERRORS_XML, { status: 200 }));
     expect(await collectionUtilisateur('introuvable')).toEqual({

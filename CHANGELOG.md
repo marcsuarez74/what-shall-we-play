@@ -4,6 +4,21 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [4.21.2] — 2026-11-20
+
+### Corrigé
+🔎 **Recherche BGG plus fiable et plus fluide.**
+- La ponctuation et l'ordre des mots ne comptent plus : « hanabi deluxe » trouve « Hanabi: Deluxe »,
+  « dilemme roi » trouve « Le Dilemme du Roi ».
+- Les résultats sont triés par pertinence (titre exact, puis « commence par », puis le reste).
+- Pendant la frappe, la liste reste affichée au lieu de clignoter, une réponse lente d'une frappe
+  précédente ne l'écrase plus, et une recherche déjà faite s'affiche instantanément.
+
+📄 **Import CSV : les jeux s'enregistrent.**
+- Cocher « extensions » pendant la recherche laissait les extensions en attente :
+  le bouton « Ajouter » ne s'activait jamais et rien n'était enregistré.
+- Un titre ou un éditeur purement numérique (« 1775 ») n'est plus refusé à l'enregistrement.
+
 ## [4.21.1] — 2026-11-20
 
 ### Corrigé

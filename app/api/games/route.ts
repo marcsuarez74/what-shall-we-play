@@ -24,8 +24,8 @@ export async function POST(req: Request) {
     const v = form.get(k);
     if (v !== null) raw[k] = Number.isNaN(Number(v)) || v === '' ? v : Number(v);
   }
-  // designer/artist restent des chaînes même si elles sont purement numériques
-  for (const k of ['designer', 'artist']) if (raw[k] != null) raw[k] = String(raw[k]);
+  // Champs texte : restent des chaînes même purement numériques (titre « 1775 », éditeur « 1A »…)
+  for (const k of ['title', 'publisher', 'designer', 'artist']) if (raw[k] != null) raw[k] = String(raw[k]);
   const v = validateGameInput(raw, lang);
   if (!v.ok) return NextResponse.json({ error: v.error }, { status: 400 });
   let coverPath: string | null = null;
