@@ -4,6 +4,12 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [4.21.3] — 2026-11-21
+
+### Corrigé
+🎲 **Détail d'un cercle aéré** : les blocs « Adhésion », « Demandes » et « Kijoukan » ne sont
+plus collés les uns aux autres.
+
 ## [4.21.2] — 2026-11-20
 
 ### Corrigé
