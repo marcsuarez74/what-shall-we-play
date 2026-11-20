@@ -172,6 +172,7 @@ export default function AddGameForm({ me }: { me: UserLite }) {
           </button>
           <p className="btn-note">{t('ajout.recapChamps')}</p>
           <Link className="link-import" href="/games/import">{t('ajout.lienImport')}</Link>
+          <Link className="link-import" href="/games/import-csv">{t('ajout.lienImportCsv')}</Link>
           <button type="button" className="link-manual" onClick={goManual}>{t('ajout.saisieManuelle')}</button>
         </>
       )}

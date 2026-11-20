@@ -75,6 +75,15 @@ describe('collection BGG (import)', () => {
       { bggId: 473508, name: 'Wingspan Pocket', annee: null }, // sans année publiée
     ]);
   });
+  it('recherche : extensions incluses sur demande (import CSV)', async () => {
+    const f = vi.fn().mockImplementation(async () => new Response(SEARCH_XML, { status: 200 }));
+    global.fetch = f;
+    await searchBoardgames('wingspan');
+    await searchBoardgames('wingspan', true);
+    expect(String(f.mock.calls[0][0])).toContain('type=boardgame');
+    expect(String(f.mock.calls[0][0])).not.toContain('expansion');
+    expect(String(f.mock.calls[1][0])).toContain('type=boardgame,boardgameexpansion');
+  });
   it('recherche : ne garde que les jeux dont le nom CONTIENT la requête', async () => {
     // /search BGG fait du flou (préfixes, mots voisins) — l'autocomplete promet « contient ».
     global.fetch = vi.fn().mockResolvedValue(new Response(`<?xml version="1.0" encoding="utf-8"?>
