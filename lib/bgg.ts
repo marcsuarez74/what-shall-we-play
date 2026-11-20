@@ -137,28 +137,43 @@ export function parseThingXml(xml: string): ThingParsed | null {
 // extensions : l'import CSV cherche aussi les extensions BGG (type distinct de boardgame).
 export async function searchBoardgames(q: string, extensions = false): Promise<{ bggId: number; name: string; annee: number | null }[]> {
   const type = extensions ? 'boardgame,boardgameexpansion' : 'boardgame';
-  const xml = await bggFetch(`${BASE}/search?query=${encodeURIComponent(q)}&type=${type}`);
+  // v4.21.5 — BGG renvoie au plus ~500 résultats, quasi alphabétiques : un fragment
+  // de 1-2 lettres en fin de saisie (« catan s ») l'inonde et la liste est coupée avant
+  // les bons titres. On interroge alors BGG sans ce fragment, et on filtre ici.
+  const mots = cle(q).split(' ').filter(Boolean);
+  const fin = mots[mots.length - 1] ?? '';
+  const debut = mots.slice(0, -1).join(' ');
+  const requete = fin.length < 3 && debut.length >= 3 ? debut : q;
+  const xml = await bggFetch(`${BASE}/search?query=${encodeURIComponent(requete)}&type=${type}`);
   if (!xml) throw new Error('BGG_UNAVAILABLE');
   const root = parser.parse(xml)?.items;
   const items = root?.item ? (Array.isArray(root.item) ? root.item : [root.item]) : [];
   // Forme réelle /search (épinglée 2026-10-05) : année en @value, comme /thing.
   // Aucune image dans les réponses — les pochettes viennent de /thing, côté UI.
-  // L'autocomplete promet « contient ce que je tape » : /search BGG est flou
-  // (préfixes, mots voisins) → post-filtre insensible casse + accents.
-  // Chaque mot tapé doit figurer dans le nom (« dilemme roi » trouve « Le Dilemme du Roi »),
-  // puis tri par pertinence : titre exact, puis « commence par », puis le reste (ordre BGG).
-  const mots = cle(q).split(' ').filter(Boolean);
-  const q2 = mots.join(' ');
   const parsed: { bggId: number; name: string; annee: number | null }[] = items.map((i: Record<string, unknown>) => ({
     bggId: Number(i['@_id']),
     // Un item peut porter plusieurs <name> (tableau) : on garde le premier.
     name: texteOuAttribut(Array.isArray(i.name) ? i.name[0] : i.name) ?? '',
     annee: n((i.yearpublished as Record<string, unknown> | undefined)?.['@_value']),
   }));
-  const rang = (name: string) => { const c = cle(name); return c === q2 ? 0 : c.startsWith(q2) ? 1 : 2; };
+  // Chaque mot tapé doit COMMENCER un mot du titre, dans n'importe quel ordre
+  // (« dilemme roi » trouve « Le Dilemme du Roi ») ; « v » ne trouve plus « 18VA ».
+  // Tri : titre exact, puis « commence par », puis la saisie telle quelle au début
+  // d'un mot (« … : The Voyage »), puis le reste ; à égalité, le titre le plus court.
+  const q2 = mots.join(' ');
+  const rang = (name: string): number => {
+    const c = cle(name);
+    if (c === q2) return 0;
+    if (c.startsWith(q2)) return 1;
+    if (` ${c}`.includes(` ${q2}`)) return 2;
+    const ws = c.split(' ');
+    return mots.every((m) => ws.some((w) => w.startsWith(m))) ? 3 : -1;
+  };
   return parsed
-    .filter((r) => { const c = cle(r.name); return mots.every((m) => c.includes(m)); })
-    .sort((a, b) => rang(a.name) - rang(b.name));
+    .map((r) => ({ r, k: rang(r.name) }))
+    .filter((x) => x.k >= 0)
+    .sort((a, b) => a.k - b.k || a.r.name.length - b.r.name.length)
+    .map((x) => x.r);
 }
 
 export async function getThing(bggId: number): Promise<ThingResult | null> {

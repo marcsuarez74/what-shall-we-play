@@ -120,7 +120,23 @@ describe('collection BGG (import)', () => {
 </items>`, { status: 200 }));
     expect((await searchBoardgames('le dilemme du roi')).map((r) => r.bggId)).toEqual([3, 1]);
     expect((await searchBoardgames('hanabi deluxe')).map((r) => r.bggId)).toEqual([2]);
-    expect((await searchBoardgames('dilemme roi')).map((r) => r.bggId)).toEqual([1, 3]);
+    expect((await searchBoardgames('dilemme roi')).map((r) => r.bggId)).toEqual([3, 1]); // à égalité : le plus court
+  });
+  it('recherche v4.21.5 : un mot tapé doit COMMENCER un mot du titre ; fragment court → BGG interrogé sans lui', async () => {
+    const f = vi.fn().mockImplementation(async () => new Response(`<?xml version="1.0" encoding="utf-8"?>
+<items total="4" termsofuse="https://boardgamegeek.com/xmlapi/termsofuse">
+  <item type="boardgame" id="1"><name type="primary" value="18VA: The Railroads Come to Virginia"/></item>
+  <item type="boardgame" id="2"><name type="primary" value="1 vs. 100: The Puzzle Game"/></item>
+  <item type="boardgame" id="3"><name type="primary" value="The Voyages of Marco Polo"/></item>
+  <item type="boardgame" id="4"><name type="primary" value="Pandemic: The Vote"/></item>
+</items>`, { status: 200 }));
+    global.fetch = f;
+    // « The V… » d'abord, puis « The V » au début d'un mot ; les mots épars ensuite (le plus court d'abord)
+    expect((await searchBoardgames('The v')).map((r) => r.bggId)).toEqual([3, 4, 2, 1]);
+    expect((await searchBoardgames('va')).map((r) => r.bggId)).toEqual([]); // « 18VA » : « va » n'est pas un début de mot
+    expect(String(f.mock.calls[0][0])).toContain('query=the&'); // « v » trop court : BGG interrogé sur « the »
+    await searchBoardgames('The voy');
+    expect(String(f.mock.calls[2][0])).toContain('query=The%20voy&');
   });
   it('épingles Review Focus n°2 : <errors> BGG -> 404 (pas une collection vide)', async () => {
     global.fetch = vi.fn().mockResolvedValue(new Response(COLLECTION_ERRORS_XML, { status: 200 }));
