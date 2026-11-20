@@ -424,6 +424,8 @@ export const fr = {
   'libre.errSeulCreateur': 'Seul le créateur peut changer le choix du jeu',
   'soiree.errVotesFigesTermine': 'La partie est terminée — les votes sont figés',
   'soiree.errDoitEtreDansSoiree': 'Vous devez être dans la partie',
+  'soiree.errSeulCreateurJoueurs': 'Seul le créateur peut modifier les joueurs',
+  'soiree.errCreateurReste': 'Le créateur ne peut pas être retiré de la partie',
   'soiree.errCorrigerNonTerminee': 'Seule une partie terminée peut être corrigée',
   'soiree.errJoueurIntrouvable': 'Joueur introuvable',
   'soiree.errDateInvalide': 'Date invalide',

@@ -79,7 +79,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
           initial={monVerdict(night.id, user.id)} compteurs={verdictsDeNuit(night.id)} />
       )}
       {night.status === 'termine' && (
-        <CorrigerPartie nightId={night.id} playedAt={night.played_at} gameId={night.game_id ?? null}
+        <CorrigerPartie nightId={night.id} creatorId={night.creator_id} playedAt={night.played_at} gameId={night.game_id ?? null}
           titreJeu={game?.title ?? null} joueurs={joueurs} candidats={membres} scores={scores} jeux={jeux}
           compteurs={verdictsDeNuit(night.id)} nbTirages={nbTirages} />
       )}

@@ -4,6 +4,15 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [4.21.1] — 2026-11-20
+
+### Corrigé
+🔒 **Seul le créateur gère les joueurs d'une partie.**
+- Un invité ou un joueur pouvait ouvrir « modifier » et retirer l'initiateur de la partie :
+  le bouton est désormais réservé au créateur, et le serveur refuse (403) tout changement
+  de joueurs venant d'un autre participant.
+- En corrigeant une partie terminée, le créateur ne peut plus être retiré (sa pastille est verrouillée).
+
 ## [4.21.0] — 2026-11-20
 
 ### Ajouté

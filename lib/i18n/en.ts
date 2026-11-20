@@ -421,6 +421,8 @@ export const en: Record<CléDict, ValeurDict> = {
   'libre.errSeulCreateur': 'Only the creator can change the pick mode',
   'soiree.errVotesFigesTermine': 'The game is over — votes are locked',
   'soiree.errDoitEtreDansSoiree': 'You must be part of the game',
+  'soiree.errSeulCreateurJoueurs': 'Only the creator can change the players',
+  'soiree.errCreateurReste': 'The creator cannot be removed from the game',
   'soiree.errCorrigerNonTerminee': 'Only a finished game can be corrected',
   'soiree.errJoueurIntrouvable': 'Player not found',
   'soiree.errDateInvalide': 'Invalid date',

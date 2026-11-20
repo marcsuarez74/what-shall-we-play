@@ -294,6 +294,8 @@ export function corrigerNuit(nightId: number, userId: number, patch: NuitPatch, 
   }
   if (patch.playerIds !== undefined) {
     if (!patch.playerIds.includes(userId)) return { error: t(lang, 'soiree.errDoitEtreDansSoiree'), status: 400 };
+    // v4.21.1 : le créateur reste toujours dans sa partie.
+    if (!patch.playerIds.includes(night.creator_id)) return { error: t(lang, 'soiree.errCreateurReste'), status: 400 };
     for (const pid of patch.playerIds)
       if (!db.prepare('SELECT 1 FROM users WHERE id = ?').get(pid)) return { error: t(lang, 'soiree.errJoueurIntrouvable'), status: 400 };
   }

@@ -10,8 +10,9 @@ type Compteurs = { adore: number; bien: number; neutre: number };
 // v4.2.0 — bloc « Corriger cette partie » de la page d'une partie terminée :
 // date, jeu (alerte verdicts au changement), participants, scores ; bouton
 // rouge « Supprimer » avec modale qui liste ce qui disparaît (maquette onglets 1 et 4).
-export default function CorrigerPartie({ nightId, playedAt, gameId, titreJeu, joueurs, candidats, scores, jeux, compteurs, nbTirages }: {
+export default function CorrigerPartie({ nightId, playedAt, gameId, titreJeu, joueurs, candidats, scores, jeux, compteurs, nbTirages, creatorId }: {
   nightId: number;
+  creatorId: number;
   playedAt: string;
   gameId: number | null;
   titreJeu: string | null;
@@ -106,8 +107,8 @@ export default function CorrigerPartie({ nightId, playedAt, gameId, titreJeu, jo
                 {presents.map((id) => {
                   const j = jDe(id);
                   return j ? (
-                    <button type="button" key={id} className="corriger-chip" onClick={() => basculer(id)}>
-                      {j.pseudo} ✕
+                    <button type="button" key={id} className="corriger-chip" disabled={id === creatorId} onClick={() => basculer(id)}>
+                      {j.pseudo}{id === creatorId ? '' : ' ✕'}
                     </button>
                   ) : null; // id stale : sauté
                 })}
