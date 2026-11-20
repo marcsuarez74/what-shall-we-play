@@ -557,6 +557,7 @@ export const en: Record<CléDict, ValeurDict> = {
   'ajout.photoRemplacer': 'Replace with a photo',
   'ajout.photoAjouter': 'Add a photo (optional)',
   'ajout.ajouterLudo': 'Add to my library',
+  'ajout.continueATaper': 'Keep typing: at least 3 letters for the last word.',
   'ajout.errAucunJeu': ({ q }: Record<string, string | number>) => `No game found for "${q}" — try the English title, or enter it manually.`,
   'ajout.errBggToken': "BGG isn't answering yet (token pending) — you can enter it manually.",
   'ajout.errFicheBgg': "Couldn't fetch the BGG sheet — try again or enter it manually.",

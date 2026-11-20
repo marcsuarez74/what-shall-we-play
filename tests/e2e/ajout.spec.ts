@@ -108,6 +108,10 @@ test('ajout : aucun résultat -> message orientant', async ({ page }) => {
   await page.getByLabel('Titre du jeu').fill('Zzzbla');
   await page.getByRole('button', { name: /Récupérer les infos/ }).click();
   await expect(page.locator('.add-form .hint')).toContainText('Aucun jeu trouvé');
+  // v4.21.5 : dernier mot de 1-2 lettres → on invite à continuer plutôt que « aucun jeu »
+  await page.getByLabel('Titre du jeu').fill('The v');
+  await page.getByRole('button', { name: /Récupérer les infos/ }).click();
+  await expect(page.locator('.add-form .hint')).toContainText('Continue à taper');
 });
 
 test('ajout : BGG indisponible (token absent) -> saisie à la main', async ({ page }) => {

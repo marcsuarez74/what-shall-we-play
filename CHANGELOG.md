@@ -4,6 +4,17 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [4.21.5] — 2026-11-21
+
+### Corrigé
+🔎 **Recherche par titre plus pertinente.**
+- Un mot tapé doit commencer un mot du titre : « The v » ne propose plus « 18VA » en tête.
+- Les titres qui commencent par la saisie passent devant, puis ceux qui la contiennent au début
+  d'un mot (« Pandemic: The Vote »), puis le reste — le titre le plus court d'abord.
+- BGG coupe ses réponses vers 500 jeux (presque par ordre alphabétique) : un dernier mot d'une
+  ou deux lettres noyait les bons titres. On interroge BGG sans ce fragment et on filtre ensuite ;
+  s'il n'y a rien, l'app invite à continuer à taper au lieu de dire « aucun jeu ».
+
 ## [4.21.4] — 2026-11-21
 
 ### Corrigé

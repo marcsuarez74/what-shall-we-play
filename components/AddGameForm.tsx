@@ -52,7 +52,11 @@ export default function AddGameForm({ me }: { me: UserLite }) {
     if (q.length < 2) return;
     const n = ++derniere.current;
     const afficher = (results: Suggestion[]) => {
-      if (results.length === 0) { setSuggestions([]); setError(t('ajout.errAucunJeu', { q })); return; }
+      if (results.length === 0) {
+        // Dernier mot de 1-2 lettres (« The v ») : BGG ne sait pas encore répondre — on invite à continuer.
+        const court = (q.split(/\s+/).pop() ?? '').length < 3;
+        setSuggestions([]); setError(court ? t('ajout.continueATaper') : t('ajout.errAucunJeu', { q })); return;
+      }
       setSuggestions(results.slice(0, MAX_SUGGESTIONS));
     };
     const connu = cache.current.get(q.toLowerCase());

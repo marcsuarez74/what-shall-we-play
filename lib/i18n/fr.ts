@@ -560,6 +560,7 @@ export const fr = {
   'ajout.photoRemplacer': 'Remplacer par une photo',
   'ajout.photoAjouter': 'Ajouter une photo (optionnel)',
   'ajout.ajouterLudo': 'Ajouter à la ludothèque',
+  'ajout.continueATaper': 'Continue à taper : au moins 3 lettres pour le dernier mot.',
   'ajout.errAucunJeu': ({ q }: Record<string, string | number>) => `Aucun jeu trouvé pour « ${q} » — essaie le titre anglais, ou saisis à la main.`,
   'ajout.errBggToken': 'BGG ne répond pas encore (token en attente) — tu peux saisir à la main.',
   'ajout.errFicheBgg': 'Impossible de récupérer la fiche BGG — réessaie ou saisis à la main.',
