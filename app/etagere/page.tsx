@@ -1,12 +1,13 @@
 import { redirect } from 'next/navigation';
 import { getSessionUser } from '@/lib/session';
-import { getActiveNight, getNightPlayers, getShelfGames, getNightGame, getTodayTermineeNight, getShelfVotes, getShelfVetos, getShelfNight, estFuture, lienInvitation } from '@/lib/nights';
+import { getActiveNight, getNightPlayers, getShelfGames, getNightGame, getTodayTermineeNight, getShelfVotes, getShelfVetos, getShelfNight, estFuture, lienInvitation, getAVenir } from '@/lib/nights';
 import { mesEvenements } from '@/lib/evenements';
 import { getNightPlays } from '@/lib/libre';
 import { getPickCounts, listUserLibrary } from '@/lib/games';
 import { listRelations } from '@/lib/amis';
 import { mesCercles, membresCercle } from '@/lib/cercles';
 import NightPicker from '@/components/NightPicker';
+import { AVenir, Ensuite } from '@/components/AVenir';
 import ShelfClient from '@/components/ShelfClient';
 import TermineeCard from '@/components/TermineeCard';
 import UserMenu from '@/components/UserMenu';
@@ -44,14 +45,18 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ n
         <UserMenu me={user} />
       </div>
       {terminee && <TermineeCard nightId={terminee.id} gameTitle={terminee.game_title} lang={lang} />}
+      {/* v4.21.0 : les parties programmées sont visibles dès l'accueil */}
+      <AVenir nights={getAVenir(user.id)} meId={user.id} lang={lang} />
       <NightPicker users={users} prechecked={[user.id]} meId={user.id} evenements={mesEvenements(user.id).map((e) => ({ id: e.id, titre: e.titre }))} cercles={mesCercles(user.id).map((c) => ({
         id: c.id, nom: c.nom, membres: membresCercle(c.id).filter((m) => m.etat === 'membre').map((m) => m.id),
       }))} />
     </main>;
   }
+  // v4.21.0 : partie du jour → rappel discret de la suivante (pas sur l'étagère d'une partie future).
+  const suivante = estFuture(night) ? null : getAVenir(user.id)[0];
   return <main className="page">
     <UserSync />
-    <ShelfClient night={night} partyGame={getNightGame(night.id)} players={getNightPlayers(night.id)} games={getShelfGames(night.id)}
+    <ShelfClient ensuite={suivante ? <Ensuite night={suivante} lang={lang} /> : undefined} night={night} partyGame={getNightGame(night.id)} players={getNightPlayers(night.id)} games={getShelfGames(night.id)}
                  myLibrary={listUserLibrary(user.id)} users={avecJoueurs(users, getNightPlayers(night.id), user.id)}
                  plays={getPickCounts()} votes={getShelfVotes(night.id)} vetos={getShelfVetos(night.id)}
                  declarations={night.mode === 'libre' ? getNightPlays(night.id) : []}

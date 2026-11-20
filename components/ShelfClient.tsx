@@ -1,5 +1,5 @@
 'use client';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { coverSrc } from '@/lib/formats';
@@ -36,7 +36,7 @@ const POIDS: Record<Exclude<ShelfFilters['weight'], 'all'>, CléDict> = {
   leger: 'etagere.poidsLeger', moyen: 'etagere.poidsMoyen', lourd: 'etagere.poidsLourd',
 };
 
-export default function ShelfClient({ night, partyGame, players, games, myLibrary, users, plays, votes, vetos = [], me, futur = false, lien, evenements = [], declarations = [] }: {
+export default function ShelfClient({ night, partyGame, players, games, myLibrary, users, plays, votes, vetos = [], me, futur = false, lien, evenements = [], declarations = [], ensuite }: {
   night: Night; partyGame: Game | null; players: UserLite[]; games: Game[]; myLibrary: Game[]; users: UserLite[]; plays: Record<number, number>;
   votes: ShelfVote[];
   vetos?: ShelfVeto[]; // v4.13.0
@@ -45,6 +45,7 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
   me: UserLite;
   futur?: boolean;
   lien?: string;
+  ensuite?: ReactNode; // v4.21.0 : rappel de la prochaine partie (partie du jour)
 }) {
   const router = useRouter();
   const { lang, t } = useI18n();
@@ -184,6 +185,7 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
         <h1>{t('etagere.titre')}</h1>
         <UserMenu me={me} />
       </header>
+      {ensuite}
       {futur && <Link className="link-btn retour-parties" href="/nights">{t('etagere.retourParties')}</Link>}
       <section className={'night-card' + (enJeu ? ' enjeu' : '')}>
         <div className="night-card-head">

@@ -4,6 +4,17 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [4.21.0] — 2026-11-20
+
+### Ajouté
+📅 **Parties à venir sur l'étagère** (l'accueil), maquette validée : `mockup/2026-11-20-v4210-parties-a-venir.html`.
+- Sans partie aujourd'hui, un bloc **« À venir »** montre les **2 prochaines** parties programmées
+  (date, heure, « Demain » / « Dans N jours », titre, joueurs, jeux) au-dessus de « Nouvelle partie ».
+  Au-delà de 2, **« Voir tout (N) › »** ouvre Parties.
+- Toucher une carte ouvre l'étagère de cette partie (ajout de jeux, votes ; tirage le jour J).
+- Avec une partie aujourd'hui, une ligne discrète **« Ensuite : … »** rappelle la suivante.
+- Les dates des séries récurrentes restent dans leur carte « Séries » de Parties.
+
 ## [4.20.0] — 2026-11-20
 
 ### Ajouté

@@ -21,3 +21,11 @@ export function titrePartie(lang: Lang, night: { titre?: string | null; played_a
     date: formatDate(lang, `${night.played_at}T12:00:00`, { weekday: 'long', day: 'numeric', month: 'long' }),
   });
 }
+
+// « 2026-10-02 » → jour « 2 » + mois « oct. » — la date est le héros d'une carte programmée.
+export function dayMonth(playedAt: string, lang: Lang): { day: string; month: string } {
+  return {
+    day: String(Number(playedAt.split('-')[2])),
+    month: formatDate(lang, `${playedAt}T12:00:00`, { month: 'short' }).replace('.', ''),
+  };
+}

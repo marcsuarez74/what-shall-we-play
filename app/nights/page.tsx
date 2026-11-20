@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { getSessionUser } from '@/lib/session';
-import { getActiveNight, getPlannedNights, getHistoryCards, getNightPlayers, getNightGame, getShelfGames, lienInvitation, conflitHoraire } from '@/lib/nights';
+import { getActiveNight, getAVenir, getHistoryCards, getNightPlayers, getNightGame, getShelfGames, lienInvitation, conflitHoraire } from '@/lib/nights';
 import { bilanArret, completerSeries, mesSeries } from '@/lib/series';
 import GererSerie from '@/components/GererSerie';
 import NouvelEvenement from '@/components/NouvelEvenement';
@@ -12,8 +12,8 @@ import { mesInvitations, invitesNuit, listeAttente } from '@/lib/invitations';
 import { sondagesInvite, sondagesOrganises } from '@/lib/sondages';
 import SondageOrganise from '@/components/SondageOrganise';
 import { coverSrc } from '@/lib/formats';
-import { t, type Lang } from '@/lib/i18n';
-import { formatDate, titrePartie } from '@/lib/i18n/format';
+import { t } from '@/lib/i18n';
+import { dayMonth, formatDate, titrePartie } from '@/lib/i18n/format';
 import { getLang } from '@/lib/i18n/server';
 import PlayerChip from '@/components/PlayerChip';
 import NightPlanner from '@/components/NightPlanner';
@@ -26,14 +26,6 @@ import BoutonAction from '@/components/BoutonAction';
 import BandeauNotifications from '@/components/BandeauNotifications';
 import { resumeLibre } from '@/lib/libre';
 
-// « 2026-10-02 » → jour « 2 » + mois « oct. » — la date est le héros d'une carte programmée.
-function dayMonth(playedAt: string, lang: Lang): { day: string; month: string } {
-  return {
-    day: String(Number(playedAt.split('-')[2])),
-    month: formatDate(lang, `${playedAt}T12:00:00`, { month: 'short' }).replace('.', ''),
-  };
-}
-
 export default async function Page({ searchParams }: { searchParams: Promise<{ vue?: string }> }) {
   const lang = await getLang();
   const user = await getSessionUser();
@@ -42,7 +34,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ v
   completerSeries(); // v4.14.0 : 4 dates d'avance par série (idempotent, sans tâche dédiée)
   const active = getActiveNight(user.id);
   // v4.14.0 : les dates d'une série vivent dans la carte de la série, pas une à une.
-  const planned = getPlannedNights(user.id).filter((n) => n.serie_id == null);
+  const planned = getAVenir(user.id);
   const series = mesSeries(user.id);
   // Historique : une carte par partie terminée (gagnant 👑 · score, date) → détail.
   const cartes = getHistoryCards(user.id);
