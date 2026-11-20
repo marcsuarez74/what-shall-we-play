@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { getSessionUser } from '@/lib/session';
-import { getActiveNight, getAVenir, getHistoryCards, getNightPlayers, getNightGame, getShelfGames, lienInvitation, conflitHoraire } from '@/lib/nights';
+import { pasCommencee, getActiveNight, getAVenir, getHistoryCards, getNightPlayers, getNightGame, getShelfGames, lienInvitation, conflitHoraire } from '@/lib/nights';
 import { bilanArret, completerSeries, mesSeries } from '@/lib/series';
 import GererSerie from '@/components/GererSerie';
 import NouvelEvenement from '@/components/NouvelEvenement';
@@ -202,7 +202,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ v
                 {active.status === 'en_jeu'
                   ? <span className="badge-etat b-enjeu"><span className="pt" />{t(lang, 'etagere.enJeu')}</span>
                   : <span className="badge-etat b-prep"><span className="pt" />{t(lang, 'etagere.enPrep')}</span>}
-                {active.creator_id === user.id && <TerminerNight nightId={active.id} status={active.status} />}
+                {active.creator_id === user.id && !pasCommencee(active) && <TerminerNight nightId={active.id} status={active.status} />}
               </div>
               <div className="chips">
                 {getNightPlayers(active.id).map((p) => <PlayerChip key={p.id} u={p} />)}

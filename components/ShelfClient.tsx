@@ -36,14 +36,15 @@ const POIDS: Record<Exclude<ShelfFilters['weight'], 'all'>, CléDict> = {
   leger: 'etagere.poidsLeger', moyen: 'etagere.poidsMoyen', lourd: 'etagere.poidsLourd',
 };
 
-export default function ShelfClient({ night, partyGame, players, games, myLibrary, users, plays, votes, vetos = [], me, futur = false, lien, evenements = [], declarations = [], ensuite }: {
+export default function ShelfClient({ night, partyGame, players, games, myLibrary, users, plays, votes, vetos = [], me, futur = false, programmee = futur, lien, evenements = [], declarations = [], ensuite }: {
   night: Night; partyGame: Game | null; players: UserLite[]; games: Game[]; myLibrary: Game[]; users: UserLite[]; plays: Record<number, number>;
   votes: ShelfVote[];
   vetos?: ShelfVeto[]; // v4.13.0
   declarations?: Declaration[]; // v4.19.0 : choix libre, les manches déclarées
   evenements?: { id: number; titre: string }[]; // v4.15.0 : rattacher la partie (Modifier)
   me: UserLite;
-  futur?: boolean;
+  futur?: boolean; // pas encore commencée (jour à venir, ou avant l'heure) : ajouter et voter seulement
+  programmee?: boolean; // date à venir (la date reste modifiable)
   lien?: string;
   ensuite?: ReactNode; // v4.21.0 : rappel de la prochaine partie (partie du jour)
 }) {
@@ -269,7 +270,9 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
                  triVotes={libre} joues={libre ? joues : null} />
       <div className="cta-zone">
         {futur ? (
-          <p className="cta-jourj">{t('etagere.tirageJourJ')}</p>
+          <p className="cta-jourj">{!programmee && night.start_time
+            ? t('etagere.ouvreA', { h: formatDate(lang, `${night.played_at}T${night.start_time}`, { timeStyle: 'short' }) })
+            : t(libre ? 'libre.ouvreJourJ' : 'etagere.tirageJourJ')}</p>
         ) : libre ? (
           <>
             <p className="cta-statut">{t('libre.ctaStatut')}</p>
@@ -363,7 +366,7 @@ export default function ShelfClient({ night, partyGame, players, games, myLibrar
                onClick={(e) => e.stopPropagation()}>
             <button type="button" className="sheet-close" aria-label={t('etagere.fermer')} onClick={() => setEditingNight(false)}>✕</button>
             <NightPicker users={users} prechecked={players.map((p) => p.id)} night={night} meId={me.id}
-                         editInfos={estCreateur ? { futur } : undefined}
+                         editInfos={estCreateur ? { futur: programmee } : undefined}
                          evenements={estCreateur ? evenements : []}
                          onClose={() => setEditingNight(false)} />
           </div>

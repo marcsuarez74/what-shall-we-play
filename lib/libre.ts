@@ -1,6 +1,6 @@
 import { getDb } from './db';
 import { t, type Lang } from './i18n';
-import { estFuture, getNight, isGameOnShelf, isNightParticipant, notifyNight, type NightStateError } from './nights';
+import { pasCommencee, getNight, isGameOnShelf, isNightParticipant, notifyNight, type NightStateError } from './nights';
 import { grouperManches, podiumPartie, type Declaration } from './manches';
 
 // v4.19.0 (choix libre / marathon) : chacun déclare « j'ai joué » une manche, avec un
@@ -45,7 +45,7 @@ function gardes(nightId: number, userId: number, lang: Lang): NightStateError | 
   if (!isNightParticipant(nightId, userId)) return { error: t(lang, 'soiree.errSeulsJoueursVote'), status: 403 };
   if (night.mode !== 'libre') return { error: t(lang, 'libre.errPasLibre'), status: 409 };
   if (night.status === 'termine') return { error: t(lang, 'soiree.errPartieTerminee'), status: 409 };
-  if (estFuture(night)) return { error: t(lang, 'soiree.errPasAujourdhui'), status: 409 };
+  if (pasCommencee(night)) return { error: t(lang, 'soiree.errPasAujourdhui'), status: 409 };
   return null;
 }
 

@@ -37,7 +37,7 @@ export const en: Record<CléDict, ValeurDict> = {
   'soiree.retirerInviteSur': 'Sure?',
   'annonce.lienSoiree': ({ lien }: Record<string, string | number>) => `Join us: ${lien}`,
   // v4.7.0 — guest rework, scheduled games (title, shelf, deletion)
-  'soiree.errPasAujourdhui': 'The draw opens on the day of the game.',
+  'soiree.errPasAujourdhui': 'The game hasn’t started yet.',
   'soiree.errTitre': 'Title: 40 characters max.',
   'soiree.titreLabel': 'Title',
   'soiree.titrePlaceholder': 'Game night 🎲',
@@ -65,6 +65,8 @@ export const en: Record<CléDict, ValeurDict> = {
   'etagere.joueursN': ({ n }: Record<string, string | number>) => `Players · ${n}`,
   'etagere.invitesN': ({ n }: Record<string, string | number>) => `Guests · ${n}`,
   'etagere.tirageJourJ': '🎡 The draw opens on the day of the game. Until then, everyone adds games and votes.',
+  'etagere.ouvreA': ({ h }: Record<string, string | number>) => `🕗 The game opens at ${h}. Until then, everyone adds games and votes.`,
+  'libre.ouvreJourJ': '🎲 The game opens on the day. Until then, everyone adds games and votes.',
   'etagere.retourParties': '← Games',
   'invite.tInvite': ({ hote }: Record<string, string | number>) => `${hote} invites you`,
   'invite.aUneSoiree': 'to a board game night',

@@ -4,6 +4,16 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [4.21.4] — 2026-11-21
+
+### Corrigé
+⏳ **Une partie programmée ne s'ouvre qu'à son jour — et à son heure, si elle est renseignée.**
+- Avant, « Terminer la partie », « J'ai joué » et le tirage étaient disponibles dès minuit le jour J,
+  même pour une partie prévue à 20 h. Désormais, tant que la partie n'a pas commencé,
+  l'étagère sert seulement à **ajouter des jeux et voter** (le serveur refuse le reste).
+- Le message de l'étagère annonce l'ouverture (« La partie s'ouvre à 20:30 ») ; en choix libre,
+  il ne parle plus de tirage.
+
 ## [4.21.2] — 2026-11-20
 
 ### Corrigé
