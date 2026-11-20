@@ -1,4 +1,8 @@
-# CLAUDE.md — What Shall We Play?
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## What Shall We Play?
 
 PWA Next.js de tirage au sort de la partie du jour — https://what-shall-we-play.marco-studio.fr
 
@@ -26,6 +30,39 @@ vérifications et les pièges déjà payés une fois.
 | `.superpowers/sdd/<chantier>/progress.md` | ledgers **locaux, git-ignorés** : décisions, rulings, accès VPS, état en cours |
 | `futur-feature.md` | backlog produit |
 | `CHANGELOG.md` + `package.json` | une entrée par version (français) ; la version est la source du tag |
+
+## Commandes
+
+`npm run dev` (turbopack) · `npm run build` · `npm run lint` (ESLint 9 flat, pas de Prettier) ·
+`npm test` (vitest) · `npm run test:e2e` (playwright) · typage : `npx tsc --noEmit` (pas de script).
+Un seul test : `npx vitest run tests/unit/<f>.test.ts -t "<nom>"` ·
+`npx playwright test tests/e2e/<spec>.spec.ts -g "<nom>"`.
+
+## Architecture (ce qui demande plusieurs fichiers pour être compris)
+
+- **Next 15 App Router, React 19, sans server actions** : toutes les mutations passent par
+  `app/api/**/route.ts`. **Pas de `middleware.ts`** : chaque page/route vérifie elle-même
+  la session (`getSessionUser` / `getSessionAny` / `getSessionInvite`, `lib/session.ts`).
+- **Domaine dans `lib/*.ts`** (nights, libre, draw, wheel, manches, games, foyers, sondages…),
+  composants client dans `components/`. Toute chaîne UI passe par `lib/i18n/{fr,en}.ts`
+  (dictionnaires typés : une clé ajoutée en FR doit l'être en EN).
+- **Persistance : better-sqlite3 brut, aucun ORM** (`lib/db.ts`). `DATA_DIR` → `app.db` (WAL).
+  Schéma en `CREATE TABLE IF NOT EXISTS` ; migrations dans `runMigrations` (`ALTER` tolérés
+  par try/catch, étapes versionnées par `PRAGMA user_version`) ; `purger()` au démarrage.
+- **Auth maison** : pseudo + PIN 4 chiffres (bcrypt, `lib/auth.ts`), cookie `wsp_session`,
+  jeton d'appareil « se souvenir de moi » avec rotation (`/api/auth/restore`). Invités :
+  `users.est_invite=1`, limités à leur soirée. Rate-limit login en mémoire (`lib/limite.ts`).
+- **Temps réel : SSE** `app/api/me/events/route.ts` + bus en mémoire `lib/events.ts`
+  (`emitToUsers` après une mutation) → `components/UserSync.tsx` fait `router.refresh()`.
+  Le bus est sur `globalThis` : **mono-processus uniquement**.
+- **Tâches de fond** : `instrumentation.ts` (balayage toutes les 5 min : séries, rappels push).
+- **Service worker** généré par `app/sw.js/route.ts` depuis `package.json` : cache
+  `wsp-v<version>` — bumper la version invalide le cache client.
+- **Soirée** : `nights.mode` ∈ `'tirage' | 'libre'`. Tirage pondéré `lib/draw.ts` + roue
+  `lib/wheel.ts` ; choix libre et manches dans `lib/libre.ts` / `lib/manches.ts`.
+- **Tests** : vitest en env node, `fileParallelism: false`, `DATA_DIR=.tmp-vitest` (setup).
+  Playwright lance aussi un stub BGG (`tests/e2e/bgg-stub.cjs`, :8765) ; helpers réutilisables
+  dans `tests/e2e/helpers/` (inscription, amis, shelf/`lancerTirage`).
 
 ## Coût réel des vérifications (mesuré)
 
