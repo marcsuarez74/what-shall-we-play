@@ -2255,6 +2255,62 @@ a.btn-go.as-link { display: flex; align-items: center; justify-content: center; 
 .link-import { display: block; text-align: center; margin-top: 12px; color: var(--cuivre);
   font-size: 13.5px; font-weight: 700; text-decoration: none; }
 
+/* ── v4.20.0 — Import d'un fichier CSV (Myludo) ── */
+.csv-depot { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  border: 2px dashed color-mix(in srgb, var(--cuivre) 55%, transparent); border-radius: 18px;
+  padding: 26px 16px; text-align: center; cursor: pointer; background: var(--surface); }
+.csv-depot .ico { font-size: 34px; }
+.csv-depot b { color: var(--cuivre); font-size: 15px; }
+.csv-depot span { font-size: 12.5px; color: var(--doux-clair); }
+.csv-depot input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.csv-fichier { display: flex; align-items: center; gap: 10px; background: var(--surface);
+  border-radius: 14px; padding: 10px 12px; margin-top: 8px; }
+.csv-fichier .t, .csv-bascule .t { flex: 1; min-width: 0; display: flex; flex-direction: column; text-align: left; }
+.csv-fichier b { font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.csv-fichier small, .csv-bascule small { font-size: 11.5px; color: var(--doux-clair); font-weight: 400; }
+.csv-bascule { display: flex; align-items: center; gap: 12px; width: 100%; margin-top: 8px;
+  background: var(--surface); border: 0; border-radius: 14px; padding: 10px 12px;
+  color: var(--creme); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+.csv-bascule .inter { flex: 0 0 auto; position: relative; width: 40px; height: 24px; border-radius: 999px;
+  background: color-mix(in srgb, var(--doux) 55%, transparent); transition: background .2s; }
+.csv-bascule .inter::after { content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px;
+  border-radius: 50%; background: var(--creme); transition: transform .2s; }
+.csv-bascule .inter.on { background: var(--cuivre); }
+.csv-bascule .inter.on::after { transform: translateX(16px); }
+.csv-avance { display: flex; justify-content: space-between; margin-top: 12px; }
+.csv-avance + .imp-barre { margin-top: 6px; }
+.csv-filtres { display: flex; gap: 6px; margin-top: 12px; }
+.csv-filtres button { background: var(--surface); border: 1px solid color-mix(in srgb, var(--doux) 40%, transparent);
+  border-radius: 999px; color: var(--doux-clair); font: inherit; font-size: 12.5px; font-weight: 700;
+  padding: 6px 12px; cursor: pointer; }
+.csv-filtres button span { opacity: .75; margin-left: 3px; }
+.csv-filtres button[aria-pressed="true"] { background: var(--cuivre); border-color: var(--cuivre); color: var(--noyer); }
+.csv-filtres button.ambre:not([aria-pressed="true"]) { border-color: var(--ambre); color: var(--ambre); }
+.csv-rien { text-align: center; margin-top: 18px; }
+.imp-jeu.agir { border-color: color-mix(in srgb, var(--ambre) 60%, transparent); }
+.imp-jeu .cover.is-ph { color: var(--doux-clair); font-weight: 800; }
+.imp-jeu .cover.attente { animation: csv-pulse 1.2s ease-in-out infinite; }
+@keyframes csv-pulse { 50% { opacity: .45; } }
+.csv-mid { background: none; border: 0; padding: 0; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.csv-mid:disabled { cursor: default; }
+.csv-ext { margin-left: 6px; font-size: 10px; font-weight: 700; color: var(--doux-clair);
+  border: 1px solid var(--doux); border-radius: 999px; padding: 1px 6px; vertical-align: 1px; }
+.csv-etat { font-size: 11.5px; font-weight: 600; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.csv-etat.att { color: var(--doux-clair); font-weight: 400; }
+.csv-etat.ok { color: var(--vert); }
+.csv-etat.dup { color: var(--ambre); }
+.csv-etat.ko { color: var(--rouge); }
+.csv-choix { max-height: 85vh; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+.csv-choix h2 { font-family: var(--font-display); font-size: 19px; font-weight: 800; padding-right: 30px; }
+.csv-recherche { display: flex; gap: 8px; }
+.csv-recherche input { flex: 1; min-width: 0; background: var(--surface); border: 1px solid color-mix(in srgb, var(--doux) 40%, transparent);
+  border-radius: 12px; color: var(--creme); font: inherit; font-size: 15px; padding: 10px 12px; outline: none; }
+.csv-recherche button { background: var(--cuivre); border: 0; border-radius: 12px; color: var(--noyer);
+  font: inherit; font-weight: 800; padding: 0 14px; cursor: pointer; }
+.csv-recherche button:disabled { opacity: .5; cursor: default; }
+.csv-cand { width: 100%; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.csv-cand[aria-pressed="true"] { border-color: var(--cuivre); }
+
 /* ---------- Verdict du jeu (v3.7 — 😍🙂😐 sur la nuit terminée) ---------- */
 .verdict-bloc { margin-top: 14px; background: var(--surface);
   border: 1px solid color-mix(in srgb, var(--cuivre) 35%, transparent); border-radius: 20px; padding: 16px; }

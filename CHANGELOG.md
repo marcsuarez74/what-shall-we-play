@@ -4,6 +4,21 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [4.20.0] — 2026-11-20
+
+### Ajouté
+📄 **Importer un fichier CSV** (export Myludo), depuis « Ajouter » (maquette validée : `mockup/2026-11-20-v4200-import-csv.html`).
+- Le fichier est lu sur le téléphone : seuls les titres partent chercher leur fiche sur **BoardGameGeek**
+  (pochette, année, poids, note, meilleur nombre de joueurs). Rien n'est ajouté avant la confirmation.
+- Écran de vérification : chaque jeu trouvé est montré avec sa pochette ; filtre **« À vérifier »**
+  pour les titres à plusieurs résultats (on choisit le bon) ou introuvables (autre titre,
+  « Importer sans pochette » ou « Ne pas importer »).
+- Les **extensions et goodies** sont écartés par défaut (interrupteur « Inclure les extensions »).
+- Les jeux déjà dans la ludothèque sont repérés : déjà liés à BGG → ignorés ; saisis à la main →
+  fiche complétée (format de boîte conservé). Les doublons du fichier ne sont importés qu'une fois.
+- Joueurs, durée, éditeur, auteurs et illustrateurs du fichier priment sur BGG ; un format de boîte
+  global s'applique aux jeux ajoutés. Bilan final : ajoutés, complétés, sans pochette, échecs (réessayables).
+
 ## [4.19.0] — 2026-10-09
 
 ### Ajouté

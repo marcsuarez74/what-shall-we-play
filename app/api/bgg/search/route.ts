@@ -8,10 +8,11 @@ export async function GET(req: Request) {
   const lang = await getLang();
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: t(lang, 'erreurs.nonConnecte') }, { status: 401 });
-  const q = new URL(req.url).searchParams.get('q')?.trim();
+  const params = new URL(req.url).searchParams;
+  const q = params.get('q')?.trim();
   if (!q || q.length < 2) return NextResponse.json({ results: [] });
   try {
-    return NextResponse.json({ results: await searchBoardgames(q) });
+    return NextResponse.json({ results: await searchBoardgames(q, params.get('ext') === '1') });
   } catch {
     return NextResponse.json({ error: t(lang, 'bgg.errRecherche') }, { status: 502 });
   }

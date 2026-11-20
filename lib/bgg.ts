@@ -128,8 +128,10 @@ export function parseThingXml(xml: string): ThingParsed | null {
   };
 }
 
-export async function searchBoardgames(q: string): Promise<{ bggId: number; name: string; annee: number | null }[]> {
-  const xml = await bggFetch(`${BASE}/search?query=${encodeURIComponent(q)}&type=boardgame`);
+// extensions : l'import CSV cherche aussi les extensions BGG (type distinct de boardgame).
+export async function searchBoardgames(q: string, extensions = false): Promise<{ bggId: number; name: string; annee: number | null }[]> {
+  const type = extensions ? 'boardgame,boardgameexpansion' : 'boardgame';
+  const xml = await bggFetch(`${BASE}/search?query=${encodeURIComponent(q)}&type=${type}`);
   if (!xml) throw new Error('BGG_UNAVAILABLE');
   const root = parser.parse(xml)?.items;
   const items = root?.item ? (Array.isArray(root.item) ? root.item : [root.item]) : [];
