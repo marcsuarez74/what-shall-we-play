@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="fr">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fiche jeu modifiable — v4.24</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Space+Grotesk:wght@400;500;600;700&display=swap">
+<style>
+/* Planche : règles en tête, puis le parcours dans un téléphone interactif.
+   Palette et typo = design system de l'app (noyer/crème/cuivre). */
+:root {
+  --noyer: #2A1F17; --surface: #3A2B1F; --surface-plus: #46352a; --creme: #F3E9DC;
+  --cuivre: #C96F3B; --vert: #3E9B6E; --rouge: #C4553B; --ambre: #C9A23B;
+  --doux: #8A7660; --doux-clair: #B9A58C; --planche: #1f1711;
+  --display: 'Bricolage Grotesque', 'Space Grotesk', system-ui, sans-serif;
+  --ui: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+[hidden] { display: none !important; }
+body { background: var(--planche); color: var(--creme); font-family: var(--ui); font-size: 15px; line-height: 1.45; padding: 28px 16px 60px; }
+h1, h2, h3 { font-family: var(--display); line-height: 1.1; letter-spacing: -0.01em; text-wrap: balance; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--cuivre); outline-offset: 2px; }
+.wrap { max-width: 1240px; margin: 0 auto; display: flex; flex-direction: column; gap: 30px; }
+.intro h1 { font-size: clamp(28px, 4vw, 40px); font-weight: 800; }
+.eyebrow { font-size: 11.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--cuivre); margin-bottom: 8px; }
+.lead { color: var(--doux-clair); margin-top: 10px; max-width: 70ch; }
+.regles { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 14px; }
+.bloc { background: var(--noyer); border: 1px solid color-mix(in srgb, var(--doux) 35%, transparent); border-radius: 16px; padding: 16px 18px; min-width: 0; }
+.bloc h2 { font-size: 17px; font-weight: 800; margin-bottom: 10px; }
+.bloc ul { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.bloc li { font-size: 13.5px; color: var(--doux-clair); padding-left: 16px; position: relative; }
+.bloc li::before { content: ''; position: absolute; left: 2px; top: 8px; width: 6px; height: 6px; border-radius: 50%; background: var(--doux); }
+.bloc li.q::before { background: var(--ambre); }
+.bloc li b { color: var(--creme); font-weight: 600; }
+
+.scene { display: grid; grid-template-columns: minmax(300px, 380px) 1fr; gap: 28px; align-items: start; }
+@media (max-width: 760px) { .scene { grid-template-columns: 1fr; } }
+.scen { display: flex; flex-direction: column; gap: 8px; }
+.scen h2 { font-size: 20px; font-weight: 800; }
+.scen p { font-size: 13.5px; color: var(--doux-clair); }
+.scen .btns { display: flex; flex-wrap: wrap; gap: 6px; }
+.scen .btns button { border: 1px solid var(--doux); background: var(--noyer); border-radius: 999px; font-size: 12.5px; padding: 5px 11px; }
+.scen .btns button[aria-pressed="true"] { border-color: var(--cuivre); color: var(--cuivre); font-weight: 700; }
+.note { font-size: 12.5px; color: var(--doux-clair); border-left: 2px solid var(--cuivre); padding: 2px 0 2px 10px; }
+
+.phone { background: var(--noyer); border: 1px solid color-mix(in srgb, var(--doux) 45%, transparent); border-radius: 30px; overflow: hidden; display: flex; flex-direction: column; height: 720px; max-width: 100%; position: relative; }
+.status { height: 26px; flex: 0 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 0 22px; font-size: 11px; color: var(--doux-clair); }
+.scroll { flex: 1 1 auto; overflow-y: auto; padding: 6px 16px 20px; display: flex; flex-direction: column; gap: 10px; }
+.tabbar { flex: 0 0 auto; height: 58px; display: flex; border-top: 1px solid color-mix(in srgb, var(--doux) 35%, transparent); background: var(--surface); }
+.tabbar span { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10.5px; color: var(--doux-clair); }
+.tabbar span.on { color: var(--cuivre); font-weight: 700; }
+.tabbar i { font-style: normal; font-size: 17px; }
+.page-head h1 { font-size: 24px; font-weight: 800; }
+.page-head h1 small { font-family: var(--ui); font-size: 13px; font-weight: 500; color: var(--doux-clair); }
+
+.lib-card { display: flex; gap: 10px; align-items: center; background: var(--surface); border-radius: 14px; padding: 8px; }
+.cov { width: 52px; height: 52px; border-radius: 9px; flex: 0 0 auto; display: grid; place-items: center; font-size: 22px; background: var(--surface-plus); color: var(--doux-clair); overflow: hidden; }
+.cov.img { background: linear-gradient(135deg, #5a7d4c, #2f4d3b); color: var(--creme); font-size: 11px; font-weight: 700; text-align: center; }
+.cov.img.b { background: linear-gradient(135deg, #8a4b2e, #3d2016); }
+.lib-card b { display: block; font-size: 14.5px; }
+.lib-card small { color: var(--doux-clair); font-size: 12px; }
+
+/* Bottom-sheet */
+.voile { position: absolute; inset: 0; background: rgb(0 0 0 / .55); display: flex; align-items: flex-end; }
+.sheet { width: 100%; max-height: 88%; overflow-y: auto; background: var(--noyer); border-top: 1px solid var(--doux); border-radius: 22px 22px 0 0; padding: 16px 16px 20px; display: flex; flex-direction: column; gap: 11px; position: relative; }
+.sheet .x { position: absolute; top: 10px; right: 12px; background: none; border: 0; color: var(--doux-clair); font-size: 18px; }
+.sheet-head { display: flex; gap: 12px; align-items: center; padding-right: 26px; }
+.sheet-head .cov { width: 76px; height: 76px; font-size: 30px; }
+.sheet-head h2 { font-size: 21px; font-weight: 800; }
+.sheet-head p { color: var(--doux-clair); font-size: 13px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { background: var(--surface); border-radius: 999px; font-size: 12.5px; padding: 3px 10px; }
+.facts { list-style: none; font-size: 13px; }
+.facts li { display: flex; justify-content: space-between; gap: 10px; padding: 6px 0; border-bottom: 1px solid color-mix(in srgb, var(--doux) 25%, transparent); }
+.facts span { color: var(--doux-clair); }
+.bgg { font-size: 12.5px; color: var(--doux-clair); }
+.actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
+.btn { border: 1px solid var(--doux); background: var(--surface); border-radius: 12px; min-height: 44px; font-weight: 600; font-size: 14px; padding: 8px; }
+.btn.cuivre { border-color: var(--cuivre); color: var(--cuivre); }
+.btn-copper { border: 0; border-radius: 14px; background: var(--cuivre); color: var(--noyer); font-weight: 700; font-size: 15px; min-height: 46px; width: 100%; }
+.btn-copper:disabled { background: var(--surface-plus); color: var(--doux-clair); }
+.link-btn { background: none; border: 0; color: var(--doux-clair); font-size: 13.5px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+.ret { background: none; border: 0; color: var(--doux-clair); font-size: 13.5px; text-align: left; }
+.sous { color: var(--doux-clair); font-size: 13px; }
+.lbl { font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--doux-clair); font-weight: 700; }
+input, select { background: var(--surface); border: 1px solid color-mix(in srgb, var(--doux) 50%, transparent); border-radius: 12px; color: var(--creme); font: inherit; font-size: 16px; padding: 10px 12px; width: 100%; min-width: 0; }
+.field { display: flex; flex-direction: column; gap: 5px; }
+.duo { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.res { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.res button { width: 100%; display: flex; gap: 10px; align-items: center; text-align: left; background: var(--surface); border: 1px solid transparent; border-radius: 12px; padding: 7px; }
+.res button[aria-pressed="true"] { border-color: var(--cuivre); }
+.res .cov { width: 40px; height: 40px; font-size: 16px; }
+.res b { display: block; font-size: 14px; }
+.res small { color: var(--doux-clair); font-size: 12px; }
+.apercu { background: var(--surface); border-radius: 14px; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+.toast { background: color-mix(in srgb, var(--vert) 18%, var(--surface)); border: 1px solid color-mix(in srgb, var(--vert) 50%, transparent); border-radius: 12px; padding: 9px 12px; font-size: 13px; }
+.diff { font-size: 12.5px; color: var(--doux-clair); }
+.diff b { color: var(--creme); }
+</style>
+<body>
+<div class="wrap">
+  <header class="intro">
+    <p class="eyebrow">Maquette v4.24.0 · validée</p>
+    <h1>Fiche jeu : lier à BGG et modifier</h1>
+    <p class="lead">Dans la ludothèque, la fiche d'un jeu gagne deux boutons. <b>Lier à BGG</b> rattrape un jeu importé
+      sans pochette, ou corrige un mauvais rapprochement. <b>Modifier</b> sert pour un jeu que BGG ne connaît pas, ou pour
+      ajuster une info.</p>
+  </header>
+
+  <section class="regles">
+    <div class="bloc"><h2>🔗 Lier à BGG</h2><ul>
+      <li>Ouvre une recherche BGG <b>pré-remplie avec le titre</b> du jeu (mêmes résultats que l'ajout, extensions comprises si on coche).</li>
+      <li>Toucher un résultat affiche un <b>aperçu</b> (pochette, année, éditeur, joueurs, durée) avant de confirmer.</li>
+      <li>Confirmer récupère <b>la pochette</b> et remplit la fiche depuis BGG. <b>Le titre et le format de boîte ne changent pas.</b></li>
+      <li>Jeu déjà lié : le bouton devient <b>« Changer de fiche BGG »</b> (mauvais rapprochement de l'import).</li>
+      <li class="q">Infos déjà présentes : <b>BGG les remplace</b>, puisque tu as choisi la fiche toi-même. Ce que tu as saisi à la main via « Modifier » peut être écrasé : l'aperçu le signale.</li>
+    </ul></div>
+    <div class="bloc"><h2>✏️ Modifier</h2><ul>
+      <li>Champs : <b>titre, format de boîte, joueurs min / max, durée, année, éditeur, auteurs</b>.</li>
+      <li>Les autres infos BGG (complexité, note, meilleur nombre de joueurs) restent celles de BGG, en lecture seule.</li>
+      <li>Titre obligatoire ; mêmes contrôles qu'à l'ajout. Enregistrer ramène à la fiche, mise à jour.</li>
+      <li class="q">Pas d'envoi de photo pour la pochette : elle vient uniquement de BGG (à voir plus tard si besoin).</li>
+    </ul></div>
+    <div class="bloc"><h2>Qui et où</h2><ul>
+      <li>Fiche ouverte depuis la <b>ludothèque</b> uniquement (pas depuis l'étagère ni une soirée).</li>
+      <li>Les jeux du <b>foyer</b> sont modifiables par chaque membre, comme le format aujourd'hui.</li>
+      <li>Les amis voient la nouvelle pochette et les infos à jour en temps réel.</li>
+      <li>Le bouton « Récupérer les pochettes » de la ludothèque ne change pas.</li>
+    </ul></div>
+  </section>
+
+  <section class="scene">
+    <div class="phone">
+      <div class="status"><span>21:04</span><span>●●● 🔋</span></div>
+      <div class="scroll">
+        <div class="page-head"><h1>Ma ludothèque <small>3 jeux</small></h1></div>
+        <div class="lib-card" data-jeu="a"><span class="cov" id="lCov">♟</span><span><b>Akropolis</b><small id="lMeta">— · —</small></span></div>
+        <div class="lib-card"><span class="cov img">Glo</span><span><b>Gloomhaven</b><small>2017 · Cephalofair</small></span></div>
+        <div class="lib-card"><span class="cov img b">Wing</span><span><b>Wingspan</b><small>2019 · Matagot</small></span></div>
+      </div>
+      <nav class="tabbar"><span><i>🧺</i>Étagère</span><span class="on"><i>📚</i>Ludothèque</span><span><i>＋</i>Ajouter</span><span><i>🎲</i>Parties</span><span><i>👥</i>Amis</span></nav>
+
+      <div class="voile" id="voile">
+        <!-- 1. Fiche -->
+        <div class="sheet" id="vFiche">
+          <button class="x" aria-label="Fermer">✕</button>
+          <div class="toast" id="toast" hidden></div>
+          <div class="sheet-head"><span class="cov" id="fCov">♟</span>
+            <div><h2 id="fTitre">Akropolis</h2><p id="fMeta">Ajouté sans pochette</p></div></div>
+          <div class="chips" id="fChips"><span class="chip">👥 2–4</span><span class="chip">⏱ 30 min</span></div>
+          <ul class="facts" id="fFacts"><li><span>Parties jouées</span><b>2</b></li></ul>
+          <p class="bgg" id="fBgg" hidden>Powered by BGG · Voir sur BoardGameGeek ↗</p>
+          <div class="actions">
+            <button class="btn cuivre" data-go="lier" id="bLier">🔗 Lier à BGG</button>
+            <button class="btn" data-go="modif">✏️ Modifier</button>
+          </div>
+        </div>
+
+        <!-- 2. Recherche BGG -->
+        <div class="sheet" id="vLier" hidden>
+          <button class="ret" data-go="fiche">‹ Akropolis</button>
+          <h2 style="font-size:19px" id="lTitre">Lier à BGG</h2>
+          <input value="Akropolis" aria-label="Rechercher sur BGG">
+          <ul class="res">
+            <li><button data-res="1" aria-pressed="false"><span class="cov img">Akr</span><span><b>Akropolis</b><small>2022</small></span></button></li>
+            <li><button data-res="2" aria-pressed="false"><span class="cov img b">Akr</span><span><b>Akropolis</b><small>2008</small></span></button></li>
+            <li><button data-res="3" aria-pressed="false"><span class="cov">♟</span><span><b>Akropolis: Athena</b><small>2024 · extension</small></span></button></li>
+          </ul>
+          <div class="apercu" id="apercu" hidden>
+            <p class="lbl">Aperçu</p>
+            <div class="sheet-head" style="padding:0"><span class="cov img">Akr</span>
+              <div><b>Akropolis</b><p class="sous">2022 · Gigamic</p></div></div>
+            <div class="chips"><span class="chip">👥 1–4</span><span class="chip">⏱ 30 min</span><span class="chip">⚖ 2.1 / 5</span></div>
+            <p class="diff">Sera remplacé : <b>joueurs 2–4 → 1–4</b>. Le titre « Akropolis » et le format restent.</p>
+          </div>
+          <button class="btn-copper" id="bUtiliser" disabled>Utiliser cette fiche</button>
+        </div>
+
+        <!-- 3. Modifier -->
+        <div class="sheet" id="vModif" hidden>
+          <button class="ret" data-go="fiche">‹ Annuler</button>
+          <h2 style="font-size:19px">Modifier le jeu</h2>
+          <div class="field"><label class="lbl" for="mT">Titre</label><input id="mT" value="Akropolis"></div>
+          <div class="field"><label class="lbl" for="mF">Format de boîte</label>
+            <select id="mF"><option>Petit</option><option selected>Moyen</option><option>Grand</option><option>Très grand</option></select></div>
+          <div class="duo">
+            <div class="field"><label class="lbl" for="mMin">Joueurs min</label><input id="mMin" inputmode="numeric" value="2"></div>
+            <div class="field"><label class="lbl" for="mMax">Joueurs max</label><input id="mMax" inputmode="numeric" value="4"></div>
+          </div>
+          <div class="duo">
+            <div class="field"><label class="lbl" for="mD">Durée (min)</label><input id="mD" inputmode="numeric" value="30"></div>
+            <div class="field"><label class="lbl" for="mA">Année</label><input id="mA" inputmode="numeric" placeholder="—"></div>
+          </div>
+          <div class="field"><label class="lbl" for="mE">Éditeur</label><input id="mE" placeholder="—"></div>
+          <div class="field"><label class="lbl" for="mAu">Auteurs</label><input id="mAu" placeholder="—"></div>
+          <button class="btn-copper" data-go="enreg">Enregistrer</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="scen">
+      <h2>Parcours</h2>
+      <p>Akropolis a été importé « sans pochette ». Touche les boutons dans le téléphone, ou saute à une étape :</p>
+      <div class="btns" id="sauts">
+        <button data-s="fiche" aria-pressed="true">1 · Fiche (sans BGG)</button>
+        <button data-s="lier" aria-pressed="false">2 · Recherche BGG</button>
+        <button data-s="lie" aria-pressed="false">3 · Fiche liée</button>
+        <button data-s="modif" aria-pressed="false">4 · Modifier</button>
+      </div>
+      <p class="note">Étape 3 : une fois lié, « Lier à BGG » devient « Changer de fiche BGG » et le lien BoardGameGeek apparaît.</p>
+      <p class="note">Les questions en ambre (remplacement par BGG, pas de photo) sont celles à trancher.</p>
+    </div>
+  </section>
+</div>
+<script>
+const $ = (s) => document.querySelector(s);
+const vues = { fiche: $('#vFiche'), lier: $('#vLier'), modif: $('#vModif') };
+let lie = false;
+function voir(v) {
+  Object.entries(vues).forEach(([k, el]) => { el.hidden = k !== v; });
+  document.querySelectorAll('#sauts button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.s === v || (v === 'fiche' && lie && b.dataset.s === 'lie' ) || (v === 'fiche' && !lie && b.dataset.s === 'fiche'))));
+}
+function appliquerLie(on) {
+  lie = on;
+  for (const id of ['#fCov', '#lCov']) { const c = $(id); c.className = on ? 'cov img' : 'cov'; c.textContent = on ? 'Akr' : '♟'; }
+  $('#fMeta').textContent = on ? '2022 · Gigamic' : 'Ajouté sans pochette';
+  $('#lMeta').textContent = on ? '2022 · Gigamic' : '— · —';
+  $('#fChips').innerHTML = on ? '<span class="chip">👥 1–4</span><span class="chip">⏱ 30 min</span><span class="chip">⚖ 2.1 / 5</span><span class="chip">⭐ 7.4 / 10</span>'
+    : '<span class="chip">👥 2–4</span><span class="chip">⏱ 30 min</span>';
+  $('#fFacts').innerHTML = (on ? '<li><span>Créateur</span><b>Jules Messaud</b></li><li><span>Meilleur à</span><b>3</b></li>' : '') + '<li><span>Parties jouées</span><b>2</b></li>';
+  $('#fBgg').hidden = !on;
+  $('#bLier').textContent = on ? '🔗 Changer de fiche BGG' : '🔗 Lier à BGG';
+  $('#lTitre').textContent = on ? 'Changer de fiche BGG' : 'Lier à BGG';
+}
+function toast(txt) { const t = $('#toast'); t.textContent = txt; t.hidden = !txt; }
+document.addEventListener('click', (e) => {
+  const go = e.target.closest('[data-go]')?.dataset.go;
+  if (go === 'enreg') { toast('✓ Modifications enregistrées'); voir('fiche'); return; }
+  if (go) { toast(''); voir(go); return; }
+  const r = e.target.closest('[data-res]');
+  if (r) {
+    document.querySelectorAll('[data-res]').forEach((b) => b.setAttribute('aria-pressed', String(b === r)));
+    $('#apercu').hidden = r.dataset.res !== '1'; $('#bUtiliser').disabled = r.dataset.res !== '1';
+    return;
+  }
+  if (e.target.id === 'bUtiliser') { appliquerLie(true); toast('✓ Pochette et infos récupérées depuis BGG'); voir('fiche'); return; }
+  const s = e.target.closest('[data-s]')?.dataset.s;
+  if (s) {
+    toast('');
+    if (s === 'fiche') { appliquerLie(false); voir('fiche'); }
+    else if (s === 'lie') { appliquerLie(true); voir('fiche'); }
+    else voir(s);
+  }
+});
+voir('fiche');
+</script>
+</body>
+</html>

@@ -42,6 +42,16 @@ export default function LibraryClient({ games: initial, plays, verdicts, me, foy
     }
   }
 
+  // v4.24.0 — après « Lier à BGG » / « Modifier » : la liste et la fiche ouverte se mettent à jour.
+  async function relire() {
+    const r = await fetch('/api/games').catch(() => null);
+    if (!r?.ok) return;
+    const liste = (await r.json()).games as Game[];
+    setGames(liste);
+    setDetail((d) => (d ? liste.find((x) => x.id === d.id) ?? d : d));
+    router.refresh();
+  }
+
   async function setFormat(id: number, box_format: string) {
     const res = await fetch(`/api/games/${id}`, { method: 'PATCH',
       headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ box_format }) });
@@ -142,7 +152,7 @@ export default function LibraryClient({ games: initial, plays, verdicts, me, foy
         <GameSheet game={detail} players={[]} playsCount={plays[detail.id] ?? 0}
                    verdicts={verdicts[detail.id]}
                    onClose={() => setDetail(null)}
-                   mode="library" />
+                   mode="library" onMaj={relire} />
       )}
     </div>
   );

@@ -1,14 +1,15 @@
 'use client';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { formatLabel, coverSrc } from '@/lib/formats';
 import { formatNombre } from '@/lib/i18n/format';
 import type { Game, UserLite } from '@/lib/types';
 import { useI18n } from './LanguageProvider';
 import PlayerChip from './PlayerChip';
 import MancheBlocs from './MancheBlocs';
+import { LierBgg, ModifierJeu } from './FicheEdition';
 import type { Declaration } from '@/lib/manches';
 
-export default function GameSheet({ game, players, playsCount, verdicts, onClose, mode = 'shelf', onRemoveShelf, veto, votants, libre }: {
+export default function GameSheet({ game, players, playsCount, verdicts, onClose, mode = 'shelf', onRemoveShelf, veto, votants, libre, onMaj }: {
   game: Game;
   players: UserLite[];
   playsCount: number;
@@ -22,8 +23,13 @@ export default function GameSheet({ game, players, playsCount, verdicts, onClose
   votants?: { joueurs: UserLite[]; moiId: number };
   /** v4.19.0 — choix libre : les manches de ce jeu et ma déclaration. */
   libre?: { nightId: number; plays: Declaration[]; meId: number; vetoPar: string | null };
+  /** v4.24.0 — ludothèque : « Lier à BGG » et « Modifier » ; relit le jeu après coup. */
+  onMaj?: () => Promise<void>;
 }) {
   const { lang, t } = useI18n();
+  const [vue, setVue] = useState<'fiche' | 'lier' | 'modif'>('fiche');
+  const [toast, setToast] = useState<string | null>(null);
+  async function fini(msg: string) { if (onMaj) await onMaj(); setToast(msg); setVue('fiche'); }
   const fmt = (n: number) => formatNombre(lang, n, { maximumFractionDigits: 1 });
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -44,6 +50,10 @@ export default function GameSheet({ game, players, playsCount, verdicts, onClose
       <div className="bottom-sheet" role="dialog" aria-modal="true" aria-label={game.title}
            onClick={(e) => e.stopPropagation()}>
         <button type="button" className="sheet-close" aria-label={t('etagere.fermer')} onClick={onClose}>✕</button>
+        {vue === 'lier' ? <LierBgg game={game} onRetour={() => setVue('fiche')} onLie={() => void fini(t('fiche.lieOk'))} />
+          : vue === 'modif' ? <ModifierJeu game={game} onRetour={() => setVue('fiche')} onEnregistre={() => void fini(t('fiche.modifOk'))} />
+          : <>
+        {toast && <p className="fe-toast" role="status">{toast}</p>}
         <div className="sheet-head">
           {cover
             ? <img className="sheet-cover" src={cover} alt={game.title} decoding="async" />
@@ -124,6 +134,14 @@ export default function GameSheet({ game, players, playsCount, verdicts, onClose
             {t('fiche.retirerPartie')}
           </button>
         )}
+        {mode === 'library' && onMaj && (
+          <div className="fe-actions">
+            <button type="button" className="btn-ghost cuivre" onClick={() => { setToast(null); setVue('lier'); }}>
+              {game.bgg_id != null ? t('fiche.changerBgg') : t('fiche.lier')}</button>
+            <button type="button" className="btn-ghost" onClick={() => { setToast(null); setVue('modif'); }}>{t('fiche.modifier')}</button>
+          </div>
+        )}
+        </>}
       </div>
     </div>
   );

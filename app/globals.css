@@ -2763,3 +2763,20 @@ a.btn-go.as-link { display: flex; align-items: center; justify-content: center; 
   background: color-mix(in srgb, var(--vert) 14%, var(--surface)); border: 1px solid color-mix(in srgb, var(--vert) 45%, transparent); }
 .csv-bandeau b { display: block; }
 .imp-bas .csv-abandon { display: block; margin: 0 auto 8px; font-size: 12px; }
+
+/* v4.24.0 — fiche jeu : lier à BGG, modifier */
+.fe-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+.fe-actions .btn-ghost { min-height: 44px; font-size: 14px; }
+.fe-actions .cuivre { border-color: var(--cuivre); color: var(--cuivre); }
+.fe-toast { margin: 0 0 10px; padding: 9px 12px; border-radius: 12px; font-size: 13px;
+  background: color-mix(in srgb, var(--vert) 18%, var(--surface)); border: 1px solid color-mix(in srgb, var(--vert) 50%, transparent); }
+.fiche-edition { display: flex; flex-direction: column; gap: 11px; }
+.fiche-edition h2 { font-size: 19px; }
+.fe-retour { align-self: flex-start; background: none; border: 0; color: var(--doux-clair); font: inherit; font-size: 13.5px; padding: 0; cursor: pointer; }
+.fe-apercu { background: var(--surface); border-radius: 14px; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+.fe-diff { font-size: 12.5px; color: var(--doux-clair); }
+.fe-champ { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.fe-champ > span { font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--doux-clair); font-weight: 700; }
+.fe-champ input, .fe-champ select { background: var(--surface); border: 1px solid color-mix(in srgb, var(--doux) 50%, transparent);
+  border-radius: 12px; color: var(--creme); font: inherit; font-size: 16px; padding: 10px 12px; width: 100%; min-width: 0; }
+.fe-duo { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
