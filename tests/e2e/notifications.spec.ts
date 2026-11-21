@@ -43,7 +43,7 @@ test('préférences par type : tout actif par défaut, un type se coupe', async 
   await register(page, `np_${Date.now().toString(36)}`);
   const avant = await (await page.request.get('/api/push')).json();
   expect(avant.cle).toMatch(/^[A-Za-z0-9_-]{80,}$/);
-  expect(avant.prefs).toEqual({ invitations: true, reponses: true, rappel: true, amis: true });
+  expect(avant.prefs).toEqual({ invitations: true, reponses: true, rappel: true, amis: true, import: true });
   expect((await page.request.patch('/api/push', { data: { type: 'rappel', actif: false } })).ok()).toBe(true);
   expect((await page.request.patch('/api/push', { data: { type: 'nimporte', actif: false } })).status()).toBe(400);
   expect((await (await page.request.get('/api/push')).json()).prefs.rappel).toBe(false);
