@@ -35,13 +35,25 @@ async function bggGate(): Promise<void> {
   if (remaining > 0) await new Promise((r) => setTimeout(r, remaining));
 }
 
+// v4.22.1 — BGG refuse les rafales (import d'un fichier : une recherche par jeu, plus les
+// replis) : sur 429 ou 5xx, on recule TOUT le monde (Retry-After, sinon 2 s puis 4 s) et on
+// réessaie, 3 tentatives en tout. Le code est journalisé : avant, tout échec était muet.
 async function bggFetch(url: string, timeoutMs = 8000): Promise<string | null> {
-  try {
-    await bggGate();
-    const res = await fetch(url, { headers: headers(), signal: AbortSignal.timeout(timeoutMs) });
-    if (!res.ok) return null;
-    return await res.text();
-  } catch { return null; } // réseau HS/timeout -> null, l'app reste utilisable
+  for (let essai = 1; ; essai++) {
+    let res: Response;
+    try {
+      await bggGate();
+      res = await fetch(url, { headers: headers(), signal: AbortSignal.timeout(timeoutMs) });
+    } catch { return null; } // réseau HS/timeout -> null, l'app reste utilisable
+    if (res.ok) {
+      try { return await res.text(); } catch { return null; }
+    }
+    const reessayable = res.status === 429 || res.status >= 500;
+    console.warn(`[bgg] ${res.status} ${new URL(url).pathname} (essai ${essai}/3)`);
+    if (!reessayable || essai >= 3) return null;
+    const attente = Math.min(Number(res.headers.get('retry-after')) || 2 * essai, 10) * 1000;
+    lastBggCall = Math.max(lastBggCall, Date.now() + attente - 1000); // la garde ajoute 1 s
+  }
 }
 
 export interface ThingParsed {

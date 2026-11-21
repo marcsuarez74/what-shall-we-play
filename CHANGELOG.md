@@ -4,6 +4,15 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [4.22.1] — 2026-11-21
+
+### Corrigé
+🔁 **Import : des jeux connus (Codenames, Akropolis…) restaient en « BGG ne répond pas ».**
+- Quand BGG refuse une rafale de recherches (429 ou erreur 5xx), le serveur attend le délai
+  demandé (sinon 2 s puis 4 s) et réessaie, 3 tentatives en tout, au lieu d'abandonner au premier refus.
+- L'attente s'applique à toutes les requêtes BGG en cours, pour ne pas relancer la rafale.
+- Chaque refus de BGG est désormais noté dans les logs du serveur (code et route).
+
 ## [4.22.0] — 2026-11-21
 
 ### Ajouté
