@@ -63,14 +63,17 @@ test('import CSV : rapprochement BGG, choix, sans pochette, enrichissement -> lu
   await page.getByRole('switch', { name: /Inclure les extensions/ }).click();
   await expect(page.getByText('Gloomhaven - Forgotten Circles')).toHaveCount(0);
 
-  // À vérifier : Splendor (2 candidats) + Jeu Inconnu (introuvable)
+  // v4.22.3 — À vérifier : Splendor (2 candidats) ; Introuvables : Jeu Inconnu
   await page.getByRole('button', { name: /À vérifier/ }).click();
-  await expect(page.locator('.imp-jeu')).toHaveCount(2);
+  await expect(page.locator('.imp-jeu')).toHaveCount(1);
   await page.getByText('2 jeux possibles').click();
   await page.getByRole('dialog').getByRole('button', { name: /2024/ }).click();
+  await expect(page.getByText('Rien à choisir')).toBeVisible();
+  await page.getByRole('button', { name: /Introuvables/ }).click();
+  await expect(page.locator('.imp-jeu')).toHaveCount(1);
   await page.getByText('Introuvable sur BGG').click();
   await page.getByRole('dialog').getByRole('button', { name: 'Importer sans pochette' }).click();
-  await expect(page.getByText('Rien à vérifier')).toBeVisible();
+  await expect(page.getByText('Tout est trouvé')).toBeVisible();
   await page.getByRole('button', { name: /Tous/ }).click();
 
   await page.getByRole('button', { name: 'Ajouter 4 jeux' }).click();

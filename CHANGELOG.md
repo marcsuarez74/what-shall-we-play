@@ -4,6 +4,15 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [4.22.3] — 2026-11-21
+
+### Amélioré
+🗂️ **Import : trois onglets pour trier la vérification.**
+- **Tous** · **À vérifier** (plusieurs jeux BGG possibles, à choisir) · **Introuvables** (rien
+  trouvé ou BGG muet, à chercher à la main) — chacun avec son compteur, mis à jour pendant la recherche.
+- Un jeu réglé ou décoché quitte son onglet ; un onglet vide l'annonce (« Rien à choisir 👌 », « Tout est trouvé 👌 »).
+- Maquette : `mockup/2026-11-21-v4223-import-onglets.html`.
+
 ## [4.22.2] — 2026-11-21
 
 ### Amélioré
