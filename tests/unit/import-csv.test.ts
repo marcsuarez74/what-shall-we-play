@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { lireCsvMyludo, lireJoueurs, lireDuree, rapprocher, requeteBgg, memeTitre, doublonsFichier, cleTitre } from '@/lib/import-csv';
+import { lireCsvMyludo, lireJsonMyludo, lireFichierMyludo, titresRepli, lireJoueurs, lireDuree, rapprocher, requeteBgg, memeTitre, doublonsFichier, cleTitre } from '@/lib/import-csv';
 import type { Game } from '@/lib/types';
 
 // En-tête et lignes réelles d'un export Myludo (apostrophe de tête comprise).
@@ -80,5 +80,57 @@ describe('outils', () => {
   it('doublons dans le fichier : la 2e occurrence', () => {
     const l = lireCsvMyludo(['Titre', 'A', 'B', 'a', 'B'].join('\n'))!;
     expect([...doublonsFichier(l)]).toEqual([2, 3]);
+  });
+});
+
+// Extrait réel d'un export Myludo JSON (v4.22.0) : listes, nombres, durée en nombre ou en texte.
+const JSON_MYLUDO = JSON.stringify([
+  { ID: 96693, Titre: 'Wondrous Creatures - Winterfall', Édition: 2026, Type: 'extension', 'Joueur(s)': '1 — 4',
+    Durée: '40 — 80', 'Éditeur(s)': ['Bad Comet', 'Super Meeple'], 'Auteur(s)': ['Yeom Cheolwoong'], 'Illustrateur(s)': ['Sophia Kang'],
+    'Note personnelle': 0, Mécanisme: ['Collection'] },
+  { ID: 88956, Titre: 'Covenant', Édition: 2025, Type: 'basegame', 'Joueur(s)': 'Duo', Durée: 100,
+    'Éditeur(s)': ['Devir'], 'Auteur(s)': ['Germán P. Millán', 'Autre'], 'Illustrateur(s)': [] },
+  { ID: 1, Titre: '  ' },
+], null, 4);
+
+describe('lireJsonMyludo', () => {
+  it('même ligne qu’en CSV : 1er éditeur, auteurs joints, durée nombre ou texte', () => {
+    const l = lireJsonMyludo(JSON_MYLUDO) as NonNullable<ReturnType<typeof lireCsvMyludo>>;
+    expect(l).toHaveLength(2);
+    expect(l[0]).toEqual(lireCsvMyludo(CSV)![0]);
+    expect(l[1]).toMatchObject({ titre: 'Covenant', annee: 2025, extension: false, minJoueurs: 2, maxJoueurs: 2,
+      duree: 100, editeur: 'Devir', auteurs: 'Germán P. Millán, Autre', illustrateurs: null });
+  });
+  it('mal formé → illisible ; liste sans Titre ou objet → null', () => {
+    expect(lireJsonMyludo('[{"Titre":')).toBe('illisible');
+    expect(lireJsonMyludo('[{"name":"Catan"}]')).toBeNull();
+    expect(lireJsonMyludo('{"items":[]}')).toBeNull();
+  });
+});
+
+describe('lireFichierMyludo', () => {
+  it('le contenu décide du format', () => {
+    expect(lireFichierMyludo(JSON_MYLUDO)).toMatchObject({ format: 'json', lignes: { length: 2 } });
+    expect(lireFichierMyludo('\uFEFF' + JSON_MYLUDO)).toMatchObject({ format: 'json' });
+    expect(lireFichierMyludo(CSV)).toMatchObject({ format: 'csv', lignes: { length: 5 } });
+  });
+  it('trois erreurs distinctes', () => {
+    expect(lireFichierMyludo('[{"Titre":')).toEqual({ erreur: 'jsonIllisible' });
+    expect(lireFichierMyludo('{"a":1}')).toEqual({ erreur: 'jsonPasMyludo' });
+    expect(lireFichierMyludo('nom;prix\nCatan;30')).toEqual({ erreur: 'csv' });
+  });
+});
+
+describe('titresRepli', () => {
+  it('parenthèses, puis « : », puis article — cumulés, sans doublon', () => {
+    expect(titresRepli('Les Aventuriers du Rail : Europe (Nouvelle édition)'))
+      .toEqual(['Les Aventuriers du Rail : Europe', 'Les Aventuriers du Rail', 'Aventuriers du Rail']);
+    expect(titresRepli("L'Île Des Mots Dits")).toEqual(['Île Des Mots Dits']);
+    expect(titresRepli('Dixit [Big Box] - Quest')).toEqual(['Dixit']);
+  });
+  it('rien à simplifier → aucun repli', () => {
+    expect(titresRepli('Covenant')).toEqual([]);
+    expect(titresRepli('The Crew')).toEqual(['Crew']);
+    expect(titresRepli('(Les)')).toEqual([]);
   });
 });

@@ -4,6 +4,21 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [4.22.0] — 2026-11-21
+
+### Ajouté
+📄 **Import d'un export Myludo en JSON, en plus du CSV.**
+- Un seul écran « Importer un fichier » accepte le `.csv` comme le `.json` : le format est reconnu
+  au contenu et affiché sur la carte du fichier ; la suite (vérification BGG, ajout, bilan) ne change pas.
+- Messages distincts pour un JSON mal formé et pour un JSON qui n'est pas un export Myludo.
+- Les champs en plus du JSON (note perso, date d'acquisition, thèmes…) sont ignorés, comme en CSV.
+
+### Corrigé
+🔁 **Moins de jeux « introuvables » à l'import.** Quand un titre ne donne rien sur BGG, l'app
+réessaie toute seule : sans ce qui est entre parenthèses, puis sans ce qui suit « : », puis sans
+l'article de tête (Le, La, Les, L', The), et enfin dans les extensions BGG. Environ une seconde
+de plus par essai, seulement pour les jeux non trouvés.
+
 ## [4.21.5] — 2026-11-21
 
 ### Corrigé
