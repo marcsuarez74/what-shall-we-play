@@ -64,27 +64,74 @@ export function lireCsvMyludo(txt: string): LigneCsv[] | null {
   const col = (nom: string) => tete.indexOf(nom);
   const iTitre = col('Titre');
   if (iTitre < 0) return null;
-  const val = (r: string[], nom: string) => (col(nom) >= 0 ? (r[col(nom)] ?? '').trim() : '');
+  return rows.filter((r) => (r[iTitre] ?? '').trim())
+    .map((r) => ligneMyludo((nom) => (col(nom) >= 0 ? (r[col(nom)] ?? '').trim() : '')));
+}
+
+/** Une ligne Myludo, quel que soit le format : val(champ) rend la valeur brute en texte
+ *  (listes JSON jointes par des virgules, comme dans le CSV). */
+function ligneMyludo(val: (nom: string) => string): LigneCsv {
   const texte = (s: string) => (s ? s.slice(0, 120) : null);
-  return rows.filter((r) => (r[iTitre] ?? '').trim()).map((r) => {
-    const j = lireJoueurs(val(r, 'Joueur(s)'));
-    const annee = Number(val(r, 'Édition'));
-    const type = val(r, 'Type');
-    return {
-      titre: r[iTitre].trim().slice(0, 120),
-      annee: Number.isInteger(annee) && annee > 0 ? annee : null,
-      extension: type !== '' && type !== 'basegame' && type !== 'standalone',
-      minJoueurs: j.min, maxJoueurs: j.max, duree: lireDuree(val(r, 'Durée')),
-      editeur: texte(val(r, 'Éditeur(s)').split(',')[0].trim()),
-      auteurs: texte(val(r, 'Auteur(s)').split(',').map((s) => s.trim()).join(', ')),
-      illustrateurs: texte(val(r, 'Illustrateur(s)').split(',').map((s) => s.trim()).join(', ')),
-    };
-  });
+  const j = lireJoueurs(val('Joueur(s)'));
+  const annee = Number(val('Édition'));
+  const type = val('Type');
+  return {
+    titre: val('Titre').slice(0, 120),
+    annee: Number.isInteger(annee) && annee > 0 ? annee : null,
+    extension: type !== '' && type !== 'basegame' && type !== 'standalone',
+    minJoueurs: j.min, maxJoueurs: j.max, duree: lireDuree(val('Durée')),
+    editeur: texte(val('Éditeur(s)').split(',')[0].trim()),
+    auteurs: texte(val('Auteur(s)').split(',').map((s) => s.trim()).join(', ')),
+    illustrateurs: texte(val('Illustrateur(s)').split(',').map((s) => s.trim()).join(', ')),
+  };
+}
+
+/** Lit un export Myludo JSON (v4.22.0) : liste d'objets aux mêmes champs que le CSV,
+ *  certains en listes (« Éditeur(s) ») ou en nombres (« Édition », « Durée »).
+ *  'illisible' si le JSON est mal formé ; null si ce n'est pas un export Myludo. */
+export function lireJsonMyludo(txt: string): LigneCsv[] | null | 'illisible' {
+  let d: unknown;
+  try { d = JSON.parse(txt); } catch { return 'illisible'; }
+  if (!Array.isArray(d)) return null;
+  const objets = d.filter((o): o is Record<string, unknown> => !!o && typeof o === 'object' && 'Titre' in o);
+  if (objets.length === 0) return null;
+  const enTexte = (v: unknown) => (Array.isArray(v) ? v.join(',') : v == null ? '' : String(v)).trim();
+  return objets.filter((o) => enTexte(o.Titre)).map((o) => ligneMyludo((nom) => enTexte(o[nom])));
+}
+
+/** Lit un export Myludo, CSV ou JSON : le contenu décide (« [ » ou « { » en tête → JSON). */
+export function lireFichierMyludo(txt: string):
+  { format: 'csv' | 'json'; lignes: LigneCsv[] } | { erreur: 'jsonIllisible' | 'jsonPasMyludo' | 'csv' } {
+  const t = txt.replace(/^﻿/, '');
+  if (/^\s*[[{]/.test(t)) {
+    const l = lireJsonMyludo(t);
+    if (l === 'illisible') return { erreur: 'jsonIllisible' };
+    return l && l.length ? { format: 'json', lignes: l } : { erreur: 'jsonPasMyludo' };
+  }
+  const l = lireCsvMyludo(t);
+  return l && l.length ? { format: 'csv', lignes: l } : { erreur: 'csv' };
 }
 
 /** Ce qu'on demande à BGG : le titre du jeu de base (« 7 Wonders Duel - Agora » → « 7 Wonders Duel »),
  *  le titre complet départage ensuite — la recherche BGG ne connaît pas nos « - ». */
 export const requeteBgg = (titre: string) => titre.split(' - ')[0].trim();
+
+/** Titres de repli quand la recherche ne donne rien (v4.22.0), du plus fidèle au plus court,
+ *  chacun partant du précédent : sans parenthèses, puis sans ce qui suit « : »,
+ *  puis sans article de tête (Le, La, Les, L', The). Sans doublon ni titre trop court. */
+export function titresRepli(titre: string): string[] {
+  const base = requeteBgg(titre);
+  const sansParentheses = base.replace(/\s*[([][^)\]]*[)\]]/g, '').replace(/\s+/g, ' ').trim();
+  const sansSuite = sansParentheses.split(':')[0].trim();
+  const sansArticle = sansSuite.replace(/^(le|la|les|the)\s+|^l['’]\s*/i, '').trim();
+  const vus = new Set([cleTitre(base)]);
+  return [sansParentheses, sansSuite, sansArticle].filter((t) => {
+    const c = cleTitre(t);
+    if (c.length < 2 || vus.has(c)) return false;
+    vus.add(c);
+    return true;
+  });
+}
 
 /** Un seul jeu BGG au titre identique → trouvé ; plusieurs ou seulement des voisins → à choisir
  *  (triés par proximité d'année : celle de Myludo est l'édition, pas la sortie) ; rien → introuvable. */

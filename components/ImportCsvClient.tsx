@@ -1,6 +1,6 @@
 'use client';
-// Import d'une ludothèque depuis un CSV (export Myludo, v4.20.0) — maquette
-// mockup/2026-11-20-v4200-import-csv.html. Fichier lu dans le navigateur ; chaque titre
+// Import d'une ludothèque depuis un export Myludo CSV (v4.20.0) ou JSON (v4.22.0) — maquettes
+// mockup/2026-11-20-v4200-import-csv.html et mockup/2026-11-21-v4220-import-json.html. Fichier lu dans le navigateur ; chaque titre
 // est cherché sur BGG (aperçu sans téléchargement : /api/bgg/thing?cover=0) ; les pochettes
 // ne sont rapatriées qu'à la confirmation, par la route habituelle.
 import { useEffect, useRef, useState } from 'react';
@@ -9,8 +9,8 @@ import Link from 'next/link';
 import { FORMATS, FORMAT_SCALE, formatShort } from '@/lib/formats';
 import { ficheBggFormData, type FicheBgg } from '@/lib/bgg-ajout';
 import {
-  lireCsvMyludo, rapprocher, requeteBgg, memeTitre, doublonsFichier,
-  type LigneCsv, type ResultatBgg,
+  lireFichierMyludo, rapprocher, requeteBgg, titresRepli, memeTitre, doublonsFichier,
+  type LigneCsv, type ResultatBgg, type Rapprochement,
 } from '@/lib/import-csv';
 import type { BoxFormat, Game, UserLite } from '@/lib/types';
 import { useI18n } from './LanguageProvider';
@@ -31,6 +31,18 @@ async function chercher(q: string, ext: boolean): Promise<ResultatBgg[]> {
   const r = await fetch(`/api/bgg/search?q=${encodeURIComponent(q)}${ext ? '&ext=1' : ''}`);
   if (!r.ok) throw new Error('search');
   return ((await r.json()).results ?? []) as ResultatBgg[];
+}
+/** Recherche BGG d'une ligne, avec repli si rien n'est trouvé (v4.22.0) : titres simplifiés,
+ *  puis le titre dans les extensions BGG. On s'arrête au premier essai qui donne quelque chose. */
+async function rapprocherLigne(l: LigneCsv): Promise<Rapprochement> {
+  const essais: [string, boolean][] = [[requeteBgg(l.titre), l.extension],
+    ...titresRepli(l.titre).map((t): [string, boolean] => [t, l.extension])];
+  if (!l.extension) essais.push([requeteBgg(l.titre), true]);
+  for (const [i, [q, ext]] of essais.entries()) {
+    const r = rapprocher(i === 0 ? l.titre : q, l.annee, await chercher(q, ext));
+    if (r.etat !== 'none') return r;
+  }
+  return { etat: 'none' };
 }
 async function fiche(bggId: number, apercu: boolean): Promise<Fiche> {
   const r = await fetch(`/api/bgg/thing?id=${bggId}${apercu ? '&cover=0' : ''}`);
@@ -55,6 +67,7 @@ export default function ImportCsvClient({ me }: { me: UserLite }) {
   const { lang, t } = useI18n();
   const [stage, setStage] = useState<Stage>('fichier');
   const [nomFichier, setNomFichier] = useState('');
+  const [format, setFormat] = useState<'csv' | 'json'>('csv');
   const [error, setError] = useState<string | null>(null);
   const [lignes, setLignes] = useState<Ligne[]>([]);
   const [ext, setExt] = useState(false);
@@ -95,7 +108,7 @@ export default function ImportCsvClient({ me }: { me: UserLite }) {
         const l = ref.current.find((x) => x.etat === 'att' && (extRef.current || !x.csv.extension));
         if (!l || !vivant.current) break;
         try {
-          const r = rapprocher(l.csv.titre, l.csv.annee, await chercher(requeteBgg(l.csv.titre), l.csv.extension));
+          const r = await rapprocherLigne(l.csv);
           if (r.etat === 'ok') maj(l.i, placer(l, await fiche(r.bggId, true)));
           else maj(l.i, r.etat === 'multi' ? { etat: 'multi', candidats: r.candidats } : { etat: 'none' });
         } catch { maj(l.i, { etat: 'echec' }); }
@@ -106,8 +119,12 @@ export default function ImportCsvClient({ me }: { me: UserLite }) {
   async function lireFichier(file: File | undefined) {
     if (!file) return;
     setError(null);
-    const csv = lireCsvMyludo(await file.text());
-    if (!csv || csv.length === 0) { setError(t('csv.errFormat')); return; }
+    const lu = lireFichierMyludo(await file.text());
+    if ('erreur' in lu) {
+      setError(t(lu.erreur === 'csv' ? 'csv.errFormat' : lu.erreur === 'jsonIllisible' ? 'csv.errJsonIllisible' : 'csv.errJsonPasMyludo'));
+      return;
+    }
+    const csv = lu.lignes;
     const res = await fetch('/api/games');
     if (!res.ok) { setError(t('import.errLectureLudo')); return; }
     ludo.current = ((await res.json()).games ?? []) as Game[];
@@ -117,7 +134,7 @@ export default function ImportCsvClient({ me }: { me: UserLite }) {
       const etat: Etat = doublons.has(i) ? 'doublon' : deja?.bgg_id != null ? 'deja' : 'att';
       return { i, csv: c, etat, coche: etat === 'att' && !c.extension, fiche: null, candidats: [], dejaId: null, resolu: false };
     });
-    setLignes(ref.current); setNomFichier(file.name); setFiltre('tous'); setStage('verif');
+    setLignes(ref.current); setNomFichier(file.name); setFormat(lu.format); setFiltre('tous'); setStage('verif');
     extRef.current = ext;
     void rechercher();
   }
@@ -202,9 +219,14 @@ export default function ImportCsvClient({ me }: { me: UserLite }) {
             <span className="ico" aria-hidden>📄</span>
             <b>{t('csv.choisir')}</b>
             <span>{t('csv.deposer')}</span>
-            <input type="file" accept=".csv,text/csv" aria-label={t('csv.choisir')}
+            <input type="file" accept=".csv,.json,text/csv,application/json" aria-label={t('csv.choisir')}
                    onChange={(e) => void lireFichier(e.target.files?.[0])} />
           </label>
+          <div className="csv-reconnus">
+            <p>{t('csv.formatsReconnus')}</p>
+            <div><span>Myludo<small>{t('csv.ouExporter')}</small></span>
+              <span className="csv-badge csv">CSV</span><span className="csv-badge json">JSON</span></div>
+          </div>
           <p className="help">{t('csv.aide')}</p>
           <Link className="cancel" href="/games/add">{t('import.annuler')}</Link>
         </div>
@@ -214,7 +236,7 @@ export default function ImportCsvClient({ me }: { me: UserLite }) {
         <div>
           <div className="csv-fichier">
             <span aria-hidden>📄</span>
-            <span className="t"><b>{nomFichier}</b><small>{t('csv.lignes', { n: lignes.length })}</small></span>
+            <span className="t"><b>{nomFichier}</b><small>Myludo <span className={`csv-badge ${format}`}>{format.toUpperCase()}</span> · {t('csv.lignes', { n: lignes.length })}</small></span>
             <button type="button" className="link-btn" onClick={() => { setStage('fichier'); ref.current = []; setLignes([]); }}>{t('csv.changer')}</button>
           </div>
           {lignes.some((l) => l.csv.extension) && (

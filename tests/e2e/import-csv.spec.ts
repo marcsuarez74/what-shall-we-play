@@ -97,3 +97,29 @@ test('import CSV : fichier illisible -> message, on reste sur l’écran fichier
   await expect(page.locator('.hint[role=alert]')).toContainText('export Myludo');
   await expect(page.getByText('Choisir un fichier CSV').first()).toBeVisible();
 });
+
+test('import JSON Myludo : format détecté, titre retrouvé par repli', async ({ page }) => {
+  const vues: string[] = [];
+  await page.route('**/api/bgg/search*', (r) => {
+    const q = new URL(r.request().url()).searchParams.get('q') ?? '';
+    vues.push(q);
+    return r.fulfill({ json: { results: RECHERCHE[q] ?? [] } });
+  });
+  await page.route('**/api/bgg/thing*', (r) =>
+    r.fulfill({ json: THING(Number(new URL(r.request().url()).searchParams.get('id'))) }));
+  await register(page, `json_${stamp}`.slice(0, 20));
+  await page.goto('/games/import-csv');
+  const json = JSON.stringify([{ ID: 1, Titre: 'Wingspan (Nouvelle édition)', Édition: 2024, Type: 'basegame',
+    'Joueur(s)': '1 — 5', Durée: 70, 'Éditeur(s)': ['Matagot'] }]);
+  await page.locator('input[type="file"]').setInputFiles({ name: 'collection.json', mimeType: 'application/json', buffer: Buffer.from(json) });
+  await expect(page.locator('.csv-badge.json')).toBeVisible();
+  await expect(page.getByText(/^✓ Wingspan/)).toBeVisible();
+  expect(vues).toEqual(['Wingspan (Nouvelle édition)', 'Wingspan']);
+});
+
+test('import JSON : JSON mal formé -> message dédié', async ({ page }) => {
+  await register(page, `jsonko_${stamp}`.slice(0, 20));
+  await page.goto('/games/import-csv');
+  await page.locator('input[type="file"]').setInputFiles({ name: 'x.json', mimeType: 'application/json', buffer: Buffer.from('[{"Titre":') });
+  await expect(page.locator('.hint[role=alert]')).toContainText('JSON est illisible');
+});

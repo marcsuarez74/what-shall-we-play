@@ -2310,6 +2310,15 @@ a.btn-go.as-link { display: flex; align-items: center; justify-content: center; 
 .csv-recherche button:disabled { opacity: .5; cursor: default; }
 .csv-cand { width: 100%; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .csv-cand[aria-pressed="true"] { border-color: var(--cuivre); }
+/* v4.22.0 — import JSON : formats reconnus, badge du format détecté */
+.csv-reconnus { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+.csv-reconnus p { font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--doux-clair); font-weight: 700; }
+.csv-reconnus div { display: flex; align-items: center; gap: 8px; background: var(--surface); border-radius: 12px; padding: 8px 12px; font-size: 13.5px; }
+.csv-reconnus div > span:first-child { flex: 1; display: flex; flex-direction: column; }
+.csv-reconnus small { color: var(--doux-clair); font-size: 12px; }
+.csv-badge { font-size: 10px; font-weight: 800; letter-spacing: .08em; border-radius: 5px; padding: 1px 5px; }
+.csv-badge.csv { background: color-mix(in srgb, var(--vert) 30%, transparent); color: var(--vert); }
+.csv-badge.json { background: color-mix(in srgb, var(--cuivre) 30%, transparent); color: var(--cuivre); }
 
 /* ---------- Verdict du jeu (v3.7 — 😍🙂😐 sur la nuit terminée) ---------- */
 .verdict-bloc { margin-top: 14px; background: var(--surface);
