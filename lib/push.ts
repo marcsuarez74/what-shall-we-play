@@ -8,7 +8,7 @@ import { getDb, DATA_DIR } from './db';
 import { t, type Lang } from './i18n';
 import { titrePartie } from './i18n/format';
 
-export const TYPES = ['invitations', 'reponses', 'rappel', 'amis'] as const;
+export const TYPES = ['invitations', 'reponses', 'rappel', 'amis', 'import'] as const;
 export type TypeNotif = (typeof TYPES)[number];
 export type Message = { titre: string; corps?: string; url: string; tag?: string };
 type Abonnement = { endpoint: string; p256dh: string; auth: string };

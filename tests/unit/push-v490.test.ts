@@ -38,7 +38,7 @@ describe('abonnements et préférences', () => {
 
   test('tous les types actifs par défaut ; un type se coupe et se rallume', () => {
     const u = compte();
-    expect(prefsNotif(u.id)).toEqual({ invitations: true, reponses: true, rappel: true, amis: true });
+    expect(prefsNotif(u.id)).toEqual({ invitations: true, reponses: true, rappel: true, amis: true, import: true });
     expect(reglerNotif(u.id, 'amis', false)).toBe(true);
     expect(reglerNotif(u.id, 'inconnu', false)).toBe(false);
     expect(reglerNotif(u.id, 'rappel', 'non')).toBe(false);

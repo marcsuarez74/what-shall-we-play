@@ -2739,3 +2739,27 @@ a.btn-go.as-link { display: flex; align-items: center; justify-content: center; 
 }
 .ensuite b { color: var(--creme); font-weight: 600; }
 .ensuite .av-chev { margin-left: auto; font-size: 15px; }
+
+/* v4.23.0 — import en tâche de fond : pastille au-dessus des onglets, carte de l'onglet Ajouter */
+.imp-pastille {
+  position: fixed; z-index: 39; left: 10px; right: 10px; margin: 0 auto; max-width: 520px;
+  bottom: calc(66px + env(safe-area-inset-bottom) + 8px);
+  display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 14px;
+  background: var(--surface-plus, var(--surface)); color: inherit; font-size: 12.5px;
+  border: 1px solid color-mix(in srgb, var(--cuivre) 55%, transparent);
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.35);
+}
+.imp-pastille.ambre { border-color: var(--ambre, var(--cuivre)); }
+.imp-pastille .ico { font-size: 18px; }
+.imp-pastille .t { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.imp-pastille small { color: var(--doux-clair); font-size: 11px; }
+.imp-pastille .mini { height: 3px; border-radius: 2px; background: color-mix(in srgb, var(--doux) 35%, transparent); overflow: hidden; }
+.imp-pastille .mini i { display: block; height: 100%; background: var(--cuivre); }
+.imp-pastille .fl { color: var(--cuivre); font-weight: 700; }
+.imp-carte { display: flex; flex-direction: column; gap: 8px; padding: 12px; margin-top: 12px; border-radius: 14px; background: var(--surface); border: 1px solid var(--cuivre); }
+.imp-carte .l { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; }
+.imp-carte .l span { color: var(--doux-clair); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.csv-bandeau { display: flex; gap: 10px; align-items: flex-start; margin: 10px 0; padding: 10px 12px; border-radius: 12px; font-size: 13px;
+  background: color-mix(in srgb, var(--vert) 14%, var(--surface)); border: 1px solid color-mix(in srgb, var(--vert) 45%, transparent); }
+.csv-bandeau b { display: block; }
+.imp-bas .csv-abandon { display: block; margin: 0 auto 8px; font-size: 12px; }

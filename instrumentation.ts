@@ -15,6 +15,9 @@ export async function register() {
     try { completerSeries(); } catch { /* jamais bloquant */ }
     try { envoyerRappels().catch(() => {}); } catch { /* jamais bloquant */ }
   };
+  // v4.23.0 : imports en tâche de fond interrompus par un redémarrage → reprise.
+  const { reprendreImports } = await import('./lib/import-fond');
+  try { reprendreImports(); } catch { /* jamais bloquant */ }
   setInterval(balayer, 5 * 60_000).unref();
   balayer();
 }

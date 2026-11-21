@@ -176,3 +176,49 @@ export function doublonsFichier(lignes: LigneCsv[]): Set<number> {
   lignes.forEach((l, i) => { const c = cleTitre(l.titre); if (vus.has(c)) doublons.add(i); else vus.add(c); });
   return doublons;
 }
+
+// ── v4.23.0 : import en tâche de fond — état d'une ligne, partagé serveur / client ──
+export type EtatLigne = 'att' | 'ok' | 'multi' | 'none' | 'echec' | 'enrichir' | 'deja' | 'doublon';
+export type ResultatAjout = 'importe' | 'enrichi' | 'echec';
+export type StatutImport = 'recherche' | 'pret' | 'ajout' | 'fini';
+/** Fiche BGG d'une ligne (aperçu : imageUrl, sans pochette téléchargée). */
+export interface FicheLigne {
+  bggId: number; title: string; year: number | null; publisher: string | null;
+  minPlayers: number | null; maxPlayers: number | null; playtimeMin: number | null;
+  weight: number | null; rating: number | null; designer: string | null;
+  artist: string | null; bestPlayers: number | null; coverName: string | null; imageUrl?: string | null;
+}
+export interface LigneImport {
+  i: number; csv: LigneCsv; etat: EtatLigne; coche: boolean; fiche: FicheLigne | null;
+  candidats: ResultatBgg[]; dejaId: number | null; resolu: boolean; resultat: ResultatAjout | null; cov: boolean;
+}
+export interface ImportInfo { nom: string; format: 'csv' | 'json'; statut: StatutImport; ext: boolean; fmt: string; vu: boolean; }
+export interface ResumeImport { statut: StatutImport; vu: boolean; nom: string; tot: number; faits: number; choisir: number; chercher: number; aAjouter: number; ajoutes: number; }
+
+const A_AGIR: EtatLigne[] = ['multi', 'none', 'echec'];
+/** À trancher à la main : coché, pas encore réglé, et BGG n'a pas donné un jeu unique. */
+export const aAgir = (l: LigneImport) => l.coche && !l.resolu && A_AGIR.includes(l.etat);
+/** Lignes visibles (extensions selon le réglage) et ce qui sera ajouté. */
+export function compter(lignes: LigneImport[], ext: boolean) {
+  const visibles = lignes.filter((l) => ext || !l.csv.extension);
+  const selection = visibles.filter((l) => l.coche && l.etat !== 'att' && l.etat !== 'deja' && l.etat !== 'doublon');
+  return {
+    visibles, selection, tot: visibles.length,
+    faits: visibles.filter((l) => l.etat !== 'att').length,
+    choisir: visibles.filter((l) => aAgir(l) && l.etat === 'multi').length,
+    chercher: visibles.filter((l) => aAgir(l) && l.etat !== 'multi').length,
+    aAjouter: selection.length, ajoutes: selection.filter((l) => l.resultat).length,
+  };
+}
+/** Ligne venue du navigateur (POST) : on ne garde que des champs propres et bornés. */
+export function nettoyerLigne(x: unknown): LigneCsv | null {
+  const o = (x ?? {}) as Record<string, unknown>;
+  const s = (v: unknown, max = 200) => (typeof v === 'string' && v.trim() ? v.trim().slice(0, max) : null);
+  const n = (v: unknown) => (typeof v === 'number' && Number.isInteger(v) && v >= 0 && v < 100000 ? v : null);
+  const titre = s(o.titre, 120);
+  if (!titre) return null;
+  return {
+    titre, annee: n(o.annee), extension: o.extension === true, minJoueurs: n(o.minJoueurs), maxJoueurs: n(o.maxJoueurs),
+    duree: n(o.duree), editeur: s(o.editeur, 120), auteurs: s(o.auteurs, 120), illustrateurs: s(o.illustrateurs, 120),
+  };
+}

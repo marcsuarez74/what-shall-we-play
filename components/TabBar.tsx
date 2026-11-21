@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { CléDict } from '@/lib/i18n';
 import { useI18n } from './LanguageProvider';
+import ImportPastille from './ImportPastille';
 
 const TABS: { href: string; icon: string; label: CléDict }[] = [
   { href: '/etagere', icon: '🗄️', label: 'tabbar.etagere' },
@@ -22,6 +23,9 @@ export default function TabBar({ invitations = 0 }: { invitations?: number }) {
   // v4.7.0 : /invite (la soirée de l'invité) n'a pas d'onglets — il n'a accès à rien d'autre.
   if (path === '/' || HIDDEN.includes(path) || path === '/invite' || path.endsWith('/rejoindre') || path.endsWith('/scores')) return null;
   return (
+    <>
+    {/* v4.23.0 : import en tâche de fond — sauf sur l'écran d'import lui-même */}
+    {path !== '/games/import-csv' && <ImportPastille />}
     <nav className="tabbar" aria-label={t('tabbar.navigation')}>
       {TABS.map((tab) => {
         const active = path === tab.href || (tab.href === '/amis' && path.startsWith('/amis/'));
@@ -36,5 +40,6 @@ export default function TabBar({ invitations = 0 }: { invitations?: number }) {
         );
       })}
     </nav>
+    </>
   );
 }

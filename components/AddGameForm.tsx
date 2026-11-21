@@ -1,6 +1,7 @@
 'use client';
 import { useRef, useState } from 'react';
 import Link from 'next/link';
+import { CarteImport } from './ImportPastille';
 import { useRouter } from 'next/navigation';
 import { FORMATS, FORMAT_SCALE, formatShort } from '@/lib/formats';
 import { formatNombre } from '@/lib/i18n/format';
@@ -192,7 +193,7 @@ export default function AddGameForm({ me }: { me: UserLite }) {
           </button>
           <p className="btn-note">{t('ajout.recapChamps')}</p>
           <Link className="link-import" href="/games/import">{t('ajout.lienImport')}</Link>
-          <Link className="link-import" href="/games/import-csv">{t('ajout.lienImportCsv')}</Link>
+          <CarteImport lien={<Link className="link-import" href="/games/import-csv">{t('ajout.lienImportCsv')}</Link>} />
           <button type="button" className="link-manual" onClick={goManual}>{t('ajout.saisieManuelle')}</button>
         </>
       )}

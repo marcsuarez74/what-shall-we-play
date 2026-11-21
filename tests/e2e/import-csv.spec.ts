@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 
-// Import d'un fichier CSV Myludo (v4.20.0) : BGG simulé au niveau de NOS routes (search + thing).
+// Import d'un fichier CSV Myludo (v4.20.0). v4.23.0 : l'import tourne sur le serveur — BGG est
+// le stub tests/e2e/bgg-stub.cjs (Gloomhaven, Wingspan, Splendor ×2 ; le reste introuvable).
 const stamp = Date.now().toString(36);
 
 const CSV = [
@@ -14,17 +15,7 @@ const CSV = [
   '7;Gloomhaven;;2017;basegame;;;;;',
 ].join('\r\n');
 
-const RECHERCHE: Record<string, { bggId: number; name: string; annee: number | null }[]> = {
-  Gloomhaven: [{ bggId: 174430, name: 'Gloomhaven', annee: 2017 }],
-  Wingspan: [{ bggId: 266192, name: 'Wingspan', annee: 2019 }],
-  Splendor: [{ bggId: 148228, name: 'Splendor', annee: 2014 }, { bggId: 999001, name: 'Splendor', annee: 2024 }],
-};
-const THING = (id: number) => ({
-  bggId: id, title: id === 174430 ? 'Gloomhaven' : id === 266192 ? 'Wingspan' : 'Splendor', year: 2017,
-  publisher: 'Éditeur BGG', minPlayers: 2, maxPlayers: 5, playtimeMin: 45, weight: 2.4, rating: 8,
-  designer: 'Auteur BGG', artist: 'Artiste BGG', bestPlayers: 4, imageUrl: null,
-  coverName: id === 174430 ? `csv-${stamp}.jpg` : null,
-});
+const LONG = { timeout: 60_000 }; // BGG (stub) interrogé par le serveur, ~1 requête/s
 
 async function register(page: import('@playwright/test').Page, p: string) {
   await page.goto('/register');
@@ -36,12 +27,6 @@ async function register(page: import('@playwright/test').Page, p: string) {
 }
 
 test('import CSV : rapprochement BGG, choix, sans pochette, enrichissement -> ludothèque', async ({ page }) => {
-  await page.route('**/api/bgg/search*', (r) => {
-    const q = new URL(r.request().url()).searchParams.get('q') ?? '';
-    return r.fulfill({ json: { results: RECHERCHE[q] ?? [] } });
-  });
-  await page.route('**/api/bgg/thing*', (r) =>
-    r.fulfill({ json: THING(Number(new URL(r.request().url()).searchParams.get('id'))) }));
   await register(page, `csv_${stamp}`.slice(0, 20));
   // Fiche manuelle « Wingspan » (sans bgg_id) + « Catan » déjà lié à BGG
   await page.request.post('/api/games', { form: { title: 'Wingspan', box_format: 'moyen' } });
@@ -51,7 +36,7 @@ test('import CSV : rapprochement BGG, choix, sans pochette, enrichissement -> lu
   await page.getByRole('link', { name: /Importer un fichier CSV/ }).click();
   await page.locator('input[type="file"]').setInputFiles({ name: 'collection.csv', mimeType: 'text/csv', buffer: Buffer.from(CSV) });
 
-  await expect(page.getByText('Recherche terminée')).toBeVisible();
+  await expect(page.getByText('Recherche terminée')).toBeVisible(LONG);
   await expect(page.getByText('✓ Gloomhaven (2017)')).toBeVisible();
   await expect(page.getByText('fiche complétée')).toBeVisible();                     // Wingspan manuel
   await expect(page.getByText('Déjà dans ta ludothèque', { exact: false })).toHaveCount(2); // Catan + Wingspan
@@ -60,6 +45,7 @@ test('import CSV : rapprochement BGG, choix, sans pochette, enrichissement -> lu
   await expect(page.getByText('Gloomhaven - Forgotten Circles')).toHaveCount(0);
   await page.getByRole('switch', { name: /Inclure les extensions/ }).click();
   await expect(page.getByText('Gloomhaven - Forgotten Circles')).toBeVisible();
+  await expect(page.getByText('Recherche terminée')).toBeVisible(LONG); // l'extension a été cherchée
   await page.getByRole('switch', { name: /Inclure les extensions/ }).click();
   await expect(page.getByText('Gloomhaven - Forgotten Circles')).toHaveCount(0);
 
@@ -68,7 +54,7 @@ test('import CSV : rapprochement BGG, choix, sans pochette, enrichissement -> lu
   await expect(page.locator('.imp-jeu')).toHaveCount(1);
   await page.getByText('2 jeux possibles').click();
   await page.getByRole('dialog').getByRole('button', { name: /2024/ }).click();
-  await expect(page.getByText('Rien à choisir')).toBeVisible();
+  await expect(page.getByText('Rien à choisir')).toBeVisible(LONG);
   await page.getByRole('button', { name: /Introuvables/ }).click();
   await expect(page.locator('.imp-jeu')).toHaveCount(1);
   await page.getByText('Introuvable sur BGG').click();
@@ -77,17 +63,17 @@ test('import CSV : rapprochement BGG, choix, sans pochette, enrichissement -> lu
   await page.getByRole('button', { name: /Tous/ }).click();
 
   await page.getByRole('button', { name: 'Ajouter 4 jeux' }).click();
-  await expect(page.getByText('Collection importée ✓')).toBeVisible();
+  await expect(page.getByText('Collection importée ✓')).toBeVisible(LONG);
   await expect(page.locator('.imp-stats li.ok b')).toHaveText('3');
   await expect(page.locator('.imp-stats li.enr b')).toHaveText('1');
-  await expect(page.locator('.imp-stats li.dup b')).toHaveText('3'); // Splendor, Jeu Inconnu, Wingspan (mock sans pochette)
+  await expect(page.locator('.imp-stats li.dup b')).toHaveText('1'); // Jeu Inconnu (le stub sert les pochettes)
 
   const { games } = await (await page.request.get('/api/games')).json();
   expect(games).toHaveLength(5);
   const par = (t: string) => games.find((g: { title: string }) => g.title === t);
   expect(par('Gloomhaven')).toMatchObject({
-    bgg_id: 174430, cover_path: `csv-${stamp}.jpg`, box_format: 'grand',
-    min_players: 1, max_players: 4, publisher: 'Cephalofair', designer: 'Isaac Childres', artist: 'Artiste BGG' });
+    bgg_id: 174430, cover_path: expect.stringMatching(/\.(jpg|webp)$/), box_format: 'grand',
+    min_players: 1, max_players: 4, publisher: 'Cephalofair', designer: 'Isaac Childres' });
   expect(par('Wingspan')).toMatchObject({ bgg_id: 266192, box_format: 'moyen', max_players: 5 });
   expect(par('Splendor').bgg_id).toBe(999001);
   expect(par('Jeu Inconnu')).toMatchObject({ bgg_id: null, min_players: 2, max_players: 2, playtime_min: 15 });
@@ -101,23 +87,20 @@ test('import CSV : fichier illisible -> message, on reste sur l’écran fichier
   await expect(page.getByText('Choisir un fichier CSV').first()).toBeVisible();
 });
 
-test('import JSON Myludo : format détecté, titre retrouvé par repli', async ({ page }) => {
-  const vues: string[] = [];
-  await page.route('**/api/bgg/search*', (r) => {
-    const q = new URL(r.request().url()).searchParams.get('q') ?? '';
-    vues.push(q);
-    return r.fulfill({ json: { results: RECHERCHE[q] ?? [] } });
-  });
-  await page.route('**/api/bgg/thing*', (r) =>
-    r.fulfill({ json: THING(Number(new URL(r.request().url()).searchParams.get('id'))) }));
+test('import JSON Myludo : titre retrouvé par repli ; l’import continue quand on quitte la page', async ({ page }) => {
   await register(page, `json_${stamp}`.slice(0, 20));
   await page.goto('/games/import-csv');
   const json = JSON.stringify([{ ID: 1, Titre: 'Wingspan (Nouvelle édition)', Édition: 2024, Type: 'basegame',
     'Joueur(s)': '1 — 5', Durée: 70, 'Éditeur(s)': ['Matagot'] }]);
   await page.locator('input[type="file"]').setInputFiles({ name: 'collection.json', mimeType: 'application/json', buffer: Buffer.from(json) });
-  await expect(page.locator('.csv-badge.json')).toBeVisible();
+  await expect(page.locator('.csv-fichier .csv-badge.json')).toBeVisible();
+  // v4.23.0 — on part ailleurs : la pastille suit l'import et y ramène.
+  await page.goto('/library');
+  await expect(page.locator('.imp-pastille')).toContainText('tout est trouvé', LONG);
+  await page.locator('.imp-pastille').click();
   await expect(page.getByText(/^✓ Wingspan/)).toBeVisible();
-  expect(vues).toEqual(['Wingspan (Nouvelle édition)', 'Wingspan']);
+  await page.goto('/games/add');
+  await expect(page.locator('.imp-carte')).toContainText('collection.json');
 });
 
 test('import JSON : JSON mal formé -> message dédié', async ({ page }) => {
