@@ -4,6 +4,19 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [4.24.0] — 2026-11-21
+
+### Ajouté
+✏️ **Fiche d'un jeu : le lier à BGG ou le modifier.**
+- Dans la ludothèque, la fiche d'un jeu propose « 🔗 Lier à BGG » : la recherche est
+  pré-remplie avec le titre, un aperçu montre ce qui sera remplacé, et « Utiliser cette fiche »
+  récupère la pochette et les infos. Un jeu importé sans pochette peut enfin la retrouver.
+- Si le jeu est déjà lié, le bouton devient « Changer de fiche BGG » (la mauvaise boîte
+  choisie à l'import se corrige ainsi). Le titre et le format de boîte ne changent jamais.
+- « ✏️ Modifier » corrige à la main le titre, le format, les joueurs, la durée, l'année,
+  l'éditeur et les auteurs. Les jeux du foyer sont modifiables par chaque membre.
+- Maquette : `mockup/2026-11-21-v4240-fiche-edition.html`.
+
 ## [4.23.0] — 2026-11-21
 
 ### Ajouté

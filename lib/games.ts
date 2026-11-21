@@ -106,3 +106,19 @@ export function enrichirJeu(userId: number, id: number, e: BggEnrich, lang: Lang
          e.bgg_rating, e.designer, e.artist, e.best_players, cover, id);
   return { ok: true };
 }
+
+/** v4.24.0 — « Lier à BGG » depuis la fiche : la fiche BGG choisie REMPLACE les infos
+ *  (sauf titre et format de boîte). Pochette : la nouvelle si BGG en a une ; sinon on garde
+ *  l'ancienne seulement si c'était déjà ce jeu BGG (une autre fiche = une autre boîte). */
+export function lierJeu(userId: number, id: number, f: import('./bgg').ThingResult, lang: Lang = 'fr'): { ok: true } | { error: string; status: number } {
+  const g = getGame(id);
+  if (!g || !canManageGame(userId, g)) return { error: t(lang, 'jeu.errIntrouvable'), status: 404 };
+  const cover = f.coverName && isSafeCoverName(f.coverName) ? f.coverName : null;
+  const txt = (s: string | null) => (s && s.trim() ? s.slice(0, 120) : null);
+  getDb().prepare(`UPDATE games SET bgg_id=?, year=?, publisher=?, min_players=?, max_players=?, playtime_min=?,
+                   weight=?, bgg_rating=?, designer=?, artist=?, best_players=?,
+                   cover_path=COALESCE(?, CASE WHEN bgg_id = ? THEN cover_path ELSE NULL END) WHERE id=?`)
+    .run(f.bggId, f.year, txt(f.publisher), f.minPlayers, f.maxPlayers, f.playtimeMin, f.weight, f.rating,
+         txt(f.designer), txt(f.artist), f.bestPlayers, cover, f.bggId, id);
+  return { ok: true };
+}
