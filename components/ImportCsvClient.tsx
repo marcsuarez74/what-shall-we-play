@@ -84,7 +84,7 @@ export default function ImportCsvClient({ me }: { me: UserLite }) {
   const [lignes, setLignes] = useState<Ligne[]>([]);
   const [ext, setExt] = useState(false);
   const [fmt, setFmt] = useState<BoxFormat>('grand');
-  const [filtre, setFiltre] = useState<'tous' | 'agir'>('tous');
+  const [filtre, setFiltre] = useState<'tous' | 'choisir' | 'chercher'>('tous');
   const [ouverte, setOuverte] = useState<number | null>(null);
   const [faits, setFaits] = useState<{ i: number; r: Resultat; cov: boolean }[]>([]);
   const [total, setTotal] = useState(0);
@@ -163,8 +163,12 @@ export default function ImportCsvClient({ me }: { me: UserLite }) {
   const faites = visibles.filter((l) => l.etat !== 'att').length;
   const fini = faites === visibles.length;
   const selection = visibles.filter((l) => l.coche && l.etat !== 'deja' && l.etat !== 'doublon');
-  const nAgir = visibles.filter(aAgir).length;
-  const montrees = filtre === 'agir' ? visibles.filter(aAgir) : visibles;
+  // v4.22.3 — deux onglets : choisir parmi plusieurs jeux BGG / chercher à la main (rien trouvé ou BGG muet).
+  const aChoisir = (l: Ligne) => aAgir(l) && l.etat === 'multi';
+  const aChercher = (l: Ligne) => aAgir(l) && l.etat !== 'multi';
+  const nChoisir = visibles.filter(aChoisir).length;
+  const nChercher = visibles.filter(aChercher).length;
+  const montrees = filtre === 'choisir' ? visibles.filter(aChoisir) : filtre === 'chercher' ? visibles.filter(aChercher) : visibles;
 
   async function importer(cible: Ligne[]) {
     setStage('import'); setFaits([]); setTotal(cible.length);
@@ -272,9 +276,10 @@ export default function ImportCsvClient({ me }: { me: UserLite }) {
           <div className="imp-barre"><div className="fill" style={{ width: `${faites * 100 / Math.max(visibles.length, 1)}%` }} /></div>
           <div className="csv-filtres">
             <button type="button" aria-pressed={filtre === 'tous'} onClick={() => setFiltre('tous')}>{t('csv.filtreTous')} <span>{visibles.length}</span></button>
-            <button type="button" aria-pressed={filtre === 'agir'} className={nAgir ? 'ambre' : ''} onClick={() => setFiltre('agir')}>{t('csv.filtreAgir')} <span>{nAgir}</span></button>
+            <button type="button" aria-pressed={filtre === 'choisir'} className={nChoisir ? 'ambre' : ''} onClick={() => setFiltre('choisir')}>{t('csv.filtreAgir')} <span>{nChoisir}</span></button>
+            <button type="button" aria-pressed={filtre === 'chercher'} className={nChercher ? 'rouge' : ''} onClick={() => setFiltre('chercher')}>{t('csv.filtreIntrouvables')} <span>{nChercher}</span></button>
           </div>
-          {montrees.length === 0 && <p className="imp-sous csv-rien">{t('csv.rienAVerifier')}</p>}
+          {montrees.length === 0 && <p className="imp-sous csv-rien">{t(filtre === 'chercher' ? 'csv.toutTrouve' : 'csv.rienAVerifier')}</p>}
           <ul className="imp-liste">
             {montrees.map((l) => {
               const img = imageDe(l.fiche);

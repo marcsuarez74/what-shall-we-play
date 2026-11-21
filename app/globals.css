@@ -2286,6 +2286,7 @@ a.btn-go.as-link { display: flex; align-items: center; justify-content: center; 
 .csv-filtres button span { opacity: .75; margin-left: 3px; }
 .csv-filtres button[aria-pressed="true"] { background: var(--cuivre); border-color: var(--cuivre); color: var(--noyer); }
 .csv-filtres button.ambre:not([aria-pressed="true"]) { border-color: var(--ambre); color: var(--ambre); }
+.csv-filtres button.rouge:not([aria-pressed="true"]) { border-color: var(--rouge); color: var(--rouge); }
 .csv-rien { text-align: center; margin-top: 18px; }
 .imp-jeu.agir { border-color: color-mix(in srgb, var(--ambre) 60%, transparent); }
 .imp-jeu .cover.is-ph { color: var(--doux-clair); font-weight: 800; }
