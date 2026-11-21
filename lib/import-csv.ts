@@ -150,6 +150,20 @@ export function rapprocher(titre: string, annee: number | null, resultats: Resul
   return { etat: 'multi', candidats };
 }
 
+/** Départage des candidats par leurs auteurs (v4.22.2) : beaucoup de titres courts ont des
+ *  homonymes sur BGG (Covenant, Seasons, Deus…). Un seul candidat partageant un auteur avec
+ *  Myludo → trouvé. Un nom = ses mots, dans n'importe quel ordre (« Yeom Cheolwoong »
+ *  = « Cheolwoong Yeom »). Personne, ou plusieurs → null (on laisse choisir). */
+export function departager(auteurs: string | null, fiches: { bggId: number; title: string; designer: string | null }[]):
+  { bggId: number; nom: string } | null {
+  const nom = (s: string) => cleTitre(s).split(' ').sort().join(' ');
+  const noms = (s: string | null) => (s ?? '').split(',').map(nom).filter((x) => x.length > 2);
+  const miens = new Set(noms(auteurs));
+  if (miens.size === 0) return null;
+  const elus = fiches.filter((f) => noms(f.designer).some((d) => miens.has(d)));
+  return elus.length === 1 ? { bggId: elus[0].bggId, nom: elus[0].title } : null;
+}
+
 /** Jeu de la ludothèque au même titre (comparaison sans casse, accents ni ponctuation). */
 export function memeTitre(titre: string, ludotheque: Game[]): Game | undefined {
   const cle = cleTitre(titre);

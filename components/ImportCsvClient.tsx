@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { FORMATS, FORMAT_SCALE, formatShort } from '@/lib/formats';
 import { ficheBggFormData, type FicheBgg } from '@/lib/bgg-ajout';
 import {
-  lireFichierMyludo, rapprocher, requeteBgg, titresRepli, memeTitre, doublonsFichier,
+  lireFichierMyludo, rapprocher, requeteBgg, titresRepli, departager, memeTitre, doublonsFichier,
   type LigneCsv, type ResultatBgg, type Rapprochement,
 } from '@/lib/import-csv';
 import type { BoxFormat, Game, UserLite } from '@/lib/types';
@@ -40,9 +40,21 @@ async function rapprocherLigne(l: LigneCsv): Promise<Rapprochement> {
   if (!l.extension) essais.push([requeteBgg(l.titre), true]);
   for (const [i, [q, ext]] of essais.entries()) {
     const r = rapprocher(i === 0 ? l.titre : q, l.annee, await chercher(q, ext));
+    if (r.etat === 'multi') return (await parAuteurs(l, r.candidats)) ?? r;
     if (r.etat !== 'none') return r;
   }
   return { etat: 'none' };
+}
+/** Plusieurs candidats : un seul a un auteur en commun avec Myludo → c'est lui (v4.22.2).
+ *  Une requête BGG pour tous ; en cas d'échec, on laisse simplement choisir. */
+async function parAuteurs(l: LigneCsv, candidats: ResultatBgg[]): Promise<Rapprochement | null> {
+  if (!l.auteurs) return null;
+  try {
+    const r = await fetch(`/api/bgg/things?ids=${candidats.map((c) => c.bggId).join(',')}`);
+    if (!r.ok) return null;
+    const elu = departager(l.auteurs, (await r.json()).things ?? []);
+    return elu && { etat: 'ok', ...elu };
+  } catch { return null; }
 }
 async function fiche(bggId: number, apercu: boolean): Promise<Fiche> {
   const r = await fetch(`/api/bgg/thing?id=${bggId}${apercu ? '&cover=0' : ''}`);

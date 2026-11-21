@@ -108,7 +108,18 @@ function cle(s: string): string {
 export function parseThingXml(xml: string): ThingParsed | null {
   const root = parser.parse(xml)?.items;
   const item = Array.isArray(root?.item) ? root.item.find((i: Record<string, unknown>) => i['@_type'] === 'boardgame') : root?.item;
-  if (!item) return null;
+  return item ? parseItem(item) : null;
+}
+
+/** Plusieurs fiches d'une seule réponse /things?id=a,b,c (v4.22.2 : départage de l'import). */
+export function parseThingsXml(xml: string): ThingParsed[] {
+  const root = parser.parse(xml)?.items;
+  const items = Array.isArray(root?.item) ? root.item : root?.item ? [root.item] : [];
+  return items.map(parseItem).filter((t: ThingParsed | null): t is ThingParsed => t !== null);
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function parseItem(item: any): ThingParsed | null {
   const val = (path: string): string | undefined =>
     (path.split('.').reduce<unknown>((acc, k) => (acc as Record<string, unknown> | undefined)?.[k], item) as
       Record<string, unknown> | undefined)?.['@_value'] as string | undefined;
@@ -205,6 +216,31 @@ export async function getThing(bggId: number): Promise<ThingResult | null> {
               ON CONFLICT(bgg_id) DO UPDATE SET payload_json = excluded.payload_json, fetched_at = excluded.fetched_at`)
     .run(bggId, JSON.stringify(result));
   return result;
+}
+
+// v4.22.2 — Fiches de plusieurs jeux en UNE requête BGG (max 20 ids) : le cache d'abord,
+// puis les manquants ensemble. Sert à départager les homonymes de l'import par leurs auteurs.
+export async function getThings(ids: number[]): Promise<ThingResult[]> {
+  const db = getDb();
+  const lire = db.prepare(`SELECT payload_json FROM bgg_cache WHERE bgg_id = ? AND fetched_at >= datetime('now','-30 days')`);
+  const trouves = new Map<number, ThingResult>();
+  for (const id of ids) {
+    const c = lire.get(id) as { payload_json: string } | undefined;
+    if (c) trouves.set(id, JSON.parse(c.payload_json) as ThingResult);
+  }
+  const manquants = ids.filter((id) => !trouves.has(id)).slice(0, 20);
+  if (manquants.length) {
+    const xml = await bggFetch(`${BASE}/things?id=${manquants.join(',')}&stats=1`);
+    const ecrire = db.prepare(`INSERT INTO bgg_cache (bgg_id, payload_json, fetched_at) VALUES (?, ?, datetime('now'))
+              ON CONFLICT(bgg_id) DO UPDATE SET payload_json = excluded.payload_json, fetched_at = excluded.fetched_at`);
+    for (const p of xml ? parseThingsXml(xml) : []) {
+      if (!manquants.includes(p.bggId)) continue;
+      const r: ThingResult = { ...p, coverName: null };
+      ecrire.run(r.bggId, JSON.stringify(r));
+      trouves.set(r.bggId, r);
+    }
+  }
+  return ids.map((id) => trouves.get(id)).filter((t): t is ThingResult => !!t);
 }
 
 // Télécharge la pochette en local (saveCover, format lu dans les octets) et la persiste dans le cache.

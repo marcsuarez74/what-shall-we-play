@@ -4,6 +4,15 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [4.22.2] — 2026-11-21
+
+### Amélioré
+👥 **Import : moins de jeux « à vérifier » quand le titre a des homonymes sur BGG.**
+- Beaucoup de titres courts (Covenant, Seasons, Deus, Akropolis…) désignent plusieurs jeux
+  sur BGG. Quand l'import hésite, il compare désormais les auteurs du fichier Myludo à ceux
+  de chaque candidat : si un seul les partage, le jeu est retrouvé sans te demander.
+- Une seule requête BGG pour tous les candidats d'un jeu ; si elle échoue, on te laisse choisir comme avant.
+
 ## [4.22.1] — 2026-11-21
 
 ### Corrigé
