@@ -1,0 +1,590 @@
+<!doctype html>
+<html lang="fr">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Import en tâche de fond — v4.23</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Space+Grotesk:wght@400;500;600;700&display=swap">
+<style>
+/* Planche : règles en tête, puis le parcours dans un téléphone interactif.
+   Palette et typo = design system de l'app (noyer/crème/cuivre). */
+:root {
+  --noyer: #2A1F17; --surface: #3A2B1F; --surface-plus: #46352a; --creme: #F3E9DC;
+  --cuivre: #C96F3B; --vert: #3E9B6E; --rouge: #C4553B; --ambre: #C9A23B;
+  --doux: #8A7660; --doux-clair: #B9A58C; --planche: #1f1711;
+  --display: 'Bricolage Grotesque', 'Space Grotesk', system-ui, sans-serif;
+  --ui: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+[hidden] { display: none !important; }
+body { background: var(--planche); color: var(--creme); font-family: var(--ui); font-size: 15px; line-height: 1.45; padding: 28px 16px 60px; }
+h1, h2, h3 { font-family: var(--display); line-height: 1.1; letter-spacing: -0.01em; text-wrap: balance; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, input:focus-visible, label:focus-within { outline: 2px solid var(--cuivre); outline-offset: 2px; }
+.wrap { max-width: 1240px; margin: 0 auto; display: flex; flex-direction: column; gap: 30px; }
+.intro h1 { font-size: clamp(28px, 4vw, 40px); font-weight: 800; }
+.eyebrow { font-size: 11.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--cuivre); margin-bottom: 8px; }
+.lead { color: var(--doux-clair); margin-top: 10px; max-width: 70ch; }
+.regles { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 14px; }
+.bloc { background: var(--noyer); border: 1px solid color-mix(in srgb, var(--doux) 35%, transparent); border-radius: 16px; padding: 16px 18px; min-width: 0; }
+.bloc h2 { font-size: 17px; font-weight: 800; margin-bottom: 10px; }
+.bloc ul { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.bloc li { font-size: 13.5px; color: var(--doux-clair); padding-left: 16px; position: relative; }
+.bloc li::before { content: ''; position: absolute; left: 2px; top: 8px; width: 6px; height: 6px; border-radius: 50%; background: var(--doux); }
+.bloc li.q::before { background: var(--ambre); }
+.bloc li b { color: var(--creme); font-weight: 600; }
+.bloc code { font-size: 12px; background: var(--surface); padding: 1px 5px; border-radius: 5px; color: var(--creme); }
+
+.scene { display: grid; grid-template-columns: minmax(300px, 380px) 1fr; gap: 28px; align-items: start; }
+@media (max-width: 760px) { .scene { grid-template-columns: 1fr; } }
+.scen { display: flex; flex-direction: column; gap: 8px; }
+.scen h2 { font-size: 20px; font-weight: 800; }
+.scen p { font-size: 13.5px; color: var(--doux-clair); }
+.scen .btns { display: flex; flex-wrap: wrap; gap: 6px; }
+.scen .btns button { border: 1px solid var(--doux); background: var(--noyer); border-radius: 999px; font-size: 12.5px; padding: 5px 11px; }
+.scen .btns button[aria-pressed="true"] { border-color: var(--cuivre); color: var(--cuivre); font-weight: 700; }
+.note { font-size: 12.5px; color: var(--doux-clair); border-left: 2px solid var(--cuivre); padding: 2px 0 2px 10px; }
+
+.phone { background: var(--noyer); border: 1px solid color-mix(in srgb, var(--doux) 45%, transparent); border-radius: 30px; overflow: hidden; display: flex; flex-direction: column; height: 720px; max-width: 100%; position: relative; }
+.status { height: 26px; flex: 0 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 0 22px; font-size: 11px; color: var(--doux-clair); }
+.scroll { flex: 1 1 auto; overflow-y: auto; padding: 6px 16px 20px; display: flex; flex-direction: column; gap: 12px; scrollbar-width: thin; }
+.scroll > * { flex-shrink: 0; }
+.pied { flex: 0 0 auto; padding: 10px 16px 14px; border-top: 1px solid color-mix(in srgb, var(--doux) 35%, transparent); background: var(--surface); display: flex; flex-direction: column; gap: 6px; }
+.tabbar { flex: 0 0 auto; height: 58px; display: flex; border-top: 1px solid color-mix(in srgb, var(--doux) 35%, transparent); background: var(--surface); }
+.tabbar span { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10.5px; color: var(--doux-clair); gap: 1px; }
+.tabbar span.on { color: var(--cuivre); font-weight: 700; }
+.tabbar i { font-style: normal; font-size: 17px; }
+
+.btn-copper { appearance: none; border: 0; border-radius: 14px; background: var(--cuivre); color: var(--noyer); font-weight: 700; font-size: 15px; min-height: 46px; padding: 10px 18px; width: 100%; }
+.btn-copper:disabled { background: var(--surface-plus); color: var(--doux-clair); cursor: not-allowed; }
+.btn-ghost { border: 1px solid var(--doux); background: none; border-radius: 14px; min-height: 42px; font-weight: 600; font-size: 14px; width: 100%; }
+.link-btn { background: none; border: 0; color: var(--doux-clair); font-size: 13.5px; font-weight: 600; padding: 4px 0; text-decoration: underline; text-underline-offset: 3px; }
+.link-import { display: block; text-align: center; color: var(--cuivre); font-weight: 600; font-size: 14px; padding: 6px 0; background: none; border: 0; width: 100%; }
+.link-import.neuf { border: 1px dashed var(--cuivre); border-radius: 12px; }
+.link-import small { display: block; color: var(--doux-clair); font-weight: 500; font-size: 11.5px; }
+
+.page-head { display: flex; align-items: center; gap: 10px; }
+.page-head h1 { font-size: 24px; font-weight: 800; }
+.page-head h1 small { font-family: var(--ui); font-size: 13px; font-weight: 500; color: var(--doux-clair); }
+.retour { background: none; border: 0; font-size: 20px; color: var(--doux-clair); padding: 0 4px; }
+.sous { color: var(--doux-clair); font-size: 13.5px; }
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field label, .sous-label { font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--doux-clair); font-weight: 700; }
+.field input { background: var(--surface); border: 1px solid color-mix(in srgb, var(--doux) 50%, transparent); border-radius: 12px; color: var(--creme); font: inherit; font-size: 16px; padding: 11px 13px; outline: none; width: 100%; }
+.btn-bgg { border: 1px solid var(--doux); background: var(--surface); border-radius: 12px; padding: 10px; font-weight: 600; font-size: 14px; }
+
+.depot { border: 2px dashed var(--doux); border-radius: 16px; padding: 26px 16px; display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; cursor: pointer; }
+.depot.sur { border-color: var(--cuivre); background: color-mix(in srgb, var(--cuivre) 10%, transparent); }
+.depot .ico { font-size: 34px; }
+.depot b { font-size: 15px; }
+.depot span { color: var(--doux-clair); font-size: 12.5px; }
+.depot input { display: none; }
+.aide { background: var(--surface); border-radius: 12px; padding: 10px 12px; font-size: 12.5px; color: var(--doux-clair); }
+.aide b { color: var(--creme); }
+.erreur { color: #F0A08E; font-size: 13px; text-align: center; }
+
+.fichier { display: flex; align-items: center; gap: 10px; background: var(--surface); border-radius: 12px; padding: 10px 12px; }
+.fichier .t { flex: 1; min-width: 0; }
+.fichier .t b { display: block; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fichier .t small { color: var(--doux-clair); font-size: 12px; }
+.formats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.formats button { border: 1px solid var(--doux); background: var(--surface); border-radius: 10px; font-size: 12.5px; padding: 7px 0; }
+.formats button[aria-pressed="true"] { border-color: var(--cuivre); background: color-mix(in srgb, var(--cuivre) 22%, var(--surface)); font-weight: 700; }
+.bascule { display: flex; align-items: center; gap: 10px; font-size: 13.5px; background: var(--surface); border-radius: 12px; padding: 10px 12px; cursor: pointer; }
+.bascule .t { flex: 1; }
+.bascule small { display: block; color: var(--doux-clair); font-size: 12px; }
+.inter { width: 40px; height: 24px; border-radius: 999px; background: var(--surface-plus); position: relative; flex: none; border: 1px solid var(--doux); }
+.inter::after { content: ''; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: var(--doux-clair); transition: left .15s; }
+.inter.on { background: var(--cuivre); border-color: var(--cuivre); }
+.inter.on::after { left: 18px; background: var(--creme); }
+
+.avance { display: flex; flex-direction: column; gap: 6px; }
+.avance .l { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--doux-clair); }
+.barre { height: 6px; border-radius: 999px; background: var(--surface-plus); overflow: hidden; }
+.barre i { display: block; height: 100%; background: var(--cuivre); width: 0; transition: width .2s; }
+.puces { display: flex; gap: 6px; flex-wrap: wrap; }
+.puce { border: 1px solid var(--doux); background: none; border-radius: 999px; font-size: 12px; padding: 4px 10px; }
+.puce[aria-pressed="true"] { background: var(--surface-plus); border-color: var(--creme); font-weight: 700; }
+.puce .n { color: var(--doux-clair); margin-left: 3px; }
+.puce.ambre { border-color: var(--ambre); color: var(--ambre); }
+.puce.rouge { border-color: var(--rouge); color: var(--rouge); }
+
+.liste { display: flex; flex-direction: column; gap: 6px; }
+.ligne { display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: var(--surface); border-radius: 12px; border: 1px solid transparent; text-align: left; width: 100%; }
+.ligne.off { opacity: .5; }
+.ligne.agir { border-color: color-mix(in srgb, var(--ambre) 55%, transparent); }
+.ligne .t { flex: 1; min-width: 0; }
+.ligne .t b { display: block; font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ligne .meta { font-size: 11.5px; color: var(--doux-clair); }
+.ligne .etat { font-size: 12px; margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.etat.ok { color: #9BD8B7; } .etat.multi, .etat.dup { color: var(--ambre); } .etat.none { color: #F0A08E; } .etat.att, .etat.ign { color: var(--doux-clair); }
+.ext { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--doux-clair); border: 1px solid var(--doux); border-radius: 5px; padding: 0 4px; margin-left: 4px; vertical-align: 1px; }
+.coche { width: 22px; height: 22px; border-radius: 7px; border: 2px solid var(--doux); flex: none; display: grid; place-items: center; font-size: 13px; font-weight: 800; background: none; }
+.coche.on { background: var(--cuivre); border-color: var(--cuivre); color: var(--noyer); }
+.cov { width: 34px; height: 46px; border-radius: 5px; flex: none; display: grid; place-items: end start; padding: 2px 3px; font-family: var(--display); font-weight: 800; font-size: 8px; line-height: 1; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.7); overflow: hidden; }
+.cov.att { background: var(--surface-plus); animation: pulse 1s infinite alternate; }
+.cov.vide { border: 1px dashed var(--doux); background: none; color: var(--doux); text-shadow: none; place-items: center; font-size: 14px; }
+@keyframes pulse { to { opacity: .45; } }
+
+.sheet-fond { position: absolute; inset: 0; background: rgba(0,0,0,.55); display: flex; align-items: flex-end; z-index: 5; }
+.sheet { background: var(--noyer); border-top: 1px solid var(--doux); border-radius: 20px 20px 0 0; padding: 14px 16px 18px; width: 100%; display: flex; flex-direction: column; gap: 10px; max-height: 80%; overflow-y: auto; }
+.sheet .poignee { width: 40px; height: 4px; border-radius: 999px; background: var(--doux); align-self: center; }
+.sheet h3 { font-size: 18px; font-weight: 800; }
+.cand { display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: var(--surface); border-radius: 12px; border: 1px solid transparent; width: 100%; text-align: left; }
+.cand[aria-pressed="true"] { border-color: var(--cuivre); }
+.cand .t { flex: 1; min-width: 0; font-size: 14px; }
+.cand small { display: block; color: var(--doux-clair); font-size: 11.5px; }
+.recherche { display: flex; gap: 6px; }
+.recherche input { flex: 1; min-width: 0; background: var(--surface); border: 1px solid var(--doux); border-radius: 10px; color: var(--creme); font: inherit; font-size: 15px; padding: 8px 10px; }
+.recherche button { border: 0; border-radius: 10px; background: var(--cuivre); color: var(--noyer); font-weight: 700; padding: 0 12px; }
+
+.fini { text-align: center; display: flex; flex-direction: column; gap: 10px; align-items: center; padding-top: 30px; }
+.fini .ico { font-size: 46px; }
+.fini h2 { font-size: 24px; font-weight: 800; }
+.bilan { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+.bilan div { display: flex; justify-content: space-between; background: var(--surface); border-radius: 10px; padding: 8px 12px; font-size: 13.5px; }
+.bilan b { font-family: var(--display); }
+.grille { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.grille .cov { width: 100%; height: auto; aspect-ratio: 3/4; font-size: 9px; border-radius: 7px; }
+.badge { font-size: 10px; font-weight: 800; letter-spacing: .08em; border-radius: 5px; padding: 1px 5px; vertical-align: 1px; margin-left: 4px; }
+.badge.csv { background: color-mix(in srgb, var(--vert) 30%, transparent); color: #9BD8B7; }
+.badge.json { background: color-mix(in srgb, var(--cuivre) 30%, transparent); color: #F2B48C; }
+.reconnus { display: flex; flex-direction: column; gap: 6px; }
+.reconnus div { display: flex; align-items: center; gap: 10px; background: var(--surface); border-radius: 12px; padding: 8px 12px; font-size: 13.5px; }
+.reconnus div span:first-child { flex: 1; }
+.reconnus small { color: var(--doux-clair); font-size: 12px; }
+table.cmp { width: 100%; border-collapse: collapse; font-size: 12.5px; color: var(--doux-clair); }
+table.cmp th, table.cmp td { text-align: left; padding: 4px 6px; border-bottom: 1px solid color-mix(in srgb, var(--doux) 30%, transparent); vertical-align: top; }
+table.cmp th { color: var(--creme); font-weight: 600; }
+table.cmp code { font-size: 11.5px; }
+
+/* v4.23 — tâche de fond */
+.pastille { flex: 0 0 auto; margin: 0 10px 8px; display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 14px; background: var(--surface-plus); border: 1px solid color-mix(in srgb, var(--cuivre) 55%, transparent); font-size: 12.5px; text-align: left; }
+.pastille .ico { font-size: 18px; }
+.pastille .t { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.pastille small { color: var(--doux-clair); font-size: 11px; }
+.pastille .mini { height: 3px; border-radius: 2px; background: color-mix(in srgb, var(--doux) 35%, transparent); overflow: hidden; }
+.pastille .mini i { display: block; height: 100%; background: var(--cuivre); }
+.pastille.ambre { border-color: var(--ambre); }
+.pastille .fl { color: var(--cuivre); font-weight: 700; }
+.bandeau { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, var(--vert) 14%, var(--surface)); border: 1px solid color-mix(in srgb, var(--vert) 45%, transparent); font-size: 12.5px; }
+.bandeau b { display: block; }
+.carte-import { display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: 14px; background: var(--surface); border: 1px solid var(--cuivre); }
+.carte-import .l { display: flex; justify-content: space-between; font-size: 12.5px; }
+.tabbar span { cursor: pointer; }
+.lock { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 40px 14px; gap: 6px; background: radial-gradient(circle at 50% 20%, #5a4330, var(--noyer) 70%); }
+.lock .heure { font-family: var(--display); font-size: 56px; font-weight: 600; }
+.lock .date { color: var(--doux-clair); margin-bottom: 28px; }
+.notif { width: 100%; text-align: left; display: flex; gap: 10px; padding: 12px; border-radius: 16px; background: color-mix(in srgb, var(--creme) 14%, transparent); backdrop-filter: blur(8px); border: none; }
+.notif .app { width: 34px; height: 34px; border-radius: 9px; background: var(--cuivre); display: grid; place-items: center; font-size: 18px; flex: 0 0 auto; }
+.notif .t { display: flex; flex-direction: column; gap: 2px; font-size: 12.5px; }
+.notif small { color: var(--doux-clair); }
+.vide-ecran { flex: 1; display: grid; place-items: center; color: var(--doux-clair); text-align: center; padding: 20px; }
+</style>
+
+<div class="wrap">
+  <header class="intro">
+    <p class="eyebrow">Maquette v4.23.0 · validée</p>
+    <h1>Import en tâche de fond</h1>
+    <p class="lead">Aujourd'hui, l'import s'arrête dès qu'on quitte l'écran : avec 184 jeux et BGG qui impose environ 2 s par recherche, il faut rester planté devant 6 à 8 minutes. Désormais, <b>le serveur fait l'import</b> : tu déposes le fichier, puis tu navigues librement, ou tu fermes l'app. Une <b>pastille</b> suit la progression partout dans l'app, et une <b>notification</b> te prévient quand il ne reste que tes choix à faire. Le téléphone est interactif : lance l'exemple, puis va sur l'Étagère pendant la recherche.</p>
+  </header>
+
+  <section class="regles">
+    <div class="bloc">
+      <h2>Ce qui change</h2>
+      <ul>
+        <li>Le fichier est toujours <b>lu dans le navigateur</b>, puis la liste des jeux est <b>envoyée au serveur</b>, qui fait les recherches BGG et garde l'état en base.</li>
+        <li><b>Pastille</b> au-dessus de la barre d'onglets, sur tous les écrans : « Recherche 45/184 », puis « 9 à vérifier · 6 introuvables », puis « Ajout 30/150 ». Un clic ramène à l'import.</li>
+        <li><b>Notification</b> (si activées) : à la fin de la recherche, puis à la fin de l'ajout.</li>
+        <li>L'<b>ajout final</b> (fiches et pochettes) se fait aussi sur le serveur : tu peux quitter pendant.</li>
+      </ul>
+    </div>
+    <div class="bloc">
+      <h2>Reprendre</h2>
+      <ul>
+        <li>Onglet <b>Ajouter</b> : la carte « Import en cours » remplace le lien d'import, avec « Reprendre ».</li>
+        <li>Tes choix (jeu choisi, sans pochette, décoché, format, extensions) sont <b>enregistrés au fur et à mesure</b> : tu les retrouves sur un autre appareil.</li>
+        <li><b>Abandonner l'import</b> efface la liste en cours, sans toucher aux jeux déjà ajoutés.</li>
+      </ul>
+    </div>
+    <div class="bloc">
+      <h2>Décisions</h2>
+      <ul>
+        <li><b>Un seul import à la fois</b> par compte.</li>
+        <li>Un import interrompu par un redémarrage du serveur <b>reprend tout seul</b> là où il en était.</li>
+        <li>Un import oublié est effacé après <b>30 jours</b> sans activité.</li>
+        <li>L'import d'une collection BGG (pseudo) n'est pas concerné par ce lot.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="scene">
+    <div class="phone" id="phone"></div>
+    <div class="scen">
+      <h2>Aller directement à…</h2>
+      <p>Ou suis le parcours en touchant le téléphone.</p>
+      <div class="btns" id="scen"></div>
+      <p class="note" id="note"></p>
+    </div>
+  </section>
+</div>
+
+<script>
+/* Ta collection d'exemple (Titre, Édition, Type b/e/s/g, Joueurs, Durée, Éditeur) */
+const EXEMPLE = [["Wondrous Creatures - Winterfall","2026","e","1 — 4","40 — 80","Bad Comet"],["Covenant","2025","b","1 — 4","100","Devir"],["Feya's Swamp","2026","b","2 — 4","80 — 100","Fractal Juegos"],["Rebirth","2025","b","2 — 4","60","Lucky Duck Games"],["7 Wonders Duel - Agora","2020","e","Duo","30","Repos Production"],["Kingdom Rush - Rift in Time - Sir Gerald Lightseeker vs. J.T.","2020","e","1 — 4","45 — 90","Lucky Duck Games"],["Kingdom Rush - Rift in Time - Spider Goddess","2020","e","1 — 4","45 — 90","Lucky Duck Games"],["Kingdom Rush - Rift in Time - Vez'nan vs. Moloch","2020","e","1 — 4","45 — 90","Lucky Duck Games"],["Yuan","2023","s","2 — 4","60","Oka Luda"],["After Us","2023","b","1 — 6","45","Catch Up Games"],["Agent Avenue","2024","b","2 — 4","15","Nerdlab Games"],["Bomb Busters","2024","b","2 — 5","30 — 60","Cocktail Games"],["Cartographers","2020","b","1+","30 — 45","Intrafin Games"],["Dewan","2026","b","2 — 4","40","Space Cowboys"],["Dewan - 4 Camps De Départ Améliorés","2026","g","2 — 4","40","Space Cowboys"],["Draftosaurus","2019","b","2 — 5","15","Ankama"],["Kingdom Crossing","2025","b","1 — 4","45 — 90","Sorry We Are French"],["L'Île Des Mots Dits","2025","b","2 — 10","20","Matagot"],["Le Dilemme du Roi","2020","b","3 — 5","60 — 120","Horrible Guild"],["Les Charlatans de Belcastel","2018","b","2 — 4","30 — 60","Schmidt"],["Les Charlatans de Belcastel - Les Alchimistes","2021","e","2 — 5","30 — 60","Schmidt"],["Les Charlatans de Belcastel - Les Sorcières s'en mêlent","2019","e","2 — 5","45","Schmidt"],["Les Tours Ambulantes","2022","b","1 — 6","30","Oya"],["Marrakesh","2023","b","2 — 4","120","Queen Games"],["Orléans","2025","b","2 — 5","90","Dlp Games"],["Présages","2025","b","4 — 6","20 — 30","Spiral Editions"],["Res Arcana","2019","b","2 — 4","20 — 60","Sand Castle Games"],["Ritual","2025","b","2 — 6","30","Palladis Games"],["Shackleton Base","2024","b","1 — 4","60 — 120","Sorry We Are French"],["Stupor Mundi","2025","b","1 — 4","90 — 150","Pixie Games"],["The Vale Of Eternity - Artifacts","2025","e","2 — 4","30 — 45","Blackrock Games"],["The Vale Of Eternity - Curse","2025","e","2 — 4","30 — 45","Mandoo Games"],["The Vale Of Eternity - Curse","2026","e","2 — 4","30 — 45","Mandoo Games"],["Tipperary","2025","b","2 — 5","45","Lookout Games"],["Toy Battle","2025","b","Duo","15","Repos Production"],["Tzolk'in","2022","b","2 — 4","90","Czech Games Edition"],["Wondrous Creatures","2025","b","1 — 4","60 — 120","Super Meeple"],["Wondrous Creatures - Bêtes gargantuesques","2025","e","1 — 4","40 — 80","Super Meeple"],["Wondrous Creatures - Pack Explorateurs","2025","e","1 — 4","40 — 80","Bad Comet"],["Wyrmspan","2024","b","1 — 5","90","Matagot"]];
+
+/* Ton export JSON Myludo (87 jeux), allégé aux champs utiles — passé tel quel au lecteur JSON */
+const EXEMPLE_JSON = [{"ID":96693,"Titre":"Wondrous Creatures - Winterfall","Édition":2026,"Type":"extension","Joueur(s)":"1 — 4","Durée":"40 — 80","Age(s)":"14+","Éditeur(s)":["Bad Comet","Super Meeple"],"Auteur(s)":["Yeom Cheolwoong"],"Date d'acquisition":"2026-11-20","Note personnelle":0},{"ID":88956,"Titre":"Covenant","Édition":2025,"Type":"basegame","Joueur(s)":"1 — 4","Durée":100,"Age(s)":"14+","Éditeur(s)":["Devir"],"Auteur(s)":["Germán P. Millán"],"Date d'acquisition":"2026-10-02","Note personnelle":0},{"ID":91925,"Titre":"Feya's Swamp","Édition":2026,"Type":"basegame","Joueur(s)":"2 — 4","Durée":"80 — 100","Age(s)":"12+","Éditeur(s)":["Fractal Juegos","Grail Games"],"Auteur(s)":["Anselm Ostertag","Helge Ostertag"],"Date d'acquisition":"2026-10-02","Note personnelle":0},{"ID":86622,"Titre":"Rebirth","Édition":2025,"Type":"basegame","Joueur(s)":"2 — 4","Durée":60,"Age(s)":"10+","Éditeur(s)":["Lucky Duck Games","Mighty Boards"],"Auteur(s)":["Reiner Knizia"],"Date d'acquisition":"2026-10-02","Note personnelle":0},{"ID":40856,"Titre":"7 Wonders Duel - Agora","Édition":2020,"Type":"extension","Joueur(s)":"Duo","Durée":30,"Age(s)":"10+","Éditeur(s)":["Repos Production"],"Auteur(s)":["Antoine Bauza","Bruno Cathala"],"Date d'acquisition":"2026-04-16","Note personnelle":0},{"ID":45032,"Titre":"Kingdom Rush - Rift in Time - Sir Gerald Lightseeker vs. J.T.","Édition":2020,"Type":"extension","Joueur(s)":"1 — 4","Durée":"45 — 90","Age(s)":"10+","Éditeur(s)":["Lucky Duck Games"],"Auteur(s)":["Helana Hope","Jessey Wright","Sen-Foong Lim"],"Date d'acquisition":"2026-04-16","Note personnelle":0},{"ID":45030,"Titre":"Kingdom Rush - Rift in Time - Spider Goddess","Édition":2020,"Type":"extension","Joueur(s)":"1 — 4","Durée":"45 — 90","Age(s)":"10+","Éditeur(s)":["Lucky Duck Games"],"Auteur(s)":["Helana Hope","Jessey Wright","Sen-Foong Lim"],"Date d'acquisition":"2026-04-16","Note personnelle":0},{"ID":45031,"Titre":"Kingdom Rush - Rift in Time - Vez'nan vs. Moloch","Édition":2020,"Type":"extension","Joueur(s)":"1 — 4","Durée":"45 — 90","Age(s)":"10+","Éditeur(s)":["Lucky Duck Games"],"Auteur(s)":["Helana Hope","Jessey Wright","Sen-Foong Lim"],"Date d'acquisition":"2026-04-16","Note personnelle":0},{"ID":67871,"Titre":"Yuan","Édition":2023,"Type":"standalone","Joueur(s)":"2 — 4","Durée":60,"Age(s)":"12+","Éditeur(s)":["Oka Luda"],"Auteur(s)":["Charlie Sigogneau"],"Date d'acquisition":"2026-04-16","Note personnelle":0},{"ID":59790,"Titre":"After Us","Édition":2023,"Type":"basegame","Joueur(s)":"1 — 6","Durée":45,"Age(s)":"14+","Éditeur(s)":["Catch Up Games"],"Auteur(s)":["Florian Sirieix"],"Date d'acquisition":"2026-03-04","Note personnelle":0},{"ID":81142,"Titre":"Agent Avenue","Édition":2024,"Type":"basegame","Joueur(s)":"2 — 4","Durée":15,"Age(s)":"8+","Éditeur(s)":["Nerdlab Games"],"Auteur(s)":["Christian Kudahl","Laura Kudahl"],"Date d'acquisition":"2026-03-04","Note personnelle":0},{"ID":75440,"Titre":"Bomb Busters","Édition":2024,"Type":"basegame","Joueur(s)":"2 — 5","Durée":"30 — 60","Age(s)":"12+","Éditeur(s)":["Cocktail Games"],"Auteur(s)":["Hisashi Hayashi"],"Date d'acquisition":"2026-03-04","Note personnelle":0},{"ID":36898,"Titre":"Cartographers","Édition":2020,"Type":"basegame","Joueur(s)":"1+","Durée":"30 — 45","Age(s)":"10+","Éditeur(s)":["Intrafin Games","Thunderworks Games"],"Auteur(s)":["Jordy Adan"],"Date d'acquisition":"2026-03-04","Note personnelle":0},{"ID":88694,"Titre":"Dewan","Édition":2026,"Type":"basegame","Joueur(s)":"2 — 4","Durée":40,"Age(s)":"10+","Éditeur(s)":["Space Cowboys"],"Auteur(s)":["Johannes Goupy","Yoann Levet"],"Date d'acquisition":"2026-03-04","Note personnelle":0},{"ID":94802,"Titre":"Dewan - 4 Camps De Départ Améliorés","Édition":2026,"Type":"goodie","Joueur(s)":"2 — 4","Durée":40,"Age(s)":"10+","Éditeur(s)":["Space Cowboys"],"Auteur(s)":["Johannes Goupy","Yoann Levet"],"Date d'acquisition":"2026-03-04","Note personnelle":0},{"ID":28590,"Titre":"Draftosaurus","Édition":2019,"Type":"basegame","Joueur(s)":"2 — 5","Durée":15,"Age(s)":"8+","Éditeur(s)":["Ankama"],"Auteur(s)":["Antoine Bauza","Corentin Lebrat","Ludovic Maublanc","Théo Rivière"],"Date d'acquisition":"2026-03-04","Note personnelle":0},{"ID":84131,"Titre":"Kingdom Crossing","Édition":2025,"Type":"basegame","Joueur(s)":"1 — 4","Durée":"45 — 90","Age(s)":"14+","Éditeur(s)":["Sorry We Are French"],"Auteur(s)":["Marco Canetta","Stefania Niccolini"],"Date d'acquisition":"2026-03-04","Note personnelle":0},{"ID":86207,"Titre":"L'Île Des Mots Dits","Édition":2025,"Type":"basegame","Joueur(s)":"2 — 10","Durée":20,"Age(s)":"10+","Éditeur(s)":["Matagot"],"Auteur(s)":["Danilo Valente","Rodrigo Rego"],"Date d'acquisition":"2026-03-04","Note personnelle":0},{"ID":42014,"Titre":"Le Dilemme du Roi","Édition":2020,"Type":"basegame","Joueur(s)":"3 — 5","Durée":"60 — 120","Age(s)":"14+","Éditeur(s)":["Horrible Guild","Iello"],"Auteur(s)":["Hjalmar Hach","Lorenzo Silva"],"Date d'acquisition":"2026-03-04","Note personnelle":0},{"ID":25727,"Titre":"Les Charlatans de Belcastel","Édition":2018,"Type":"basegame","Joueur(s)":"2 — 4","Durée":"30 — 60","Age(s)":"10+","Éditeur(s)":["Schmidt"],"Auteur(s)":["Wolfgang Warsch"],"Date d'acquisition":"2026-03-04","Note personnelle":0},{"ID":47091,"Titre":"Les Charlatans de Belcastel - Les Alchimistes","Édition":2021,"Type":"extension","Joueur(s)":"2 — 5","Durée":"30 — 60","Age(s)":"10+","Éditeur(s)":["Schmidt"],"Auteur(s)":["Wolfgang Warsch"],"Date d'acquisition":"2026-03-04","Note personnelle":0},{"ID":29465,"Titre":"Les Charlatans de Belcastel - Les Sorcières s'en mêlent","Édition":2019,"Type":"extension","Joueur(s)":"2 — 5","Durée":45,"Age(s)":"10+","Éditeur(s)":["Schmidt"],"Auteur(s)":["Wolfgang Warsch"],"Date d'acquisition":"2026-03-04","Note personnelle":0},{"ID":60693,"Titre":"Les Tours Ambulantes","Édition":2022,"Type":"basegame","Joueur(s)":"1 — 6","Durée":30,"Age(s)":"8+","Éditeur(s)":["Oya"],"Auteur(s)":["Michael Kiesling","Wolfgang Kramer"],"Date d'acquisition":"2026-03-04","Note personnelle":0},{"ID":66004,"Titre":"Marrakesh","Édition":2023,"Type":"basegame","Joueur(s)":"2 — 4","Durée":120,"Age(s)":"14+","Éditeur(s)":["Queen Games"],"Auteur(s)":["Stefan Feld"],"Date d'acquisition":"2026-03-04","Note personnelle":0},{"ID":85363,"Titre":"Orléans","Édition":2025,"Type":"basegame","Joueur(s)":"2 — 5","Durée":90,"Age(s)":"14+","Éditeur(s)":["Dlp Games","Grail Games"],"Auteur(s)":["Reiner Stockhausen"],"Date d'acquisition":"2026-03-04","Note personnelle":0},{"ID":80650,"Titre":"Présages","Édition":2025,"Type":"basegame","Joueur(s)":"4 — 6","Durée":"20 — 30","Age(s)":"10+","Éditeur(s)":["Spiral Editions"],"Auteur(s)":["Maxime Rambourg"],"Date d'acquisition":"2026-03-04","Note personnelle":0},{"ID":29303,"Titre":"Res Arcana","Édition":2019,"Type":"basegame","Joueur(s)":"2 — 4","Durée":"20 — 60","Age(s)":"12+","Éditeur(s)":["Sand Castle Games"],"Auteur(s)":["Thomas Lehmann"],"Date d'acquisition":"2026-03-04","Note personnelle":0},{"ID":86576,"Titre":"Ritual","Édition":2025,"Type":"basegame","Joueur(s)":"2 — 6","Durée":30,"Age(s)":"10+","Éditeur(s)":["Palladis Games"],"Auteur(s)":["Tomás Tarragón"],"Date d'acquisition":"2026-03-04","Note personnelle":0},{"ID":72854,"Titre":"Shackleton Base","Édition":2024,"Type":"basegame","Joueur(s)":"1 — 4","Durée":"60 — 120","Age(s)":"14+","Éditeur(s)":["Sorry We Are French"],"Auteur(s)":["Fabio Lopiano","Nestore Mangone"],"Date d'acquisition":"2026-03-04","Note personnelle":0},{"ID":85765,"Titre":"Stupor Mundi","Édition":2025,"Type":"basegame","Joueur(s)":"1 — 4","Durée":"90 — 150","Age(s)":"12+","Éditeur(s)":["Pixie Games","Quined Games"],"Auteur(s)":["Nestore Mangone"],"Date d'acquisition":"2026-03-04","Note personnelle":0},{"ID":80228,"Titre":"The Vale Of Eternity - Artifacts","Édition":2025,"Type":"extension","Joueur(s)":"2 — 4","Durée":"30 — 45","Age(s)":"10+","Éditeur(s)":["Blackrock Games","Mandoo Games"],"Auteur(s)":["Eric Hong","Mathieu Rivero"],"Date d'acquisition":"2026-03-04","Note personnelle":0},{"ID":87415,"Titre":"The Vale Of Eternity - Curse","Édition":2025,"Type":"extension","Joueur(s)":"2 — 4","Durée":"30 — 45","Age(s)":"10+","Éditeur(s)":["Mandoo Games"],"Auteur(s)":["Eric Hong"],"Date d'acquisition":"2026-03-04","Note personnelle":0},{"ID":90944,"Titre":"The Vale Of Eternity - Curse","Édition":2026,"Type":"extension","Joueur(s)":"2 — 4","Durée":"30 — 45","Age(s)":"10+","Éditeur(s)":["Mandoo Games"],"Auteur(s)":["Eric Hong","Mathieu Rivero"],"Date d'acquisition":"2026-03-04","Note personnelle":0},{"ID":79794,"Titre":"Tipperary","Édition":2025,"Type":"basegame","Joueur(s)":"2 — 5","Durée":45,"Age(s)":"8+","Éditeur(s)":["Lookout Games"],"Auteur(s)":["Günter Burkhardt"],"Date d'acquisition":"2026-03-04","Note personnelle":0},{"ID":83145,"Titre":"Toy Battle","Édition":2025,"Type":"basegame","Joueur(s)":"Duo","Durée":15,"Age(s)":"8+","Éditeur(s)":["Repos Production"],"Auteur(s)":["Alessandro Zucchini","Paolo Mori"],"Date d'acquisition":"2026-03-04","Note personnelle":0},{"ID":60409,"Titre":"Tzolk'in","Édition":2022,"Type":"basegame","Joueur(s)":"2 — 4","Durée":90,"Age(s)":"13+","Éditeur(s)":["Czech Games Edition","Iello"],"Auteur(s)":["Daniele Tascini","Simone Luciani"],"Date d'acquisition":"2026-03-04","Note personnelle":0},{"ID":77471,"Titre":"Wondrous Creatures","Édition":2025,"Type":"basegame","Joueur(s)":"1 — 4","Durée":"60 — 120","Age(s)":"14+","Éditeur(s)":["Super Meeple"],"Auteur(s)":["Yeom Cheolwoong"],"Date d'acquisition":"2026-03-04","Note personnelle":0},{"ID":86442,"Titre":"Wondrous Creatures - Bêtes gargantuesques","Édition":2025,"Type":"extension","Joueur(s)":"1 — 4","Durée":"40 — 80","Age(s)":"14+","Éditeur(s)":["Super Meeple"],"Auteur(s)":["Yeom Cheolwoong"],"Date d'acquisition":"2026-03-04","Note personnelle":0},{"ID":86443,"Titre":"Wondrous Creatures - Pack Explorateurs","Édition":2025,"Type":"extension","Joueur(s)":"1 — 4","Durée":"40 — 80","Age(s)":"14+","Éditeur(s)":["Bad Comet","Super Meeple"],"Auteur(s)":["Yeom Cheolwoong"],"Date d'acquisition":"2026-03-04","Note personnelle":0},{"ID":73777,"Titre":"Wyrmspan","Édition":2024,"Type":"basegame","Joueur(s)":"1 — 5","Durée":90,"Age(s)":"14+","Éditeur(s)":["Matagot","Stonemaier Games"],"Auteur(s)":["Connie Vogelmann"],"Date d'acquisition":"2026-03-04","Note personnelle":0},{"ID":73383,"Titre":"Kutná Hora","Édition":2024,"Type":"basegame","Joueur(s)":"2 — 4","Durée":"60 — 120","Age(s)":"13+","Éditeur(s)":["Czech Games Edition","Iello"],"Auteur(s)":["Ondřej Bystroň","Pavel Jarosch","Petr Caslava"],"Date d'acquisition":"2024-05-14","Note personnelle":0},{"ID":1005,"Titre":"7 Wonders Duel","Édition":2015,"Type":"basegame","Joueur(s)":"Duo","Durée":30,"Age(s)":"10+","Éditeur(s)":["Repos Production"],"Auteur(s)":["Antoine Bauza","Bruno Cathala"],"Date d'acquisition":"2024-05-05","Note personnelle":0},{"ID":55664,"Titre":"Akropolis","Édition":2022,"Type":"basegame","Joueur(s)":"1 — 4","Durée":25,"Age(s)":"8+","Éditeur(s)":["Gigamic"],"Auteur(s)":["Jules Messaud"],"Date d'acquisition":"2024-05-05","Note personnelle":0},{"ID":710,"Titre":"Black Stories","Édition":2004,"Type":"basegame","Joueur(s)":"2 — 24","Durée":20,"Age(s)":"16+","Éditeur(s)":["Kikigagne?"],"Auteur(s)":["Holger Bösch"],"Date d'acquisition":"2024-05-05","Note personnelle":0},{"ID":4503,"Titre":"Black Stories - Morts de rire...","Édition":2011,"Type":"basegame","Joueur(s)":"2 — 24","Durée":15,"Age(s)":"14+","Éditeur(s)":["Kikigagne?"],"Auteur(s)":["Corinna Harder","Jens Schumacher"],"Date d'acquisition":"2024-05-05","Note personnelle":0},{"ID":70312,"Titre":"Boréal","Édition":2024,"Type":"basegame","Joueur(s)":"Duo","Durée":25,"Age(s)":"10+","Éditeur(s)":["Spiral Editions"],"Auteur(s)":["Masafumi Mizuno"],"Date d'acquisition":"2024-05-05","Note personnelle":0},{"ID":629,"Titre":"Codenames","Édition":2016,"Type":"basegame","Joueur(s)":"2+","Durée":15,"Age(s)":"12+","Éditeur(s)":["Czech Games Edition","Iello"],"Auteur(s)":["Vlaada Chvátil"],"Date d'acquisition":"2024-05-05","Note personnelle":0},{"ID":2412,"Titre":"Complots","Édition":2013,"Type":"basegame","Joueur(s)":"2 — 8","Durée":15,"Age(s)":"8+","Éditeur(s)":["Ferti"],"Auteur(s)":["Rikki Tahta"],"Date d'acquisition":"2024-05-05","Note personnelle":0},{"ID":28270,"Titre":"Dany","Édition":2019,"Type":"basegame","Joueur(s)":"3 — 8","Durée":30,"Age(s)":"16+","Éditeur(s)":["Grrre Games"],"Auteur(s)":["Phil Vizcarro"],"Date d'acquisition":"2024-05-05","Note personnelle":0},{"ID":1534,"Titre":"Deus","Édition":2014,"Type":"basegame","Joueur(s)":"2 — 4","Durée":60,"Age(s)":"14+","Éditeur(s)":["Pearl Games"],"Auteur(s)":["Sébastien Dujardin"],"Date d'acquisition":"2024-05-05","Note personnelle":0},{"ID":42693,"Titre":"Durian","Édition":2020,"Type":"basegame","Joueur(s)":"2 — 7","Durée":20,"Age(s)":"7+","Éditeur(s)":["Oink Games"],"Auteur(s)":["Masato Uesugi"],"Date d'acquisition":"2024-05-05","Note personnelle":0},{"ID":2878,"Titre":"Empathy","Édition":2012,"Type":"basegame","Joueur(s)":"3 — 6","Durée":"30 — 60","Age(s)":"14+","Éditeur(s)":["Witty Editions"],"Auteur(s)":["Odet L'Homer"],"Date d'acquisition":"2024-05-05","Note personnelle":0},{"ID":19847,"Titre":"Exploding Kittens","Édition":2017,"Type":"basegame","Joueur(s)":"2 — 5","Durée":20,"Age(s)":"7+","Éditeur(s)":["Exploding Kittens"],"Auteur(s)":["Elan Lee","Matthew Inman","Shane Small"],"Date d'acquisition":"2024-05-05","Note personnelle":0},{"ID":75080,"Titre":"Harmonies","Édition":2024,"Type":"basegame","Joueur(s)":"1 — 4","Durée":30,"Age(s)":"10+","Éditeur(s)":["Libellud"],"Auteur(s)":["Johan Benvenuto"],"Date d'acquisition":"2024-05-05","Note personnelle":0},{"ID":69883,"Titre":"Kill Kim","Édition":2023,"Type":"basegame","Joueur(s)":"5 — 10","Durée":"20 — 30","Age(s)":"10+","Éditeur(s)":["Hiboutatillus"],"Auteur(s)":["Louis Roudaut","Thibault Lorcy"],"Date d'acquisition":"2024-05-05","Note personnelle":0},{"ID":30467,"Titre":"Kingdom Rush - Faille Temporelle","Édition":2020,"Type":"basegame","Joueur(s)":"1 — 4","Durée":"60 — 90","Age(s)":"14+","Éditeur(s)":["Lucky Duck Games"],"Auteur(s)":["Helana Hope","Jessey Wright","Sen-Foong Lim"],"Date d'acquisition":"2024-05-05","Note personnelle":0},{"ID":63851,"Titre":"Kites","Édition":2023,"Type":"basegame","Joueur(s)":"2 — 6","Durée":10,"Age(s)":"10+","Éditeur(s)":["Floodgate Games","Matagot"],"Auteur(s)":["Kevin Hamano"],"Date d'acquisition":"2024-05-05","Note personnelle":0},{"ID":55301,"Titre":"Le Roi Des Nains","Édition":2022,"Type":"basegame","Joueur(s)":"3 — 5","Durée":30,"Age(s)":"10+","Éditeur(s)":["Iello"],"Auteur(s)":["Bruno Faidutti"],"Date d'acquisition":"2024-05-05","Note personnelle":0},{"ID":18179,"Titre":"Les Loups-Garous de Thiercelieux","Édition":2001,"Type":"basegame","Joueur(s)":"8 — 18","Durée":30,"Age(s)":"8+","Éditeur(s)":["Lui-Même"],"Auteur(s)":["Hervé Marly","Philippe Des Pallières"],"Date d'acquisition":"2024-05-05","Note personnelle":0},{"ID":39021,"Titre":"Light Hunters : Playing cards","Édition":2019,"Type":"basegame","Joueur(s)":"2 — 8","Durée":15,"Age(s)":"10+","Éditeur(s)":["Dtda Games"],"Auteur(s)":["Serge Matsumoto"],"Date d'acquisition":"2024-05-05","Note personnelle":0},{"ID":75428,"Titre":"Littoral","Édition":2024,"Type":"basegame","Joueur(s)":"1 — 5","Durée":20,"Age(s)":"8+","Éditeur(s)":["Randolph"],"Auteur(s)":["Brian Burgoyne"],"Date d'acquisition":"2024-05-05","Note personnelle":0},{"ID":2300,"Titre":"Mascarade","Édition":2013,"Type":"basegame","Joueur(s)":"2 — 13","Durée":30,"Age(s)":"10+","Éditeur(s)":["Repos Production"],"Auteur(s)":["Bruno Faidutti"],"Date d'acquisition":"2024-05-05","Note personnelle":0},{"ID":50479,"Titre":"Meadow","Édition":2021,"Type":"basegame","Joueur(s)":"1 — 4","Durée":"60 — 90","Age(s)":"10+","Éditeur(s)":["Rebel Studio"],"Auteur(s)":["Klemens Kalicki"],"Date d'acquisition":"2024-05-05","Note personnelle":0},{"ID":73789,"Titre":"Middle Ages","Édition":2024,"Type":"basegame","Joueur(s)":"2 — 5","Durée":30,"Age(s)":"10+","Éditeur(s)":["Studio H"],"Auteur(s)":["Marc André"],"Date d'acquisition":"2024-05-05","Note personnelle":0},{"ID":62707,"Titre":"Mindbug","Édition":2023,"Type":"basegame","Joueur(s)":"Duo","Durée":20,"Age(s)":"8+","Éditeur(s)":["Iello","Nerdlab Games"],"Auteur(s)":["Christian Kudahl","Marvin Hegen","Richard Garfield","Skaff Elias"],"Date d'acquisition":"2024-05-05","Note personnelle":0},{"ID":30478,"Titre":"Obscurio","Édition":2019,"Type":"basegame","Joueur(s)":"2 — 8","Durée":40,"Age(s)":"10+","Éditeur(s)":["Libellud"],"Auteur(s)":["L'Atelier"],"Date d'acquisition":"2024-05-05","Note personnelle":0},{"ID":58990,"Titre":"Pagan","Édition":2023,"Type":"basegame","Joueur(s)":"Duo","Durée":"60+","Age(s)":"12+","Éditeur(s)":["Super Meeple","Wyrmgold"],"Auteur(s)":["Kåre Werner Storgaard","Kasper Kjær Christiansen"],"Date d'acquisition":"2024-05-05","Note personnelle":0},{"ID":74105,"Titre":"Pixies","Édition":2024,"Type":"basegame","Joueur(s)":"2 — 5","Durée":30,"Age(s)":"8+","Éditeur(s)":["Bombyx"],"Auteur(s)":["Johannes Goupy"],"Date d'acquisition":"2024-05-05","Note personnelle":0},{"ID":5330,"Titre":"Quoridor","Édition":2011,"Type":"basegame","Joueur(s)":"2 — 4","Durée":15,"Age(s)":"6+","Éditeur(s)":["Gigamic"],"Auteur(s)":["Mirko Marchesi"],"Date d'acquisition":"2024-05-05","Note personnelle":0},{"ID":3383,"Titre":"Seasons","Édition":2012,"Type":"basegame","Joueur(s)":"2 — 4","Durée":60,"Age(s)":"14+","Éditeur(s)":["Libellud"],"Auteur(s)":["Régis Bonnessée"],"Date d'acquisition":"2024-05-05","Note personnelle":0},{"ID":76998,"Titre":"Secret Identity","Édition":2024,"Type":"basegame","Joueur(s)":"3 — 8","Durée":"20 — 40","Age(s)":"10+","Éditeur(s)":["Funnyfox"],"Auteur(s)":["Alexandre Droit","Bertrand Roux","Johan Benvenuto","Kévin Jost"],"Date d'acquisition":"2024-05-05","Note personnelle":0},{"ID":51478,"Titre":"Sequence","Édition":2020,"Type":"basegame","Joueur(s)":"2 — 12","Durée":30,"Age(s)":"7+","Éditeur(s)":["Goliath"],"Auteur(s)":[],"Date d'acquisition":"2024-05-05","Note personnelle":0},{"ID":66014,"Titre":"Shadow Hunters","Édition":2020,"Type":"basegame","Joueur(s)":"4 — 8","Durée":30,"Age(s)":"10+","Éditeur(s)":["Kosmos","Matagot"],"Auteur(s)":["Yasutaka Ikeda"],"Date d'acquisition":"2024-05-05","Note personnelle":0},{"ID":42051,"Titre":"Shamans","Édition":2020,"Type":"basegame","Joueur(s)":"3 — 5","Durée":"30 — 60","Age(s)":"10+","Éditeur(s)":["Studio H"],"Auteur(s)":["Cédrick Chaboussit"],"Date d'acquisition":"2024-05-05","Note personnelle":0},{"ID":64645,"Titre":"Sky Team","Édition":2023,"Type":"basegame","Joueur(s)":"Duo","Durée":20,"Age(s)":"12+","Éditeur(s)":["Le Scorpion Masqué"],"Auteur(s)":["Luc Rémond"],"Date d'acquisition":"2024-05-05","Note personnelle":0},{"ID":50117,"Titre":"Spicy","Édition":2021,"Type":"basegame","Joueur(s)":"2 — 6","Durée":30,"Age(s)":"10+","Éditeur(s)":["Heidelberger Spieleverlag","Iello"],"Auteur(s)":["Győri Zoltán Gábor"],"Date d'acquisition":"2024-05-05","Note personnelle":0},{"ID":73825,"Titre":"Sync or Swim","Édition":2024,"Type":"basegame","Joueur(s)":"3 — 6","Durée":"30 — 45","Age(s)":"14+","Éditeur(s)":["Bézier Games","Iello"],"Auteur(s)":["Divya Hedgren","Lucas Hedgren"],"Date d'acquisition":"2024-05-05","Note personnelle":0},{"ID":100,"Titre":"Terraforming Mars","Édition":2017,"Type":"basegame","Joueur(s)":"1 — 5","Durée":"90 — 120","Age(s)":"12+","Éditeur(s)":["Fryxgames","Intrafin Games"],"Auteur(s)":["Jacob Fryxelius"],"Date d'acquisition":"2024-05-05","Note personnelle":0},{"ID":62447,"Titre":"That's Not a Hat","Édition":2023,"Type":"basegame","Joueur(s)":"3 — 8","Durée":15,"Age(s)":"8+","Éditeur(s)":["Ravensburger"],"Auteur(s)":["Kasper Lapp"],"Date d'acquisition":"2024-05-05","Note personnelle":0},{"ID":970,"Titre":"The Big Book of Madness","Édition":2015,"Type":"basegame","Joueur(s)":"2 — 5","Durée":"60 — 120","Age(s)":"12+","Éditeur(s)":["Iello"],"Auteur(s)":["Maxime Rambourg"],"Date d'acquisition":"2024-05-05","Note personnelle":0},{"ID":71923,"Titre":"The Vale of Eternity","Édition":2023,"Type":"basegame","Joueur(s)":"2 — 4","Durée":"30 — 45","Age(s)":"10+","Éditeur(s)":["Blackrock Games","Mandoo Games"],"Auteur(s)":["Eric Hong"],"Date d'acquisition":"2024-05-05","Note personnelle":0},{"ID":19870,"Titre":"This War Of Mine","Édition":2017,"Type":"basegame","Joueur(s)":"1 — 6","Durée":120,"Age(s)":"18+","Éditeur(s)":["Edge Entertainment"],"Auteur(s)":["Michal Oracz"],"Date d'acquisition":"2024-05-05","Note personnelle":0},{"ID":49474,"Titre":"Tichu","Édition":2021,"Type":"basegame","Joueur(s)":"3 — 6","Durée":60,"Age(s)":"10+","Éditeur(s)":["Tiki Editions"],"Auteur(s)":["Urs Hostettler"],"Date d'acquisition":"2024-05-05","Note personnelle":0},{"ID":67722,"Titre":"Traîtres à Bord !","Édition":2023,"Type":"basegame","Joueur(s)":"3 — 8","Durée":20,"Age(s)":"10+","Éditeur(s)":["Savana Games"],"Auteur(s)":["Jean-Xia Chou"],"Date d'acquisition":"2024-05-05","Note personnelle":0},{"ID":50767,"Titre":"Trek 12 - Amazonie","Édition":2021,"Type":"basegame","Joueur(s)":"1+","Durée":30,"Age(s)":"8+","Éditeur(s)":["Lumberjacks Studio"],"Auteur(s)":["Bruno Cathala","Corentin Lebrat"],"Date d'acquisition":"2024-05-05","Note personnelle":0},{"ID":50329,"Titre":"Welcome to the Moon","Édition":2021,"Type":"basegame","Joueur(s)":"1 — 6","Durée":"25 — 30","Age(s)":"10+","Éditeur(s)":["Blue Cocker"],"Auteur(s)":["Alexis Allard","Benoit Turpin"],"Date d'acquisition":"2024-05-05","Note personnelle":0},{"ID":67870,"Titre":"Yuan","Édition":2023,"Type":"standalone","Joueur(s)":"2 — 4","Durée":60,"Age(s)":"12+","Éditeur(s)":["Oka Luda"],"Auteur(s)":["Charlie Sigogneau"],"Date d'acquisition":"2024-05-05","Note personnelle":0}];
+/* Le même exemple CSV que la v4.20, régénéré en texte pour passer par le vrai lecteur */
+const EXEMPLE_CSV = ['Titre;Édition;Type;Joueur(s);Durée;Éditeur(s)', ...EXEMPLE.map(([t, y, ty, j, d, e]) => [t, y, { b: 'basegame', e: 'extension', s: 'standalone', g: 'goodie' }[ty], j, d, e].join(';'))].join('\n');
+
+/* Réponses BGG simulées pour la démo */
+const ALIAS = { "Les Charlatans de Belcastel": ["The Quacks of Quedlinburg", 2018], "Le Dilemme du Roi": ["The King's Dilemma", 2019], "Tzolk'in": ["Tzolk'in: The Mayan Calendar", 2012], "Orléans": ["Orléans", 2014], "L'Île Des Mots Dits": ["Wordsmith Island", 2025], "Les Tours Ambulantes": ["Walking Towers", 2022] };
+const MULTI = { "Covenant": [["Covenant", 2025, "Devir"], ["Covenant", 2019, "Lloyd Games"], ["Covenant: The Board Game", 2008, "auto-édition"]], "Ritual": [["Ritual", 2025, "Palladis Games"], ["Ritual", 2014, "Spielworxx"]], "Marrakesh": [["Marrakesh", 2022, "Queen Games"], ["Marrakech", 2007, "Gigamic"], ["Marrakesh: Essential Edition", 2024, "Queen Games"]] };
+const INTROUVABLE = ["Dewan", "Présages", "Wondrous Creatures - Winterfall", "Dewan - 4 Camps De Départ Améliorés"];
+const DEJA = ["Draftosaurus", "Cartographers"];
+
+const S = { ecran: 'ajout', fichier: null, lignes: [], fmt: 'grand', ext: false, filtre: 'tous', sheet: null, cherche: '', resultats: null, ajoutes: 0, erreur: '', survol: false };
+let minuteur = null;
+
+const norm = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
+const hash = s => [...s].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+function cov(titre, cls = '') { const h = hash(titre) % 360; return `<span class="cov ${cls}" style="background:linear-gradient(160deg,hsl(${h} 45% 42%),hsl(${(h + 40) % 360} 50% 22%))">${esc(titre.split(/[ :-]/)[0].slice(0, 9))}</span>`; }
+
+function joueurs(v) { if (/duo/i.test(v)) return '2 j'; const n = v.match(/\d+/g) || []; if (v.includes('+')) return `${n[0]}+ j`; return n.length > 1 ? `${n[0]}–${n[1]} j` : n[0] ? `${n[0]} j` : ''; }
+function duree(v) { const n = (v.match(/\d+/) || [])[0]; return n ? `${n} min` : ''; }
+
+/* Lecteur CSV Myludo : ; comme séparateur, guillemets, BOM et apostrophe de tête tolérés */
+function lireCsv(txt) {
+  txt = txt.replace(/^﻿/, '').replace(/^'/, '');
+  const rows = []; let row = [], cell = '', q = false;
+  for (let i = 0; i < txt.length; i++) {
+    const c = txt[i];
+    if (q) { if (c === '"') { if (txt[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += c; }
+    else if (c === '"') q = true;
+    else if (c === ';') { row.push(cell); cell = ''; }
+    else if (c === '\n' || c === '\r') { if (c === '\r' && txt[i + 1] === '\n') i++; row.push(cell); rows.push(row); row = []; cell = ''; }
+    else cell += c;
+  }
+  if (cell || row.length) { row.push(cell); rows.push(row); }
+  const tete = rows.shift() || []; const col = n => tete.indexOf(n);
+  const iT = col('Titre');
+  if (iT < 0) return null;
+  const typ = { basegame: 'b', extension: 'e', standalone: 's' };
+  return rows.filter(r => r[iT]).map(r => [r[iT], r[col('Édition')] || '', typ[r[col('Type')]] || (r[col('Type')] ? 'g' : 'b'), r[col('Joueur(s)')] || '', r[col('Durée')] || '', (r[col('Éditeur(s)')] || '').split(',')[0]]);
+}
+
+/* Lecteur JSON Myludo : liste d'objets aux mêmes noms de champs que le CSV ; listes et nombres aplatis */
+function lireJson(txt) {
+  let d;
+  try { d = JSON.parse(txt); } catch { return { erreur: 'Ce fichier JSON est illisible (mal formé ou incomplet).' }; }
+  if (!Array.isArray(d) || !d.some(o => o && typeof o === 'object' && 'Titre' in o)) return { erreur: 'Ce JSON n\'est pas un export Myludo (champ « Titre » introuvable).' };
+  const txt1 = v => Array.isArray(v) ? v.join(', ') : v == null ? '' : String(v);
+  const premier = v => Array.isArray(v) ? (v[0] || '') : txt1(v).split(',')[0];
+  const typ = { basegame: 'b', extension: 'e', standalone: 's' };
+  return { donnees: d.filter(o => o && txt1(o['Titre']).trim()).map(o => [txt1(o['Titre']).trim(), txt1(o['Édition']), typ[o['Type']] || (o['Type'] ? 'g' : 'b'), txt1(o['Joueur(s)']), txt1(o['Durée']), premier(o['Éditeur(s)'])]) };
+}
+
+/* Un seul point d'entrée : le contenu décide du format, pas l'extension */
+function lire(txt) {
+  txt = txt.replace(/^﻿/, '');
+  if (/^\s*[\[{]/.test(txt)) return { format: 'json', ...lireJson(txt) };
+  const d = lireCsv(txt);
+  return d && d.length ? { format: 'csv', donnees: d } : { format: 'csv', erreur: 'Ce fichier n\'est pas un export Myludo lisible (colonne « Titre » introuvable).' };
+}
+
+function charger(donnees, nom, format) {
+  const vus = new Set();
+  S.fichier = { nom, n: donnees.length, format };
+  S.lignes = donnees.map(([t, y, type, pl, du, ed], i) => {
+    const cle = norm(t); const doublon = vus.has(cle); vus.add(cle);
+    const ext = type === 'e' || type === 'g';
+    return { i, t, y, ext, pl: joueurs(pl), du: duree(du), ed, etat: doublon ? 'ign' : 'att', bgg: null, coche: !doublon && !ext };
+  });
+  S.ecran = 'verif'; S.filtre = 'tous'; S.phase = null; S.vuFini = false; render(); lancer();
+}
+
+function resoudre(l) {
+  if (l.etat === 'ign') return;
+  if (DEJA.includes(l.t)) { l.etat = 'dup'; l.bgg = [l.t, +l.y]; return; }
+  if (INTROUVABLE.includes(l.t)) { l.etat = 'none'; return; }
+  if (MULTI[l.t]) { l.etat = 'multi'; return; }
+  if (ALIAS[l.t]) { l.etat = 'ok'; l.bgg = ALIAS[l.t]; return; }
+  const h = hash(l.t) % 12; // fichier déposé : quelques cas douteux pour la démo
+  if (!EXEMPLE.some(e => e[0] === l.t) && h === 0) { l.etat = 'none'; return; }
+  if (!EXEMPLE.some(e => e[0] === l.t) && h === 1) { l.etat = 'multi'; return; }
+  l.etat = 'ok'; l.bgg = [l.t.replace(/ - /g, ': '), +l.y || '—'];
+}
+
+function lancer(instant) {
+  clearInterval(minuteur);
+  const file = () => S.lignes.find(l => l.etat === 'att' && (S.ext || !l.ext));
+  if (instant) { let l; while ((l = file())) resoudre(l); render(); return; }
+  minuteur = setInterval(() => { const l = file(); if (!l) { clearInterval(minuteur); render(); return; } resoudre(l); render(); }, 450);
+}
+
+const aAgir = l => l.coche && !l.resolu && (l.etat === 'multi' || l.etat === 'none'); // « sans pochette » assumé = résolu
+const aChoisir = l => aAgir(l) && l.etat === 'multi';
+const aChercher = l => aAgir(l) && l.etat === 'none';
+const visibles = () => S.lignes.filter(l => S.ext || !l.ext);
+const compte = () => { const v = visibles(); return { tot: v.length, faits: v.filter(l => l.etat !== 'att').length, coches: v.filter(l => l.coche).length, agir: v.filter(aAgir).length, choisir: v.filter(aChoisir).length, chercher: v.filter(aChercher).length, ext: S.lignes.filter(l => l.ext).length }; };
+
+function etatTxt(l) {
+  switch (l.etat) {
+    case 'att': return ['att', 'Recherche sur BGG…'];
+    case 'ok': return ['ok', `✓ BGG : ${l.bgg[0]} (${l.bgg[1]})`];
+    case 'multi': return ['multi', `${(MULTI[l.t] || [1, 2]).length} résultats sur BGG — choisir ›`];
+    case 'none': return ['none', l.sansCov ? 'Sans pochette — chercher ›' : 'Introuvable sur BGG — chercher ›'];
+    case 'dup': return ['dup', 'Déjà dans ta ludothèque · sera complété'];
+    case 'ign': return ['ign', 'En double dans le fichier · ignoré'];
+  }
+}
+
+const ONGLETS = [['📚', 'Étagère', 'etagere'], ['🗂️', 'Ludothèque', 'ludo'], ['➕', 'Ajouter', 'ajout'], ['🎲', 'Parties', 'parties']];
+const TAB = on => `${pastille()}<div class="tabbar">${ONGLETS.map(([i, n, k]) => `<span class="${n === on ? 'on' : ''}" data-a="nav" data-v="${k}"><i>${i}</i>${n}</span>`).join('')}</div>`;
+
+/* v4.23 — où en est l'import (côté serveur dans l'app réelle) */
+function phase() {
+  if (!S.lignes.length || S.phase === 'abandon') return null;
+  if (S.phase === 'ajout') return 'ajout';
+  if (S.phase === 'fini') return S.vuFini ? null : 'fini';
+  const c = compte(); return c.faits < c.tot ? 'recherche' : 'pret';
+}
+function pastille() {
+  const p = phase(); if (!p || ['verif', 'encours', 'fini', 'import'].includes(S.ecran)) return '';
+  const c = compte();
+  if (p === 'recherche') return `<button class="pastille" data-a="reprendre"><span class="ico">📥</span><span class="t">Import · recherche sur BGG ${c.faits}/${c.tot}<span class="mini"><i style="width:${c.faits / c.tot * 100}%"></i></span></span><span class="fl">›</span></button>`;
+  if (p === 'pret') return `<button class="pastille ${c.agir ? 'ambre' : ''}" data-a="reprendre"><span class="ico">${c.agir ? '✋' : '✅'}</span><span class="t">${c.agir ? `Import : ${c.choisir} à vérifier · ${c.chercher} introuvable${c.chercher > 1 ? 's' : ''}` : 'Import prêt : tout est trouvé'}<small>Touche pour finir</small></span><span class="fl">›</span></button>`;
+  if (p === 'ajout') { const n = aAjouter(); return `<button class="pastille" data-a="reprendre"><span class="ico">📦</span><span class="t">Ajout des jeux ${S.ajoutes}/${n}<span class="mini"><i style="width:${S.ajoutes / n * 100}%"></i></span></span><span class="fl">›</span></button>`; }
+  return `<button class="pastille" data-a="reprendre"><span class="ico">🎉</span><span class="t">Collection importée<small>Voir le bilan</small></span><span class="fl">›</span></button>`;
+}
+const aAjouter = () => S.lignes.filter(x => x.coche && (S.ext || !x.ext)).length;
+
+function vEtagere() {
+  return `${STATUS}<div class="scroll"><div class="page-head"><h1>Étagère</h1></div>
+    <p class="sous">Tu navigues normalement : la recherche continue sur le serveur.</p>
+    <div class="grille">${DEJA.concat(['Wyrmspan', 'Akropolis', 'Sky Team', 'Harmonies']).map(t => cov(t)).join('')}</div></div>${TAB('Étagère')}`;
+}
+function vParties() {
+  return `${STATUS}<div class="vide-ecran"><div><p style="font-size:30px">🎲</p><p>Tes parties</p></div></div>${TAB('Parties')}`;
+}
+function vNotif() {
+  const c = compte(); const ajout = S.phase === 'ajout' || S.phase === 'fini';
+  const b = bilan();
+  const txt = ajout ? `Collection importée : ${b.neufs} jeux ajoutés, ${b.comp} complétés.`
+    : c.agir ? `Recherche terminée : ${c.tot - c.agir} jeux trouvés. ${c.choisir} à vérifier, ${c.chercher} introuvable${c.chercher > 1 ? 's' : ''} — touche pour finir.`
+    : `Recherche terminée : tous tes jeux sont trouvés — touche pour les ajouter.`;
+  return `<div class="lock"><span class="heure">9:52</span><span class="date">samedi 21 novembre</span>
+    <button class="notif" data-a="reprendre"><span class="app">🎲</span><span class="t"><b>What Shall We Play?</b>${esc(txt)}<small>maintenant</small></span></button></div>`;
+}
+const STATUS = '<div class="status"><span>9:41</span><span>●●● 🔋</span></div>';
+
+function carteImport() {
+  const c = compte(), p = phase();
+  const l = p === 'recherche' ? `Recherche sur BGG · ${c.faits}/${c.tot}` : p === 'ajout' ? `Ajout des jeux · ${S.ajoutes}/${aAjouter()}` : `${c.choisir} à vérifier · ${c.chercher} introuvable${c.chercher > 1 ? 's' : ''}`;
+  return `<div class="carte-import"><div class="l"><b>📥 Import en cours</b><span>${esc(S.fichier.nom)}</span></div><span class="sous">${l}</span>
+    <button class="btn-copper" data-a="reprendre">Reprendre</button></div>`;
+}
+
+function vAjout() {
+  return `${STATUS}<div class="scroll">
+    <div class="page-head"><h1>Ajouter un jeu</h1></div>
+    <div class="field"><label>Titre</label><input placeholder="Ex. Wyrmspan"></div>
+    <button class="btn-bgg">Récupérer depuis BoardGameGeek</button>
+    <button class="link-import">Importer ma collection BGG</button>
+    ${phase() && phase() !== 'fini' ? carteImport() : '<button class="link-import neuf" data-a="versImport">📄 Importer un fichier (CSV ou JSON)<small>Export Myludo · pochettes récupérées sur BGG</small></button>'}
+    <button class="link-btn" style="align-self:center">Saisir à la main</button>
+  </div>${TAB('Ajouter')}`;
+}
+
+function vImport() {
+  return `${STATUS}<div class="scroll">
+    <div class="page-head"><button class="retour" data-a="versAjout" aria-label="Retour">‹</button><h1>Importer un fichier</h1></div>
+    <p class="sous">Exporte ta collection depuis Myludo (fichier .csv ou .json) : chaque jeu est retrouvé sur BoardGameGeek pour sa pochette et sa fiche.</p>
+    <label class="depot ${S.survol ? 'sur' : ''}" id="depot">
+      <span class="ico">📄</span><b>Choisir un fichier CSV ou JSON</b><span>ou dépose-le ici</span>
+      <input type="file" accept=".csv,.json,text/csv,application/json" id="fic">
+    </label>
+    ${S.erreur ? `<p class="erreur">${esc(S.erreur)}</p>` : ''}
+    <div><p class="sous-label" style="margin-bottom:6px">Formats reconnus</p>
+      <div class="reconnus">
+        <div><span>Myludo<br><small>Ma ludothèque → ⋯ → Exporter</small></span><span class="badge csv">CSV</span><span class="badge json">JSON</span></div>
+      </div></div>
+    <div class="aide">Le fichier reste sur ton téléphone : seuls les titres sont cherchés sur BGG. Rien n'est ajouté avant ta confirmation.</div>
+    <div class="scen btns" style="flex-direction:row;flex-wrap:wrap;gap:6px;border-top:1px dashed var(--doux);padding-top:10px">
+      <span class="sous" style="width:100%;font-size:11.5px">Maquette seulement :</span>
+      <button class="puce" data-a="exemple" data-v="json">Exemple JSON (87)</button>
+      <button class="puce" data-a="exemple" data-v="csv">Exemple CSV (40)</button>
+      <button class="puce" data-a="exemple" data-v="casse">JSON mal formé</button>
+      <button class="puce" data-a="exemple" data-v="autre">JSON d'une autre appli</button>
+    </div>
+  </div>${TAB('Ajouter')}`;
+}
+
+function vVerif() {
+  const c = compte(); const fini = c.faits === c.tot;
+  let l = visibles(); if (S.filtre === 'choisir') l = l.filter(aChoisir); if (S.filtre === 'chercher') l = l.filter(aChercher);
+  const vide = { tous: 'Aucun jeu', choisir: 'Rien à choisir 👌', chercher: 'Tout est trouvé 👌' }[S.filtre];
+  return `${STATUS}<div class="scroll">
+    <div class="page-head"><button class="retour" data-a="versImport" aria-label="Retour">‹</button><h1>Vérifier <small>${c.tot} jeux</small></h1></div>
+    <div class="fichier"><span>📄</span><div class="t"><b>${esc(S.fichier.nom)}</b><small>Myludo <span class="badge ${S.fichier.format}">${S.fichier.format.toUpperCase()}</span> · ${S.fichier.n} jeux</small></div><button class="link-btn" data-a="versImport">Changer</button></div>
+    <div class="bascule" data-a="ext"><div class="t">Inclure les extensions<small>${c.ext} extensions et goodies dans le fichier</small></div><span class="inter ${S.ext ? 'on' : ''}"></span></div>
+    <div><p class="sous-label" style="margin-bottom:6px">Format de boîte pour l'import</p>
+      <div class="formats">${['mini', 'petit', 'moyen', 'grand'].map(f => `<button data-a="fmt" data-v="${f}" aria-pressed="${S.fmt === f}">${f[0].toUpperCase() + f.slice(1)}</button>`).join('')}</div></div>
+    <div class="avance"><div class="l"><span>${fini ? 'Recherche BGG terminée' : 'Recherche des pochettes sur BGG…'}</span><span>${c.faits}/${c.tot}</span></div><div class="barre"><i style="width:${c.tot ? c.faits / c.tot * 100 : 0}%"></i></div></div>
+    ${fini ? '' : '<div class="bandeau"><span>🛰️</span><span><b>Tu peux quitter cette page.</b>La recherche continue sur le serveur, même app fermée. On te prévient quand c\'est fini.</span></div>'}
+    <div class="puces"><button class="puce" data-a="filtre" data-v="tous" aria-pressed="${S.filtre === 'tous'}">Tous<span class="n">${c.tot}</span></button>
+      <button class="puce ${c.choisir ? 'ambre' : ''}" data-a="filtre" data-v="choisir" aria-pressed="${S.filtre === 'choisir'}">À vérifier<span class="n">${c.choisir}</span></button>
+      <button class="puce ${c.chercher ? 'rouge' : ''}" data-a="filtre" data-v="chercher" aria-pressed="${S.filtre === 'chercher'}">Introuvables<span class="n">${c.chercher}</span></button></div>
+    <div class="liste">${l.length ? l.map(ligne).join('') : `<p class="sous" style="text-align:center;padding:14px">${vide}</p>`}</div>
+  </div>
+  <div class="pied"><button class="link-btn" data-a="abandon" style="align-self:center;font-size:12px">Abandonner l'import</button><button class="btn-copper" data-a="importer" ${c.coches && fini ? '' : 'disabled'}>${fini ? `Ajouter ${c.coches} jeu${c.coches > 1 ? 'x' : ''}` : 'Recherche en cours…'}</button></div>${TAB('Ajouter')}`;
+}
+
+function ligne(l) {
+  const [k, txt] = etatTxt(l);
+  const c = l.etat === 'att' ? '<span class="cov att"></span>' : (l.etat === 'none' || l.etat === 'ign' || (l.etat === 'multi' && !l.bgg)) ? '<span class="cov vide">?</span>' : cov(l.bgg ? l.bgg[0] : l.t);
+  const clic = (l.etat === 'multi' || l.etat === 'none' || (l.etat === 'ok' && l.choisi)) ? `data-a="ouvrir" data-i="${l.i}"` : '';
+  return `<div class="ligne ${l.coche ? '' : 'off'} ${aAgir(l) ? 'agir' : ''}">
+    ${c}<button class="t" style="background:none;border:0;text-align:left" ${clic}><b>${esc(l.t)}${l.ext ? '<span class="ext">ext.</span>' : ''}</b>
+    <span class="meta">${[l.y, l.pl, l.du].filter(Boolean).join(' · ')}</span><div class="etat ${k}">${esc(txt)}</div></button>
+    ${l.etat === 'ign' ? '' : `<button class="coche ${l.coche ? 'on' : ''}" data-a="coche" data-i="${l.i}" aria-label="Importer ${esc(l.t)}">${l.coche ? '✓' : ''}</button>`}
+  </div>`;
+}
+
+function vSheet() {
+  const l = S.lignes[S.sheet];
+  const cands = MULTI[l.t] || (S.resultats || (l.etat === 'multi' ? [[l.t, +l.y || 2020, '—'], [l.t + ': Deluxe', 2021, '—']] : []));
+  return `<div class="sheet-fond" data-a="fermer"><div class="sheet" data-stop>
+    <span class="poignee"></span>
+    <h3>${esc(l.t)}</h3>
+    <p class="sous">${l.etat === 'none' && !S.resultats ? 'Aucun jeu à ce titre sur BGG. Essaie un autre titre (souvent le titre anglais).' : 'Lequel est ton jeu ?'}</p>
+    <div class="recherche"><input id="q" value="${esc(S.cherche || l.t)}"><button data-a="chercher">Chercher</button></div>
+    ${cands.map((c, j) => `<button class="cand" data-a="choisir" data-j="${j}" aria-pressed="${!!(l.bgg && l.bgg[0] === c[0] && l.bgg[1] === c[1])}">${cov(c[0])}<span class="t">${esc(c[0])}<small>${c[1]} · ${esc(c[2])}</small></span></button>`).join('')}
+    <button class="btn-ghost" data-a="sansCov">Importer sans pochette</button>
+    <button class="link-btn" data-a="decocher" style="align-self:center">Ne pas importer ce jeu</button>
+  </div></div>`;
+}
+
+function vEnCours() {
+  const n = S.lignes.filter(l => l.coche && (S.ext || !l.ext)).length;
+  return `${STATUS}<div class="scroll"><div class="fini"><span class="ico">📦</span><h2>Ajout en cours…</h2>
+    <p class="sous">Les fiches et les pochettes se téléchargent sur le serveur. <b>Tu peux quitter</b> : on te prévient à la fin.</p>
+    <div class="avance" style="width:100%"><div class="l"><span>Jeux ajoutés</span><span>${S.ajoutes}/${n}</span></div><div class="barre"><i style="width:${S.ajoutes / n * 100}%"></i></div></div></div></div>${TAB('Ajouter')}`;
+}
+
+function bilan() {
+  const v = S.lignes.filter(l => l.coche && (S.ext || !l.ext));
+  return { neufs: v.filter(l => l.etat !== 'dup').length, comp: v.filter(l => l.etat === 'dup').length, sans: v.filter(l => !l.bgg).length, ign: S.lignes.length - v.length };
+}
+
+function vFini() {
+  const b = bilan();
+  return `${STATUS}<div class="scroll"><div class="fini"><span class="ico">🎉</span><h2>Collection importée</h2>
+    <div class="bilan"><div><span>Jeux ajoutés</span><b>${b.neufs}</b></div><div><span>Jeux complétés (déjà là)</span><b>${b.comp}</b></div><div><span>Sans pochette</span><b>${b.sans}</b></div><div><span>Non importés</span><b>${b.ign}</b></div></div>
+    <p class="sous">Le format de boîte (${S.fmt}) et la pochette se changent ensuite depuis la fiche de chaque jeu.</p>
+    <button class="btn-copper" data-a="ludo">Voir ma ludothèque</button></div></div>${TAB('Ajouter')}`;
+}
+
+function vLudo() {
+  const v = S.lignes.filter(l => l.coche && (S.ext || !l.ext) && l.etat !== 'dup');
+  const tous = [...DEJA.map(t => ({ t, bgg: [t] })), ...v];
+  return `${STATUS}<div class="scroll"><div class="page-head"><h1>Ma ludothèque <small>${tous.length} jeux</small></h1></div>
+    <div class="grille">${tous.map(l => l.bgg ? cov(l.bgg[0]) : `<span class="cov vide" title="${esc(l.t)}" style="font-size:9px;padding:4px;text-align:center">${esc(l.t)}</span>`).join('')}</div></div>${TAB('Ludothèque')}`;
+}
+
+const NOTES = {
+  ajout: 'Pendant un import, la carte « Import en cours » remplace le lien : un seul import à la fois. « Reprendre » ramène à l\'écran où tu en étais.',
+  import: 'Inchangé : le fichier est lu dans le navigateur. Seule la liste des jeux part au serveur, qui lance l\'import.',
+  verif: 'Bandeau vert pendant la recherche : tu peux partir. Va sur l\'Étagère (onglet en bas) : la pastille suit la progression. Tes choix sont enregistrés au fur et à mesure. « Abandonner l\'import » efface la liste en cours.',
+  etagere: 'Partout dans l\'app, la pastille au-dessus des onglets montre l\'import : recherche, puis ce qui reste à faire, puis l\'ajout. Elle disparaît une fois le bilan vu.',
+  notif: 'Notification push (si tu les as activées), envoyée par le serveur à la fin de la recherche, puis à la fin de l\'ajout. La toucher ouvre l\'import.',
+  parties: 'Navigation libre : l\'import continue.',
+  encours: 'L\'ajout (fiches et pochettes) se fait sur le serveur : tu peux quitter, la pastille et la notification prennent le relais.',
+  fini: 'Bilan inchangé. Une fois vu, la pastille disparaît.',
+  ludo: 'Résultat : les jeux importés rejoignent la ludothèque avec leur pochette.'
+};
+
+function render() {
+  const p = document.getElementById('phone');
+  const vues = { ajout: vAjout, import: vImport, verif: vVerif, encours: vEnCours, fini: vFini, ludo: vLudo, etagere: vEtagere, parties: vParties, notif: vNotif };
+  const y = p.querySelector('.scroll')?.scrollTop || 0;
+  p.innerHTML = vues[S.ecran]() + (S.sheet !== null ? vSheet() : '');
+  const sc = p.querySelector('.scroll'); if (sc && S.ecran === 'verif') sc.scrollTop = y;
+  document.getElementById('note').textContent = NOTES[S.ecran];
+  document.getElementById('scen').innerHTML = [['ajout', 'Onglet Ajouter'], ['import', '1 · Fichier'], ['verif', '2 · Vérification'], ['etagere', 'Ailleurs dans l\'app'], ['notif', 'Notification'], ['fini', '3 · Bilan']].map(([k, n]) => `<button data-s="${k}" aria-pressed="${S.ecran === k || (k === 'fini' && S.ecran === 'encours')}">${n}</button>`).join('');
+  const fic = document.getElementById('fic');
+  if (fic) fic.onchange = e => lireFichier(e.target.files[0]);
+  const dep = document.getElementById('depot');
+  if (dep) {
+    dep.ondragover = e => { e.preventDefault(); if (!S.survol) { S.survol = true; render(); } };
+    dep.ondragleave = () => { S.survol = false; render(); };
+    dep.ondrop = e => { e.preventDefault(); S.survol = false; lireFichier(e.dataTransfer.files[0]); };
+  }
+}
+
+function lireFichier(f) {
+  if (!f) return;
+  f.text().then(txt => lireTexte(txt, f.name));
+}
+
+function lireTexte(txt, nom) {
+  const r = lire(txt);
+  if (r.erreur) { S.erreur = r.erreur; S.ecran = 'import'; render(); return; }
+  S.erreur = ''; charger(r.donnees, nom, r.format);
+}
+
+const EXEMPLES = {
+  json: () => lireTexte(JSON.stringify(EXEMPLE_JSON, null, 4), 'collection_ScVfOdKRE00x.json'),
+  csv: () => lireTexte(EXEMPLE_CSV, 'collection_DySCHPFbxGWK.csv'),
+  casse: () => lireTexte(JSON.stringify(EXEMPLE_JSON.slice(0, 3)).slice(0, -40), 'collection_coupee.json'),
+  autre: () => lireTexte('{"items":[{"name":"Wyrmspan","objectid":365670}]}', 'export_autre.json')
+};
+
+document.getElementById('phone').addEventListener('click', e => {
+  const el = e.target.closest('[data-a]'); if (!el) return;
+  if (el.dataset.a === 'fermer' && e.target.closest('[data-stop]')) return;
+  const a = el.dataset.a, l = el.dataset.i != null ? S.lignes[+el.dataset.i] : S.lignes[S.sheet];
+  switch (a) {
+    case 'versImport': clearInterval(minuteur); S.ecran = 'import'; break;
+    case 'versAjout': S.ecran = 'ajout'; break;
+    case 'exemple': EXEMPLES[el.dataset.v](); return;
+    case 'ext': S.ext = !S.ext; S.lignes.filter(x => x.ext && x.etat !== 'ign').forEach(x => x.coche = S.ext); lancer(); break;
+    case 'fmt': S.fmt = el.dataset.v; break;
+    case 'filtre': S.filtre = el.dataset.v; break;
+    case 'coche': l.coche = !l.coche; break;
+    case 'ouvrir': S.sheet = l.i; S.cherche = ''; S.resultats = null; break;
+    case 'fermer': S.sheet = null; break;
+    case 'chercher': S.cherche = document.getElementById('q').value; S.resultats = [[S.cherche, 2024, 'résultat BGG simulé']]; break;
+    case 'choisir': { const c = (MULTI[l.t] || S.resultats || [[l.t, +l.y || 2020, '—'], [l.t + ': Deluxe', 2021, '—']])[+el.dataset.j]; l.bgg = c; l.etat = 'ok'; l.choisi = true; l.coche = true; S.sheet = null; break; }
+    case 'sansCov': l.bgg = null; l.etat = 'none'; l.sansCov = true; l.coche = true; S.sheet = null; l.resolu = true; break;
+    case 'decocher': l.coche = false; S.sheet = null; break;
+    case 'importer': S.ecran = 'encours'; S.ajoutes = 0; S.phase = 'ajout'; render(); {
+      const n = aAjouter();
+      minuteur = setInterval(() => { S.ajoutes++; if (S.ajoutes >= n) { clearInterval(minuteur); S.phase = 'fini'; if (S.ecran === 'encours') { S.ecran = 'fini'; S.vuFini = true; } } render(); }, 250);
+    } return;
+    case 'ludo': S.ecran = 'ludo'; break;
+    case 'nav': S.ecran = el.dataset.v; break;
+    case 'reprendre': { const p = phase(); S.ecran = p === 'ajout' ? 'encours' : p === 'fini' ? 'fini' : 'verif'; if (p === 'fini') S.vuFini = true; break; }
+    case 'abandon': if (confirm('Abandonner l\'import ? La liste en cours est effacée ; les jeux déjà ajoutés restent.')) { clearInterval(minuteur); S.lignes = []; S.phase = null; S.ecran = 'ajout'; } break;
+  }
+  render();
+});
+
+document.getElementById('scen').addEventListener('click', e => {
+  const b = e.target.closest('[data-s]'); if (!b) return;
+  clearInterval(minuteur); S.sheet = null;
+  const k = b.dataset.s;
+  if (k !== 'ajout' && k !== 'import' && !S.lignes.length) { EXEMPLES.json(); lancer(true); }
+  if (k === 'verif') lancer(true);
+  if (k === 'fini' || k === 'ludo') { lancer(true); S.phase = 'fini'; S.vuFini = true; S.ajoutes = aAjouter(); }
+  if (k === 'notif') lancer(true);
+  if (k === 'etagere' && !S.lignes.some(l => l.etat === 'att' && (S.ext || !l.ext))) { S.lignes.forEach(l => { if (l.etat !== 'ign') l.etat = 'att'; }); S.phase = null; lancer(); }
+  S.ecran = k; render();
+});
+
+render();
+</script>

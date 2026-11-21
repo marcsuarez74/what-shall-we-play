@@ -11,6 +11,7 @@ const TYPES: { type: string; label: CléDict; aide: CléDict }[] = [
   { type: 'reponses', label: 'notifs.reponses', aide: 'notifs.reponsesAide' },
   { type: 'rappel', label: 'notifs.rappel', aide: 'notifs.rappelAide' },
   { type: 'amis', label: 'notifs.amis', aide: 'notifs.amisAide' },
+  { type: 'import', label: 'notifs.import', aide: 'notifs.importAide' },
 ];
 
 export default function NotificationsCard() {

@@ -4,6 +4,20 @@ Toutes les évolutions notables de l'app sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) —
 versionnement [sémantique](https://semver.org/lang/fr/) (`MAJOR.MINOR.PATCH`).
 
+## [4.23.0] — 2026-11-21
+
+### Ajouté
+🛰️ **Import : il continue sans toi.**
+- Une fois le fichier choisi, c'est le serveur qui cherche les jeux sur BGG puis les ajoute :
+  tu peux changer de page, utiliser l'app ou même la fermer, l'import avance quand même.
+- Une pastille au-dessus des onglets suit l'avancée partout dans l'app et t'y ramène d'un toucher ;
+  sur l'onglet Ajouter, une carte « Import en cours » propose de le reprendre.
+- Une notification (nouveau type « Import », réglable dans les notifications) prévient quand
+  la recherche est finie — avec ce qui reste à vérifier — puis quand la collection est importée.
+- L'import en cours se retrouve tel quel en revenant (choix, coches, format), reprend après un
+  redémarrage du serveur, et peut être abandonné ; il est effacé au bout de 30 jours.
+- Maquette : `mockup/2026-11-21-v4230-import-fond.html`.
+
 ## [4.22.3] — 2026-11-21
 
 ### Amélioré

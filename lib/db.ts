@@ -236,6 +236,33 @@ CREATE TABLE IF NOT EXISTS night_plays (
   created_at TEXT NOT NULL DEFAULT (datetime('now','localtime')),
   UNIQUE (night_id, game_id, manche, user_id)
 );
+-- v4.23.0 : import Myludo en tâche de fond. Liste de travail temporaire (un import par
+-- compte) : les jeux ajoutés vivent dans games, jamais ici.
+CREATE TABLE IF NOT EXISTS imports (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+  nom TEXT NOT NULL,
+  format TEXT NOT NULL,
+  statut TEXT NOT NULL DEFAULT 'recherche',
+  ext INTEGER NOT NULL DEFAULT 0,
+  fmt TEXT NOT NULL DEFAULT 'grand',
+  vu INTEGER NOT NULL DEFAULT 0,
+  maj_le TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE TABLE IF NOT EXISTS import_lignes (
+  import_id INTEGER NOT NULL REFERENCES imports(id) ON DELETE CASCADE,
+  i INTEGER NOT NULL,
+  csv_json TEXT NOT NULL,
+  etat TEXT NOT NULL,
+  coche INTEGER NOT NULL,
+  fiche_json TEXT,
+  candidats_json TEXT NOT NULL DEFAULT '[]',
+  deja_id INTEGER,
+  resolu INTEGER NOT NULL DEFAULT 0,
+  resultat TEXT,
+  cov INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (import_id, i)
+);
 `;
 
 let db: Database.Database | null = null;
@@ -326,6 +353,8 @@ export function purger(db: Database.Database): void {
   db.prepare("DELETE FROM sessions WHERE expires_at <= datetime('now')").run();
   db.prepare("DELETE FROM device_tokens WHERE created_at <= datetime('now', '-1 year')").run();
   db.prepare('DELETE FROM users WHERE est_invite = 1 AND id NOT IN (SELECT user_id FROM night_players)').run();
+  // v4.23.0 : liste d'import oubliée depuis 30 jours (les jeux ajoutés, eux, restent).
+  db.prepare("DELETE FROM imports WHERE maj_le <= datetime('now', '-30 days')").run();
 }
 
 export function getDb(): Database.Database {

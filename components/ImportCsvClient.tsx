@@ -1,131 +1,94 @@
 'use client';
 // Import d'une ludothèque depuis un export Myludo CSV (v4.20.0) ou JSON (v4.22.0) — maquettes
-// mockup/2026-11-20-v4200-import-csv.html et mockup/2026-11-21-v4220-import-json.html. Fichier lu dans le navigateur ; chaque titre
-// est cherché sur BGG (aperçu sans téléchargement : /api/bgg/thing?cover=0) ; les pochettes
-// ne sont rapatriées qu'à la confirmation, par la route habituelle.
+// mockup/2026-11-20-v4200-import-csv.html, …-v4220-import-json.html, …-v4230-import-fond.html.
+// v4.23.0 : le fichier est lu ici, puis le SERVEUR fait l'import (recherche BGG, ajout) — on peut
+// quitter la page ou fermer l'app. Cet écran lit l'état en base (GET /api/import) et le pilote.
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { FORMATS, FORMAT_SCALE, formatShort } from '@/lib/formats';
-import { ficheBggFormData, type FicheBgg } from '@/lib/bgg-ajout';
 import {
-  lireFichierMyludo, rapprocher, requeteBgg, titresRepli, departager, memeTitre, doublonsFichier,
-  type LigneCsv, type ResultatBgg, type Rapprochement,
+  lireFichierMyludo, compter, aAgir,
+  type ResultatBgg, type LigneImport, type ImportInfo, type FicheLigne, type EtatLigne,
 } from '@/lib/import-csv';
-import type { BoxFormat, Game, UserLite } from '@/lib/types';
+import type { BoxFormat, UserLite } from '@/lib/types';
 import { useI18n } from './LanguageProvider';
 import UserMenu from './UserMenu';
 
-type Fiche = FicheBgg & { imageUrl?: string | null };
-type Etat = 'att' | 'ok' | 'multi' | 'none' | 'echec' | 'enrichir' | 'deja' | 'doublon';
-interface Ligne {
-  i: number; csv: LigneCsv; etat: Etat; coche: boolean;
-  fiche: Fiche | null; candidats: ResultatBgg[]; dejaId: number | null; resolu: boolean;
-}
-type Resultat = 'importe' | 'enrichi' | 'echec';
-type Stage = 'fichier' | 'verif' | 'import' | 'recap';
+type Donnees = { import: ImportInfo | null; lignes: LigneImport[] };
 
-const imageDe = (f: Fiche | null) => (f?.coverName ? `/api/cover/${f.coverName}` : f?.imageUrl ?? null);
+const imageDe = (f: FicheLigne | null) => (f?.coverName ? `/api/cover/${f.coverName}` : f?.imageUrl ?? null);
 
 async function chercher(q: string, ext: boolean): Promise<ResultatBgg[]> {
   const r = await fetch(`/api/bgg/search?q=${encodeURIComponent(q)}${ext ? '&ext=1' : ''}`);
   if (!r.ok) throw new Error('search');
   return ((await r.json()).results ?? []) as ResultatBgg[];
 }
-/** Recherche BGG d'une ligne, avec repli si rien n'est trouvé (v4.22.0) : titres simplifiés,
- *  puis le titre dans les extensions BGG. On s'arrête au premier essai qui donne quelque chose. */
-async function rapprocherLigne(l: LigneCsv): Promise<Rapprochement> {
-  const essais: [string, boolean][] = [[requeteBgg(l.titre), l.extension],
-    ...titresRepli(l.titre).map((t): [string, boolean] => [t, l.extension])];
-  if (!l.extension) essais.push([requeteBgg(l.titre), true]);
-  for (const [i, [q, ext]] of essais.entries()) {
-    const r = rapprocher(i === 0 ? l.titre : q, l.annee, await chercher(q, ext));
-    if (r.etat === 'multi') return (await parAuteurs(l, r.candidats)) ?? r;
-    if (r.etat !== 'none') return r;
-  }
-  return { etat: 'none' };
-}
-/** Plusieurs candidats : un seul a un auteur en commun avec Myludo → c'est lui (v4.22.2).
- *  Une requête BGG pour tous ; en cas d'échec, on laisse simplement choisir. */
-async function parAuteurs(l: LigneCsv, candidats: ResultatBgg[]): Promise<Rapprochement | null> {
-  if (!l.auteurs) return null;
-  try {
-    const r = await fetch(`/api/bgg/things?ids=${candidats.map((c) => c.bggId).join(',')}`);
-    if (!r.ok) return null;
-    const elu = departager(l.auteurs, (await r.json()).things ?? []);
-    return elu && { etat: 'ok', ...elu };
-  } catch { return null; }
-}
-async function fiche(bggId: number, apercu: boolean): Promise<Fiche> {
-  const r = await fetch(`/api/bgg/thing?id=${bggId}${apercu ? '&cover=0' : ''}`);
+async function apercu(bggId: number): Promise<FicheLigne> {
+  const r = await fetch(`/api/bgg/thing?id=${bggId}&cover=0`);
   if (!r.ok) throw new Error('thing');
-  return (await r.json()) as Fiche;
+  return (await r.json()) as FicheLigne;
 }
-
-/** Valeurs du jeu : la fiche BGG, puis ce que dit le CSV quand il le dit (titre, joueurs, durée, éditeur, auteurs). */
-function valeurs(l: Ligne) {
-  const f = l.fiche, c = l.csv;
-  return {
-    bgg_id: f?.bggId ?? null, year: f?.year ?? c.annee, publisher: c.editeur ?? f?.publisher ?? null,
-    min_players: c.minJoueurs ?? f?.minPlayers ?? null, max_players: c.maxJoueurs ?? f?.maxPlayers ?? null,
-    playtime_min: c.duree ?? f?.playtimeMin ?? null, weight: f?.weight ?? null, bgg_rating: f?.rating ?? null,
-    designer: c.auteurs ?? f?.designer ?? null, artist: c.illustrateurs ?? f?.artist ?? null,
-    best_players: f?.bestPlayers ?? null, cover_name: f?.coverName ?? null,
-  };
+async function envoyer(method: 'POST' | 'PATCH', corps: unknown): Promise<Donnees> {
+  const r = await fetch('/api/import', { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(corps) });
+  if (!r.ok) throw new Error('import');
+  return (await r.json()) as Donnees;
 }
 
 export default function ImportCsvClient({ me }: { me: UserLite }) {
   const router = useRouter();
   const { lang, t } = useI18n();
-  const [stage, setStage] = useState<Stage>('fichier');
-  const [nomFichier, setNomFichier] = useState('');
-  const [format, setFormat] = useState<'csv' | 'json'>('csv');
+  const [charge, setCharge] = useState(false);
+  const [info, setInfo] = useState<ImportInfo | null>(null);
+  const [lignes, setLignes] = useState<LigneImport[]>([]);
+  const [neuf, setNeuf] = useState(false); // import précédent terminé et vu : on repart d'un fichier
   const [error, setError] = useState<string | null>(null);
-  const [lignes, setLignes] = useState<Ligne[]>([]);
-  const [ext, setExt] = useState(false);
-  const [fmt, setFmt] = useState<BoxFormat>('grand');
   const [filtre, setFiltre] = useState<'tous' | 'choisir' | 'chercher'>('tous');
   const [ouverte, setOuverte] = useState<number | null>(null);
-  const [faits, setFaits] = useState<{ i: number; r: Resultat; cov: boolean }[]>([]);
-  const [total, setTotal] = useState(0);
-  const ref = useRef<Ligne[]>([]);
-  const ludo = useRef<Game[]>([]);
-  const boucle = useRef(false);
-  // Lu à chaque tour de boucle : cocher « extensions » pendant une recherche en cours
-  // doit les inclure (sinon elles restaient « en attente » et « Ajouter » ne s'activait jamais).
-  const extRef = useRef(false);
-  const vivant = useRef(true);
-  // StrictMode (dev) démonte puis remonte : le drapeau doit revenir à vrai au remontage.
-  useEffect(() => { vivant.current = true; return () => { vivant.current = false; }; }, []);
+  const statutPrec = useRef<string | null>(null);
 
-  function maj(i: number, patch: Partial<Ligne>) {
-    ref.current = ref.current.map((l) => (l.i === i ? { ...l, ...patch } : l));
-    if (vivant.current) setLignes(ref.current);
+  function appliquer(d: Donnees) {
+    setInfo(d.import); setLignes(d.lignes);
+    // Ajout terminé sous nos yeux : bilan vu, ludothèque à jour.
+    const st = d.import?.statut ?? null;
+    if (st === 'fini' && statutPrec.current && statutPrec.current !== 'fini') { void envoyer('PATCH', { vu: true }).catch(() => {}); router.refresh(); }
+    statutPrec.current = st;
+  }
+  async function relire() {
+    try { const r = await fetch('/api/import'); if (r.ok) appliquer(await r.json()); } catch { /* prochain tour */ }
   }
 
-  // Ligne trouvée sur BGG : déjà là (même bgg_id, ou même titre déjà lié) / à compléter / nouvelle.
-  function placer(l: Ligne, f: Fiche): Partial<Ligne> {
-    const parId = ludo.current.find((g) => g.bgg_id === f.bggId);
-    const parTitre = memeTitre(l.csv.titre, ludo.current);
-    if (parId || parTitre?.bgg_id != null) return { fiche: f, etat: 'deja', coche: false };
-    if (parTitre) return { fiche: f, etat: 'enrichir', dejaId: parTitre.id };
-    return { fiche: f, etat: 'ok' };
-  }
+  useEffect(() => {
+    (async () => {
+      try {
+        const r = await fetch('/api/import');
+        if (r.ok) {
+          const d = (await r.json()) as Donnees;
+          if (d.import?.statut === 'fini') { if (d.import.vu) setNeuf(true); else void envoyer('PATCH', { vu: true }).catch(() => {}); }
+          statutPrec.current = d.import?.statut ?? null;
+          setInfo(d.import); setLignes(d.lignes);
+        }
+      } finally { setCharge(true); }
+    })();
+  }, []);
 
-  async function rechercher() {
-    if (boucle.current) return;
-    boucle.current = true;
-    try {
-      for (;;) {
-        const l = ref.current.find((x) => x.etat === 'att' && (extRef.current || !x.csv.extension));
-        if (!l || !vivant.current) break;
-        try {
-          const r = await rapprocherLigne(l.csv);
-          if (r.etat === 'ok') maj(l.i, placer(l, await fiche(r.bggId, true)));
-          else maj(l.i, r.etat === 'multi' ? { etat: 'multi', candidats: r.candidats } : { etat: 'none' });
-        } catch { maj(l.i, { etat: 'echec' }); }
-      }
-    } finally { boucle.current = false; }
+  // Le serveur avance seul : on relit toutes les 2 s tant qu'il cherche ou ajoute.
+  const statut = info?.statut;
+  useEffect(() => {
+    if (statut !== 'recherche' && statut !== 'ajout') return;
+    const id = setInterval(() => void relire(), 2000);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statut]);
+
+  async function agir(corps: unknown) {
+    setError(null);
+    try { appliquer(await envoyer('PATCH', corps)); } catch { setError(t('bgg.errPasReponse')); }
+  }
+  /** Décision sur une ligne : affichée tout de suite, confirmée par le serveur. */
+  function decider(i: number, patch: Partial<LigneImport>, corps: Record<string, unknown>) {
+    setLignes((ls) => ls.map((l) => (l.i === i ? { ...l, ...patch } : l)));
+    void agir({ ligne: i, ...corps });
   }
 
   async function lireFichier(file: File | undefined) {
@@ -136,75 +99,34 @@ export default function ImportCsvClient({ me }: { me: UserLite }) {
       setError(t(lu.erreur === 'csv' ? 'csv.errFormat' : lu.erreur === 'jsonIllisible' ? 'csv.errJsonIllisible' : 'csv.errJsonPasMyludo'));
       return;
     }
-    const csv = lu.lignes;
-    const res = await fetch('/api/games');
-    if (!res.ok) { setError(t('import.errLectureLudo')); return; }
-    ludo.current = ((await res.json()).games ?? []) as Game[];
-    const doublons = doublonsFichier(csv);
-    ref.current = csv.map((c, i) => {
-      const deja = memeTitre(c.titre, ludo.current);
-      const etat: Etat = doublons.has(i) ? 'doublon' : deja?.bgg_id != null ? 'deja' : 'att';
-      return { i, csv: c, etat, coche: etat === 'att' && !c.extension, fiche: null, candidats: [], dejaId: null, resolu: false };
-    });
-    setLignes(ref.current); setNomFichier(file.name); setFormat(lu.format); setFiltre('tous'); setStage('verif');
-    extRef.current = ext;
-    void rechercher();
+    try {
+      appliquer(await envoyer('POST', { nom: file.name, format: lu.format, lignes: lu.lignes, ext: false, fmt: 'grand' }));
+      setNeuf(false); setFiltre('tous');
+    } catch { setError(t('import.errLectureLudo')); }
   }
 
-  function basculerExt() {
-    const v = !ext;
-    setExt(v); extRef.current = v;
-    for (const l of ref.current) if (l.csv.extension && ['att', 'ok', 'multi', 'none', 'echec', 'enrichir'].includes(l.etat)) maj(l.i, { coche: v });
-    if (v) void rechercher();
+  async function abandonner(confirmer: boolean) {
+    if (confirmer && !window.confirm(t('csv.abandonnerConfirm'))) return;
+    await fetch('/api/import', { method: 'DELETE' }).catch(() => {});
+    setInfo(null); setLignes([]); statutPrec.current = null;
   }
 
-  const visibles = lignes.filter((l) => ext || !l.csv.extension);
-  const aAgir = (l: Ligne) => l.coche && !l.resolu && (l.etat === 'multi' || l.etat === 'none' || l.etat === 'echec');
-  const faites = visibles.filter((l) => l.etat !== 'att').length;
-  const fini = faites === visibles.length;
-  const selection = visibles.filter((l) => l.coche && l.etat !== 'deja' && l.etat !== 'doublon');
-  // v4.22.3 — deux onglets : choisir parmi plusieurs jeux BGG / chercher à la main (rien trouvé ou BGG muet).
-  const aChoisir = (l: Ligne) => aAgir(l) && l.etat === 'multi';
-  const aChercher = (l: Ligne) => aAgir(l) && l.etat !== 'multi';
-  const nChoisir = visibles.filter(aChoisir).length;
-  const nChercher = visibles.filter(aChercher).length;
+  const ext = info?.ext ?? false;
+  const fmt = (info?.fmt ?? 'grand') as BoxFormat;
+  const c = compter(lignes, ext);
+  const { visibles, selection } = c;
+  const fini = c.faits === c.tot;
+  const aChoisir = (l: LigneImport) => aAgir(l) && l.etat === 'multi';
+  const aChercher = (l: LigneImport) => aAgir(l) && l.etat !== 'multi';
   const montrees = filtre === 'choisir' ? visibles.filter(aChoisir) : filtre === 'chercher' ? visibles.filter(aChercher) : visibles;
+  const stage = !charge ? null : !info || neuf ? 'fichier' : info.statut === 'fini' ? 'recap' : info.statut === 'ajout' ? 'import' : 'verif';
 
-  async function importer(cible: Ligne[]) {
-    setStage('import'); setFaits([]); setTotal(cible.length);
-    const out: { i: number; r: Resultat; cov: boolean }[] = [];
-    for (const l0 of cible) {
-      let l = l0;
-      if (l.fiche) { try { l = { ...l, fiche: await fiche(l.fiche.bggId, false) }; } catch { /* sans pochette : rattrapable depuis la ludothèque */ } }
-      const v = valeurs(l);
-      let r: Resultat = 'echec';
-      try {
-        if (l.etat === 'enrichir' && l.dejaId != null) {
-          const res = await fetch(`/api/games/${l.dejaId}/enrichir`, {
-            method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(v) });
-          if (res.ok) r = 'enrichi';
-        } else {
-          const fd = l.fiche ? ficheBggFormData(l.fiche, fmt, l.csv.titre) : new FormData();
-          if (!l.fiche) { fd.append('title', l.csv.titre); fd.append('box_format', fmt); }
-          for (const [k, x] of Object.entries(v)) if (x != null && k !== 'cover_name' && k !== 'bgg_id') fd.set(k, String(x));
-          const res = await fetch('/api/games', { method: 'POST', body: fd });
-          if (res.ok) r = 'importe';
-        }
-      } catch { /* compté en échec */ }
-      out.push({ i: l.i, r, cov: !!v.cover_name });
-      if (vivant.current) setFaits([...out]);
-    }
-    if (!vivant.current) return;
-    setStage('recap');
-    router.refresh();
-  }
+  const nImp = lignes.filter((l) => l.resultat === 'importe').length;
+  const nEnr = lignes.filter((l) => l.resultat === 'enrichi').length;
+  const nKo = lignes.filter((l) => l.resultat === 'echec').length;
+  const nSans = lignes.filter((l) => l.resultat && l.resultat !== 'echec' && !l.cov).length;
 
-  const nImp = faits.filter((f) => f.r === 'importe').length;
-  const nEnr = faits.filter((f) => f.r === 'enrichi').length;
-  const nKo = faits.filter((f) => f.r === 'echec').length;
-  const nSans = faits.filter((f) => f.r !== 'echec' && !f.cov).length;
-
-  function texteEtat(l: Ligne): string {
+  function texteEtat(l: LigneImport): string {
     switch (l.etat) {
       case 'att': return t('csv.etatAttente');
       case 'ok': return t('csv.etatOk', { nom: l.fiche?.title ?? '', annee: l.fiche?.year ?? '—' });
@@ -216,7 +138,8 @@ export default function ImportCsvClient({ me }: { me: UserLite }) {
       case 'none': return l.resolu ? t('csv.etatSansCov') : t('csv.etatNone');
     }
   }
-  const classeEtat: Record<Etat, string> = { att: 'att', ok: 'ok', enrichir: 'dup', deja: 'att', doublon: 'att', multi: 'dup', none: 'ko', echec: 'ko' };
+  const classeEtat: Record<EtatLigne, string> = { att: 'att', ok: 'ok', enrichir: 'dup', deja: 'att', doublon: 'att', multi: 'dup', none: 'ko', echec: 'ko' };
+  const ligneOuverte = lignes.find((l) => l.i === ouverte);
 
   return (
     <div className="imp-page">
@@ -248,15 +171,18 @@ export default function ImportCsvClient({ me }: { me: UserLite }) {
         </div>
       )}
 
-      {stage === 'verif' && (
+      {stage === 'verif' && info && (
         <div>
           <div className="csv-fichier">
             <span aria-hidden>📄</span>
-            <span className="t"><b>{nomFichier}</b><small>Myludo <span className={`csv-badge ${format}`}>{format.toUpperCase()}</span> · {t('csv.lignes', { n: lignes.length })}</small></span>
-            <button type="button" className="link-btn" onClick={() => { setStage('fichier'); ref.current = []; setLignes([]); }}>{t('csv.changer')}</button>
+            <span className="t"><b>{info.nom}</b><small>Myludo <span className={`csv-badge ${info.format}`}>{info.format.toUpperCase()}</span> · {t('csv.lignes', { n: lignes.length })}</small></span>
+            <button type="button" className="link-btn" onClick={() => void abandonner(true)}>{t('csv.changer')}</button>
           </div>
+          {!fini && (
+            <div className="csv-bandeau"><span aria-hidden>🛰️</span><span><b>{t('csv.quitterTitre')}</b>{t('csv.quitterTexte')}</span></div>
+          )}
           {lignes.some((l) => l.csv.extension) && (
-            <button type="button" className="csv-bascule" role="switch" aria-checked={ext} onClick={basculerExt}>
+            <button type="button" className="csv-bascule" role="switch" aria-checked={ext} onClick={() => void agir({ ext: !ext })}>
               <span className="t">{t('csv.extensions')}<small>{t('csv.extensionsN', { n: lignes.filter((l) => l.csv.extension).length })}</small></span>
               <span className={`inter${ext ? ' on' : ''}`} aria-hidden />
             </button>
@@ -264,20 +190,21 @@ export default function ImportCsvClient({ me }: { me: UserLite }) {
           <p className="field-label">{t('import.fmtDefaut', { f: formatShort(fmt, lang) })}</p>
           <div className="seg" role="group" aria-label={t('import.fmtGroupeAria')}>
             {FORMATS.map((f) => (
-              <button key={f} type="button" className={fmt === f ? 'on' : ''} aria-pressed={fmt === f} onClick={() => setFmt(f)}>
+              <button key={f} type="button" className={fmt === f ? 'on' : ''} aria-pressed={fmt === f}
+                      onClick={() => { setInfo({ ...info, fmt: f }); void agir({ fmt: f }); }}>
                 <span className="box" style={{ width: 9 + 4 * FORMAT_SCALE[f], height: 9 + 4 * FORMAT_SCALE[f] }} />
                 <span className="lbl">{formatShort(f, lang)}</span>
               </button>
             ))}
           </div>
           <p className="imp-num csv-avance">
-            <span>{fini ? t('csv.rechercheFinie') : t('csv.rechercheEnCours')}</span><span>{faites} / {visibles.length}</span>
+            <span>{fini ? t('csv.rechercheFinie') : t('csv.rechercheEnCours')}</span><span>{c.faits} / {c.tot}</span>
           </p>
-          <div className="imp-barre"><div className="fill" style={{ width: `${faites * 100 / Math.max(visibles.length, 1)}%` }} /></div>
+          <div className="imp-barre"><div className="fill" style={{ width: `${c.faits * 100 / Math.max(c.tot, 1)}%` }} /></div>
           <div className="csv-filtres">
-            <button type="button" aria-pressed={filtre === 'tous'} onClick={() => setFiltre('tous')}>{t('csv.filtreTous')} <span>{visibles.length}</span></button>
-            <button type="button" aria-pressed={filtre === 'choisir'} className={nChoisir ? 'ambre' : ''} onClick={() => setFiltre('choisir')}>{t('csv.filtreAgir')} <span>{nChoisir}</span></button>
-            <button type="button" aria-pressed={filtre === 'chercher'} className={nChercher ? 'rouge' : ''} onClick={() => setFiltre('chercher')}>{t('csv.filtreIntrouvables')} <span>{nChercher}</span></button>
+            <button type="button" aria-pressed={filtre === 'tous'} onClick={() => setFiltre('tous')}>{t('csv.filtreTous')} <span>{c.tot}</span></button>
+            <button type="button" aria-pressed={filtre === 'choisir'} className={c.choisir ? 'ambre' : ''} onClick={() => setFiltre('choisir')}>{t('csv.filtreAgir')} <span>{c.choisir}</span></button>
+            <button type="button" aria-pressed={filtre === 'chercher'} className={c.chercher ? 'rouge' : ''} onClick={() => setFiltre('chercher')}>{t('csv.filtreIntrouvables')} <span>{c.chercher}</span></button>
           </div>
           {montrees.length === 0 && <p className="imp-sous csv-rien">{t(filtre === 'chercher' ? 'csv.toutTrouve' : 'csv.rienAVerifier')}</p>}
           <ul className="imp-liste">
@@ -297,14 +224,15 @@ export default function ImportCsvClient({ me }: { me: UserLite }) {
                   </button>
                   {!figee && (
                     <button type="button" className="puce" aria-pressed={l.coche} aria-label={t('import.importerAria', { j: l.csv.titre })}
-                            onClick={() => maj(l.i, { coche: !l.coche })}>✓</button>
+                            onClick={() => decider(l.i, { coche: !l.coche }, { coche: !l.coche })}>✓</button>
                   )}
                 </li>
               );
             })}
           </ul>
           <div className="imp-bas">
-            <button type="button" className="btn-go" disabled={!fini || selection.length === 0} onClick={() => void importer(selection)}>
+            <button type="button" className="link-btn csv-abandon" onClick={() => void abandonner(true)}>{t('csv.abandonner')}</button>
+            <button type="button" className="btn-go" disabled={!fini || selection.length === 0} onClick={() => void agir({ ajouter: true })}>
               {!fini ? t('csv.rechercheEnCours') : selection.length === 0 ? t('import.rienAImporter') : t('csv.ajouterN', { n: selection.length })}
             </button>
           </div>
@@ -314,8 +242,8 @@ export default function ImportCsvClient({ me }: { me: UserLite }) {
       {stage === 'import' && (
         <div>
           <p className="imp-encours">{t('csv.ajoutEnCours')}</p>
-          <div className="imp-barre"><div className="fill" style={{ width: `${faits.length * 100 / Math.max(total, 1)}%` }} /></div>
-          <p className="imp-num">{faits.length} / {total} · {t('csv.garderOuvert')}</p>
+          <div className="imp-barre"><div className="fill" style={{ width: `${c.ajoutes * 100 / Math.max(c.aAjouter, 1)}%` }} /></div>
+          <p className="imp-num">{c.ajoutes} / {c.aAjouter} · {t('csv.ajoutQuitter')}</p>
         </div>
       )}
 
@@ -333,20 +261,17 @@ export default function ImportCsvClient({ me }: { me: UserLite }) {
           </ul>
           {nSans > 0 && <p className="help">{t('csv.aideSansCov')}</p>}
           {nKo > 0 && (
-            <button type="button" className="btn-ressayer"
-                    onClick={() => void importer(lignes.filter((l) => faits.find((f) => f.i === l.i)?.r === 'echec'))}>
-              {t('import.reessayer')}
-            </button>
+            <button type="button" className="btn-ressayer" onClick={() => void agir({ reessayer: true })}>{t('import.reessayer')}</button>
           )}
           <Link className="btn-go as-link" href="/library">{t('ludotheque.voir')}</Link>
         </div>
       )}
 
-      {ouverte !== null && (
-        <Choix ligne={lignes.find((l) => l.i === ouverte)!} onFermer={() => setOuverte(null)}
-               onChoisir={(f) => { const l = ref.current.find((x) => x.i === ouverte)!; maj(l.i, { ...placer(l, f), coche: true, resolu: true }); setOuverte(null); }}
-               onSansCov={() => { maj(ouverte, { etat: 'none', fiche: null, coche: true, resolu: true }); setOuverte(null); }}
-               onExclure={() => { maj(ouverte, { coche: false }); setOuverte(null); }} />
+      {ligneOuverte && (
+        <Choix ligne={ligneOuverte} onFermer={() => setOuverte(null)}
+               onChoisir={async (bggId) => { await agir({ ligne: ligneOuverte.i, bggId }); setOuverte(null); }}
+               onSansCov={() => { decider(ligneOuverte.i, { etat: 'none', fiche: null, coche: true, resolu: true }, { sansCov: true }); setOuverte(null); }}
+               onExclure={() => { decider(ligneOuverte.i, { coche: false }, { coche: false }); setOuverte(null); }} />
       )}
     </div>
   );
@@ -354,12 +279,12 @@ export default function ImportCsvClient({ me }: { me: UserLite }) {
 
 /** Bottom-sheet : choisir parmi les résultats BGG, ou chercher sous un autre titre. */
 function Choix({ ligne, onFermer, onChoisir, onSansCov, onExclure }: {
-  ligne: Ligne; onFermer: () => void; onChoisir: (f: Fiche) => void; onSansCov: () => void; onExclure: () => void;
+  ligne: LigneImport; onFermer: () => void; onChoisir: (bggId: number) => Promise<void>; onSansCov: () => void; onExclure: () => void;
 }) {
   const { t } = useI18n();
   const [q, setQ] = useState(ligne.csv.titre);
   const [cands, setCands] = useState<ResultatBgg[]>(ligne.candidats);
-  const [apercus, setApercus] = useState<Record<number, Fiche>>({});
+  const [apercus, setApercus] = useState<Record<number, FicheLigne>>({});
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -369,7 +294,7 @@ function Choix({ ligne, onFermer, onChoisir, onSansCov, onExclure }: {
     (async () => {
       for (const c of cands.slice(0, 6)) {
         if (!actif) return;
-        try { const f = await fiche(c.bggId, true); if (actif) setApercus((p) => ({ ...p, [c.bggId]: f })); } catch { /* sans miniature */ }
+        try { const f = await apercu(c.bggId); if (actif) setApercus((p) => ({ ...p, [c.bggId]: f })); } catch { /* sans miniature */ }
       }
     })();
     return () => { actif = false; };
@@ -381,7 +306,7 @@ function Choix({ ligne, onFermer, onChoisir, onSansCov, onExclure }: {
   }
   async function choisir(c: ResultatBgg) {
     setBusy(true); setErr(null);
-    try { onChoisir(apercus[c.bggId] ?? await fiche(c.bggId, true)); } catch { setErr(t('bgg.errPasReponse')); setBusy(false); }
+    try { await onChoisir(c.bggId); } catch { setErr(t('bgg.errPasReponse')); setBusy(false); }
   }
 
   return (
