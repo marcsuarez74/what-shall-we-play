@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { parseThingXml, getThing, attachCover, collectionUtilisateur, parseCollectionXml, searchBoardgames } from '@/lib/bgg';
+import { parseThingXml, parseThingsXml, getThings, getThing, attachCover, collectionUtilisateur, parseCollectionXml, searchBoardgames } from '@/lib/bgg';
 import { isSafeCoverName } from '@/lib/storage';
 import { THING_XML, COLLECTION_XML, COLLECTION_ERRORS_XML, SEARCH_XML } from './bgg.fixture';
 
@@ -66,6 +66,17 @@ describe('bgg', () => {
     expect(global.fetch).toHaveBeenCalledTimes(3);
     warn.mockRestore();
   }, 15000);
+  // v4.22.2 : fiches de plusieurs jeux en une requête, le cache d'abord.
+  it('getThings : une seule requête pour les manquants, le cache pour les autres', async () => {
+    const item = THING_XML.slice(THING_XML.indexOf('<item '), THING_XML.lastIndexOf('</items>')).replace('id="167791"', 'id="777"');
+    const deux = THING_XML.replace('</items>', `${item}</items>`);
+    expect(parseThingsXml(deux).map((t) => t.bggId)).toEqual([167791, 777]);
+    global.fetch = vi.fn().mockResolvedValue(new Response(deux, { status: 200 }));
+    const r = await getThings([167791, 777]);
+    expect(r.map((t) => t.bggId)).toEqual([167791, 777]);
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+    expect(String(vi.mocked(global.fetch).mock.calls[0][0])).toContain('id=777&'); // 167791 vient du cache
+  });
   // Épingle R1 : deux appels concurrents partent à ≥ 1000 ms d'écart (pas au même instant).
   it('sérialise les appels BGG concurrents (~1 req/s)', async () => {
     const fired: number[] = [];

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { lireCsvMyludo, lireJsonMyludo, lireFichierMyludo, titresRepli, lireJoueurs, lireDuree, rapprocher, requeteBgg, memeTitre, doublonsFichier, cleTitre } from '@/lib/import-csv';
+import { lireCsvMyludo, lireJsonMyludo, lireFichierMyludo, titresRepli, departager, lireJoueurs, lireDuree, rapprocher, requeteBgg, memeTitre, doublonsFichier, cleTitre } from '@/lib/import-csv';
 import type { Game } from '@/lib/types';
 
 // En-tête et lignes réelles d'un export Myludo (apostrophe de tête comprise).
@@ -132,5 +132,19 @@ describe('titresRepli', () => {
     expect(titresRepli('Covenant')).toEqual([]);
     expect(titresRepli('The Crew')).toEqual(['Crew']);
     expect(titresRepli('(Les)')).toEqual([]);
+  });
+});
+
+describe('departager (v4.22.2)', () => {
+  const f = (bggId: number, designer: string | null) => ({ bggId, title: `Jeu ${bggId}`, designer });
+  it('un seul homonyme partage un auteur → trouvé (casse, accents, ordre des mots ignorés)', () => {
+    expect(departager('Germán P. Millán', [f(1, 'Someone Else'), f(2, 'German P. Millan, Autre')]))
+      .toEqual({ bggId: 2, nom: 'Jeu 2' });
+    expect(departager('Yeom Cheolwoong', [f(1, 'Cheolwoong Yeom'), f(2, null)])?.bggId).toBe(1);
+  });
+  it('personne ou plusieurs, ou pas d’auteur Myludo → null', () => {
+    expect(departager('A B', [f(1, 'C D'), f(2, null)])).toBeNull();
+    expect(departager('A Bc', [f(1, 'A Bc'), f(2, 'Bc A, X')])).toBeNull();
+    expect(departager(null, [f(1, 'A Bc')])).toBeNull();
   });
 });
