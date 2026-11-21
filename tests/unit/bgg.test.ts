@@ -46,6 +46,26 @@ describe('bgg', () => {
     expect(await attachCover(cached!)).toBe(cached!);
     expect(global.fetch).not.toHaveBeenCalled();
   });
+  // v4.22.1 : BGG refuse une rafale (429) → on recule et on réessaie au lieu d'échouer.
+  it('429 puis 200 → réessaie et réussit ; 404 → pas de nouvel essai', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    global.fetch = vi.fn()
+      .mockResolvedValueOnce(new Response('', { status: 429, headers: { 'retry-after': '1' } }))
+      .mockResolvedValue(new Response(SEARCH_XML, { status: 200 }));
+    expect((await searchBoardgames('wingspan')).length).toBeGreaterThan(0);
+    expect(global.fetch).toHaveBeenCalledTimes(2);
+    global.fetch = vi.fn().mockResolvedValue(new Response('', { status: 404 }));
+    await expect(searchBoardgames('wingspan')).rejects.toThrow();
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+    warn.mockRestore();
+  });
+  it('503 trois fois → abandon (null), 3 essais', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    global.fetch = vi.fn().mockResolvedValue(new Response('', { status: 503, headers: { 'retry-after': '1' } }));
+    expect(await getThing(424242)).toBeNull();
+    expect(global.fetch).toHaveBeenCalledTimes(3);
+    warn.mockRestore();
+  }, 15000);
   // Épingle R1 : deux appels concurrents partent à ≥ 1000 ms d'écart (pas au même instant).
   it('sérialise les appels BGG concurrents (~1 req/s)', async () => {
     const fired: number[] = [];
